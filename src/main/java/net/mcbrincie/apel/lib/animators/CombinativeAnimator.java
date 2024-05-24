@@ -31,8 +31,16 @@ public class CombinativeAnimator<T extends PathAnimatorBase> extends PathAnimato
         this.objects = animators;
     }
 
-    public CombinativeAnimator(int delay, CombinativeAnimator<T> animator, float renderingInterval) {
-        super(delay, new ParticleObject(ParticleTypes.EFFECT), renderingInterval); // Kinda clunky but idc
+    /**
+     * Constructor for the combinative animator. This constructor is
+     * meant to be used in the case that you want to fully copy a new
+     * combinative animator instance with all of its parameters regardless
+     * of their visibility(this means protected & private params are copied)
+     *
+     * @param animator The animator to copy from
+     */
+    public CombinativeAnimator(CombinativeAnimator<T> animator) {
+        super(animator.delay, new ParticleObject(ParticleTypes.EFFECT), 0); // Kinda clunky but idc
         this.objects = animator.objects.clone();
         this.processSpeed = animator.processSpeed;
     }

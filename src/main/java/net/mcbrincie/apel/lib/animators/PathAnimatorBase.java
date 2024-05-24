@@ -15,6 +15,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/** The abstract base class that all path animators inherit from. It
+ * does some stuff under the hood and provides useful methods for working
+ * with the path animators. The scheduling is abstracted away from the user
+ * so the only thing they need to care is setting the logic
+*/
 public abstract class PathAnimatorBase {
     protected float renderingInterval = 0.0f;
     protected int renderingSteps = 0;
@@ -48,6 +53,14 @@ public abstract class PathAnimatorBase {
         this.renderingInterval = renderingInterval;
     }
 
+    /**
+     * Constructor for the path base animator. This constructor is
+     * meant to be used in the case that you want to fully copy a new
+     * path base animator instance with all of its parameters regardless
+     * of their visibility(this means protected & private params are copied)
+     *
+     * @param animator The animator to copy from
+    */
     public PathAnimatorBase(PathAnimatorBase animator) {
         this.delay = animator.delay;
         this.particle = animator.particle;
@@ -66,9 +79,13 @@ public abstract class PathAnimatorBase {
      */
     public void allocateToScheduler() {
         if (this.delay != 0 && !Apel.apelScheduler.hasAllocated(this)) {
-            int steps = this.renderingSteps != 0 ? this.renderingSteps : this.convertToSteps();
+            int steps = this.renderingSteps != 0 ? this.scheduleGetAmount() : this.convertToSteps();
             Apel.apelScheduler.allocateNewSequence(this, steps);
         }
+    }
+
+    protected int scheduleGetAmount() {
+        return this.renderingSteps;
     }
 
     /** Gets the amount of particles. Which can be 0 indicating
@@ -161,6 +178,8 @@ public abstract class PathAnimatorBase {
      * position and not at any other specified position
      *
      * @param world The server world instance
+     * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
+     * @throws SeqMissingException When it finds there is no sequence yet allocated
      */
     public void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException {
         this.beginAnimation(world, 0, -1);
@@ -172,6 +191,9 @@ public abstract class PathAnimatorBase {
      * measured as steps(not seconds, so delay doesn't affect it)
      *
      * @param world The server world instance
+     * @param startStep The time to begin the animation at. Measured as a step
+     * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
+     * @throws SeqMissingException When it finds there is no sequence yet allocated
      */
     public void beginAnimation(ServerWorld world, int startStep) throws SeqDuplicateException, SeqMissingException {
         this.beginAnimation(world, startStep, -1);
@@ -191,23 +213,32 @@ public abstract class PathAnimatorBase {
      * @param world The server world instance
      * @param startStep The time to begin the animation at. Measured as a step
      * @param endStep The time to end the animation at. Measured as a step
+     * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
+     * @throws SeqMissingException When it finds there is no sequence yet allocated
      */
     public abstract void beginAnimation(
             ServerWorld world, int startStep, int endStep
     ) throws SeqDuplicateException, SeqMissingException;
 
-    public void handleDrawingStep(ServerWorld world, int i, Vec3d curr) throws SeqMissingException {
+    /** This method is used for drawing the object. It does more than just drawing, primarily scheduling
+     *
+     * @param world The server world instance
+     * @param step The current step in
+     * @param curr The current position
+     * @throws SeqMissingException When it finds that there is no sequence yet allocated
+     */
+    public void handleDrawingStep(ServerWorld world, int step, Vec3d curr) throws SeqMissingException {
         if (this.delay == 0) {
-            this.particle.draw(world, i, curr);
+            this.particle.draw(world, step, curr);
             return;
         }
-        Runnable func = () -> this.particle.draw(world, i, curr);
+        Runnable func = () -> this.particle.draw(world, step, curr);
         if (this.processSpeed <= 1) {
             Apel.apelScheduler.allocateNewStep(
                     this, new ScheduledStep(this.delay, new Runnable[]{func})
             );
             return;
-        } else if (i % this.processSpeed != 0) {
+        } else if (step % this.processSpeed != 0) {
             this.storedFuncsBuffer.add(func);
             return;
         }

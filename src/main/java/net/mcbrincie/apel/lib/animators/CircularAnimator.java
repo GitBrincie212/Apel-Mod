@@ -8,10 +8,18 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
+/** A slightly more complex animator than linear animator or point animator because it deals with a circle.
+ * The animator basically creates a circle and when animating on it, you specify which angle(IN RADIANS) should
+ * be the start & end, to trim some parts. If you wanna fully revolve around the circle and end up back at the
+ * same point then you can specify the revolutions it should do by using {@code setRevolutions}. By default, it's
+ * set to 1 revolution which means it loops the circle once
+ *
+ */
 public class CircularAnimator extends PathAnimatorBase {
     protected double radius;
     protected Vec3d center;
     protected Vec3d rotation;
+    protected int revolutions = 1;
     private float tempDiffStore;
 
     protected Function7<Float, Float, Vec3d, Double, Vec3d, Integer, Float, Void> onEnd;
@@ -69,16 +77,45 @@ public class CircularAnimator extends PathAnimatorBase {
         this.rotation = rotation;
     }
 
+    /**
+     * Constructor for the circular animator. This constructor is
+     * meant to be used in the case that you want to fully copy a new
+     * circular animator instance with all of its parameters regardless
+     * of their visibility(this means protected & private params are copied)
+     *
+     * @param animator The animator to copy from
+    */
     public CircularAnimator(CircularAnimator animator) {
         super(animator);
         this.rotation = animator.rotation;
         this.center = animator.center;
         this.radius = animator.radius;
+        this.revolutions = animator.revolutions;
+        this.tempDiffStore = -1.0f;
     }
 
 
+    /** Rotates the animator in 3D space. The params are measured as radians
+     * and NOT in degrees. It uses euler's 3D rotation
+     *
+     * @param x The x coordinates
+     * @param y The y coordinates
+     * @param z The z coordinates
+     */
     public void rotate(double x, double y, double z) {
         this.rotation = new Vec3d(x, y, z);
+    }
+
+    /** Sets the revolutions(looping around the circle)
+     * the animator can do around the circle when animating
+     *
+     * @param revolutions The amount of loops to do on a circle
+    */
+    public void setRevolutions(int revolutions) {
+        if (revolutions < 1) {
+            throw new IllegalArgumentException("Revolutions cannot be below 1");
+        }
+        this.revolutions = revolutions;
     }
 
 
@@ -106,9 +143,13 @@ public class CircularAnimator extends PathAnimatorBase {
         this.beginAnimation(world, (float) startAngle, (float) (Math.TAU- 0.000001f), true);
     }
 
+    /** Converts any render interval based animation into render steps
+     *
+     * @return The converted step
+     */
     @Override
     public int convertToSteps() {
-        return (int) (Math.ceil(this.tempDiffStore / this.renderingInterval) + 1);
+        return (int) (Math.ceil(this.tempDiffStore / this.renderingInterval) + 1) * this.revolutions;
     }
 
 
@@ -127,6 +168,7 @@ public class CircularAnimator extends PathAnimatorBase {
         this.beginAnimation(world, (float) startAngle, (float) endAngle, true);
     }
 
+
     public void beginAnimation(
             ServerWorld world, float startAngle, float endAngle, boolean clockwise
     ) throws SeqMissingException, SeqDuplicateException {
@@ -135,10 +177,10 @@ public class CircularAnimator extends PathAnimatorBase {
         float differenceAngle = endAngle - startAngle;
         this.tempDiffStore = differenceAngle;
 
-        int particleAmount = this.renderingSteps == 0 ? this.convertToSteps() : this.renderingSteps;
+        int particleAmount = this.renderingSteps == 0 ? this.convertToSteps() : this.renderingSteps * this.revolutions;
         float angleInterval = this.renderingInterval == 0 ? (
-                differenceAngle) / (this.renderingSteps - 1
-        ) : this.renderingInterval;
+                ((differenceAngle) / (this.renderingSteps - 1)) * this.revolutions
+        ): this.renderingInterval * this.revolutions;
 
         float currAngle = startAngle;
         Vec3d pos = calculatePoint(currAngle);

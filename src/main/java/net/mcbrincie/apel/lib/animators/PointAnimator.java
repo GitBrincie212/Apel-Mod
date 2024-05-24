@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.animators;
 
-import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
@@ -21,6 +20,14 @@ public class PointAnimator extends PathAnimatorBase {
         this.origin = origin;
     }
 
+    /**
+     * Constructor for the point animator. This constructor is
+     * meant to be used in the case that you want to fully copy a new
+     * point base animator instance with all of its parameters regardless
+     * of their visibility(this means protected & private params are copied)
+     *
+     * @param animator The animator to copy from
+    */
     public PointAnimator(PointAnimator animator) {
         super(animator);
         this.origin = animator.origin;
