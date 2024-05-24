@@ -2,6 +2,7 @@ package net.mcbrincie.apel.item;
 
 import net.mcbrincie.apel.lib.animators.CircularAnimator;
 import net.mcbrincie.apel.lib.animators.CombinativeAnimator;
+import net.mcbrincie.apel.lib.animators.LinearAnimator;
 import net.mcbrincie.apel.lib.animators.PointAnimator;
 import net.mcbrincie.apel.lib.objects.ParticleCuboid;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
@@ -25,25 +26,29 @@ public class DebugStick extends Item {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         if (world.isClient) return TypedActionResult.pass(user.getMainHandStack());
         ParticleObject particleCircleObj = new ParticleObject(ParticleTypes.END_ROD);
-        ParticleCuboid particleCuboid = new ParticleCuboid(
-                ParticleTypes.END_ROD, new Vec3i(90, 10, 90), new Vec3d(3, 7, 3), new Vec3d(0, 0, 0)
-        );
-        PointAnimator centerPoint = new PointAnimator(
-                1, particleCuboid, new Vec3d(0, 0, 0), 250
-        );
-        centerPoint.beginAnimation((ServerWorld) world);
-        // CombinativeAnimator<CircularAnimator> combineAnimator = getAnimators((ServerWorld) world, particleCircleObj, false);
-        // CombinativeAnimator<CircularAnimator> combineAnimator2 = getAnimators((ServerWorld) world, particleCircleObj, true);
+        // CombinativeAnimator<CircularAnimator> combineAnimator = getAnimators((ServerWorld) world, particleCircleObj);
         // combineAnimator.beginAnimation((ServerWorld) world);
+        LinearAnimator animator = new LinearAnimator(
+                1, new Vec3d[]{
+                        new Vec3d(0, 0, 0),
+                        new Vec3d(5, 0, 5),
+                        new Vec3d(-5, -5, 0),
+                        new Vec3d(0, 0, 5)
+                }, particleCircleObj, new float[]{
+                        0.3f, 0.5f, 1f
+        }
+        );
+        animator.setProcessingSpeed(2);
+        animator.beginAnimation((ServerWorld) world);
         return TypedActionResult.pass(user.getMainHandStack());
     }
 
-    private CombinativeAnimator<CircularAnimator> getAnimators(ServerWorld world, ParticleObject particleCircleObj, boolean speed) {
+    private CombinativeAnimator<CircularAnimator> getAnimators(ServerWorld world, ParticleObject particleCircleObj) {
         CircularAnimator animator = new CircularAnimator(
-                1, 3, speed ? Vec3d.ZERO : new Vec3d(0, 10, 0),
-                new Vec3d(Math.PI / 2, 0, 0), particleCircleObj, 350
+                1, 3, Vec3d.ZERO, new Vec3d(Math.PI / 2, 0, 0),
+                particleCircleObj, 800
         );
-        if (speed) animator.setProcessingSpeed(4);
+        animator.setRevolutions(5);
         CircularAnimator animator2 = new CircularAnimator(animator);
         animator2.rotate(Math.PI, 0, 0);
         CircularAnimator animator3 = new CircularAnimator(animator);
@@ -51,11 +56,6 @@ public class DebugStick extends Item {
         CircularAnimator animator4 = new CircularAnimator(animator);
         animator4.rotate(Math.TAU / 3, 0, 0);
         float veryCloseToStart = (float) (Math.TAU - 0.00001f);
-        for (int i = 0; i < 300; i++) {
-            CircularAnimator animatorRedudant = new CircularAnimator(animator);
-            animatorRedudant.rotate(i * 10, i * 2, i * 9);
-            animatorRedudant.beginAnimation(world, 0, veryCloseToStart, false);
-        }
         animator.beginAnimation(world, 0, veryCloseToStart, false);
         animator2.beginAnimation(world, 0, veryCloseToStart, false);
         animator3.beginAnimation(world, 0, veryCloseToStart, false);
