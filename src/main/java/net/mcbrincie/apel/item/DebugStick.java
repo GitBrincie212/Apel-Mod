@@ -1,11 +1,11 @@
 package net.mcbrincie.apel.item;
 
-import net.mcbrincie.apel.lib.animators.CircularAnimator;
-import net.mcbrincie.apel.lib.animators.CombinativeAnimator;
 import net.mcbrincie.apel.lib.animators.LinearAnimator;
 import net.mcbrincie.apel.lib.animators.PointAnimator;
 import net.mcbrincie.apel.lib.objects.ParticleCuboid;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.objects.ParticleSphere;
+import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
+import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -17,6 +17,8 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 
+import java.util.Random;
+
 public class DebugStick extends Item {
     public DebugStick(Settings settings) {
         super(settings);
@@ -25,43 +27,44 @@ public class DebugStick extends Item {
     @Override
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         if (world.isClient) return TypedActionResult.pass(user.getMainHandStack());
-        ParticleObject particleCircleObj = new ParticleObject(ParticleTypes.END_ROD);
-        // CombinativeAnimator<CircularAnimator> combineAnimator = getAnimators((ServerWorld) world, particleCircleObj);
+        animators((ServerWorld) world);
         // combineAnimator.beginAnimation((ServerWorld) world);
-        LinearAnimator animator = new LinearAnimator(
-                1, new Vec3d[]{
-                        new Vec3d(0, 0, 0),
-                        new Vec3d(5, 0, 5),
-                        new Vec3d(-5, -5, 0),
-                        new Vec3d(0, 0, 5)
-                }, particleCircleObj, new float[]{
-                        0.3f, 0.5f, 1f
-        }
-        );
-        animator.setProcessingSpeed(2);
-        animator.beginAnimation((ServerWorld) world);
+
         return TypedActionResult.pass(user.getMainHandStack());
     }
 
-    private CombinativeAnimator<CircularAnimator> getAnimators(ServerWorld world, ParticleObject particleCircleObj) {
-        CircularAnimator animator = new CircularAnimator(
-                1, 3, Vec3d.ZERO, new Vec3d(Math.PI / 2, 0, 0),
-                particleCircleObj, 800
+    private void animators(ServerWorld world) {
+        ParticleSphere sphere = new ParticleSphere(
+                ParticleTypes.END_ROD, 0.1f, new Vec3d(0, 0, 1), 500
         );
-        animator.setRevolutions(5);
-        CircularAnimator animator2 = new CircularAnimator(animator);
-        animator2.rotate(Math.PI, 0, 0);
-        CircularAnimator animator3 = new CircularAnimator(animator);
-        animator3.rotate(Math.PI / 3, 0, 0);
-        CircularAnimator animator4 = new CircularAnimator(animator);
-        animator4.rotate(Math.TAU / 3, 0, 0);
-        float veryCloseToStart = (float) (Math.TAU - 0.00001f);
-        animator.beginAnimation(world, 0, veryCloseToStart, false);
-        animator2.beginAnimation(world, 0, veryCloseToStart, false);
-        animator3.beginAnimation(world, 0, veryCloseToStart, false);
-        animator4.beginAnimation(world, 0, veryCloseToStart, false);
-        return new CombinativeAnimator<>(
-                1, 5
+        sphere.beforeCalcsIntercept = (interceptData, obj) -> {
+            obj.setRadius(obj.getRadius() + 0.0001f);
+            // obj.setRotation(obj.getRotation().add(0.0001f, 0, 0));
+            return new InterceptedResult<>(interceptData, obj);
+        };
+        PointAnimator animator = new PointAnimator(
+                1, sphere, Vec3d.ZERO, 1000
         );
+        ParticleSphere sphere2 = new ParticleSphere(sphere);
+        Random rand = new Random();
+        sphere2.setRotation(sphere2.getRotation().add(
+                rand.nextFloat(0.5f), rand.nextFloat(0.5f), rand.nextFloat(0.5f)
+        ));
+        ParticleSphere sphere3 = new ParticleSphere(sphere);
+        sphere3.setRotation(sphere2.getRotation().add(
+                rand.nextFloat(0.5f), rand.nextFloat(0.5f), rand.nextFloat(0.5f)
+        ));
+        animator.setProcessingSpeed(2);
+        PointAnimator animator2 = new PointAnimator(
+                3, sphere2, Vec3d.ZERO, 1000
+        );
+        animator2.setProcessingSpeed(5);
+        PointAnimator animator3 = new PointAnimator(
+                7, sphere3, Vec3d.ZERO, 1000
+        );
+        animator3.setProcessingSpeed(6);
+        animator.beginAnimation(world);
+        animator2.beginAnimation(world);
+        animator3.beginAnimation(world);
     }
 }

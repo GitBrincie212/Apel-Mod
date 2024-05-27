@@ -26,9 +26,6 @@ public class CircularAnimator extends PathAnimatorBase {
     protected Function7<Float, Float, Vec3d, Double, Vec3d, Integer, Float, Void> onStart;
     protected Function7<Integer, Float, Float, Double, Vec3d, Integer, Float, Void> onProcess;
 
-
-    private final RuntimeException RADIUS_ABOVE_0 = new IllegalArgumentException("Radius must be positive and not 0");
-
     /**
      * Constructor for the circular animation. This constructor is
      * meant to be used in the case that you want a constant amount
@@ -46,7 +43,6 @@ public class CircularAnimator extends PathAnimatorBase {
             @NotNull ParticleObject particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
-        if (radius <= 0) throw RADIUS_ABOVE_0;
         this.radius = radius;
         this.center = center;
         this.rotation = rotation;
@@ -71,7 +67,6 @@ public class CircularAnimator extends PathAnimatorBase {
             @NotNull ParticleObject particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
-        if (radius <= 0) throw RADIUS_ABOVE_0;
         this.radius = radius;
         this.center = center;
         this.rotation = rotation;
@@ -152,6 +147,10 @@ public class CircularAnimator extends PathAnimatorBase {
         return (int) (Math.ceil(this.tempDiffStore / this.renderingInterval) + 1) * this.revolutions;
     }
 
+    @Override
+    protected int scheduleGetAmount() {
+        return this.renderingSteps * this.revolutions;
+    }
 
     /** This method is used for beginning the animation logic.
      * It accepts the server world as well as a predefined current
@@ -192,7 +191,6 @@ public class CircularAnimator extends PathAnimatorBase {
         }
         this.allocateToScheduler();
         for (int i = 0; i < particleAmount ; i++) {
-            this.calculatePoint(currAngle);
             this.handleDrawingStep(world, i, pos);
             if (this.onProcess != null) {
                 this.onProcess.apply(
@@ -212,6 +210,8 @@ public class CircularAnimator extends PathAnimatorBase {
     }
 
     private Vec3d calculatePoint(float currAngle) {
+        if (this.radius <= 0) throw new IllegalArgumentException("Radius cannot be negative or 0");
+
         Vec3d pos = new Vec3d(
                 this.radius * Math.cos(currAngle),
                 this.radius * Math.sin(currAngle),

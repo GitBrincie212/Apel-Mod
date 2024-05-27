@@ -25,7 +25,7 @@ public abstract class PathAnimatorBase {
     protected int renderingSteps = 0;
     protected int delay;
     protected int processSpeed = 1;
-    @NotNull  protected ParticleObject particle;
+    protected ParticleObject particle;
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
 
@@ -33,24 +33,34 @@ public abstract class PathAnimatorBase {
     protected Function5<Integer, Integer, Vec3d, Integer, Float, Void> onStart;
     protected Function6<Integer, Integer, Vec3d, Vec3d, Integer, Float, Void> onProcess;
 
-    public PathAnimatorBase(int delay, @NotNull  ParticleObject particle, int renderingSteps) {
-        if (renderingSteps < 0) {
-            throw new IllegalArgumentException("Rendering Steps is not positive or equals to 0");
-        }
-        this.delay = delay;
-        this.particle = particle;
-        this.renderingSteps = renderingSteps;
+    /** Constructor for the path animator. This constructor is meant to be used when you want a
+     * constant amount of rendering steps. It is worth pointing out that this won't look
+     * pleasant in the eyes on larger distances. For that it is recommended to look into:
+
+     * @param delay The delay per rendering step
+     * @param particle The particle object to use
+     * @param renderingSteps The rendering steps to use
+     * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, float)
+    */
+    public PathAnimatorBase(int delay, @NotNull ParticleObject particle, int renderingSteps) {
+        this.setDelay(delay);
+        this.setParticleObject(particle);
+        this.setRenderSteps(renderingSteps);
     }
 
-    public PathAnimatorBase(int delay, @NotNull  ParticleObject particle, float renderingInterval) {
-        if (delay < 0) {
-            throw new IllegalArgumentException("Delay is not positive");
-        } else if (renderingInterval < 0) {
-            throw new IllegalArgumentException("Rendering Interval is not positive or equals to 0");
-        }
-        this.delay = delay;
-        this.particle = particle;
-        this.renderingInterval = renderingInterval;
+    /** Constructor for the path animator. This constructor is meant to be used when you want a
+     * consistent amount of rendering steps no matter the distance. It is worth pointing out that
+     * there will be performance overhead for large distances. To minimise, it is recommended to look into:
+     *
+     * @param delay The delay per rendering step
+     * @param particle The particle object to use
+     * @param renderingInterval The rendering interval to use, which is how many blocks per new rendering step
+     * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, int)
+    */
+    public PathAnimatorBase(int delay, @NotNull ParticleObject particle, float renderingInterval) {
+        this.setDelay(delay);
+        this.setParticleObject(particle);
+        this.setRenderInterval(renderingInterval);
     }
 
     /**
@@ -88,12 +98,12 @@ public abstract class PathAnimatorBase {
         return this.renderingSteps;
     }
 
-    /** Gets the amount of particles. Which can be 0 indicating
-     * that there wasn't any amount of particles specified
+    /** Gets the amount of rendering steps. Which can be 0 indicating
+     * that there wasn't any rendering steps specified
      *
      * @return The amount of particles
      */
-    public int getAmount() {
+    public int getRenderSteps() {
         return this.renderingSteps;
     }
 
@@ -103,8 +113,87 @@ public abstract class PathAnimatorBase {
      *
      * @return The interval of blocks per particle object render
      */
-    public float getInterval() {
+    public float getRenderInterval() {
         return this.renderingInterval;
+    }
+
+    /** Gets the delay per rendering step. This can be 0 indicating
+     * that the animation plays in an instant, the amount of delay is
+     * also controlled via processing speed
+     *
+     * @see PathAnimatorBase#setProcessingSpeed(int)
+     * @return The amount of rendering steps
+     */
+    public int getDelay() {
+        return this.renderingSteps;
+    }
+
+    /** Sets the delay per rendering step to a new value. And
+     * returns the previous delay per rendering step used
+     *
+     * @see PathAnimatorBase#setProcessingSpeed(int)
+     * @return The previous amount of rendering steps
+     */
+    public int setDelay(int delay) {
+        if (delay < 0) {
+            throw new IllegalArgumentException("Delay is not positive");
+        }
+        int prevDelay = this.delay;
+        this.delay = delay;
+        return prevDelay;
+    }
+
+    /** Gets the particle object that is used. Particle objects in short are the
+     * particles that the user sees per rendering step, they have a draw method
+     *
+     *
+     * @return The particle object
+     */
+    public int getParticleObject() {
+        return this.renderingSteps;
+    }
+
+    /** Sets the particle object to a new value. And returns the
+     * previous particle object used in the animator
+     *
+     * @return The previous amount of rendering steps
+     */
+    public ParticleObject setParticleObject(@NotNull ParticleObject object) {
+        ParticleObject particleObject = this.particle;
+        this.particle = object;
+        return particleObject;
+    }
+
+    /** Sets the rendering interval to a new value. It resets the rendering steps
+     *  to 0. And returns the previous rendering interval used
+     *
+     * @param interval The new rendering interval to set
+     * @return The previous rendering interval
+    */
+    public float setRenderInterval(float interval) {
+        if (interval < 0) {
+            throw new IllegalArgumentException("Rendering Interval is not positive or equals to 0");
+        }
+        float prevInterval = this.renderingInterval;
+        this.renderingInterval = interval;
+        this.renderingSteps = 0;
+        return prevInterval;
+    }
+
+    /** Sets the rendering steps to a new value. It resets the rendering interval
+     *  to 0.0f. And returns the previous rendering steps used
+     *
+     * @param steps The new rendering steps to set
+     * @return The previous rendering interval
+    */
+    public int setRenderSteps(int steps) {
+        if (steps < 0) {
+            throw new IllegalArgumentException("Rendering Steps is not positive or equals to 0");
+        }
+        int prevRenderStep = this.renderingSteps;
+        this.renderingSteps = steps;
+        this.renderingInterval = 0.0f;
+        return prevRenderStep;
     }
 
 
@@ -157,19 +246,34 @@ public abstract class PathAnimatorBase {
 
     /** Sets the processing speed to allow for even faster animations on larger rendering steps.
      *  This tells the system how many functions for that animator to execute per tick. Which means
-     *  that the amount of steps per tick. It has to be above 1 (speed 1 counts normal).
+     *  that the amount of steps per tick. It has to be above 1 (speed 1 counts normal). The speed is
+     *  measured in render steps / server ticks or rs/st. It returns the previous processing speed used
      *  <br><br>
      *  Use this function when you want detailed animations go faster(if delay 1 doesn't satisfy)
      *  <br><br>
      *  <strong>note:</strong> when it is delay 0. Processing speed is completely ignored
      *
+     * @see PathAnimatorBase#setDelay(int)
      * @param speed The amount of steps to execute per tick
+     * @return The previous processing speed used
      */
-    public void setProcessingSpeed(int speed) {
+    public int setProcessingSpeed(int speed) {
         if (speed < 1) {
             throw new IllegalArgumentException("Process speed cannot be below 1 rs/st");
         }
+        int prevProcessSpeed = this.processSpeed;
         this.processSpeed = speed;
+        return prevProcessSpeed;
+    }
+
+    /** Gets the processing speed. Which is meausred in rs/st and dictates how many functions
+     * to execute per rendering step. By default, it is set to 1 rs/st
+     *
+     * @see PathAnimatorBase#getDelay()
+     * @return The processing speed used
+     */
+    public int getProcessingSpeed() {
+        return this.processSpeed;
     }
 
 

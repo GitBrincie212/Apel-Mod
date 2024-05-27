@@ -20,6 +20,25 @@ public class PointAnimator extends PathAnimatorBase {
         this.origin = origin;
     }
 
+    /** Gets the origin point. Which is where the particle animation plays at
+     *
+     * @return The origin point(that is stationary)
+    */
+    public Vec3d getOrigin() {
+        return this.origin;
+    }
+
+    /** Sets the origin point. Which is where the particle animation plays at. Returns
+     * the previous origin point that was used
+     *
+     * @return The previous origin point used
+    */
+    public Vec3d setOrigin(Vec3d origin) {
+        Vec3d prevOrigin = this.origin;
+        this.origin = origin;
+        return prevOrigin;
+    }
+
     /**
      * Constructor for the point animator. This constructor is
      * meant to be used in the case that you want to fully copy a new

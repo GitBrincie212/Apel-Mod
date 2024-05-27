@@ -6,19 +6,12 @@ import net.minecraft.util.math.Vec3d;
 import java.util.HashMap;
 
 public class InterceptData extends HashMap<String, Object> {
-    private int currentStep;
-    private Vec3d position;
+    public final int currentStep;
+    public final Vec3d position;
 
     public InterceptData(ServerWorld world, Vec3d position, int step) {
         this.currentStep = step;
         this.position = position;
         this.put("world", world);
-    }
-
-    public int getCurrentStep() {
-        return this.currentStep;
-    }
-    public Vec3d getPosition() {
-        return this.position;
     }
 }

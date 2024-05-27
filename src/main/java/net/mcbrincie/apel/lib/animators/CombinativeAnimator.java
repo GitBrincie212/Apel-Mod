@@ -11,7 +11,7 @@ import java.util.List;
 
 public class CombinativeAnimator<T extends PathAnimatorBase> extends PathAnimatorBase {
     public T[] objects;
-    private List<List<?>> argumentsBinded;
+    public List<Object> argumentsBinded;
 
     @SafeVarargs
     public CombinativeAnimator(int delay, float renderingInterval, @NotNull T... animators) {
@@ -55,14 +55,7 @@ public class CombinativeAnimator<T extends PathAnimatorBase> extends PathAnimato
 
     @Override
     public int convertToSteps() {
-        int steps = 0;
-        for (T object : objects) {
-            steps = Math.max(object.renderingSteps, steps);
-            if (object.renderingSteps == 0) {
-                steps = Math.max(object.convertToSteps(), steps);
-            }
-        }
-        return steps;
+        return 0;
     }
 
     @Override
@@ -72,7 +65,6 @@ public class CombinativeAnimator<T extends PathAnimatorBase> extends PathAnimato
         }
         int index = 0;
         for (T animator : this.objects) {
-            List<?> argsToBind = this.argumentsBinded.get(index);
             index++;
         }
     }

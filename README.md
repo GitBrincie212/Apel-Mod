@@ -7,7 +7,7 @@ the developer huge flexibility as well as scenes being easy maintained with
 high performance. It also features a full command interface to use the library
 even if you know nothing about java or just want test out some quick stuff.<br><br>
 
-### The library contains 2 systems that enable the creation of complex scenes:
+### Key features:
 - **Particle Objects:** These are objects which render. They can be 2D, 3D shapes(such as a cube, circle, triangle) or 
 even more complex ones like a cat or a dog(these aren't implemented to the library). They are classes that 
 inherit from / extend the ``ParticleObject`` class. They also define a draw method which accepts the server world,
@@ -38,12 +38,20 @@ the method ``handleDrawingStep`` should be used. Path animators come in bundle w
 do not modify anything but listen to 3 specific events which happen when the animator starts, when it processes
 (each step it is called) and when the animator ends(either normally or abruptly)<br><br>
 
+- **Ease Functions:** These are mathematical functions that specify how a parameter should react based
+on the rendering step it is in. An ease function can be simple as a constant(which just returns the constant),
+a linear function or much more complex ones like elastic, back, rough.... etc. Some values accept an ease 
+function while others don't, ease functions live in the XY plane where X is the rendering steps and Y is the 
+new value for the parameter. You can define your custom ease functions via 2 ways. The first is to extend the
+class & the second is by using the ``CustomEase`` and providing multiple ``EaseEntry`` (although it should be used
+in scenarios where the rendering steps are known)<br>
 
-There is more, such as ease functions(which can be either described mathematically or manually) and control the value 
-of a certain parameter for each rendering step(It can be as simple as the value increasing logarithmically or more 
-complex such as polynomials...), so it is recommended to read upon the documentation to explain specific systems used &
-what goes under the hood
+### Getting Started
+The first obvious thing is to create an ``ParticleObject``, pick your desired object to create and supply the params,
+the second thing is creating the path animator object to use which will describe the motion of that object. And finally
+use on the animator the ``beginAnimation`` and supply it with the server world to process the entire animation!<br>
 
+### Credits & Contributions
 This project is founded & lead by McBrincie212. Contributions are welcome as long as they don't do anything shady such
 as embedding malware, doing inappropriate things.... After all the project is meant to be improved & expanded upon with
 new ideas, new systems and many more stuff that boost productivity and enhance the work experience

@@ -12,16 +12,13 @@ public class ParticleCircle extends ParticleObject {
     public float radius;
     public float insideAmount = 0;
     public @NotNull ParticleEffect insideParticle;
-    public int amount;
     public DrawInterceptor<ParticleCircle> afterCalcsIntercept;
     public DrawInterceptor<ParticleCircle> beforeCalcsIntercept;
 
     public ParticleCircle(
-            @NotNull ParticleEffect particle, float radius,
-            float rotationX, float rotationY, float rotationZ,
-            int amount
+            @NotNull ParticleEffect particle, float radius, Vec3d rotation, int amount
     ) {
-        super(particle, new Vec3d(rotationX, rotationY, rotationZ));
+        super(particle, rotation);
         this.radius = radius;
         this.amount = amount;
         this.insideParticle = particle;
@@ -37,13 +34,11 @@ public class ParticleCircle extends ParticleObject {
     }
 
     public ParticleCircle(
-            @NotNull ParticleEffect particle, float radius,
-            float rotationX, float rotationY, float rotationZ, int amount,
+            @NotNull ParticleEffect particle, float radius, Vec3d rotation, int amount,
             int insideAmount, @NotNull ParticleEffect insideParticle
     ) {
-        super(particle, new Vec3d(rotationX, rotationY, rotationZ));
+        super(particle, rotation);
         this.radius = radius;
-        this.rotation = new Vec3d(rotationX, rotationY, rotationZ);
         this.insideAmount = insideAmount;
         this.amount = amount;
         this.insideParticle = insideParticle;
@@ -62,12 +57,10 @@ public class ParticleCircle extends ParticleObject {
 
     public ParticleCircle(
             @NotNull ParticleEffect particle, float radius,
-            float rotationX, float rotationY, float rotationZ, int amount,
-            int insideAmount
+            Vec3d rotation, int amount, int insideAmount
     ) {
-        super(particle, new Vec3d(rotationX, rotationY, rotationZ));
+        super(particle, rotation);
         this.radius = radius;
-        this.rotation = new Vec3d(rotationX, rotationY, rotationZ);
         this.insideAmount = insideAmount;
         this.amount = amount;
         this.insideParticle = particle;
@@ -130,7 +123,7 @@ public class ParticleCircle extends ParticleObject {
     ) {
         InterceptData interceptData = new InterceptData(world, pos, step);
         interceptData.put("draw_position", drawPos);
-        if (this.afterCalcsIntercept == null) return new InterceptedResult<>(this, interceptData);
+        if (this.afterCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
         return this.afterCalcsIntercept.apply(interceptData, obj);
     }
 
@@ -139,7 +132,7 @@ public class ParticleCircle extends ParticleObject {
     ) {
         InterceptData interceptData = new InterceptData(world, pos, step);
         interceptData.put("iterated_rotation", currRot);
-        if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(this, interceptData);
+        if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
         return this.beforeCalcsIntercept.apply(interceptData, obj);
     }
 }

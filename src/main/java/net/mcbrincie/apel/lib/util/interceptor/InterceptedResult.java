@@ -4,7 +4,7 @@ public class InterceptedResult<T> {
     public InterceptData interceptData;
     public T object;
 
-    public InterceptedResult(T obj, InterceptData data) {
+    public InterceptedResult(InterceptData data, T obj) {
         this.object = obj;
         this.interceptData = data;
     }
