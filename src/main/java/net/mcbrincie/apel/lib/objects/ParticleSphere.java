@@ -5,15 +5,27 @@ import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.Vec2f;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleSphere extends ParticleObject {
     protected float radius;
     public float insideAmount = 0;
     public @NotNull ParticleEffect insideParticle;
     public DrawInterceptor<ParticleSphere> afterCalcsIntercept;
     public DrawInterceptor<ParticleSphere> beforeCalcsIntercept;
+
+    // Caching the trig function
+    private Vec2f cachedYaw = Vec2f.ZERO;
+    private Vec2f cachedPitch = Vec2f.ZERO;
+    private Vec2f cachedRoll = Vec2f.ZERO;
+    private Vec3d prevRotation = null;
+
+    private float cachedValI = -1.0f;
+    private float cachedAmount = -1.0f;
+    private Vec3d cachedCoords;
 
     public ParticleSphere(
             @NotNull ParticleEffect particle, float radius,
@@ -86,6 +98,13 @@ public class ParticleSphere extends ParticleObject {
         this.insideAmount = circle.insideAmount;
         this.afterCalcsIntercept = circle.afterCalcsIntercept;
         this.beforeCalcsIntercept = circle.beforeCalcsIntercept;
+        this.cachedCoords = circle.cachedCoords;
+        this.cachedValI = circle.cachedValI;
+        this.cachedAmount = circle.cachedAmount;
+        this.cachedYaw = circle.cachedYaw;
+        this.cachedPitch = circle.cachedPitch;
+        this.cachedRoll = circle.cachedRoll;
+        this.prevRotation = circle.prevRotation;
     }
 
     public float setRadius(float radius) {
@@ -107,30 +126,79 @@ public class ParticleSphere extends ParticleObject {
             InterceptedResult<ParticleSphere> modifiedResult =
                     this.interceptDrawCalcBefore(world, pos, i, step, this);
             ParticleSphere objectInUse = modifiedResult.object;
-            float k = i + .5f;
-            double phi = Math.acos(1f - ((2f * k) / objectInUse.amount));
-            double theta = Math.PI * k * (1 + Math.sqrt(5));
-            double x = Math.cos(theta) * Math.sin(phi) * objectInUse.radius;
-            double y = Math.sin(theta) * Math.sin(phi) * objectInUse.radius;
-            double z = Math.cos(phi) * objectInUse.radius;
-            Vec3d point = objectInUse.applyRotation(x, y, z).add(pos);
+            Vec3d drawPos = objectInUse.computeCoords(i);
+            drawPos = objectInUse.applyRotation(drawPos.x, drawPos.y, drawPos.z).add(pos);
             world.spawnParticles(
-                    this.particle, point.x, point.y, point.z,
+                    this.particle, drawPos.x, drawPos.y, drawPos.z,
                     0, 0.0f, 0.0f, 0.0f, 1
             );
         }
     }
 
-    private Vec3d applyRotation(double x, double y, double z) {
-        double rotX = this.rotation.x;
+    private Vec3d computeCoords(int i) {
+        if (i == this.cachedValI && this.amount == this.cachedAmount) {
+            return cachedCoords.multiply(this.radius);
+        }
+        float k = i + .5f;
+        double phi = Math.acos(1f - ((2f * k) / this.amount));
+        double theta = Math.PI * k * (1 + Math.sqrt(5));
+        double x = Math.cos(theta) * Math.sin(phi);
+        double y = Math.sin(theta) * Math.sin(phi);
+        double z = Math.cos(phi);
+        this.cachedValI = i;
+        this.cachedAmount = this.amount;
+        Vec3d pos = new Vec3d(x, y, z);
+        this.cachedCoords = pos;
+        return pos.multiply(this.radius);
+    }
+
+    private Vec2f computeYaw() {
         double rotY = this.rotation.y;
+        if (this.prevRotation != null && rotY == this.prevRotation.y) {
+            return this.cachedYaw;
+        }
+        float cosYaw = (float) Math.cos(rotY);
+        float sinYaw = (float) Math.sin(rotY);
+        Vec2f yawVec = new Vec2f(cosYaw, sinYaw);
+        this.cachedYaw = yawVec;
+        return yawVec;
+    }
+
+    private Vec2f computePitch() {
+        double rotX = this.rotation.x;
+        if (this.prevRotation != null && rotX == this.prevRotation.x) {
+            return this.cachedPitch;
+        }
+        float cosPitch = (float) Math.cos(rotX);
+        float sinPitch = (float) Math.sin(rotX);
+        Vec2f pitchVec = new Vec2f(cosPitch, sinPitch);
+        this.cachedPitch = pitchVec;
+        return pitchVec;
+    }
+
+    private Vec2f computeRoll() {
         double rotZ = this.rotation.z;
-        double cosYaw = Math.cos(rotY);
-        double sinYaw = Math.sin(rotY);
-        double cosPitch = Math.cos(rotX);
-        double sinPitch = Math.sin(rotX);
-        double cosRoll = Math.cos(rotZ);
-        double sinRoll = Math.sin(rotZ);
+        if (this.prevRotation != null && rotZ == this.prevRotation.z) {
+            return this.cachedRoll;
+        }
+        float cosRoll = (float) Math.cos(rotZ);
+        float sinRoll = (float) Math.sin(rotZ);
+        Vec2f rollVec = new Vec2f(cosRoll, sinRoll);
+        this.cachedRoll = rollVec;
+        return rollVec;
+    }
+
+    private Vec3d applyRotation(double x, double y, double z) {
+        Vec2f pitchVec = computePitch();
+        Vec2f yawVec = computeYaw();
+        Vec2f rollVec = computeRoll();
+        double cosYaw = yawVec.x;
+        double sinYaw = yawVec.y;
+        double cosPitch = pitchVec.x;
+        double sinPitch = pitchVec.y;
+        double cosRoll = rollVec.x;
+        double sinRoll = rollVec.y;
+        this.prevRotation = this.rotation;
 
         // Apply pitch (rotation around X-axis)
         double y1 = y * cosPitch - z * sinPitch;

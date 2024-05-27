@@ -16,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
  * new interceptor called {@code duringDrawIntercept} which is used during the
  * drawing of the particle lines
  */
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCuboid extends ParticleObject {
     public Vec3d size;
     protected Vec3i amount;
@@ -113,6 +114,9 @@ public class ParticleCuboid extends ParticleObject {
     public ParticleCuboid(ParticleCuboid object) {
         super(object);
         this.size = object.size;
+        this.beforeCalcsIntercept = object.beforeCalcsIntercept;
+        this.afterCalcsIntercept = object.afterCalcsIntercept;
+        this.duringDrawIntercept = object.duringDrawIntercept;
         this.amount = object.amount;
     }
 
@@ -135,13 +139,13 @@ public class ParticleCuboid extends ParticleObject {
 
     /** Draws a particle line along 2 vertices
      *
-     * @param world
-     * @param vertexStart
-     * @param vertexEnd
-     * @param step
-     * @param amountUsed
+     * @param world Server world instance
+     * @param vertexStart The starting vertex coordinates
+     * @param vertexEnd The ending vertex coordinates
+     * @param step The current step the draw method is in
+     * @param amountUsed The amount of particles for the line
     */
-    public void drawLine(ServerWorld world, Vec3d vertexStart, Vec3d vertexEnd, int step, int amountUsed) {
+    protected void drawLine(ServerWorld world, Vec3d vertexStart, Vec3d vertexEnd, int step, int amountUsed) {
         if (amountUsed == 0) return;
         InterceptedResult<ParticleCuboid> modifiedPairBefore =
                 this.interceptDrawCalcBefore(world, vertexStart, vertexEnd, step, amountUsed, this);

@@ -9,6 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CombinativeAnimator<T extends PathAnimatorBase> extends PathAnimatorBase {
     public T[] objects;
     public List<Object> argumentsBinded;

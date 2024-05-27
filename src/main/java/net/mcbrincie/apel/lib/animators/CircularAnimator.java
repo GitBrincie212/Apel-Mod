@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
  * set to 1 revolution which means it loops the circle once
  *
  */
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CircularAnimator extends PathAnimatorBase {
     protected double radius;
     protected Vec3d center;
@@ -87,6 +88,9 @@ public class CircularAnimator extends PathAnimatorBase {
         this.radius = animator.radius;
         this.revolutions = animator.revolutions;
         this.tempDiffStore = -1.0f;
+        this.onStart = animator.onStart;
+        this.onEnd = animator.onEnd;
+        this.onProcess = animator.onProcess;
     }
 
 

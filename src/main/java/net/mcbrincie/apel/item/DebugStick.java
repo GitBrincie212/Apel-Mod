@@ -1,10 +1,7 @@
 package net.mcbrincie.apel.item;
 
 import net.mcbrincie.apel.lib.animators.LinearAnimator;
-import net.mcbrincie.apel.lib.animators.PointAnimator;
-import net.mcbrincie.apel.lib.objects.ParticleCuboid;
 import net.mcbrincie.apel.lib.objects.ParticleSphere;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
@@ -14,7 +11,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.World;
 
 import java.util.Random;
@@ -34,37 +30,21 @@ public class DebugStick extends Item {
     }
 
     private void animators(ServerWorld world) {
+        Random rand = new Random();
         ParticleSphere sphere = new ParticleSphere(
-                ParticleTypes.END_ROD, 0.1f, new Vec3d(0, 0, 1), 500
+                ParticleTypes.END_ROD, 5.5f, new Vec3d(0, 0, 1), 100
         );
         sphere.beforeCalcsIntercept = (interceptData, obj) -> {
-            obj.setRadius(obj.getRadius() + 0.0001f);
-            // obj.setRotation(obj.getRotation().add(0.0001f, 0, 0));
+            obj.setRotation(obj.getRotation().add(0.0001f, 0, 0));
             return new InterceptedResult<>(interceptData, obj);
         };
-        PointAnimator animator = new PointAnimator(
-                1, sphere, Vec3d.ZERO, 1000
+        LinearAnimator animator = new LinearAnimator(
+                0, Vec3d.ZERO, new Vec3d(
+                    rand.nextFloat(-7.5f, 7.5f),
+                    rand.nextFloat(-7.5f, 7.5f),
+                    rand.nextFloat(-7.5f, 7.5f)
+                ), sphere, 3000
         );
-        ParticleSphere sphere2 = new ParticleSphere(sphere);
-        Random rand = new Random();
-        sphere2.setRotation(sphere2.getRotation().add(
-                rand.nextFloat(0.5f), rand.nextFloat(0.5f), rand.nextFloat(0.5f)
-        ));
-        ParticleSphere sphere3 = new ParticleSphere(sphere);
-        sphere3.setRotation(sphere2.getRotation().add(
-                rand.nextFloat(0.5f), rand.nextFloat(0.5f), rand.nextFloat(0.5f)
-        ));
-        animator.setProcessingSpeed(2);
-        PointAnimator animator2 = new PointAnimator(
-                3, sphere2, Vec3d.ZERO, 1000
-        );
-        animator2.setProcessingSpeed(5);
-        PointAnimator animator3 = new PointAnimator(
-                7, sphere3, Vec3d.ZERO, 1000
-        );
-        animator3.setProcessingSpeed(6);
         animator.beginAnimation(world);
-        animator2.beginAnimation(world);
-        animator3.beginAnimation(world);
     }
 }

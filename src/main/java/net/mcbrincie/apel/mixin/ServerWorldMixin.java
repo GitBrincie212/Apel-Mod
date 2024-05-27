@@ -42,7 +42,6 @@ public abstract class ServerWorldMixin {
 				}
 			}
 		}
-
 		for (ScheduledSequence sequence : tasksToRemove2) {
 			Apel.apelScheduler.deallocateSequence(sequence);
 		}

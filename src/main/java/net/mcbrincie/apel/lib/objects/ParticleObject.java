@@ -19,6 +19,7 @@ import net.minecraft.util.math.Vec3d;
  * As well as if the rotation on one or multiple axis exceeds 2π then it is rounded
  * to the scope for that (-2π, 2π)
 */
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleObject {
     protected ParticleEffect particle;
     protected Vec3d rotation;
@@ -65,6 +66,7 @@ public class ParticleObject {
     public ParticleObject(ParticleObject object) {
         this.particle = object.particle;
         this.rotation = object.rotation;
+        this.amount = object.amount;
         this.beforeCalcsIntercept = object.beforeCalcsIntercept;
         this.afterCalcsIntercept = object.afterCalcsIntercept;
     }

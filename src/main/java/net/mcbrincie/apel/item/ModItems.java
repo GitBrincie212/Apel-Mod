@@ -11,13 +11,13 @@ import net.minecraft.util.Identifier;
 
 public class ModItems {
 
-    public static final Item DEBUG_PARTICLE_STICK = registerItem(
-            "debug_particle_stick",
+    public static final Item DEBUG_ANIM_1 = registerItem(
+            "debug_particle_anim1",
             new DebugStick(new Item.Settings())
     );
 
     public static void appendItems(FabricItemGroupEntries entries) {
-        entries.add(DEBUG_PARTICLE_STICK);
+        entries.add(DEBUG_ANIM_1);
     }
 
     private static Item registerItem(String name, Item item) {

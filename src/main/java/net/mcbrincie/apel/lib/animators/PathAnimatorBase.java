@@ -20,6 +20,7 @@ import java.util.List;
  * with the path animators. The scheduling is abstracted away from the user
  * so the only thing they need to care is setting the logic
 */
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class PathAnimatorBase {
     protected float renderingInterval = 0.0f;
     protected int renderingSteps = 0;

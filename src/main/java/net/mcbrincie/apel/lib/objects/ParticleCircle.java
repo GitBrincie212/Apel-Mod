@@ -8,6 +8,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCircle extends ParticleObject {
     public float radius;
     public float insideAmount = 0;
@@ -98,16 +99,16 @@ public class ParticleCircle extends ParticleObject {
             currRot = (double) (modifiedPairBefore.interceptData.get("iterated_rotation"));
             double x = Math.sin(currRot);
             double y = Math.cos(currRot);
-            Vec3d circVec = new Vec3d(
+            Vec3d circumferenceVec = new Vec3d(
                     objectToUse.radius * x,
                     objectToUse.radius * y,
                     0
             );
-            circVec = circVec
+            circumferenceVec = circumferenceVec
                     .rotateZ((float) objectToUse.rotation.z)
                     .rotateY((float) objectToUse.rotation.y)
                     .rotateX((float) objectToUse.rotation.x);
-            Vec3d finalPosVec = circVec.add(pos);
+            Vec3d finalPosVec = circumferenceVec.add(pos);
             InterceptedResult<ParticleCircle> modifiedPairAfter =
                     objectToUse.interceptDrawCalcAfter(world, pos, finalPosVec, step, objectToUse);
             finalPosVec = (Vec3d) (modifiedPairAfter.interceptData.get("draw_position"));

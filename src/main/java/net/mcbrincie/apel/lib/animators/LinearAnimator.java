@@ -14,6 +14,7 @@ import java.util.Arrays;
  * but still capable of doing basic animations and is friendlier compared to other animators. It accepts
  * the 2 endpoints of the line(start and end)
 */
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class LinearAnimator extends PathAnimatorBase {
     protected Vec3d[] endpoints;
     protected int[] renderingSteps;
@@ -21,8 +22,6 @@ public class LinearAnimator extends PathAnimatorBase {
 
     private final IllegalArgumentException EQUAL_POSITIONS = new IllegalArgumentException("Starting & Ending Position cannot be equal");
     private final IllegalArgumentException BELOW_2_ENDPOINTS = new IllegalArgumentException("Endpoints should be above 2");
-    private final IllegalArgumentException INTERVAL_MISMATCH = new IllegalArgumentException("Intervals do not match the endpoints");
-    private final IllegalArgumentException STEPS_MISMATCH = new IllegalArgumentException("Steps do not match the endpoints");
 
 
     /**
@@ -126,7 +125,9 @@ public class LinearAnimator extends PathAnimatorBase {
     ) {
         super(delay, particle, renderingInterval[0]);
         if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
-        if ((renderingInterval.length - 1) == endpoints.length) throw INTERVAL_MISMATCH;
+        if ((renderingInterval.length - 1) == endpoints.length) {
+            throw new IllegalArgumentException("Intervals do not match the endpoints");
+        }
         int index = -1;
         Vec3d curr = endpoints[0];
         for (Vec3d endpoint : endpoints) {
@@ -158,7 +159,9 @@ public class LinearAnimator extends PathAnimatorBase {
     ) {
         super(delay, particle, renderingSteps[0]);
         if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
-        if ((renderingSteps.length - 1) == endpoints.length) throw STEPS_MISMATCH;
+        if ((renderingSteps.length - 1) == endpoints.length) {
+            throw new IllegalArgumentException("Steps do not match the endpoints");
+        }
         int index = -1;
         Vec3d curr = endpoints[0];
         for (Vec3d endpoint : endpoints) {

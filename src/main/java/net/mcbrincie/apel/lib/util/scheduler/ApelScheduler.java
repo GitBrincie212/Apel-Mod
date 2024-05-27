@@ -14,8 +14,8 @@ import java.util.List;
  *  sequences for each object. It also does some security checks to verify
  */
 public class ApelScheduler implements Iterable<ScheduledSequence> {
-    private List<ScheduledSequence> scheduledTasks = new ArrayList<>();
-    private List<PathAnimatorBase> authorisedObjects = new ArrayList<>();
+    private final List<ScheduledSequence> scheduledTasks = new ArrayList<>();
+    private final List<PathAnimatorBase> authorisedObjects = new ArrayList<>();
 
     /** Allocates a new sequence chunk to be used in the scheduler. It accepts the animator object
      *  as a parameter. It is crucial to allocate first if you don't have any chunk. The method
@@ -55,6 +55,7 @@ public class ApelScheduler implements Iterable<ScheduledSequence> {
      *
      * @param index The index to remove at
      */
+    @SuppressWarnings("unused")
     public void deallocateSequence(int index) {
         this.scheduledTasks.remove(index);
         this.authorisedObjects.remove(index);
