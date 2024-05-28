@@ -6,9 +6,6 @@ import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4d;
-import org.joml.Matrix4f;
-import org.joml.Matrix4x3fStack;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleTetrahedron extends ParticleObject{
