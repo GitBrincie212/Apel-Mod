@@ -13,7 +13,7 @@ public class ModItems {
 
     public static final Item DEBUG_ANIM_1 = registerItem(
             "debug_particle_anim1",
-            new DebugStick(new Item.Settings())
+            new DebugParticleAnim1(new Item.Settings())
     );
 
     public static void appendItems(FabricItemGroupEntries entries) {
