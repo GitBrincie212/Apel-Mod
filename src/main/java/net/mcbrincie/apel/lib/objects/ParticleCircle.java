@@ -11,8 +11,6 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCircle extends ParticleObject {
     public float radius;
-    public float insideAmount = 0;
-    public @NotNull ParticleEffect insideParticle;
     public DrawInterceptor<ParticleCircle> afterCalcsIntercept;
     public DrawInterceptor<ParticleCircle> beforeCalcsIntercept;
 
@@ -22,7 +20,6 @@ public class ParticleCircle extends ParticleObject {
         super(particle, rotation);
         this.radius = radius;
         this.amount = amount;
-        this.insideParticle = particle;
     }
 
     public ParticleCircle(
@@ -31,59 +28,12 @@ public class ParticleCircle extends ParticleObject {
         super(particle, Vec3d.ZERO);
         this.radius = radius;
         this.amount = amount;
-        this.insideParticle = particle;
-    }
-
-    public ParticleCircle(
-            @NotNull ParticleEffect particle, float radius, Vec3d rotation, int amount,
-            int insideAmount, @NotNull ParticleEffect insideParticle
-    ) {
-        super(particle, rotation);
-        this.radius = radius;
-        this.insideAmount = insideAmount;
-        this.amount = amount;
-        this.insideParticle = insideParticle;
-    }
-
-    public ParticleCircle(
-            @NotNull ParticleEffect particle, float radius, int amount,
-            int insideAmount, @NotNull ParticleEffect insideParticle
-    ) {
-        super(particle, Vec3d.ZERO);
-        this.radius = radius;
-        this.amount = amount;
-        this.insideAmount = insideAmount;
-        this.insideParticle = insideParticle;
-    }
-
-    public ParticleCircle(
-            @NotNull ParticleEffect particle, float radius,
-            Vec3d rotation, int amount, int insideAmount
-    ) {
-        super(particle, rotation);
-        this.radius = radius;
-        this.insideAmount = insideAmount;
-        this.amount = amount;
-        this.insideParticle = particle;
-    }
-
-    public ParticleCircle(
-            @NotNull ParticleEffect particle, float radius, int amount,
-            int insideAmount
-    ) {
-        super(particle, Vec3d.ZERO);
-        this.radius = radius;
-        this.amount = amount;
-        this.insideAmount = insideAmount;
-        this.insideParticle = particle;
     }
 
     public ParticleCircle(ParticleCircle circle) {
         super(circle);
-        this.insideParticle = circle.insideParticle;
         this.radius = circle.radius;
         this.amount = circle.amount;
-        this.insideAmount = circle.insideAmount;
         this.afterCalcsIntercept = circle.afterCalcsIntercept;
         this.beforeCalcsIntercept = circle.beforeCalcsIntercept;
     }

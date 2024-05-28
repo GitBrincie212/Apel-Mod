@@ -12,8 +12,6 @@ import org.jetbrains.annotations.NotNull;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleSphere extends ParticleObject {
     protected float radius;
-    public float insideAmount = 0;
-    public @NotNull ParticleEffect insideParticle;
     public DrawInterceptor<ParticleSphere> afterCalcsIntercept;
     public DrawInterceptor<ParticleSphere> beforeCalcsIntercept;
 
@@ -34,7 +32,6 @@ public class ParticleSphere extends ParticleObject {
         super(particle, rotation);
         this.setRadius(radius);
         this.setAmount(amount);
-        this.insideParticle = particle;
     }
 
     public ParticleSphere(
@@ -43,59 +40,12 @@ public class ParticleSphere extends ParticleObject {
         super(particle, Vec3d.ZERO);
         this.setRadius(radius);
         this.setAmount(amount);
-        this.insideParticle = particle;
-    }
-
-    public ParticleSphere(
-            @NotNull ParticleEffect particle, float radius, Vec3d rotation, int amount,
-            int insideAmount, @NotNull ParticleEffect insideParticle
-    ) {
-        super(particle, rotation);
-        this.setRadius(radius);
-        this.setAmount(amount);
-        this.insideAmount = insideAmount;
-        this.insideParticle = insideParticle;
-    }
-
-    public ParticleSphere(
-            @NotNull ParticleEffect particle, float radius, int amount,
-            int insideAmount, @NotNull ParticleEffect insideParticle
-    ) {
-        super(particle, Vec3d.ZERO);
-        this.setRadius(radius);
-        this.setAmount(amount);
-        this.insideAmount = insideAmount;
-        this.insideParticle = insideParticle;
-    }
-
-    public ParticleSphere(
-            @NotNull ParticleEffect particle, float radius,
-            Vec3d rotation, int amount, int insideAmount
-    ) {
-        super(particle, rotation);
-        this.setRadius(radius);
-        this.setAmount(amount);
-        this.insideAmount = insideAmount;
-        this.insideParticle = particle;
-    }
-
-    public ParticleSphere(
-            @NotNull ParticleEffect particle, float radius, int amount,
-            int insideAmount
-    ) {
-        super(particle, Vec3d.ZERO);
-        this.setRadius(radius);
-        this.setAmount(amount);
-        this.insideAmount = insideAmount;
-        this.insideParticle = particle;
     }
 
     public ParticleSphere(ParticleSphere circle) {
         super(circle);
-        this.insideParticle = circle.insideParticle;
         this.radius = circle.radius;
         this.amount = circle.amount;
-        this.insideAmount = circle.insideAmount;
         this.afterCalcsIntercept = circle.afterCalcsIntercept;
         this.beforeCalcsIntercept = circle.beforeCalcsIntercept;
         this.cachedCoords = circle.cachedCoords;
@@ -123,13 +73,17 @@ public class ParticleSphere extends ParticleObject {
     @Override
     public void draw(ServerWorld world, int step, Vec3d pos) {
         for (int i = 0; i < this.amount; i++) {
-            InterceptedResult<ParticleSphere> modifiedResult =
+            InterceptedResult<ParticleSphere> modifiedResultBefore =
                     this.interceptDrawCalcBefore(world, pos, i, step, this);
-            ParticleSphere objectInUse = modifiedResult.object;
+            ParticleSphere objectInUse = modifiedResultBefore.object;
             Vec3d drawPos = objectInUse.computeCoords(i);
             drawPos = objectInUse.applyRotation(drawPos.x, drawPos.y, drawPos.z).add(pos);
+            InterceptedResult<ParticleSphere> modifiedResultAfter =
+                    this.interceptDrawCalcAfter(world, pos, drawPos, step, i, objectInUse);
+            drawPos = (Vec3d) modifiedResultAfter.interceptData.get("draw_position");
+            ParticleSphere objectInUseAfter = modifiedResultAfter.object;
             world.spawnParticles(
-                    this.particle, drawPos.x, drawPos.y, drawPos.z,
+                    objectInUseAfter.particle, drawPos.x, drawPos.y, drawPos.z,
                     0, 0.0f, 0.0f, 0.0f, 1
             );
         }
@@ -141,9 +95,10 @@ public class ParticleSphere extends ParticleObject {
         }
         float k = i + .5f;
         double phi = Math.acos(1f - ((2f * k) / this.amount));
-        double theta = Math.PI * k * (1 + Math.sqrt(5));
-        double x = Math.cos(theta) * Math.sin(phi);
-        double y = Math.sin(theta) * Math.sin(phi);
+        double theta = Math.PI * k * 3.23606;
+        double sinPhi = Math.sin(phi);
+        double x = Math.cos(theta) * sinPhi;
+        double y = Math.sin(theta) * sinPhi;
         double z = Math.cos(phi);
         this.cachedValI = i;
         this.cachedAmount = this.amount;
@@ -216,10 +171,12 @@ public class ParticleSphere extends ParticleObject {
     }
 
     private InterceptedResult<ParticleSphere> interceptDrawCalcAfter(
-            ServerWorld world, Vec3d pos, Vec3d drawPos, int step, ParticleSphere obj
+            ServerWorld world, Vec3d pos, Vec3d drawPos,
+            int step, int currAmount, ParticleSphere obj
     ) {
         InterceptData interceptData = new InterceptData(world, pos, step);
         interceptData.put("draw_position", drawPos);
+        interceptData.put("current_amount", currAmount);
         if (this.afterCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
         return this.afterCalcsIntercept.apply(interceptData, obj);
     }
