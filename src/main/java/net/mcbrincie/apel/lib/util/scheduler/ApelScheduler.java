@@ -7,14 +7,16 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 
 /** The Scheduler. The scheduler runs on the world server ticks and handles
  *  delaying multiple functions requested by a path animator object by creating
  *  sequences for each object. It also does some security checks to verify
  */
+@SuppressWarnings("unused")
 public class ApelScheduler implements Iterable<ScheduledSequence> {
-    private final List<ScheduledSequence> scheduledTasks = new ArrayList<>();
+    private final LinkedList<ScheduledSequence> scheduledTasks = new LinkedList<>();
     private final List<PathAnimatorBase> authorisedObjects = new ArrayList<>();
 
     /** Allocates a new sequence chunk to be used in the scheduler. It accepts the animator object
@@ -55,7 +57,6 @@ public class ApelScheduler implements Iterable<ScheduledSequence> {
      *
      * @param index The index to remove at
      */
-    @SuppressWarnings("unused")
     public void deallocateSequence(int index) {
         this.scheduledTasks.remove(index);
         this.authorisedObjects.remove(index);
@@ -71,6 +72,36 @@ public class ApelScheduler implements Iterable<ScheduledSequence> {
         int index = this.scheduledTasks.indexOf(sequence);
         this.authorisedObjects.remove(index);
         this.scheduledTasks.remove(index);
+    }
+
+    /** Returns whenever the scheduler has any work to do
+     *
+     * @return a boolean that indicates if the scheduler has work to do
+     */
+    public boolean isProcessing() {
+        return this.authorisedObjects.isEmpty() && this.scheduledTasks.isEmpty();
+    }
+
+    public void runTick() {
+        Iterator<ScheduledSequence> sequenceIterator = scheduledTasks.iterator();
+        int index = -1;
+        while (sequenceIterator.hasNext()) {
+            index++;
+            ScheduledSequence section = sequenceIterator.next();
+            ScheduledStep firstElement = section.first();
+            if (firstElement == null) continue;
+            firstElement.delay--;
+            if (firstElement.delay == 0) {
+                for (Runnable func : firstElement.func) {
+                    func.run();
+                }
+                section.deallocateStep();
+                if (section.isEmpty()) {
+                    sequenceIterator.remove();
+                    authorisedObjects.remove(index);
+                }
+            }
+        }
     }
 
 
