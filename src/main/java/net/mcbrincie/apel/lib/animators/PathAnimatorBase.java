@@ -267,7 +267,7 @@ public abstract class PathAnimatorBase {
         return prevProcessSpeed;
     }
 
-    /** Gets the processing speed. Which is meausred in rs/st and dictates how many functions
+    /** Gets the processing speed. Which is measured in rs/st and dictates how many functions
      * to execute per rendering step. By default, it is set to 1 rs/st
      *
      * @see PathAnimatorBase#getDelay()
