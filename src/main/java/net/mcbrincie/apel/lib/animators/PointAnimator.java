@@ -7,6 +7,8 @@ import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
+
+@SuppressWarnings("unused")
 public class PointAnimator extends PathAnimatorBase {
     protected Vector3f origin;
 
