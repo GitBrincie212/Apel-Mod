@@ -1,28 +1,39 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Vector3f;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleTetrahedron extends ParticleObject{
-    public DrawInterceptor<ParticleTetrahedron> afterCalcsIntercept;
-    public DrawInterceptor<ParticleTetrahedron> beforeCalcsIntercept;
-    public DrawInterceptor<ParticleTetrahedron> duringDrawIntercept;
+    public DrawInterceptor<ParticleTetrahedron, afterCalc> afterCalcsIntercept;
+    public DrawInterceptor<ParticleTetrahedron, beforeCalc> beforeCalcsIntercept;
 
-    protected Vec3d vertex1;
-    protected Vec3d vertex2;
-    protected Vec3d vertex3;
-    protected Vec3d vertex4;
+    private final CommonUtils commonUtils = new CommonUtils();
+
+    public enum afterCalc {
+        DRAW_POSITION, END_VERTEX, START_VERTEX
+    }
+
+    public enum beforeCalc {
+        END_VERTEX, START_VERTEX
+    }
+
+    protected Vector3f vertex1;
+    protected Vector3f vertex2;
+    protected Vector3f vertex3;
+    protected Vector3f vertex4;
 
     private final IllegalArgumentException UNBALANCED_VERTICES = new IllegalArgumentException(
             "Unbalanced vertices, there must be only 4 vertices"
     );
 
-    public ParticleTetrahedron(ParticleEffect particle, Vec3d[] vertices, Vec3d rotation, int amount) {
+    public ParticleTetrahedron(ParticleEffect particle, Vector3f[] vertices, Vector3f rotation, int amount) {
         super(particle, rotation);
         if (vertices.length != 4) {
             throw UNBALANCED_VERTICES;
@@ -35,7 +46,7 @@ public class ParticleTetrahedron extends ParticleObject{
         this.amount = amount;
     }
 
-    public ParticleTetrahedron(ParticleEffect particle, Vec3d[] vertices, int amount) {
+    public ParticleTetrahedron(ParticleEffect particle, Vector3f[] vertices, int amount) {
         super(particle);
         if (vertices.length != 4) {
             throw UNBALANCED_VERTICES;
@@ -56,135 +67,88 @@ public class ParticleTetrahedron extends ParticleObject{
         this.vertex4 = object.vertex4;
         this.beforeCalcsIntercept = object.beforeCalcsIntercept;
         this.afterCalcsIntercept = object.afterCalcsIntercept;
-        this.duringDrawIntercept = object.duringDrawIntercept;
     }
 
-    private void checkValidTetrahedron(Vec3d vertex1, Vec3d vertex2, Vec3d vertex3, Vec3d vertex4) {
-        // TODO: find a way to determine if the 4 vertices make a tetrahedron
-        if (false) {
+    private void checkValidTetrahedron(Vector3f vertex1, Vector3f vertex2, Vector3f vertex3, Vector3f vertex4) {
+        float result = ((vertex2.sub(vertex1).cross(vertex3.sub(vertex1))).dot(vertex4.sub(vertex1)));
+        if (Math.abs(result) > 0.0001f) {
             throw new IllegalArgumentException("Provided vertices do not produce a tetrahedron");
         }
     }
 
-    private void checkForParallelism(Vec3d[] vertices) {
-        Vec3d vertex1 = vertices[0];
-        Vec3d vertex2 = vertices[1];
-        Vec3d vertex3 = vertices[2];
-        Vec3d vertex4 = vertices[3];
+    private void checkForParallelism(Vector3f[] vertices) {
+        Vector3f vertex1 = vertices[0];
+        Vector3f vertex2 = vertices[1];
+        Vector3f vertex3 = vertices[2];
+        Vector3f vertex4 = vertices[3];
         this.checkValidTetrahedron(vertex1, vertex2, vertex3, vertex4);
     }
 
-    public Vec3d setVertex1(Vec3d vertex1) {
-        Vec3d prevVertex1 = this.vertex1;
+    public Vector3f setVertex1(Vector3f vertex1) {
+        Vector3f prevVertex1 = this.vertex1;
         this.checkValidTetrahedron(vertex1, this.vertex2, this.vertex3, this.vertex4);
         this.vertex1 = vertex1;
         return prevVertex1;
     }
 
-    public Vec3d setVertex2(Vec3d vertex2) {
-        Vec3d prevVertex2 = this.vertex2;
+    public Vector3f setVertex2(Vector3f vertex2) {
+        Vector3f prevVertex2 = this.vertex2;
         this.checkValidTetrahedron(this.vertex2, vertex2, this.vertex3, this.vertex4);
         this.vertex2 = vertex2;
         return prevVertex2;
     }
 
-    public Vec3d setVertex3(Vec3d vertex3) {
-        Vec3d prevVertex3 = this.vertex3;
+    public Vector3f setVertex3(Vector3f vertex3) {
+        Vector3f prevVertex3 = this.vertex3;
         this.checkValidTetrahedron(this.vertex1, this.vertex2, vertex3, this.vertex4);
         this.vertex3 = vertex3;
         return prevVertex3;
     }
 
-    public Vec3d setVertex4(Vec3d vertex4) {
-        Vec3d prevVertex4 = this.vertex4;
+    public Vector3f setVertex4(Vector3f vertex4) {
+        Vector3f prevVertex4 = this.vertex4;
         this.checkValidTetrahedron(this.vertex2, this.vertex2, this.vertex3, vertex4);
         this.vertex4 = vertex4;
         return prevVertex4;
     }
 
-    public Vec3d getVertex1() {return this.vertex1;}
-    public Vec3d getVertex2() {return this.vertex2;}
-    public Vec3d getVertex3() {return this.vertex3;}
-    public Vec3d getVertex4() {return this.vertex4;}
-
-
-    protected void drawLine(ServerWorld world, Vec3d vertexStart, Vec3d vertexEnd, int step) {
-        InterceptedResult<ParticleTetrahedron> modifiedPairBefore =
-                this.interceptDrawCalcBefore(world, vertexStart, vertexEnd, step, this);
-        vertexStart = (Vec3d) modifiedPairBefore.interceptData.get("start_position");
-        vertexEnd = (Vec3d) modifiedPairBefore.interceptData.get("end_position");
-        ParticleTetrahedron currObject = modifiedPairBefore.object;
-        double dist = vertexEnd.distanceTo(vertexStart);
-        double dirX = (vertexEnd.x - vertexStart.x) / dist;
-        double dirY = (vertexEnd.y - vertexStart.y) / dist;
-        double dirZ = (vertexEnd.z - vertexStart.z) / dist;
-        double interval = dist / currObject.amount;
-        Vec3d curr = new Vec3d(vertexStart.x, vertexStart.y, vertexStart.z);
-        InterceptedResult<ParticleTetrahedron> modifiedPairAfter =
-                this.interceptDrawCalcAfter(world, vertexStart, vertexEnd, curr, step, currObject);
-        vertexStart = (Vec3d) modifiedPairAfter.interceptData.get("start_position");
-        vertexEnd = (Vec3d) modifiedPairAfter.interceptData.get("end_position");
-        curr = (Vec3d) modifiedPairAfter.interceptData.get("draw_position");
-        currObject = modifiedPairAfter.object;
-        int amountUsed = currObject.amount;
-        for (int i = 0; i < amountUsed; i++) {
-            world.spawnParticles(
-                    this.particle, curr.x, curr.y, curr.z, 0,
-                    0.0f, 0.0f, 0.0f, 1
-            );
-            curr = curr.add((dirX * interval), (dirY * interval), (dirZ * interval));
-            InterceptedResult<ParticleTetrahedron> modifiedPairDrawAfter =
-                    this.interceptDuringDraw(world, vertexStart, vertexEnd, curr, step, currObject);
-            curr = (Vec3d) modifiedPairDrawAfter.interceptData.get("draw_position");
-            currObject = modifiedPairAfter.object;
-        }
-    }
+    public Vector3f getVertex1() {return this.vertex1;}
+    public Vector3f getVertex2() {return this.vertex2;}
+    public Vector3f getVertex3() {return this.vertex3;}
+    public Vector3f getVertex4() {return this.vertex4;}
 
     @Override
-    public void draw(ServerWorld world, int step, Vec3d pos) {
-        Vec3d vertex0 = this.vertex1.add(pos);
-        Vec3d vertex1 = this.vertex2.add(pos);
-        Vec3d vertex2 = this.vertex3.add(pos);
-        Vec3d vertex3 = this.vertex4.add(pos);
-        this.drawLine(world, vertex0, vertex1, step);
-        this.drawLine(world, vertex0, vertex2, step);
-        this.drawLine(world, vertex0, vertex3, step);
-        this.drawLine(world, vertex1, vertex2, step);
-        this.drawLine(world, vertex1, vertex3, step);
-        this.drawLine(world, vertex2, vertex3, step);
+    public void draw(ServerWorld world, int step, Vector3f pos) {
+        InterceptedResult<ParticleTetrahedron, beforeCalc> modifiedBefore =
+                this.interceptDrawCalcBefore(world, step, pos, this);
+        ParticleTetrahedron objectToUse = modifiedBefore.object;
+        Vector3f vertex0 = this.vertex1.add(pos);
+        Vector3f vertex1 = this.vertex2.add(pos);
+        Vector3f vertex2 = this.vertex3.add(pos);
+        Vector3f vertex3 = this.vertex4.add(pos);
+        commonUtils.drawLine(this, world, vertex0, vertex1, this.amount);
+        commonUtils.drawLine(this, world, vertex0, vertex2, this.amount);
+        commonUtils.drawLine(this, world, vertex0, vertex3, this.amount);
+        commonUtils.drawLine(this, world, vertex1, vertex2, this.amount);
+        commonUtils.drawLine(this, world, vertex1, vertex3, this.amount);
+        commonUtils.drawLine(this, world, vertex2, vertex3, this.amount);
+        this.interceptDrawCalcAfter(world, step, pos, this);
+        this.endDraw(world, step, pos);
     }
 
-    private InterceptedResult<ParticleTetrahedron> interceptDrawCalcAfter(
-            ServerWorld world, Vec3d start, Vec3d end, Vec3d drawPos,
-            int step, ParticleTetrahedron obj
+    private InterceptedResult<ParticleTetrahedron, afterCalc> interceptDrawCalcAfter(
+            ServerWorld world, int step, Vector3f pos, ParticleTetrahedron obj
     ) {
-        InterceptData interceptData = new InterceptData(world, drawPos, step);
-        interceptData.put("draw_position", drawPos);
-        interceptData.put("start_position", start);
-        interceptData.put("end_position", end);
+        InterceptData<afterCalc> interceptData = new InterceptData<>(world, pos, step, afterCalc.class);
         if (this.afterCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
         return this.afterCalcsIntercept.apply(interceptData, obj);
     }
 
-    private InterceptedResult<ParticleTetrahedron> interceptDrawCalcBefore(
-            ServerWorld world, Vec3d start, Vec3d end, int step, ParticleTetrahedron obj
+    private InterceptedResult<ParticleTetrahedron, beforeCalc> interceptDrawCalcBefore(
+            ServerWorld world, int step, Vector3f pos, ParticleTetrahedron obj
     ) {
-        InterceptData interceptData = new InterceptData(world, null, step);
-        interceptData.put("start_position", start);
-        interceptData.put("end_position", end);
+        InterceptData<beforeCalc> interceptData = new InterceptData<>(world, pos, step, beforeCalc.class);
         if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
         return this.beforeCalcsIntercept.apply(interceptData, obj);
-    }
-
-    private InterceptedResult<ParticleTetrahedron> interceptDuringDraw(
-            ServerWorld world, Vec3d start, Vec3d end, Vec3d drawPos,
-            int step, ParticleTetrahedron obj
-    ) {
-        InterceptData interceptData = new InterceptData(world, null, step);
-        interceptData.put("draw_position", drawPos);
-        interceptData.put("start_position", start);
-        interceptData.put("end_position", end);
-        if (this.duringDrawIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.duringDrawIntercept.apply(interceptData, obj);
     }
 }

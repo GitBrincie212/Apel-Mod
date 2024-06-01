@@ -7,6 +7,7 @@ import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 /** A slightly more complex animator than linear animator or point animator because it deals with a circle.
  * The animator basically creates a circle and when animating on it, you specify which angle(IN RADIANS) should
@@ -17,15 +18,15 @@ import org.jetbrains.annotations.NotNull;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CircularAnimator extends PathAnimatorBase {
-    protected double radius;
-    protected Vec3d center;
-    protected Vec3d rotation;
+    protected float radius;
+    protected Vector3f center;
+    protected Vector3f rotation;
     protected int revolutions = 1;
     private float tempDiffStore;
 
-    protected Function7<Float, Float, Vec3d, Double, Vec3d, Integer, Float, Void> onEnd;
-    protected Function7<Float, Float, Vec3d, Double, Vec3d, Integer, Float, Void> onStart;
-    protected Function7<Integer, Float, Float, Double, Vec3d, Integer, Float, Void> onProcess;
+    protected Function7<Float, Float, Vector3f, Float, Vector3f, Integer, Float, Void> onEnd;
+    protected Function7<Float, Float, Vector3f, Float, Vector3f, Integer, Float, Void> onStart;
+    protected Function7<Integer, Float, Float, Float, Vector3f, Integer, Float, Void> onProcess;
 
     /**
      * Constructor for the circular animation. This constructor is
@@ -40,7 +41,7 @@ public class CircularAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public CircularAnimator(
-            int delay, double radius, @NotNull  Vec3d center, @NotNull Vec3d rotation,
+            int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
             @NotNull ParticleObject particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
@@ -64,7 +65,7 @@ public class CircularAnimator extends PathAnimatorBase {
      * @param renderingInterval The amount of blocks before placing a new render step
      */
     public CircularAnimator(
-            int delay, double radius, @NotNull  Vec3d center, @NotNull Vec3d rotation,
+            int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
             @NotNull ParticleObject particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
@@ -101,8 +102,8 @@ public class CircularAnimator extends PathAnimatorBase {
      * @param y The y coordinates
      * @param z The z coordinates
      */
-    public void rotate(double x, double y, double z) {
-        this.rotation = new Vec3d(x, y, z);
+    public void rotate(float x, float y, float z) {
+        this.rotation = new Vector3f(x, y, z);
     }
 
     /** Sets the revolutions(looping around the circle)
@@ -186,7 +187,7 @@ public class CircularAnimator extends PathAnimatorBase {
         ): this.renderingInterval * this.revolutions;
 
         float currAngle = startAngle;
-        Vec3d pos = calculatePoint(currAngle);
+        Vector3f pos = calculatePoint(currAngle);
         if (this.onStart != null) {
             this.onStart.apply(
                     startAngle, endAngle, pos, this.radius,
@@ -211,20 +212,21 @@ public class CircularAnimator extends PathAnimatorBase {
                     startAngle, endAngle, pos, this.radius, this.center, this.renderingSteps, this.renderingInterval
             );
         }
+        this.finishRendering();
     }
 
-    private Vec3d calculatePoint(float currAngle) {
+    private Vector3f calculatePoint(float currAngle) {
         if (this.radius <= 0) throw new IllegalArgumentException("Radius cannot be negative or 0");
 
-        Vec3d pos = new Vec3d(
-                this.radius * Math.cos(currAngle),
-                this.radius * Math.sin(currAngle),
+        Vector3f pos = new Vector3f(
+                (float) (this.radius * Math.cos(currAngle)),
+                (float) (this.radius * Math.sin(currAngle)),
                 0
         );
         pos = pos
-                .rotateZ((float) this.rotation.z)
-                .rotateY((float) this.rotation.y)
-                .rotateX((float) this.rotation.x);
+                .rotateZ(this.rotation.z)
+                .rotateY(this.rotation.y)
+                .rotateX(this.rotation.x);
         return pos.add(this.center);
     }
 }

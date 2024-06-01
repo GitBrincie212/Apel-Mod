@@ -6,6 +6,7 @@ import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 import java.util.Arrays;
 
@@ -16,7 +17,7 @@ import java.util.Arrays;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class LinearAnimator extends PathAnimatorBase {
-    protected Vec3d[] endpoints;
+    protected Vector3f[] endpoints;
     protected int[] renderingSteps;
     protected float[] renderingInterval;
 
@@ -36,12 +37,12 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public LinearAnimator(
-            int delay, @NotNull Vec3d start, @NotNull Vec3d end,
+            int delay, @NotNull Vector3f start, @NotNull Vector3f end,
             @NotNull ParticleObject particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
         if (start.equals(end)) throw EQUAL_POSITIONS;
-        this.endpoints = new Vec3d[]{start, end};
+        this.endpoints = new Vector3f[]{start, end};
         this.renderingSteps = new int[]{renderingSteps};
         this.renderingInterval = new float[]{0.0f};
     }
@@ -60,14 +61,14 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The amount of blocks before placing a new render step
      */
     public LinearAnimator(
-            int delay, @NotNull Vec3d[] endpoints,
+            int delay, @NotNull Vector3f[] endpoints,
             ParticleObject particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
         if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
         int index = -1;
-        Vec3d curr = endpoints[0];
-        for (Vec3d endpoint : endpoints) {
+        Vector3f curr = endpoints[0];
+        for (Vector3f endpoint : endpoints) {
             index++;
             if (index == 0) continue;
             if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
@@ -89,14 +90,14 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public LinearAnimator(
-            int delay, @NotNull Vec3d[] endpoints,
+            int delay, @NotNull Vector3f[] endpoints,
             @NotNull ParticleObject particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
         if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
         int index = -1;
-        Vec3d curr = endpoints[0];
-        for (Vec3d endpoint : endpoints) {
+        Vector3f curr = endpoints[0];
+        for (Vector3f endpoint : endpoints) {
             index++;
             if (index == 0) continue;
             if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
@@ -120,7 +121,7 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The amount of blocks before placing a new render step
      */
     public LinearAnimator(
-            int delay, @NotNull Vec3d[] endpoints,
+            int delay, @NotNull Vector3f[] endpoints,
             ParticleObject particle, float[] renderingInterval
     ) {
         super(delay, particle, renderingInterval[0]);
@@ -129,8 +130,8 @@ public class LinearAnimator extends PathAnimatorBase {
             throw new IllegalArgumentException("Intervals do not match the endpoints");
         }
         int index = -1;
-        Vec3d curr = endpoints[0];
-        for (Vec3d endpoint : endpoints) {
+        Vector3f curr = endpoints[0];
+        for (Vector3f endpoint : endpoints) {
             index++;
             if (index == 0) continue;
             if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
@@ -154,7 +155,7 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public LinearAnimator(
-            int delay, @NotNull Vec3d[] endpoints,
+            int delay, @NotNull Vector3f[] endpoints,
             @NotNull ParticleObject particle, int[] renderingSteps
     ) {
         super(delay, particle, renderingSteps[0]);
@@ -163,8 +164,8 @@ public class LinearAnimator extends PathAnimatorBase {
             throw new IllegalArgumentException("Steps do not match the endpoints");
         }
         int index = -1;
-        Vec3d curr = endpoints[0];
-        for (Vec3d endpoint : endpoints) {
+        Vector3f curr = endpoints[0];
+        for (Vector3f endpoint : endpoints) {
             index++;
             if (index == 0) continue;
             if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
@@ -190,12 +191,12 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The amount of blocks before placing a new render step
      */
     public LinearAnimator(
-            int delay, Vec3d start, Vec3d end,
+            int delay, Vector3f start, Vector3f end,
             ParticleObject particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
         if (start.equals(end)) throw EQUAL_POSITIONS;
-        this.endpoints = new Vec3d[]{start, end};
+        this.endpoints = new Vector3f[]{start, end};
         this.renderingInterval = new float[]{renderingInterval};
         this.renderingSteps = new int[]{0};
     }
@@ -219,14 +220,14 @@ public class LinearAnimator extends PathAnimatorBase {
      *
      * @return The distance between the start and end
      */
-    public double getDistance() {
-        double sumDistance = 0;
+    public float getDistance() {
+        float sumDistance = 0;
         int index = -1;
-        Vec3d currVec = this.endpoints[0];
-        for (Vec3d endpoint : this.endpoints) {
+        Vector3f currVec = this.endpoints[0];
+        for (Vector3f endpoint : this.endpoints) {
             index++;
             if (index == 0) continue;
-            sumDistance += endpoint.distanceTo(currVec);
+            sumDistance += endpoint.distance(currVec);
         }
         return sumDistance;
     }
@@ -256,31 +257,31 @@ public class LinearAnimator extends PathAnimatorBase {
         if (endStep < 0 && endStep != -1) throw new IllegalArgumentException("End step is invalid");
         if (endStep <= startStep && endStep != -1) throw new IllegalArgumentException("Start & End step range is invalid");
         int particleAmount;
-        double particleInterval;
-        Vec3d curr = new Vec3d(this.endpoints[0].x, this.endpoints[0].y, this.endpoints[0].z);
+        float particleInterval;
+        Vector3f curr = new Vector3f(this.endpoints[0].x, this.endpoints[0].y, this.endpoints[0].z);
         if (this.onStart != null) {
             this.onStart.apply(startStep, endStep, curr, this.renderingSteps[0], this.renderingInterval[0]);
         }
         this.allocateToScheduler();
         int lastStep = 0;
         int endpointIndex = -1;
-        for (Vec3d endPos : this.endpoints) {
+        for (Vector3f endPos : this.endpoints) {
             endpointIndex++;
             if(endpointIndex == 0) continue;
             particleAmount = this.renderingSteps[endpointIndex - 1];
             particleInterval = this.renderingInterval[endpointIndex - 1];
             if (particleInterval == 0.0f) {
-                particleInterval = (this.getDistance() / particleAmount) * (this.endpoints.length - 1);
+                particleInterval = (float) (this.getDistance() / particleAmount) * (this.endpoints.length - 1);
             } else {
                 particleAmount = this.convertToSteps();
             }
-            Vec3d startPos = this.endpoints[endpointIndex - 1];
+            Vector3f startPos = this.endpoints[endpointIndex - 1];
+            float dist = this.getDistance();
             for (int i = 0; i < particleAmount; i++) {
-                double dist = this.getDistance();
-                double currDist = curr.distanceTo(endPos);
-                double dirX = (endPos.x - startPos.x) / dist;
-                double dirY = (endPos.y - startPos.y) / dist;
-                double dirZ = (endPos.z - startPos.z) / dist;
+                double currDist = curr.distance(endPos);
+                float dirX = (endPos.x - startPos.x) / dist;
+                float dirY = (endPos.y - startPos.y) / dist;
+                float dirZ = (endPos.z - startPos.z) / dist;
                 int currDirX = (int) Math.round((endPos.x - curr.x) / currDist);
                 int currDirY = (int) Math.round((endPos.y - curr.y) / currDist);
                 int currDirZ = (int) Math.round((endPos.z - curr.z) / currDist);
@@ -290,10 +291,10 @@ public class LinearAnimator extends PathAnimatorBase {
                     lastStep = i;
                     if (i == 0) break;
                 }
-                double newX = curr.x + (dirX * particleInterval);
-                double newY = curr.y + (dirY * particleInterval);
-                double newZ = curr.z + (dirZ * particleInterval);
-                curr = new Vec3d(newX, newY, newZ);
+                float newX = curr.x + (dirX * particleInterval);
+                float newY = curr.y + (dirY * particleInterval);
+                float newZ = curr.z + (dirZ * particleInterval);
+                curr = new Vector3f(newX, newY, newZ);
                 if (i <= startStep) continue;
                 this.handleDrawingStep(world, i, curr);
                 if (this.onProcess != null) {
@@ -310,5 +311,6 @@ public class LinearAnimator extends PathAnimatorBase {
                     this.renderingInterval[this.renderingInterval.length - 1]
             );
         }
+        this.finishRendering();
     }
 }

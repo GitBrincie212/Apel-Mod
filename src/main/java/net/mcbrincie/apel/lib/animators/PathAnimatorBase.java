@@ -10,6 +10,7 @@ import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,9 +31,9 @@ public abstract class PathAnimatorBase {
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
 
-    protected Function6<Integer, Integer, Vec3d, Vec3d, Integer, Float, Void> onEnd;
-    protected Function5<Integer, Integer, Vec3d, Integer, Float, Void> onStart;
-    protected Function6<Integer, Integer, Vec3d, Vec3d, Integer, Float, Void> onProcess;
+    protected Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onEnd;
+    protected Function5<Integer, Integer, Vector3f, Integer, Float, Void> onStart;
+    protected Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onProcess;
 
     /** Constructor for the path animator. This constructor is meant to be used when you want a
      * constant amount of rendering steps. It is worth pointing out that this won't look
@@ -89,10 +90,9 @@ public abstract class PathAnimatorBase {
      *  sequence. The method does that for your convenience
      */
     public void allocateToScheduler() {
-        if (this.delay != 0 && !Apel.apelScheduler.hasAllocated(this)) {
-            int steps = this.renderingSteps != 0 ? this.scheduleGetAmount() : this.convertToSteps();
-            Apel.apelScheduler.allocateNewSequence(this, steps);
-        }
+        if (this.delay == 0) return;
+        int steps = this.renderingSteps != 0 ? this.scheduleGetAmount() : this.convertToSteps();
+        Apel.apelScheduler.allocateNewSequence(this, steps);
     }
 
     protected int scheduleGetAmount() {
@@ -208,7 +208,7 @@ public abstract class PathAnimatorBase {
      *                  <strong>particle amount</strong>, <strong>interval of blocks</strong>
      */
     public void bindEndAnimListener(
-            Function6<Integer, Integer, Vec3d, Vec3d, Integer, Float, Void> onEnd
+            Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onEnd
     ) {
         this.onEnd = onEnd;
     }
@@ -224,7 +224,7 @@ public abstract class PathAnimatorBase {
      *                  <strong>interval of blocks</strong>
      */
     public void bindStartAnimListener(
-            Function5<Integer, Integer, Vec3d, Integer, Float, Void> onStart
+            Function5<Integer, Integer, Vector3f, Integer, Float, Void> onStart
     ) {
         this.onStart = onStart;
     }
@@ -240,7 +240,7 @@ public abstract class PathAnimatorBase {
      *                  <strong>particle amount</strong>, <strong>interval of blocks</strong>
      */
     public void bindProcessAnimListener(
-            Function6<Integer, Integer, Vec3d, Vec3d, Integer, Float, Void> onProcess
+            Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onProcess
     ) {
         this.onProcess = onProcess;
     }
@@ -332,12 +332,12 @@ public abstract class PathAnimatorBase {
      * @param curr The current position
      * @throws SeqMissingException When it finds that there is no sequence yet allocated
      */
-    public void handleDrawingStep(ServerWorld world, int step, Vec3d curr) throws SeqMissingException {
+    public void handleDrawingStep(ServerWorld world, int step, Vector3f curr) throws SeqMissingException {
+        Runnable func = () -> this.particle.draw(world, step, curr);
         if (this.delay == 0) {
-            this.particle.draw(world, step, curr);
+            Apel.drawThread.submit(func);
             return;
         }
-        Runnable func = () -> this.particle.draw(world, step, curr);
         if (this.processSpeed <= 1) {
             Apel.apelScheduler.allocateNewStep(
                     this, new ScheduledStep(this.delay, new Runnable[]{func})
@@ -351,5 +351,9 @@ public abstract class PathAnimatorBase {
                 this, new ScheduledStep(this.delay, this.storedFuncsBuffer.toArray(Runnable[]::new))
         );
         this.storedFuncsBuffer.clear();
+    }
+
+    public void finishRendering() {
+
     }
 }
