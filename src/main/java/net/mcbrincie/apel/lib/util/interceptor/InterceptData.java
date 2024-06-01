@@ -1,7 +1,6 @@
 package net.mcbrincie.apel.lib.util.interceptor;
 
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3f;
 
 import java.util.EnumMap;
