@@ -3,15 +3,15 @@
 	"id": "apel",
 	"version": "${version}",
 	"name": "apel",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Apel is a particle animation library that focuses on ease of use for making complex animations",
 	"authors": [
-		"Me!"
+		"McBrincie212"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://github.com/GitBrincie212/Apel-Mod",
+		"sources": "https://github.com/GitBrincie212/Apel-Mod"
 	},
-	"license": "CC0-1.0",
+	"license": "MIT",
 	"icon": "assets/apel/icon.png",
 	"environment": "*",
 	"entrypoints": {
@@ -31,7 +31,4 @@
 		"java": ">=21",
 		"fabric-api": "*"
 	},
-	"suggests": {
-		"another-mod": "*"
-	}
 }
