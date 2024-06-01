@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.util.interceptor;
 
 @FunctionalInterface
-public interface DrawInterceptor<T> {
-    InterceptedResult<T> apply(InterceptData data, T obj);
+public interface DrawInterceptor<T, R extends Enum<R>> {
+    InterceptedResult<T, R> apply(InterceptData<R> data, T obj);
 }
