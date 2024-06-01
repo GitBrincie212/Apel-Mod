@@ -270,7 +270,7 @@ public class LinearAnimator extends PathAnimatorBase {
             particleAmount = this.renderingSteps[endpointIndex - 1];
             particleInterval = this.renderingInterval[endpointIndex - 1];
             if (particleInterval == 0.0f) {
-                particleInterval = (float) (this.getDistance() / particleAmount) * (this.endpoints.length - 1);
+                particleInterval = (this.getDistance() / particleAmount) * (this.endpoints.length - 1);
             } else {
                 particleAmount = this.convertToSteps();
             }
@@ -297,7 +297,7 @@ public class LinearAnimator extends PathAnimatorBase {
                 if (i <= startStep) continue;
                 this.handleDrawingStep(world, i, curr);
                 if (this.onProcess != null) {
-                    this.onProcess.apply(i, endStep, curr, endPos, particleAmount, (float) particleInterval);
+                    this.onProcess.apply(i, endStep, curr, endPos, particleAmount, particleInterval);
                 }
                 lastStep++;
             }
