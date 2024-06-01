@@ -5,10 +5,8 @@ import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
-import org.joml.Vector3i;
 
 /** The particle object class that represents a circle(2D shape) and not a 3D sphere.
  * It has a radius which dictates how large or small the circle is depending on the

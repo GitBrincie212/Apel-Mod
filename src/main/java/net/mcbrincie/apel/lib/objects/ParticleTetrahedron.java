@@ -6,7 +6,6 @@ import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3f;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})

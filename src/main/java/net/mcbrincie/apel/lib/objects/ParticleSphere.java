@@ -6,10 +6,8 @@ import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec2f;
-import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
-import org.joml.Vector3i;
 
 /** The particle object class that represents a sphere(3D shape) and not a 2D circle.
  * It has a radius which dictates how large or small the sphere is depending on the
