@@ -68,5 +68,6 @@ public class CombinativeAnimator<T extends PathAnimatorBase> extends PathAnimato
         for (T animator : this.objects) {
             index++;
         }
+        this.finishRendering();
     }
 }
