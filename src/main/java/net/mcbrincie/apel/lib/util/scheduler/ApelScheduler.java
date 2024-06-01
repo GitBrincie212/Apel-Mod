@@ -1,13 +1,12 @@
 package net.mcbrincie.apel.lib.util.scheduler;
 
+import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.animators.PathAnimatorBase;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 /** The Scheduler. The scheduler runs on the world server ticks and handles
@@ -15,9 +14,9 @@ import java.util.List;
  *  sequences for each object. It also does some security checks to verify
  */
 @SuppressWarnings("unused")
-public class ApelScheduler implements Iterable<ScheduledSequence> {
-    private final LinkedList<ScheduledSequence> scheduledTasks = new LinkedList<>();
-    private final List<PathAnimatorBase> authorisedObjects = new ArrayList<>();
+public class ApelScheduler {
+    private final List<ScheduledSequence> scheduledTasks = new ArrayList<>();
+    private final List<PathAnimatorBase> animators = new ArrayList<>();
 
     /** Allocates a new sequence chunk to be used in the scheduler. It accepts the animator object
      *  as a parameter. It is crucial to allocate first if you don't have any chunk. The method
@@ -26,11 +25,8 @@ public class ApelScheduler implements Iterable<ScheduledSequence> {
      *
      */
     public void allocateNewSequence(PathAnimatorBase object, int amount) throws SeqDuplicateException {
-        if (authorisedObjects.contains(object)) {
-            throw new SeqDuplicateException("Cannot allocate more than 1 chunk at a time");
-        }
         this.scheduledTasks.add(new ScheduledSequence(amount));
-        this.authorisedObjects.add(object);
+        this.animators.add(object);
     }
 
     /** Allocates a new delayed step. It accepts the animator object and the scheduled step.
@@ -40,15 +36,11 @@ public class ApelScheduler implements Iterable<ScheduledSequence> {
     public void allocateNewStep(
             PathAnimatorBase object, ScheduledStep step
     ) throws SeqMissingException {
-        int index = this.authorisedObjects.indexOf(object);
+        int index = this.animators.indexOf(object);
         if (index == -1) {
             throw new SeqMissingException("No sequence chunk is found belonging to this path animator");
         }
         this.scheduledTasks.get(index).allocateStep(step);
-    }
-
-    public boolean hasAllocated(PathAnimatorBase object) {
-        return this.authorisedObjects.contains(object);
     }
 
     /** <strong>THIS METHOD IS NOT ADVISED TO BE USED</strong>
@@ -59,19 +51,18 @@ public class ApelScheduler implements Iterable<ScheduledSequence> {
      */
     public void deallocateSequence(int index) {
         this.scheduledTasks.remove(index);
-        this.authorisedObjects.remove(index);
+        this.animators.remove(index);
     }
 
     /** <strong>THIS METHOD IS NOT ADVISED TO BE USED</strong>
      * The method is used in the processing of the server which means it won't do
-     * security checks. It is used for the de-allocation of the sequence
+     * security checks. It is used for the de-allocation of the object
      *
-     * @param sequence The Sequence to remove
+     * @param object The Path animator to remove
      */
-    public void deallocateSequence(ScheduledSequence sequence) {
-        int index = this.scheduledTasks.indexOf(sequence);
-        this.authorisedObjects.remove(index);
-        this.scheduledTasks.remove(index);
+    public void deallocateSequence(PathAnimatorBase object) {
+        int index = this.animators.indexOf(object);
+        this.deallocateSequence(index);
     }
 
     /** Returns whenever the scheduler has any work to do
@@ -79,35 +70,32 @@ public class ApelScheduler implements Iterable<ScheduledSequence> {
      * @return a boolean that indicates if the scheduler has work to do
      */
     public boolean isProcessing() {
-        return this.authorisedObjects.isEmpty() && this.scheduledTasks.isEmpty();
+        return !this.scheduledTasks.isEmpty();
     }
 
     public void runTick() {
-        Iterator<ScheduledSequence> sequenceIterator = scheduledTasks.iterator();
-        int index = -1;
-        while (sequenceIterator.hasNext()) {
-            index++;
-            ScheduledSequence section = sequenceIterator.next();
-            ScheduledStep firstElement = section.first();
-            if (firstElement == null) continue;
+        Iterator<ScheduledSequence> iterator = this.scheduledTasks.iterator();
+        int index = 0;
+        while (iterator.hasNext()) {
+            ScheduledSequence sequence = iterator.next();
+            ScheduledStep firstElement = sequence.first();
+            if (firstElement == null) {
+                index++;
+                continue;
+            }
             firstElement.delay--;
             if (firstElement.delay == 0) {
                 for (Runnable func : firstElement.func) {
-                    func.run();
+                    Apel.drawThread.submit(func);
                 }
-                section.deallocateStep();
-                if (section.isEmpty()) {
-                    sequenceIterator.remove();
-                    authorisedObjects.remove(index);
+                sequence.deallocateStep();
+                if (sequence.isEmpty()) {
+                    iterator.remove();
+                    this.animators.remove(index);
+                    index--;
                 }
             }
+            index++;
         }
-    }
-
-
-    @Override
-    @NotNull
-    public Iterator<ScheduledSequence> iterator() {
-        return this.scheduledTasks.iterator();
     }
 }

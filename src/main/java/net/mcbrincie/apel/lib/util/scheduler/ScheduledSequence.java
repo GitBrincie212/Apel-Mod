@@ -2,10 +2,8 @@ package net.mcbrincie.apel.lib.util.scheduler;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
 public class ScheduledSequence implements Iterable<ScheduledStep> {
     private final ScheduledStep[] scheduledSteps;
