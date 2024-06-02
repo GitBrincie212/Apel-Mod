@@ -1,8 +1,11 @@
 package net.mcbrincie.apel.lib.animators;
 
+import com.mojang.datafixers.util.Function4;
+import com.mojang.datafixers.util.Function5;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -19,10 +22,15 @@ public class LinearAnimator extends PathAnimatorBase {
     protected Vector3f[] endpoints;
     protected int[] renderingSteps;
     protected float[] renderingInterval;
+    protected AnimationTrimming<Integer> trimming;
+
+    protected Function5<AnimationTrimming<Integer>, Vector3f, Vector3f, Integer, Float, Void> onEnd;
+    protected Function4<AnimationTrimming<Integer>, Vector3f, Integer, Float, Void> onStart;
+    protected Function5<AnimationTrimming<Integer>, Vector3f, Vector3f, Integer, Float, Void> onProcess;
 
     private final IllegalArgumentException EQUAL_POSITIONS = new IllegalArgumentException("Starting & Ending Position cannot be equal");
     private final IllegalArgumentException BELOW_2_ENDPOINTS = new IllegalArgumentException("Endpoints should be above 2");
-
+    private final IllegalArgumentException INVALID_TRIM_RANGE = new IllegalArgumentException("Invalid animation trimming range");
 
     /**
      * Constructor for the linear animation. This constructor is
@@ -213,6 +221,10 @@ public class LinearAnimator extends PathAnimatorBase {
         this.endpoints = animator.endpoints;
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
+        this.trimming = animator.trimming;
+        this.onEnd = animator.onEnd;
+        this.onStart = animator.onStart;
+        this.onProcess = animator.onProcess;
     }
 
     /** Gets the distance between the start & end position
@@ -229,6 +241,30 @@ public class LinearAnimator extends PathAnimatorBase {
             sumDistance += endpoint.distance(currVec);
         }
         return sumDistance;
+    }
+
+    /** Sets the animation trimming which accepts a start trim or
+     * an ending trim. The trim parts have to be integer values
+     *
+     * @return The animation trimming that is used
+     */
+    public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
+        int startStep = trimming.getStart();
+        int endStep = trimming.getEnd();
+        if (startStep <= 0) {throw INVALID_TRIM_RANGE;}
+        if (endStep >= this.getRenderSteps()) {throw INVALID_TRIM_RANGE;}
+        if (startStep >= endStep) {throw INVALID_TRIM_RANGE;}
+        AnimationTrimming<Integer> prevTrimming = this.trimming;
+        this.trimming = trimming;
+        return prevTrimming;
+    }
+
+    /** Gets the animation trimming that is used
+     *
+     * @return The animation trimming that is used
+     */
+    public AnimationTrimming<Integer> getTrimming() {
+        return this.trimming;
     }
 
 
@@ -251,15 +287,14 @@ public class LinearAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public void beginAnimation(ServerWorld world, int startStep, int endStep) throws SeqDuplicateException, SeqMissingException {
-        if (startStep < 0) throw new IllegalArgumentException("Start step is not positive");
-        if (endStep < 0 && endStep != -1) throw new IllegalArgumentException("End step is invalid");
-        if (endStep <= startStep && endStep != -1) throw new IllegalArgumentException("Start & End step range is invalid");
+    public void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException {
         int particleAmount;
         float particleInterval;
+        int startStep = this.trimming.getStart();
+        int endStep = this.trimming.getEnd();
         Vector3f curr = new Vector3f(this.endpoints[0].x, this.endpoints[0].y, this.endpoints[0].z);
         if (this.onStart != null) {
-            this.onStart.apply(startStep, endStep, curr, this.renderingSteps[0], this.renderingInterval[0]);
+            this.onStart.apply(this.trimming, curr, this.renderingSteps[0], this.renderingInterval[0]);
         }
         this.allocateToScheduler();
         int lastStep = 0;
@@ -297,19 +332,18 @@ public class LinearAnimator extends PathAnimatorBase {
                 if (i <= startStep) continue;
                 this.handleDrawingStep(world, i, curr);
                 if (this.onProcess != null) {
-                    this.onProcess.apply(i, endStep, curr, endPos, particleAmount, particleInterval);
+                    this.onProcess.apply(this.trimming, curr, endPos, particleAmount, particleInterval);
                 }
                 lastStep++;
             }
         }
         if (this.onEnd != null) {
             this.onEnd.apply(
-                    startStep, lastStep, curr,
+                    this.trimming, curr,
                     this.endpoints[this.endpoints.length - 1],
                     this.renderingSteps[this.renderingSteps.length - 1],
                     this.renderingInterval[this.renderingInterval.length - 1]
             );
         }
-        this.finishRendering();
     }
 }
