@@ -1,9 +1,10 @@
 package net.mcbrincie.apel.lib.animators;
 
-import com.mojang.datafixers.util.Function7;
+import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -21,11 +22,14 @@ public class CircularAnimator extends PathAnimatorBase {
     protected Vector3f center;
     protected Vector3f rotation;
     protected int revolutions = 1;
+    protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, (float) (Math.TAU - 0.0001f));
+    protected boolean clockwise;
+
     private float tempDiffStore;
 
-    protected Function7<Float, Float, Vector3f, Float, Vector3f, Integer, Float, Void> onEnd;
-    protected Function7<Float, Float, Vector3f, Float, Vector3f, Integer, Float, Void> onStart;
-    protected Function7<Integer, Float, Float, Float, Vector3f, Integer, Float, Void> onProcess;
+    protected Function6<AnimationTrimming<Float>, Vector3f, Float, Vector3f, Integer, Float, Void> onEnd;
+    protected Function6<AnimationTrimming<Float>, Vector3f, Float, Vector3f, Integer, Float, Void> onStart;
+    protected Function6<Integer, AnimationTrimming<Float>, Float, Vector3f, Integer, Float, Void> onProcess;
 
     /**
      * Constructor for the circular animation. This constructor is
@@ -91,6 +95,8 @@ public class CircularAnimator extends PathAnimatorBase {
         this.onStart = animator.onStart;
         this.onEnd = animator.onEnd;
         this.onProcess = animator.onProcess;
+        this.clockwise = animator.clockwise;
+        this.trimming = animator.trimming;
     }
 
 
@@ -117,29 +123,42 @@ public class CircularAnimator extends PathAnimatorBase {
         this.revolutions = revolutions;
     }
 
-
-    /** This method is used for beginning the animation logic.
-     * Unlike its counterparts, it begins only on the starting
-     * position and not at any other specified position
+    /** Sets the animation trimming which accepts a start trim or
+     * an ending trim. The trim parts have to be float values
      *
-     * @param world The server world instance
+     * @return The animation trimming that is used
      */
-    @Override
-    public void beginAnimation(ServerWorld world) throws SeqMissingException, SeqDuplicateException {
-        this.beginAnimation(world, 0.0f, (float) (Math.TAU - 0.000001f), true);
+    public AnimationTrimming<Float> setTrimming(AnimationTrimming<Float> trimming) {
+        trimming.setStart((float) (trimming.getStart() % Math.TAU));
+        trimming.setEnd((float) (trimming.getEnd() % Math.TAU));
+        AnimationTrimming<Float> prevTrimming = this.trimming;
+        this.trimming = trimming;
+        return prevTrimming;
     }
 
-
-    /** This method is used for beginning the animation logic.
-     * The method can accept a trim from the start. Which is
-     * measured as steps(not seconds, so delay doesn't affect it)
+    /** Gets the animation trimming that is used
      *
-     * @param world The server world instance
+     * @return The animation trimming that is used
      */
-    public void beginAnimation(
-            ServerWorld world, int startAngle
-    ) throws SeqMissingException, SeqDuplicateException {
-        this.beginAnimation(world, (float) startAngle, (float) (Math.TAU- 0.000001f), true);
+    public AnimationTrimming<Float> getTrimming() {
+        return this.trimming;
+    }
+
+    /** Sets the clockwise value that is used
+     *
+     * @return The previous clockwise value
+     */
+    public boolean setClockwise() {
+        this.clockwise = !this.clockwise;
+        return !this.clockwise;
+    }
+
+    /** Gets the clockwise value
+     *
+     * @return The clockwise value
+     */
+    public boolean getClockwise() {
+        return this.clockwise;
     }
 
     /** Converts any render interval based animation into render steps
@@ -157,27 +176,15 @@ public class CircularAnimator extends PathAnimatorBase {
     }
 
     /** This method is used for beginning the animation logic.
-     * It accepts the server world as well as a predefined current
-     * position(from where to start)
+     * It accepts the server world as a parameter. Unlike most
+     * path animators, this one uses angles for trimming
      *
      * @param world The server world instance
-     * @param startAngle The time to begin the animation at. Measured as a step
-     * @param endAngle The time to end the animation at. Measured as a step
      */
     @Override
-    public void beginAnimation(
-            ServerWorld world, int startAngle, int endAngle
-    ) throws SeqMissingException, SeqDuplicateException {
-        this.beginAnimation(world, (float) startAngle, (float) endAngle, true);
-    }
-
-
-    public void beginAnimation(
-            ServerWorld world, float startAngle, float endAngle, boolean clockwise
-    ) throws SeqMissingException, SeqDuplicateException {
-        startAngle = (float) (startAngle % Math.TAU);
-        endAngle = (float) (endAngle % Math.TAU);
-        float differenceAngle = endAngle - startAngle;
+    public void beginAnimation(ServerWorld world) throws SeqMissingException, SeqDuplicateException {
+        float startAngle = this.trimming.getStart();
+        float differenceAngle = this.trimming.getEnd() - startAngle;
         this.tempDiffStore = differenceAngle;
 
         int particleAmount = this.renderingSteps == 0 ? this.convertToSteps() : this.renderingSteps * this.revolutions;
@@ -189,7 +196,7 @@ public class CircularAnimator extends PathAnimatorBase {
         Vector3f pos = calculatePoint(currAngle);
         if (this.onStart != null) {
             this.onStart.apply(
-                    startAngle, endAngle, pos, this.radius,
+                    this.trimming, pos, this.radius,
                     this.center, this.renderingSteps, this.renderingInterval
             );
         }
@@ -198,20 +205,25 @@ public class CircularAnimator extends PathAnimatorBase {
             this.handleDrawingStep(world, i, pos);
             if (this.onProcess != null) {
                 this.onProcess.apply(
-                        i, currAngle, endAngle, this.radius, this.center, this.renderingSteps, this.renderingInterval
+                        i, this.trimming, this.radius, this.center, this.renderingSteps, this.renderingInterval
                 );
             }
-            currAngle += clockwise ? angleInterval : -angleInterval;
+            currAngle += this.clockwise ? angleInterval : -angleInterval;
             currAngle = (float) (currAngle % Math.TAU);
             pos = this.calculatePoint(currAngle);
         }
 
         if (this.onEnd != null) {
             this.onEnd.apply(
-                    startAngle, endAngle, pos, this.radius, this.center, this.renderingSteps, this.renderingInterval
+                    this.trimming, pos, this.radius, this.center, this.renderingSteps, this.renderingInterval
             );
         }
-        this.finishRendering();
+    }
+
+
+    public void beginAnimation(
+            ServerWorld world, float startAngle, float endAngle, boolean clockwise
+    ) throws SeqMissingException, SeqDuplicateException {
     }
 
     private Vector3f calculatePoint(float currAngle) {
