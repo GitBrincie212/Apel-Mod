@@ -43,7 +43,7 @@ public abstract class PathAnimatorBase {
      * @param renderingSteps The rendering steps to use
      * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, float)
     */
-    public PathAnimatorBase(int delay, @NotNull ParticleObject particle, int renderingSteps) {
+    public PathAnimatorBase(int delay, ParticleObject particle, int renderingSteps) {
         this.setDelay(delay);
         this.setParticleObject(particle);
         this.setRenderSteps(renderingSteps);
@@ -276,53 +276,21 @@ public abstract class PathAnimatorBase {
         return this.processSpeed;
     }
 
-
-    /** This method is used for beginning the animation logic.
-     * Unlike its counterparts, it begins only on the starting
-     * position and not at any other specified position
-     *
-     * @param world The server world instance
-     * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
-     * @throws SeqMissingException When it finds there is no sequence yet allocated
-     */
-    public void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException {
-        this.beginAnimation(world, 0, -1);
-    }
-
-
-    /** This method is used for beginning the animation logic.
-     * The method can accept a trim from the start. Which is
-     * measured as steps(not seconds, so delay doesn't affect it)
-     *
-     * @param world The server world instance
-     * @param startStep The time to begin the animation at. Measured as a step
-     * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
-     * @throws SeqMissingException When it finds there is no sequence yet allocated
-     */
-    public void beginAnimation(ServerWorld world, int startStep) throws SeqDuplicateException, SeqMissingException {
-        this.beginAnimation(world, startStep, -1);
-    }
-
     /** Does the calculations to convert from an interval to rendering steps
      *
      * @return The amount of steps
      */
     public abstract int convertToSteps();
 
-
     /** This method is used for beginning the animation logic.
-     * It accepts the server world as well as a predefined current
-     * position(from where to start)
+     * This method must be used when creating a particle animator.
+     * Ideally the animators should implement their own trimming
      *
      * @param world The server world instance
-     * @param startStep The time to begin the animation at. Measured as a step
-     * @param endStep The time to end the animation at. Measured as a step
      * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
      * @throws SeqMissingException When it finds there is no sequence yet allocated
-     */
-    public abstract void beginAnimation(
-            ServerWorld world, int startStep, int endStep
-    ) throws SeqDuplicateException, SeqMissingException;
+    */
+    public abstract void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException;
 
     /** This method is used for drawing the object. It does more than just drawing, primarily scheduling
      *
@@ -350,9 +318,5 @@ public abstract class PathAnimatorBase {
                 this, new ScheduledStep(this.delay, this.storedFuncsBuffer.toArray(Runnable[]::new))
         );
         this.storedFuncsBuffer.clear();
-    }
-
-    public void finishRendering() {
-
     }
 }

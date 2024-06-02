@@ -60,13 +60,10 @@ public class PointAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public void beginAnimation(
-            ServerWorld world, int startStep, int endStep
-    ) throws SeqDuplicateException, SeqMissingException {
+    public void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException {
         this.allocateToScheduler();
         for (int i = 0; i < renderingSteps; i++) {
             this.handleDrawingStep(world, i, this.origin);
         }
-        this.finishRendering();
     }
 }
