@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.util;
 
+@SuppressWarnings("unused")
 public class AnimationTrimming<T> {
     protected T start;
     protected T end;
