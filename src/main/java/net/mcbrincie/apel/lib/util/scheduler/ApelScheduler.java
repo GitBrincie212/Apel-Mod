@@ -25,7 +25,7 @@ public class ApelScheduler {
      *
      */
     public void allocateNewSequence(PathAnimatorBase object, int amount) throws SeqDuplicateException {
-        this.scheduledTasks.add(new ScheduledSequence(amount));
+        this.scheduledTasks.add(new ScheduledSequence());
         this.animators.add(object);
     }
 
