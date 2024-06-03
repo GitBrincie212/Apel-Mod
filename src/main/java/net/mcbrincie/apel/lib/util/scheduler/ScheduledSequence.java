@@ -4,12 +4,14 @@ import java.util.Stack;
 
 public class ScheduledSequence {
     private final Stack<ScheduledStep> scheduledSteps;
+    public boolean hasAllocatedOnce = false;
 
     public ScheduledSequence() {
         this.scheduledSteps = new Stack<>();
     }
 
     public void allocateStep(ScheduledStep step) {
+        this.hasAllocatedOnce = true;
         this.scheduledSteps.push(step);
     }
 
