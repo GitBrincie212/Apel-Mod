@@ -8,6 +8,7 @@ import org.joml.Vector3f;
  * It has an inner radius & an outer radius. The inner radius controls the center
  * gap while the outer radius controls the outer ring's size.
 */
+@SuppressWarnings("unused")
 public class ParticleTorus extends ParticleObject {
     protected float torusRadius;
     protected float innerRadius;
