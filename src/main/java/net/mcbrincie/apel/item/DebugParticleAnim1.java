@@ -1,7 +1,7 @@
 package net.mcbrincie.apel.item;
 
 import net.mcbrincie.apel.lib.animators.PointAnimator;
-import net.mcbrincie.apel.lib.objects.ParticleSphere;
+import net.mcbrincie.apel.lib.objects.ParticleQuad;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -26,20 +26,13 @@ public class DebugParticleAnim1 extends Item {
     }
 
     private void animators(ServerWorld world) {
-        ParticleSphere sphere1 = new ParticleSphere(
-                ParticleTypes.END_ROD, 6.5f,
-                new Vector3f(), 5000
+        ParticleQuad quad1 = new ParticleQuad(
+                ParticleTypes.END_ROD, 3f, 5f,
+                50, new Vector3f(0, 0.7853f, 0)
         );
-        ParticleSphere sphere2 = new ParticleSphere(sphere1);
-        sphere2.setRadius(4.5f);
-        sphere2.setParticleEffect(ParticleTypes.FLAME);
         PointAnimator pointAnimator1 = new PointAnimator(
-                1, sphere1, new Vector3f(), 1000
-        );
-        PointAnimator pointAnimator2 = new PointAnimator(
-                2, sphere2, new Vector3f(), 1000
+                1, quad1, new Vector3f(), 1000
         );
         pointAnimator1.beginAnimation(world);
-        pointAnimator2.beginAnimation(world);
     }
 }
