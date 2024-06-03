@@ -89,7 +89,7 @@ public class ApelScheduler {
                     Apel.drawThread.submit(func);
                 }
                 sequence.deallocateStep();
-                if (sequence.isEmpty()) {
+                if (sequence.isEmpty() && sequence.hasAllocatedOnce) {
                     iterator.remove();
                     this.animators.remove(index);
                     index--;
