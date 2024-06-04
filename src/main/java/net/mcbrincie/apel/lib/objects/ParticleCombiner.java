@@ -8,19 +8,44 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
+
 /** A utility particle object class that groups all particle objects as
  * one object instead of multiple. Particle combiners can also group themselves
  * which can produce an object hierarchy. There many good things about using
  * a particle combiner in most cases, examples include but are not limited to
+ * <br><br>
+ * <center><h2>Advantages</h2></center>
+ * <br>
  *
- * <table border="1">
- *   <tr>
- *     <td> cell 11 </td> <td> cell 21</td>
- *   </tr>
- *   <tr>
- *     <td> cell 12 </td> <td> cell 22</td>
- *   </tr>
- * </table>
+ * <b>Fewer Memory Overhead(s) & Smaller Memory Footprint</b><br>
+ * Since objects are grouped together. This means that there will be fewer particle animators created
+ * as well as the object being handled as 1 particle object instance instead of being multiple. Which
+ * means that memory is dramatically reduced down for complex scenes(if you had 10 path animators for 10
+ * objects, in which the path animators do 1 million rendering step. The entire bandwidth is cut down
+ * from 10 million -> 1 million steps allocated to the scheduler for the processing)<br><br>
+ *
+ * <b>Easier Management On Multiple Complex Objects</b><br>
+ * The main premise of the particle combiner is to combine particle objects as 1. Which can simplify
+ * repetitive logic and instead of passing the objects into separate path animators(that contain the
+ * almost same params and are the same type). Now you can pass it in only 1 path animator, there are
+ * common methods for managing the object instances which further simplify the repetitive process<br><br>
+ *
+ * <b>Dynamic Object Allocation At Runtime</b><br>
+ * Without the particle combiner, it is difficult to create objects at runtime and create a new path animator
+ * that inherits almost all the same attributes as all the other animators for the other objects & programmatically
+ * changing the params is very tedious. This doesn't have to be the case, because you can allocate a new particle
+ * object to the particle combiner and from there APEL would take care the rest<br><br>
+ *
+ * <b>Controlling Objects Before Being Drawn</b><br>
+ * Thanks to the {@code beforeChildRenderIntercept}. The developer can control the object itself before other
+ * interceptors from that object can do, they can also choose if they want to draw the object or not by modifying
+ * {@code CAN_DRAW_OBJECT}, which this logic is not possible without changing the particle object's class<br><br>
+ *
+ * <b>Hierarchical Grouping</b><br>
+ * Particle combiners can also combine themselves which can allow for the creation of tree-like particle objects,
+ * without the need of making your own particle object class and configuring the params to work the way that. All
+ * this logic you would have to go and implement is handled for you, you can also use recursive
+ * methods to scale down the tree and modify the values<br><br>
  *
  * @param <T> The type of the object, can also be set to <?> to accept all particle objects
  */
@@ -40,7 +65,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** This data is used after calculations(it contains the modified 4 vertices) */
     public enum beforeChildRenderData {
-        OBJECT_IN_USE
+        OBJECT_IN_USE, CAN_DRAW_OBJECT
     }
 
     /** The constructor for the particle combiner. Which is a utility class that
@@ -439,6 +464,9 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         for (T object : this.objects) {
             InterceptedResult<ParticleCombiner<T>, beforeChildRenderData> modifiedDataBefore =
                     this.interceptRenderChildBefore(world, step, this, object);
+            if (!((boolean) modifiedDataBefore.interceptData.getMetadata(beforeChildRenderData.CAN_DRAW_OBJECT))) {
+                continue;
+            }
             ParticleObject objInUse = (ParticleObject) modifiedDataBefore.interceptData.getMetadata(
                     beforeChildRenderData.OBJECT_IN_USE
             );
