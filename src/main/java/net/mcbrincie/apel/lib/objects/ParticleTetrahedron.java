@@ -7,7 +7,6 @@ import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
-import org.joml.Vector3i;
 
 /** The particle object class that represents a 3D triangle(Tetrahedron). It has 4
  * vertices that make it up which must not be coplanar with each other. The vertices
@@ -65,7 +64,7 @@ public class ParticleTetrahedron extends ParticleObject{
      * @param vertices The vertices that make up the tetrahedron
      * @param amount The amount of particles for the object
      *
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
+     * @see ParticleTetrahedron#ParticleTetrahedron(ParticleEffect, Vector3f[], int, Vector3f)
     */
     public ParticleTetrahedron(ParticleEffect particle, Vector3f[] vertices, int amount) {
         super(particle);
