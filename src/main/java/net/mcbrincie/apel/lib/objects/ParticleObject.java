@@ -143,15 +143,14 @@ public class ParticleObject {
         return this.rotation;
     }
 
-    /** THIS METHOD SHOuLD NOT BE USED.
-     * <p>
-     *  This method is an internal APEL method to render the ParticleObject into the ServerWorld.
-     *
+    /** This method allows for drawing a particle point given the world, the current step and the drawing position.
+     * <b>The method is used for internal workings, its not meant to be used for outside use</b>. Path animators
+     * are the ones who calculate the position, the step & give the server world instance
+     * 
      * @param world The server world instance
      * @param step The current rendering step at
      * @param drawPos The position to draw at
      */
-    @Deprecated
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
         InterceptedResult<ParticleObject, beforeCalc> modifiedResult = this.doBeforeDraw(world, drawPos, step, this);
         drawPos = (Vector3f) modifiedResult.interceptData.getMetadata(beforeCalc.DRAW_POSITION);
