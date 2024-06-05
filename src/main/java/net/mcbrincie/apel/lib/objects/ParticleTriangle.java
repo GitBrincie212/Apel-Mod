@@ -189,18 +189,18 @@ public class ParticleTriangle extends ParticleObject{
     public Vector3f getVertex3() {return this.vertex3;}
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
         InterceptedResult<ParticleTriangle, emptyData> modifiedBefore =
-                this.interceptDrawCalcBefore(world, step, pos, this);
+                this.interceptDrawCalcBefore(world, step, drawPos, this);
         ParticleTriangle objectToUse = modifiedBefore.object;
-        Vector3f vertex1 = this.vertex1.add(pos);
-        Vector3f vertex2 = this.vertex2.add(pos);
-        Vector3f vertex3 = this.vertex3.add(pos);
+        Vector3f vertex1 = this.vertex1.add(drawPos);
+        Vector3f vertex2 = this.vertex2.add(drawPos);
+        Vector3f vertex3 = this.vertex3.add(drawPos);
         commonUtils.drawLine(objectToUse, world, vertex1, vertex2, objectToUse.amount);
         commonUtils.drawLine(objectToUse, world, vertex2, vertex3, objectToUse.amount);
         commonUtils.drawLine(objectToUse, world, vertex3, vertex1, objectToUse.amount);
-        this.interceptDrawCalcAfter(world, step, pos, this);
-        this.endDraw(world, step, pos);
+        this.interceptDrawCalcAfter(world, step, drawPos, this);
+        this.endDraw(world, step, drawPos);
     }
 
     private InterceptedResult<ParticleTriangle, emptyData> interceptDrawCalcAfter(

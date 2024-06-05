@@ -45,7 +45,7 @@ public class ParticleTorus extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
 
     }
 }

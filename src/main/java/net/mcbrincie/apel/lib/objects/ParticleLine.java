@@ -111,13 +111,13 @@ public class ParticleLine extends ParticleObject {
 
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
         InterceptedResult<ParticleLine, ParticleLine.emptyData> modifiedBefore =
                 this.interceptDrawCalcBefore(world, step, this);
         ParticleLine objectInUse = modifiedBefore.object;
         commonUtils.drawLine(this, world, this.start, this.end, this.amount);
         this.interceptDrawCalcAfter(world, step, objectInUse);
-        this.endDraw(world, step, pos);
+        this.endDraw(world, step, drawPos);
     }
 
     private void interceptDrawCalcAfter(

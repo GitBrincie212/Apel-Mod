@@ -79,12 +79,12 @@ public class ParticleCircle extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
         float angleInterval = 360 / (float) this.amount;
         for (int i = 0; i < (this.amount / 2); i++) {
             double currRot = angleInterval * i;
             InterceptedResult<ParticleCircle, beforeCalc> modifiedPairBefore =
-                    this.interceptDrawCalcBefore(world, pos, currRot, step, this);
+                    this.interceptDrawCalcBefore(world, drawPos, currRot, step, this);
             ParticleCircle objectToUse = modifiedPairBefore.object;
             currRot = (double) (modifiedPairBefore.interceptData.getMetadata(beforeCalc.ITERATED_ROTATION));
             float x = (float) Math.sin(currRot);
@@ -98,13 +98,13 @@ public class ParticleCircle extends ParticleObject {
                     .rotateZ(objectToUse.rotation.z)
                     .rotateY(objectToUse.rotation.y)
                     .rotateX(objectToUse.rotation.x);
-            Vector3f finalPosVec = circumferenceVec.add(pos);
+            Vector3f finalPosVec = circumferenceVec.add(drawPos);
             InterceptedResult<ParticleCircle, afterCalc> modifiedPairAfter =
-                    objectToUse.interceptDrawCalcAfter(world, pos, finalPosVec, step, objectToUse);
+                    objectToUse.interceptDrawCalcAfter(world, drawPos, finalPosVec, step, objectToUse);
             finalPosVec = (Vector3f) (modifiedPairAfter.interceptData.getMetadata(afterCalc.DRAW_POSITION));
             this.drawParticle(world, finalPosVec);
         }
-        this.endDraw(world, step, pos);
+        this.endDraw(world, step, drawPos);
     }
 
     private InterceptedResult<ParticleCircle, afterCalc> interceptDrawCalcAfter(

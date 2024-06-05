@@ -228,17 +228,17 @@ public class ParticleQuad extends ParticleObject {
     protected Vector3f getVertex4() {return this.vertex4;}
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
         float rotX = this.rotation.x;
         float rotY = this.rotation.y;
         float rotZ = this.rotation.z;
         InterceptedResult<ParticleQuad, ParticleQuad.emptyData> modifiedResultBefore =
                 this.interceptDrawCalcBefore(world, step, this);
         ParticleQuad objectInUse = modifiedResultBefore.object;
-        Vector3f alteredVertex1 = objectInUse.vertex1.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(pos);
-        Vector3f alteredVertex2 = objectInUse.vertex2.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(pos);
-        Vector3f alteredVertex3 = objectInUse.vertex3.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(pos);
-        Vector3f alteredVertex4 = objectInUse.vertex4.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(pos);
+        Vector3f alteredVertex1 = objectInUse.vertex1.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(drawPos);
+        Vector3f alteredVertex2 = objectInUse.vertex2.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(drawPos);
+        Vector3f alteredVertex3 = objectInUse.vertex3.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(drawPos);
+        Vector3f alteredVertex4 = objectInUse.vertex4.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(drawPos);
         InterceptedResult<ParticleQuad, ParticleQuad.afterCalcData> modifiedResultAfter = objectInUse.interceptDrawCalcAfter(
                 world, step, this, alteredVertex1, alteredVertex2, alteredVertex3, alteredVertex4
         );

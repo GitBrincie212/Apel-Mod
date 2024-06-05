@@ -7,9 +7,6 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
-import java.util.List;
-
 
 /** The base class for any particle object. Particle objects are the things
  * that will be rendered. This can be a cube, a sphere, a 2D circle, a cat, a
@@ -24,19 +21,17 @@ import java.util.List;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleObject {
-    protected ParticleEffect particle;
+    protected ParticleEffect particleEffect;
     protected Vector3f rotation;
-    protected int amount = 0;
+    protected int amount = 1;
 
-    public DrawInterceptor<ParticleObject, afterCalc> afterCalcsIntercept;
-    public DrawInterceptor<ParticleObject, beforeCalc> beforeCalcsIntercept;
+    public DrawInterceptor<ParticleObject, beforeCalc> beforeDraw;
+    public DrawInterceptor<ParticleObject, afterCalc> afterDraw;
 
     public enum beforeCalc {
         DRAW_POSITION
     }
     public enum afterCalc {}
-
-    private final List<Vector3f> positionBuffer = new ArrayList<>();
 
 
     /** Constructor for the particle object which is a point. It accepts as parameters
@@ -46,11 +41,11 @@ public class ParticleObject {
      *
      * @see ParticleObject#ParticleObject(ParticleObject)
      *
-     * @param particle The particle effect to use
+     * @param particleEffect The particle effect to use
      * @param rotation The rotation(IN RADIANS)
     */
-    public ParticleObject(ParticleEffect particle, Vector3f rotation) {
-        this.particle = particle;
+    public ParticleObject(ParticleEffect particleEffect, Vector3f rotation) {
+        this.particleEffect = particleEffect;
         this.setRotation(rotation);
     }
 
@@ -61,11 +56,10 @@ public class ParticleObject {
      *
      * @see ParticleObject#ParticleObject(ParticleEffect, Vector3f) 
      *
-     * @param particle The particle effect to use
+     * @param particleEffect The particle effect to use
     */
-    public ParticleObject(ParticleEffect particle) {
-        this.particle = particle;
-        this.rotation = new Vector3f(0, 0, 0);
+    public ParticleObject(ParticleEffect particleEffect) {
+        this(particleEffect, new Vector3f(0, 0, 0));
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -74,11 +68,11 @@ public class ParticleObject {
      * @param object The particle object to copy from
      */
     public ParticleObject(ParticleObject object) {
-        this.particle = object.particle;
+        this.particleEffect = object.particleEffect;
         this.rotation = object.rotation;
         this.amount = object.amount;
-        this.beforeCalcsIntercept = object.beforeCalcsIntercept;
-        this.afterCalcsIntercept = object.afterCalcsIntercept;
+        this.beforeDraw = object.beforeDraw;
+        this.afterDraw = object.afterDraw;
     }
 
     /** Sets the rotation to a new value. The rotation is calculated in radians and
@@ -104,8 +98,8 @@ public class ParticleObject {
      * @return The previously used particle
      */
     public ParticleEffect setParticleEffect(ParticleEffect particle) {
-        ParticleEffect prevParticle = this.particle;
-        this.particle = particle;
+        ParticleEffect prevParticle = this.particleEffect;
+        this.particleEffect = particle;
         return prevParticle;
     }
 
@@ -114,7 +108,7 @@ public class ParticleObject {
      * @return The currently used particle
      */
     public ParticleEffect getParticleEffect() {
-        return this.particle;
+        return this.particleEffect;
     }
 
     /** Sets the amount of particles to use for rendering the object. This
@@ -149,60 +143,44 @@ public class ParticleObject {
         return this.rotation;
     }
 
-    /** This method isn't meant to be used by the user and serves as a method for the system to use.
-     *  It calls this method to tell the object to render how it looks on every rendering step. It
-     *  supplies it with the server world, the current step and the position to draw at. And returns
-     *  nothing back. Its best practice to support the interceptors API
-     *
+    /** This method allows for drawing a particle point given the world, the current step and the drawing position.
+     * <b>The method is used for internal workings, its not meant to be used for outside use</b>. Path animators
+     * are the ones who calculate the position, the step & give the server world instance
+     * 
      * @param world The server world instance
      * @param step The current rendering step at
-     * @param pos The position to draw at
+     * @param drawPos The position to draw at
      */
-    public void draw(ServerWorld world, int step, Vector3f pos) {
-        InterceptedResult<ParticleObject, beforeCalc> modifiedResult =
-                this.interceptDrawCalcBefore(world, pos, step, this);
-        pos = (Vector3f) modifiedResult.interceptData.getMetadata(beforeCalc.DRAW_POSITION);
-        this.drawParticle(world, pos);
-        this.interceptDrawCalcAfter(world, pos, step, this);
-        this.endDraw(world, step, pos);
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
+        InterceptedResult<ParticleObject, beforeCalc> modifiedResult = this.doBeforeDraw(world, drawPos, step, this);
+        drawPos = (Vector3f) modifiedResult.interceptData.getMetadata(beforeCalc.DRAW_POSITION);
+        this.drawParticle(world, drawPos);
+        this.doAfterDraw(world, drawPos, step, this);
+        this.endDraw(world, step, drawPos);
     }
 
     public void endDraw(ServerWorld world, int step, Vector3f pos) {
-        /*
-        BatchParticleS2CPacket packet = new BatchParticleS2CPacket(
-                this.particle, false, this.positionBuffer.toArray(Vector3f[]::new)
-        );
-        List<ServerPlayerEntity> playerEntities = world.getPlayers();
-        for (ServerPlayerEntity serverPlayerEntity : playerEntities) {
-            if (serverPlayerEntity.getWorld() != world) continue;
-            serverPlayerEntity.networkHandler.sendPacket(packet);
-        }
-        this.positionBuffer.clear();
-        */
     }
 
     public void drawParticle(ServerWorld world, Vector3f position) {
         world.spawnParticles(
-                this.particle, position.x, position.y, position.z, 0,
+                this.particleEffect, position.x, position.y, position.z, 0,
                 0.0f, 0.0f, 0.0f, 1
         );
-        // this.positionBuffer.add(position);
     }
 
-    private InterceptedResult<ParticleObject, beforeCalc> interceptDrawCalcBefore(
-            ServerWorld world, Vector3f pos, int step, ParticleObject obj
+    private InterceptedResult<ParticleObject, beforeCalc> doBeforeDraw(
+            ServerWorld world, Vector3f drawPos, int step, ParticleObject obj
     ) {
-        InterceptData<beforeCalc> interceptData = new InterceptData<>(world, pos, step, beforeCalc.class);
-        interceptData.addMetadata(beforeCalc.DRAW_POSITION, pos);
-        if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeCalcsIntercept.apply(interceptData, obj);
+        InterceptData<beforeCalc> interceptData = new InterceptData<>(world, drawPos, step, beforeCalc.class);
+        interceptData.addMetadata(beforeCalc.DRAW_POSITION, drawPos);
+        if (this.beforeDraw == null) return new InterceptedResult<>(interceptData, this);
+        return this.beforeDraw.apply(interceptData, obj);
     }
 
-    private void interceptDrawCalcAfter(
-            ServerWorld world, Vector3f pos, int step, ParticleObject obj
-    ) {
-        InterceptData<afterCalc> interceptData = new InterceptData<>(world, pos, step, afterCalc.class);
-        if (this.afterCalcsIntercept == null) return;
-        this.afterCalcsIntercept.apply(interceptData, obj);
+    private void doAfterDraw(ServerWorld world, Vector3f drawPos, int step, ParticleObject obj) {
+        InterceptData<afterCalc> interceptData = new InterceptData<>(world, drawPos, step, afterCalc.class);
+        if (this.afterDraw == null) return;
+        this.afterDraw.apply(interceptData, obj);
     }
 }
