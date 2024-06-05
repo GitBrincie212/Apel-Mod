@@ -27,7 +27,7 @@ public class DebugParticleAnim1 extends Item {
         return TypedActionResult.pass(user.getMainHandStack());
     }
 
-    private void animators(ServerWorld world) {`
+    private void animators(ServerWorld world) {
        // ....
     }
 }
