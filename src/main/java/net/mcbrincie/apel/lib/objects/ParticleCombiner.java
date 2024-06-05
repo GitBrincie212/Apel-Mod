@@ -91,7 +91,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     @SafeVarargs
     public ParticleCombiner(Vector3f rotation, T... objects) {
         super(ParticleTypes.SCRAPE); // We do not care about the particle
-        this.particle = null;
+        this.particleEffect = null;
         this.setObjects(objects);
         this.setRotation(rotation);
     }
@@ -109,7 +109,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     @SafeVarargs
     public ParticleCombiner(T... objects) {
         super(ParticleTypes.SCRAPE); // We do not care about the particle
-        this.particle = null;
+        this.particleEffect = null;
         this.setObjects(objects);
     }
 
@@ -340,11 +340,11 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         Arrays.fill(offsets, new Vector3f());
         this.offset = Arrays.stream(offsets).toList();
         int prevAmount = objects[0].amount;
-        ParticleEffect prevEffect = objects[0].particle;
+        ParticleEffect prevEffect = objects[0].particleEffect;
         for (T object : objects) {
-            if (this.amount == -1 && this.particle == null) break;
+            if (this.amount == -1 && this.particleEffect == null) break;
             this.amount = (object.amount != this.amount) ? -1 : this.amount;
-            this.particle = (object.particle != this.particle) ? null : this.particle;
+            this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
         }
         return prevObjects;
     }
@@ -360,7 +360,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      */
     public void appendObject(T object) {
         if (object.amount != this.amount) this.amount = -1;
-        if (object.particle != this.particle) this.particle = null;
+        if (object.particleEffect != this.particleEffect) this.particleEffect = null;
         this.objects.add(object);
         this.offset.add(new Vector3f());
     }
@@ -376,7 +376,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      */
     public void appendObject(T object, Vector3f offset) {
         if (object.amount != this.amount) this.amount = -1;
-        if (object.particle != this.particle) this.particle = null;
+        if (object.particleEffect != this.particleEffect) this.particleEffect = null;
         this.objects.add(object);
         this.offset.add(offset);
     }
@@ -394,7 +394,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         Arrays.fill(offsets, new Vector3f());
         for (T object : objectList) {
             if (object.amount != this.amount) this.amount = -1;
-            if (object.particle != this.particle) this.particle = null;
+            if (object.particleEffect != this.particleEffect) this.particleEffect = null;
         }
         this.offset.addAll(Arrays.stream(offsets).toList());
     }
@@ -408,8 +408,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     public T setIndividualObject(int index, T newObject) {
         T prevObject = this.objects.get(index);
         this.objects.set(index, newObject);
-        if (this.particle != newObject.particle) {
-            this.particle = null;
+        if (this.particleEffect != newObject.particleEffect) {
+            this.particleEffect = null;
         }
         if (this.amount != newObject.amount) {
             this.amount = -1;
@@ -515,7 +515,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @see ParticleCombiner#setParticleEffectRecursively(ParticleEffect) 
      */
     public void setParticleEffectRecursively(ParticleEffect[] particle) {
-        this.particle = null;
+        this.particleEffect = null;
         this.particleEffectRecursiveLogic(particle, 0);
     }
     
@@ -523,7 +523,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         for (T object : this.objects) {
             if (depth >= particle.length) break;
             if (object instanceof ParticleCombiner<?> combiner) {
-                object.particle = null;
+                object.particleEffect = null;
                 combiner.particleEffectRecursiveLogic(particle, depth + 1);
             }
             object.setParticleEffect(particle[depth]);
