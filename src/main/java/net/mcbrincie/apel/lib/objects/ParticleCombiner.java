@@ -91,6 +91,29 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     @SafeVarargs
     public ParticleCombiner(Vector3f rotation, T... objects) {
         super(ParticleTypes.SCRAPE); // We do not care about the particle
+        if (objects.length == 0) {
+            throw new IllegalArgumentException("At least one object has to be supplied");
+        }
+        this.particleEffect = null;
+        this.setObjects(objects);
+        this.setRotation(rotation);
+    }
+
+    /** The constructor for the particle combiner. Which is a utility class that
+     * helps in grouping particle objects together as 1 single particle object.
+     * Which of course has many benefits such as being able to directly modify
+     * the objects themselves without needing to set one after the other to a
+     * specific value. There is a simpler constructor for no rotation
+     * <br><br>
+     * <b>Note:</b> it uses the {@code setRotation} which sets all the
+     * particle object's rotation values to the provided rotation value
+     *
+     * @param objects The objects to group together
+     *
+     * @see ParticleCombiner#ParticleCombiner(ParticleObject[])
+     */
+    public ParticleCombiner(List<T> objects) {
+        super(ParticleTypes.SCRAPE); // We do not care about the particle
         this.particleEffect = null;
         this.setObjects(objects);
         this.setRotation(rotation);
@@ -111,6 +134,11 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         super(ParticleTypes.SCRAPE); // We do not care about the particle
         this.particleEffect = null;
         this.setObjects(objects);
+    }
+
+    public ParticleCombiner() {
+        super(ParticleTypes.SCRAPE); // We do not care about the particle
+        this.particleEffect = null;
     }
 
     /** The copy constructor for the particle combiner. Which
@@ -142,7 +170,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     public Vector3f setRotation(Vector3f rotation) {
         Vector3f prevRotation = this.rotation;
         this.rotation = rotation;
-        for (T object : objects) {
+        for (T object : this.objects) {
             object.setRotation(this.rotation);
         }
         return prevRotation;
@@ -167,7 +195,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         Vector3f prevRotation = this.rotation;
         this.rotation = rotation;
         int i = 0;
-        for (T object : objects) {
+        for (T object : this.objects) {
             object.setRotation(this.rotation.add(offsetX * i, offsetY * i, offsetZ * i));
             i++;
         }
@@ -256,7 +284,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         }
         Vector3f prevRotation = super.setRotation(rotation);
         int i = 0;
-        for (T object : objects) {
+        for (T object : this.objects) {
             object.setRotation(this.rotation.add(offset.x * i, offset.y * i, offset.z * i));
             i++;
         }
@@ -334,14 +362,40 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         if (objects.length <= 1) {
             throw new IllegalArgumentException("There has to be needs than 1 object supplied");
         }
+        System.out.println(Arrays.toString(objects));
         List<T> prevObjects = this.objects;
-        this.objects = Arrays.stream(objects).toList();
+        this.objects = Arrays.asList(objects);
         Vector3f[] offsets = new Vector3f[objects.length];
         Arrays.fill(offsets, new Vector3f());
         this.offset = Arrays.stream(offsets).toList();
         int prevAmount = objects[0].amount;
         ParticleEffect prevEffect = objects[0].particleEffect;
-        for (T object : objects) {
+        for (T object : this.objects) {
+            if (this.amount == -1 && this.particleEffect == null) break;
+            this.amount = (object.amount != this.amount) ? -1 : this.amount;
+            this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
+        }
+        return prevObjects;
+    }
+
+    /** Sets the amount of particle objects to use and returns the previous objects that were used.
+     *
+     * @param objects The particle objects list
+     * @return The previous particle objects list
+     */
+    public final List<T> setObjects(List<T> objects) {
+        if (objects.size() <= 1) {
+            throw new IllegalArgumentException("There has to be needs than 1 object supplied");
+        }
+        System.out.println(objects);
+        List<T> prevObjects = this.objects;
+        this.objects = objects;
+        Vector3f[] offsets = new Vector3f[objects.size()];
+        Arrays.fill(offsets, new Vector3f());
+        this.offset = Arrays.stream(offsets).toList();
+        int prevAmount = objects.getFirst().amount;
+        ParticleEffect prevEffect = objects.getFirst().particleEffect;
+        for (T object : this.objects) {
             if (this.amount == -1 && this.particleEffect == null) break;
             this.amount = (object.amount != this.amount) ? -1 : this.amount;
             this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
@@ -392,7 +446,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         this.objects.addAll(objectList);
         Vector3f[] offsets = new Vector3f[objects.length];
         Arrays.fill(offsets, new Vector3f());
-        for (T object : objectList) {
+        for (T object : this.objects) {
             if (object.amount != this.amount) this.amount = -1;
             if (object.particleEffect != this.particleEffect) this.particleEffect = null;
         }
@@ -428,7 +482,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @see ParticleCombiner#setRotation(Vector3f, Vector3f)
      */
     public void setRotationRecursively(Vector3f rotation) {
-        for (T object : objects) {
+        for (T object : this.objects) {
             if (object instanceof ParticleCombiner<?> combiner) {
                 combiner.setRotationRecursively(rotation);
             }
@@ -450,7 +504,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             throw new IllegalArgumentException("offset rotation must not equal (0, 0, 0)");
         }
         int i = 0;
-        for (T object : objects) {
+        for (T object : this.objects) {
             if (object instanceof ParticleCombiner<?> combiner) {
                 combiner.setRotationRecursively(
                         rotation.add(offset.x * i, offset.y * i, offset.z * i), offset
@@ -509,16 +563,16 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      *
      * <b>Note:</b> If there is no more particles to supply in the current depth level the system is,
      * it will resort in not going below. Keep that in mind
-     * 
+     *
      * @param particle The particles per level
      *
-     * @see ParticleCombiner#setParticleEffectRecursively(ParticleEffect) 
+     * @see ParticleCombiner#setParticleEffectRecursively(ParticleEffect)
      */
     public void setParticleEffectRecursively(ParticleEffect[] particle) {
         this.particleEffect = null;
         this.particleEffectRecursiveLogic(particle, 0);
     }
-    
+
     private void particleEffectRecursiveLogic(ParticleEffect[] particle, int depth) {
         for (T object : this.objects) {
             if (depth >= particle.length) break;
