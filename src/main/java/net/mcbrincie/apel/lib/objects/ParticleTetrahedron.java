@@ -217,22 +217,22 @@ public class ParticleTetrahedron extends ParticleObject{
     public Vector3f getVertex4() {return this.vertex4;}
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
         InterceptedResult<ParticleTetrahedron, emptyData> modifiedBefore =
-                this.interceptDrawCalcBefore(world, step, pos, this);
+                this.interceptDrawCalcBefore(world, step, drawPos, this);
         ParticleTetrahedron objectToUse = modifiedBefore.object;
-        Vector3f vertex0 = this.vertex1.add(pos);
-        Vector3f vertex1 = this.vertex2.add(pos);
-        Vector3f vertex2 = this.vertex3.add(pos);
-        Vector3f vertex3 = this.vertex4.add(pos);
+        Vector3f vertex0 = this.vertex1.add(drawPos);
+        Vector3f vertex1 = this.vertex2.add(drawPos);
+        Vector3f vertex2 = this.vertex3.add(drawPos);
+        Vector3f vertex3 = this.vertex4.add(drawPos);
         commonUtils.drawLine(this, world, vertex0, vertex1, this.amount);
         commonUtils.drawLine(this, world, vertex0, vertex2, this.amount);
         commonUtils.drawLine(this, world, vertex0, vertex3, this.amount);
         commonUtils.drawLine(this, world, vertex1, vertex2, this.amount);
         commonUtils.drawLine(this, world, vertex1, vertex3, this.amount);
         commonUtils.drawLine(this, world, vertex2, vertex3, this.amount);
-        this.interceptDrawCalcAfter(world, step, pos, this);
-        this.endDraw(world, step, pos);
+        this.interceptDrawCalcAfter(world, step, drawPos, this);
+        this.endDraw(world, step, drawPos);
     }
 
     private InterceptedResult<ParticleTetrahedron, emptyData> interceptDrawCalcAfter(

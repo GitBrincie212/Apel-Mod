@@ -226,18 +226,18 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
         float width = size.x;
         float height = size.y;
         float depth = size.z;
-        Vector3f vertex1 = this.getVertex(width, height, depth, pos);
-        Vector3f vertex2 = this.getVertex(width, -height, -depth, pos);
-        Vector3f vertex3 = this.getVertex(-width, height, -depth, pos);
-        Vector3f vertex4 = this.getVertex(width, height, -depth, pos);
-        Vector3f vertex5 = this.getVertex(-width, -height, depth, pos);
-        Vector3f vertex6 = this.getVertex(width, -height, depth, pos);
-        Vector3f vertex7 = this.getVertex(-width, height, depth, pos);
-        Vector3f vertex8 = this.getVertex(-width, -height, -depth, pos);
+        Vector3f vertex1 = this.getVertex(width, height, depth, drawPos);
+        Vector3f vertex2 = this.getVertex(width, -height, -depth, drawPos);
+        Vector3f vertex3 = this.getVertex(-width, height, -depth, drawPos);
+        Vector3f vertex4 = this.getVertex(width, height, -depth, drawPos);
+        Vector3f vertex5 = this.getVertex(-width, -height, depth, drawPos);
+        Vector3f vertex6 = this.getVertex(width, -height, depth, drawPos);
+        Vector3f vertex7 = this.getVertex(-width, height, depth, drawPos);
+        Vector3f vertex8 = this.getVertex(-width, -height, -depth, drawPos);
 
         int bottomFaceAmount = this.amount.x;
         int topFaceAmount = this.amount.y;
@@ -281,7 +281,7 @@ public class ParticleCuboid extends ParticleObject {
             commonUtils.drawLine(objectInUse, world, vertex1, vertex4, verticalBarsAmount);
         }
         this.interceptDrawCalcAfter(world, step, objectInUse);
-        this.endDraw(world, step, pos);
+        this.endDraw(world, step, drawPos);
     }
 
     private void interceptDrawCalcAfter(

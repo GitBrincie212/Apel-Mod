@@ -37,7 +37,7 @@ import org.joml.Vector3f;
  * object to the particle combiner and from there APEL would take care the rest<br><br>
  *
  * <b>Controlling Objects Before Being Drawn</b><br>
- * Thanks to the {@code beforeChildRenderIntercept}. The developer can control the object itself before other
+ * Thanks to the {@code beforeChildRender}. The developer can control the object itself before other
  * interceptors from that object can do, they can also choose if they want to draw the object or not by modifying
  * {@code CAN_DRAW_OBJECT}, which this logic is not possible without changing the particle object's class<br><br>
  *
@@ -54,11 +54,11 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     protected T[] objects;
     protected int amount = -1;
 
-    public DrawInterceptor<ParticleCombiner<T>, emptyData> afterChildRenderIntercept;
-    public DrawInterceptor<ParticleCombiner<T>, beforeChildRenderData> beforeChildRenderIntercept;
+    public DrawInterceptor<ParticleCombiner<T>, emptyData> afterChildRender;
+    public DrawInterceptor<ParticleCombiner<T>, beforeChildRenderData> beforeChildRender;
 
-    @Deprecated public final DrawInterceptor<?, ?> afterCalcsIntercept = null;
-    @Deprecated public final DrawInterceptor<?, ?> beforeCalcsIntercept = null;
+    @Deprecated public final DrawInterceptor<?, ?> afterCalcs = null;
+    @Deprecated public final DrawInterceptor<?, ?> beforeCalcs = null;
 
     /** There is no data being transmitted */
     public enum emptyData {}
@@ -85,7 +85,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     @SafeVarargs
     public ParticleCombiner(Vector3f rotation, T... objects) {
         super(ParticleTypes.SCRAPE); // We do not care about the particle
-        this.particle = null;
+        this.particleEffect = null;
         this.setObjects(objects);
         this.setRotation(rotation);
     }
@@ -103,7 +103,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     @SafeVarargs
     public ParticleCombiner(T... objects) {
         super(ParticleTypes.SCRAPE); // We do not care about the particle
-        this.particle = null;
+        this.particleEffect = null;
         this.setObjects(objects);
     }
 
@@ -117,8 +117,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         super(combiner);
         this.objects = combiner.objects;
         this.amount = combiner.amount;
-        this.afterChildRenderIntercept = combiner.afterChildRenderIntercept;
-        this.beforeChildRenderIntercept = combiner.beforeChildRenderIntercept;
+        this.afterChildRender = combiner.afterChildRender;
+        this.beforeChildRender = combiner.beforeChildRender;
     }
 
     /** Sets the rotation for all the particle objects. There is
@@ -263,11 +263,11 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         T[] prevObjects = this.objects;
         this.objects = objects;
         int prevAmount = objects[0].amount;
-        ParticleEffect prevEffect = objects[0].particle;
+        ParticleEffect prevEffect = objects[0].particleEffect;
         for (T object : objects) {
-            if (this.amount == -1 && this.particle == null) break;
+            if (this.amount == -1 && this.particleEffect == null) break;
             this.amount = (object.amount != this.amount) ? -1 : this.amount;
-            this.particle = (object.particle != this.particle) ? null : this.particle;
+            this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
         }
         return prevObjects;
     }
@@ -281,8 +281,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     public T setIndividualObject(int index, T newObject) {
         T prevObject = this.objects[index];
         this.objects[index] = newObject;
-        if (this.particle != newObject.particle) {
-            this.particle = null;
+        if (this.particleEffect != newObject.particleEffect) {
+            this.particleEffect = null;
         }
         if (this.amount != newObject.amount) {
             this.amount = -1;
@@ -367,7 +367,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @see ParticleCombiner#setParticleEffectRecursively(ParticleEffect) 
      */
     public void setParticleEffectRecursively(ParticleEffect[] particle) {
-        this.particle = null;
+        this.particleEffect = null;
         this.particleEffectRecursiveLogic(particle, 0);
     }
     
@@ -375,7 +375,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         for (T object : this.objects) {
             if (depth >= particle.length) break;
             if (object instanceof ParticleCombiner<?> combiner) {
-                object.particle = null;
+                object.particleEffect = null;
                 combiner.particleEffectRecursiveLogic(particle, depth + 1);
             }
             object.setParticleEffect(particle[depth]);
@@ -460,10 +460,10 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     public T getObject(int index) {return objects[index];}
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
         for (T object : this.objects) {
             InterceptedResult<ParticleCombiner<T>, beforeChildRenderData> modifiedDataBefore =
-                    this.interceptRenderChildBefore(world, step, this, object);
+                    this.doBeforeChildRender(world, step, this, object);
             if (!((boolean) modifiedDataBefore.interceptData.getMetadata(beforeChildRenderData.CAN_DRAW_OBJECT))) {
                 continue;
             }
@@ -471,29 +471,29 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
                     beforeChildRenderData.OBJECT_IN_USE
             );
             ParticleCombiner<T> comberInUse = modifiedDataBefore.object;
-            objInUse.draw(world, step, pos);
-            this.interceptRenderChildAfter(world, step, comberInUse);
+            objInUse.draw(world, step, drawPos);
+            this.doAfterChildRender(world, step, comberInUse);
         }
     }
 
-    private InterceptedResult<ParticleCombiner<T>, emptyData> interceptRenderChildAfter(
+    private InterceptedResult<ParticleCombiner<T>, emptyData> doAfterChildRender(
             ServerWorld world, int step, ParticleCombiner<T> obj
     ) {
         InterceptData<emptyData> interceptData = new InterceptData<>(
                 world, null, step, emptyData.class
         );
-        if (this.afterChildRenderIntercept == null) return new InterceptedResult<>(interceptData, obj);
-        return this.afterChildRenderIntercept.apply(interceptData, obj);
+        if (this.afterChildRender == null) return new InterceptedResult<>(interceptData, obj);
+        return this.afterChildRender.apply(interceptData, obj);
     }
 
-    private InterceptedResult<ParticleCombiner<T>, beforeChildRenderData> interceptRenderChildBefore(
+    private InterceptedResult<ParticleCombiner<T>, beforeChildRenderData> doBeforeChildRender(
             ServerWorld world, int step, ParticleCombiner<T> obj, T objectInUse
     ) {
         InterceptData<beforeChildRenderData> interceptData = new InterceptData<>(
                 world, null, step, beforeChildRenderData.class
         );
         interceptData.addMetadata(beforeChildRenderData.OBJECT_IN_USE, objectInUse);
-        if (this.beforeChildRenderIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeChildRenderIntercept.apply(interceptData, obj);
+        if (this.beforeChildRender == null) return new InterceptedResult<>(interceptData, this);
+        return this.beforeChildRender.apply(interceptData, obj);
     }
 }
