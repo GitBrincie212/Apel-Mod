@@ -46,7 +46,7 @@ public class ParticleObject {
     */
     public ParticleObject(ParticleEffect particleEffect, Vector3f rotation) {
         this.particleEffect = particleEffect;
-        this.setRotation(rotation);
+        this.rotation = this.normalizeRotation(rotation);
     }
 
     /** Constructor for the particle object which is a point. It accepts as parameters
@@ -84,11 +84,15 @@ public class ParticleObject {
      */
     public Vector3f setRotation(Vector3f rotation) {
         Vector3f prevRotation = this.rotation;
+        this.rotation = this.normalizeRotation(rotation);
+        return prevRotation;
+    }
+
+    protected Vector3f normalizeRotation(Vector3f rotation) {
         float x = (float) (rotation.x % Math.TAU);
         float y = (float) (rotation.y % Math.TAU);
         float z = (float) (rotation.z % Math.TAU);
-        this.rotation = new Vector3f(x, y, z);
-        return prevRotation;
+        return new Vector3f(x, y, z);
     }
 
     /** Sets the particle to use to a new value and returns the previous
