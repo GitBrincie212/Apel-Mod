@@ -1,3 +1,5 @@
+
+https://github.com/GitBrincie212/Apel-Mod/assets/92397968/d6a642e8-77fc-4eaa-bd54-4bdf2d398204
 # Getting Started
 As from the `README.md` you know, Apel consists of 2 systems which compliment each other.
 These systems allow for the flexible behaviour you see when writing code for complex particle 
@@ -109,9 +111,10 @@ pointAnimator.beginAnimation(world);
 ```
 
 This in minecraft translates into visually:<br>
-<video width="320" height="240" controls>
-  <source src="media/getting_started_code_1.mp4" type="video/mp4">
-</video>
+
+
+https://github.com/GitBrincie212/Apel-Mod/assets/92397968/8e4f3a9c-547c-4ff8-8ade-63abd7fb7f86
+
 
 In this code snippet we can clearly see that we define a particle object, and we define a path animator which contains
 the `point` particle object. We then use the ``beginAnimation`` method from the path animator by supplying the server
