@@ -699,6 +699,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
                 world, null, step, beforeChildRenderData.class
         );
         interceptData.addMetadata(beforeChildRenderData.OBJECT_IN_USE, objectInUse);
+        interceptData.addMetadata(beforeChildRenderData.CAN_DRAW_OBJECT, true);
         if (this.beforeChildRenderIntercept == null) return new InterceptedResult<>(interceptData, this);
         return this.beforeChildRenderIntercept.apply(interceptData, obj);
     }
