@@ -670,7 +670,9 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             index++;
             InterceptedResult<ParticleCombiner<T>, beforeChildRenderData> modifiedDataBefore =
                     this.interceptRenderChildBefore(world, step, this, object);
-            if (!((boolean) modifiedDataBefore.interceptData.getMetadata(beforeChildRenderData.CAN_DRAW_OBJECT))) {
+            Boolean shouldDraw = (Boolean) modifiedDataBefore.interceptData.getMetadata(beforeChildRenderData.CAN_DRAW_OBJECT);
+            if (shouldDraw == null || shouldDraw == Boolean.FALSE) {
+                // Unset or explicitly false == do not draw
                 continue;
             }
             ParticleObject objInUse = (ParticleObject) modifiedDataBefore.interceptData.getMetadata(
