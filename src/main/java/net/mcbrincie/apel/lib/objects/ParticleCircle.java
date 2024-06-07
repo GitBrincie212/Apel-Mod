@@ -15,16 +15,16 @@ import org.joml.Vector3f;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCircle extends ParticleObject {
     protected float radius;
-    public DrawInterceptor<ParticleCircle, afterCalc> afterCalcsIntercept;
-    public DrawInterceptor<ParticleCircle, beforeCalc> beforeCalcsIntercept;
+    private DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
     /** This data is used before calculations(it contains the iterated rotation) */
-    public enum beforeCalc {
+    public enum BeforeDrawData {
         ITERATED_ROTATION
     }
 
     /** This data is used after calculations(it contains the drawing position) */
-    public enum afterCalc {
+    public enum AfterDrawData {
         DRAW_POSITION
     }
 
@@ -32,7 +32,7 @@ public class ParticleCircle extends ParticleObject {
      * the particle to use, the radius of the circle, the rotation to apply & the amount of particles.
      * There is also a simplified version for no rotation.
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param radius The radius of the circle(how big it is)
      * @param rotation The rotation to apply
@@ -40,9 +40,9 @@ public class ParticleCircle extends ParticleObject {
      * @see ParticleCircle#ParticleCircle(ParticleEffect, float, int)
     */
     public ParticleCircle(
-            @NotNull ParticleEffect particle, float radius, Vector3f rotation, int amount
+            @NotNull ParticleEffect particleEffect, float radius, Vector3f rotation, int amount
     ) {
-        super(particle, rotation);
+        super(particleEffect, rotation);
         this.radius = radius;
         this.amount = amount;
     }
@@ -51,18 +51,16 @@ public class ParticleCircle extends ParticleObject {
      * the particle to use, the radius of the circle, & the amount of particles.
      * There is also a version that allows for rotation.
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param radius The radius of the circle(how big it is)
      *
      * @see ParticleCircle#ParticleCircle(ParticleEffect, float, Vector3f, int)
     */
     public ParticleCircle(
-            @NotNull ParticleEffect particle, float radius, int amount
+            @NotNull ParticleEffect particleEffect, float radius, int amount
     ) {
-        super(particle);
-        this.radius = radius;
-        this.amount = amount;
+        this(particleEffect, radius, new Vector3f(0), amount);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -74,8 +72,27 @@ public class ParticleCircle extends ParticleObject {
         super(circle);
         this.radius = circle.radius;
         this.amount = circle.amount;
-        this.afterCalcsIntercept = circle.afterCalcsIntercept;
-        this.beforeCalcsIntercept = circle.beforeCalcsIntercept;
+        this.afterDraw = circle.afterDraw;
+        this.beforeDraw = circle.beforeDraw;
+    }
+
+    /** Gets the radius of the ParticleCircle and returns it.
+     *
+     * @return the radius of the ParticleCircle
+     */
+    public float getRadius() {
+        return radius;
+    }
+
+    /** Set the radius of this ParticleCircle and returns the previous radius that was used.
+     *
+     * @param radius the new radius
+     * @return the previously used radius
+     */
+    public float setRadius(float radius) {
+        float prevRadius = this.radius;
+        this.radius = radius;
+        return prevRadius;
     }
 
     @Override
@@ -83,10 +100,10 @@ public class ParticleCircle extends ParticleObject {
         float angleInterval = 360 / (float) this.amount;
         for (int i = 0; i < (this.amount / 2); i++) {
             double currRot = angleInterval * i;
-            InterceptedResult<ParticleCircle, beforeCalc> modifiedPairBefore =
-                    this.interceptDrawCalcBefore(world, drawPos, currRot, step, this);
+            InterceptedResult<ParticleCircle, BeforeDrawData> modifiedPairBefore =
+                    this.doBeforeDraw(world, drawPos, currRot, step, this);
             ParticleCircle objectToUse = modifiedPairBefore.object;
-            currRot = (double) (modifiedPairBefore.interceptData.getMetadata(beforeCalc.ITERATED_ROTATION));
+            currRot = (double) (modifiedPairBefore.interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION));
             float x = (float) Math.sin(currRot);
             float y = (float) Math.cos(currRot);
             Vector3f circumferenceVec = new Vector3f(
@@ -99,29 +116,49 @@ public class ParticleCircle extends ParticleObject {
                     .rotateY(objectToUse.rotation.y)
                     .rotateX(objectToUse.rotation.x);
             Vector3f finalPosVec = circumferenceVec.add(drawPos.add(this.offset));
-            InterceptedResult<ParticleCircle, afterCalc> modifiedPairAfter =
-                    objectToUse.interceptDrawCalcAfter(world, drawPos, finalPosVec, step, objectToUse);
-            finalPosVec = (Vector3f) (modifiedPairAfter.interceptData.getMetadata(afterCalc.DRAW_POSITION));
+            InterceptedResult<ParticleCircle, AfterDrawData> modifiedPairAfter =
+                    objectToUse.doAfterDraw(world, drawPos, finalPosVec, step, objectToUse);
+            finalPosVec = (Vector3f) (modifiedPairAfter.interceptData.getMetadata(AfterDrawData.DRAW_POSITION));
             this.drawParticle(world, finalPosVec);
         }
         this.endDraw(world, step, drawPos);
     }
 
-    private InterceptedResult<ParticleCircle, afterCalc> interceptDrawCalcAfter(
-            ServerWorld world, Vector3f pos, Vector3f drawPos, int step, ParticleCircle obj
-    ) {
-        InterceptData<afterCalc> interceptData = new InterceptData<>(world, pos, step, afterCalc.class);
-        interceptData.addMetadata(afterCalc.DRAW_POSITION, drawPos);
-        if (this.afterCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.afterCalcsIntercept.apply(interceptData, obj);
+    /** Set the interceptor to run after drawing the circle.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the position where the circle is rendered, and the
+     * step number of the animation.  It will also have the position around the circle at which the
+     * current particle was drawn.
+     *
+     * @param afterDraw the new interceptor to execute after drawing each particle
+     */
+    public void setAfterDraw(DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw) {
+        this.afterDraw = afterDraw;
     }
 
-    private InterceptedResult<ParticleCircle, beforeCalc> interceptDrawCalcBefore(
-            ServerWorld world, Vector3f pos, double currRot, int step, ParticleCircle obj
+    private InterceptedResult<ParticleCircle, AfterDrawData> doAfterDraw(
+            ServerWorld world, Vector3f centerPos, Vector3f drawPos, int step, ParticleCircle particleCircle
     ) {
-        InterceptData<beforeCalc> interceptData = new InterceptData<>(world, pos, step, beforeCalc.class);
-        interceptData.addMetadata(beforeCalc.ITERATED_ROTATION, currRot);
-        if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeCalcsIntercept.apply(interceptData, obj);
+        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, centerPos, step, AfterDrawData.class);
+        interceptData.addMetadata(AfterDrawData.DRAW_POSITION, drawPos);
+        return this.afterDraw.apply(interceptData, this);
+    }
+
+    /** Set the interceptor to run prior to drawing the circle.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the position where the circle is rendered, and the
+     * step number of the animation.  It will also have the angle around the circle at which the
+     * current particle is.
+     *
+     * @param beforeDraw the new interceptor to execute prior to drawing each particle
+     */
+    public void setBeforeDraw(DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw) {
+        this.beforeDraw = beforeDraw;
+    }
+
+    private InterceptedResult<ParticleCircle, BeforeDrawData> doBeforeDraw(
+            ServerWorld world, Vector3f pos, double currRot, int step, ParticleCircle particleCircle
+    ) {
+        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
+        interceptData.addMetadata(BeforeDrawData.ITERATED_ROTATION, currRot);
+        return this.beforeDraw.apply(interceptData, this);
     }
 }
