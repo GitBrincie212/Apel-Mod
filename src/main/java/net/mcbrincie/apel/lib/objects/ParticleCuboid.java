@@ -16,23 +16,24 @@ import org.joml.Vector3i;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCuboid extends ParticleObject {
-    public Vector3f size = new Vector3f();
+    protected Vector3f size = new Vector3f();
     protected Vector3i amount;
-    public DrawInterceptor<ParticleCuboid, emptyData> afterCalcsIntercept;
-    public DrawInterceptor<ParticleCuboid, beforeCalcData> beforeCalcsIntercept;
+
+    public DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw;
+    public DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw;
 
     private final CommonUtils commonUtils = new CommonUtils();
 
     /** There is no data being transmitted */
-    public enum emptyData {}
+    public enum AfterDrawData {}
 
     /** This data is used before calculations(it contains the vertices)*/
-    public enum beforeCalcData {
+    public enum BeforeDrawData {
         VERTICES,
     }
 
     /** This enum is used for the getter method of setAmount */
-    public enum areaEnum {
+    public enum AreaLabel {
         BOTTOM_FACE, TOP_FACE, VERTICAL_BARS, ALL_FACES
     }
 
@@ -41,16 +42,17 @@ public class ParticleCuboid extends ParticleObject {
      * the size of the cuboid(width, height, depth) & the rotation to apply There is also a simplified version
      * for no rotation.
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param size The size in regard to width, height, depth
      * @param rotation The rotation to apply
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f)
     */
-    public ParticleCuboid(ParticleEffect particle, Vector3i amount, @NotNull Vector3f size, Vector3f rotation) {
-        super(particle, rotation);
-        this.setSize(size);
+    public ParticleCuboid(ParticleEffect particleEffect, Vector3i amount, @NotNull Vector3f size, Vector3f rotation) {
+        super(particleEffect, rotation);
+        // Defensive copy to protect against Vector3f's preference to modify in-place
+        this.setSize(new Vector3f(size));
         this.amount = amount;
     }
 
@@ -59,16 +61,14 @@ public class ParticleCuboid extends ParticleObject {
      * the size of the cuboid(width, height, depth). It is a simplified version for the case when
      * no rotation is meant to be applied. For rotation offset you can use another constructor
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param size The size in regard to width, height, depth
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
      */
-    public ParticleCuboid(ParticleEffect particle, Vector3i amount, @NotNull Vector3f size) {
-        super(particle);
-        this.setSize(size);
-        this.amount = amount;
+    public ParticleCuboid(ParticleEffect particleEffect, Vector3i amount, @NotNull Vector3f size) {
+        this(particleEffect, amount, size, new Vector3f(0));
     }
 
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
@@ -78,17 +78,15 @@ public class ParticleCuboid extends ParticleObject {
      * particles per face section. There is a constructor that allows to handle different amounts per face
      * and another that is meant to be used when no rotation is meant to be applied
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param size The size in regard to width, height, depth
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f)
      */
-    public ParticleCuboid(ParticleEffect particle, int amount, @NotNull Vector3f size, Vector3f rotation) {
-        super(particle, rotation);
-        this.setSize(size);
-        this.amount = new Vector3i(amount, amount, amount);
+    public ParticleCuboid(ParticleEffect particleEffect, int amount, @NotNull Vector3f size, Vector3f rotation) {
+        this(particleEffect, new Vector3i(amount), size, rotation);
     }
 
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
@@ -98,17 +96,15 @@ public class ParticleCuboid extends ParticleObject {
      * particles per face section. There is a constructor that allows to handle different amounts per face
      * and another that is meant to be used when no rotation is meant to be applied
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param size The size in regard to width, height, depth
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f)
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f, Vector3f)
      */
-    public ParticleCuboid(ParticleEffect particle, int amount, @NotNull Vector3f size) {
-        super(particle);
-        this.setSize(size);
-        this.amount = new Vector3i(amount, amount, amount);
+    public ParticleCuboid(ParticleEffect particleEffect, int amount, @NotNull Vector3f size) {
+        this(particleEffect, new Vector3i(amount), size, new Vector3f(0));
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -119,17 +115,21 @@ public class ParticleCuboid extends ParticleObject {
     public ParticleCuboid(ParticleCuboid cuboid) {
         super(cuboid);
         this.size = cuboid.size;
-        this.beforeCalcsIntercept = cuboid.beforeCalcsIntercept;
-        this.afterCalcsIntercept = cuboid.afterCalcsIntercept;
+        this.beforeDraw = cuboid.beforeDraw;
+        this.afterDraw = cuboid.afterDraw;
         this.amount = cuboid.amount;
+    }
+
+    public Vector3f getSize() {
+        // Defensive copy to prevent a caller from messing with this class' data.
+        return new Vector3f(this.size).mul(2);
     }
 
     /** Sets the size of the cuboid object. The X axis corresponds to width,
      * Y axis corresponds to height and Z axis corresponds to depth. There is
-     * an additional way to set size via providing a float(which makes a cube)
+     * an additional way to set size via providing a float (which makes a cube).
      *
-     *
-     * @param size The size(which can produce also a cuboid & a cube)
+     * @param size The size
      * @return The previous size
      * @see ParticleCuboid#setSize(float)
      */
@@ -137,24 +137,24 @@ public class ParticleCuboid extends ParticleObject {
         if (size.x <= 0 || size.y <= 0 || size.z <= 0) {
             throw new IndexOutOfBoundsException("One of the size axis is below or equal to zero");
         }
-        Vector3f prevSize = new Vector3f(this.size).mul(2);
+        Vector3f prevSize = this.getSize();
         this.size = size.mul(0.5f);
         return prevSize;
     }
 
     /** Sets the size of the cuboid object. The width, height & depth is a constant amount
-     *  which makes a cube(and not a cuboid). There is an additional ay to set size via
-     *  providing a Vector3f(which can also make a cuboid and not just a cube)
+     *  which makes a cube (and not a cuboid). There is an additional way to set size via
+     *  providing a Vector3f (which can make a cuboid and not just a cube)
      *
-     * @param size The size(which will produce a cube)
-     * @return The previous size used
+     * @param size The size of the cube
+     * @return The previous size
      * @see ParticleCuboid#setSize(Vector3f)
      */
     public Vector3f setSize(float size) {
         if (size <= 0) {
             throw new IndexOutOfBoundsException("Size cannot be below or equal to zero");
         }
-        Vector3f prevSize = new Vector3f(this.size).mul(2);
+        Vector3f prevSize = this.getSize();
         size /= 2;
         this.size = new Vector3f(size, size, size);
         return prevSize;
@@ -197,14 +197,14 @@ public class ParticleCuboid extends ParticleObject {
      *
      * @return The amount of that face
     */
-    public Vector3i getAmount(areaEnum faceIndex) {
+    public Vector3i getAmount(AreaLabel faceIndex) {
         /*
         Quite junk code but I don't care. I know that I need to favour composition over inheritance.
         But this is just one exception which doesn't make sense to develop a whole composition system
         */
-        return (faceIndex == areaEnum.ALL_FACES) ? this.amount :
-                (faceIndex == areaEnum.BOTTOM_FACE) ? new Vector3i(this.amount.x, -1, -1) :
-                        (faceIndex == areaEnum.TOP_FACE) ? new Vector3i(-1, this.amount.y, -1) :
+        return (faceIndex == AreaLabel.ALL_FACES) ? this.amount :
+                (faceIndex == AreaLabel.BOTTOM_FACE) ? new Vector3i(this.amount.x, -1, -1) :
+                        (faceIndex == AreaLabel.TOP_FACE) ? new Vector3i(-1, this.amount.y, -1) :
                                 new Vector3i(-1, -1, this.amount.z);
     }
 
@@ -213,16 +213,16 @@ public class ParticleCuboid extends ParticleObject {
      * @param width The width
      * @param height The height
      * @param depth The depth
-     * @param pos The center position
+     * @param translation The center position relative to the origin
      * @return The vertex's coordinates
      */
-    public Vector3f getVertex(float width, float height, float depth, Vector3f pos) {
+    public Vector3f getVertex(float width, float height, float depth, Vector3f translation) {
         Vector3f vertex = new Vector3f(width, height, depth);
         vertex = vertex
                 .rotateZ(this.rotation.z)
                 .rotateY(this.rotation.y)
                 .rotateX(this.rotation.x);
-        return vertex.add(pos);
+        return vertex.add(translation);
     }
 
     @Override
@@ -244,9 +244,9 @@ public class ParticleCuboid extends ParticleObject {
         int verticalBarsAmount = this.amount.z;
 
         Vector3f[] vertices = {vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7, vertex8};
-        InterceptedResult<ParticleCuboid, beforeCalcData> modifiedPairBefore =
-                this.interceptDrawCalcBefore(world, vertices, step, this);
-        vertices = (Vector3f[]) modifiedPairBefore.interceptData.getMetadata(beforeCalcData.VERTICES);
+        InterceptedResult<ParticleCuboid, BeforeDrawData> modifiedPairBefore =
+                this.doBeforeDraw(world, vertices, step, this);
+        vertices = (Vector3f[]) modifiedPairBefore.interceptData.getMetadata(BeforeDrawData.VERTICES);
         ParticleCuboid objectInUse = modifiedPairBefore.object;
 
         vertex1 = vertices[0];
@@ -280,24 +280,22 @@ public class ParticleCuboid extends ParticleObject {
             commonUtils.drawLine(objectInUse, world, vertex3, vertex7, verticalBarsAmount);
             commonUtils.drawLine(objectInUse, world, vertex1, vertex4, verticalBarsAmount);
         }
-        this.interceptDrawCalcAfter(world, step, objectInUse);
+        this.doAfterDraw(world, step, objectInUse);
         this.endDraw(world, step, drawPos);
     }
 
-    private void interceptDrawCalcAfter(
-            ServerWorld world, int step, ParticleCuboid obj
-    ) {
-        InterceptData<emptyData> interceptData = new InterceptData<>(world, null, step, emptyData.class);
-        if (this.afterCalcsIntercept == null) return;
-        this.afterCalcsIntercept.apply(interceptData, obj);
+    private void doAfterDraw(ServerWorld world, int step, ParticleCuboid particleCuboid) {
+        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, null, step, AfterDrawData.class);
+        if (this.afterDraw == null) return;
+        this.afterDraw.apply(interceptData, particleCuboid);
     }
 
-    private InterceptedResult<ParticleCuboid, beforeCalcData> interceptDrawCalcBefore(
-            ServerWorld world, Vector3f[] vertices, int step, ParticleCuboid obj
+    private InterceptedResult<ParticleCuboid, BeforeDrawData> doBeforeDraw(
+            ServerWorld world, Vector3f[] vertices, int step, ParticleCuboid particleCuboid
     ) {
-        InterceptData<beforeCalcData> interceptData = new InterceptData<>(world, null, step, beforeCalcData.class);
-        interceptData.addMetadata(beforeCalcData.VERTICES, vertices);
-        if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeCalcsIntercept.apply(interceptData, obj);
+        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
+        interceptData.addMetadata(BeforeDrawData.VERTICES, vertices);
+        if (this.beforeDraw == null) return new InterceptedResult<>(interceptData, this);
+        return this.beforeDraw.apply(interceptData, particleCuboid);
     }
 }
