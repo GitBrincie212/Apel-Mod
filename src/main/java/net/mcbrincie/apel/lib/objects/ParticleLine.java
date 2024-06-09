@@ -13,33 +13,32 @@ import org.joml.Vector3f;
  * in order to draw that line. The line cannot be curved and is only linear.
  * <br><br>
  * <b>Note:</b> rotation won't be applied to the calculations, as such it doesn't make
- * any difference
+ * any difference.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleLine extends ParticleObject {
     protected Vector3f start;
     protected Vector3f end;
-    public DrawInterceptor<ParticleLine, ParticleLine.emptyData> afterCalcsIntercept;
-    public DrawInterceptor<ParticleLine, ParticleLine.emptyData> beforeCalcsIntercept;
 
-    public enum emptyData {}
+    private DrawInterceptor<ParticleLine, AfterDrawData> afterDraw;
+    private DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw;
 
+    public enum BeforeDrawData {}
+    public enum AfterDrawData {}
 
     private final CommonUtils commonUtils = new CommonUtils();
 
-
     /** Constructor for the particle line which is a line. It accepts as parameters
      * the particle to use, the starting endpoint & the ending endpoint. Rotation
-     * doesn't matter in this context,
+     * doesn't matter in this context.
      *
-     * @param particle The particle effect to use
+     * @param particleEffect The particle effect to use
      * @param start The starting endpoint
      * @param end The ending endpoint
      * @param amount The amount of particles
-     *
     */
-    public ParticleLine(ParticleEffect particle, Vector3f start, Vector3f end, int amount) {
-        super(particle);
+    public ParticleLine(ParticleEffect particleEffect, Vector3f start, Vector3f end, int amount) {
+        super(particleEffect);
         this.setAmount(amount);
         if (start.equals(end)) {
             throw new IllegalArgumentException("Endpoints must not be equal");
@@ -57,8 +56,8 @@ public class ParticleLine extends ParticleObject {
         super(line);
         this.end = line.end;
         this.start = line.start;
-        this.beforeCalcsIntercept = line.beforeCalcsIntercept;
-        this.afterCalcsIntercept = line.afterCalcsIntercept;
+        this.beforeDraw = line.beforeDraw;
+        this.afterDraw = line.afterDraw;
     }
 
     /** Sets the starting point of the line
@@ -66,7 +65,7 @@ public class ParticleLine extends ParticleObject {
      * @param start The new starting point of the line
      * @return The previous starting point
     */
-    public Vector3f setStartEndpoint(Vector3f start) {
+    public Vector3f setStart(Vector3f start) {
         if (start.equals(this.end)) {
             throw new IllegalArgumentException("Endpoints must not be equal");
         }
@@ -80,7 +79,7 @@ public class ParticleLine extends ParticleObject {
      * @param end The new ending point of the line
      * @return The previous ending point
     */
-    public Vector3f setEndEndpoint(Vector3f end) {
+    public Vector3f setEnd(Vector3f end) {
         if (end.equals(this.start)) {
             throw new IllegalArgumentException("Endpoints must not be equal");
         }
@@ -91,48 +90,70 @@ public class ParticleLine extends ParticleObject {
 
     @Override
     @Deprecated
-    public Vector3f getRotation() {return null;}
+    public Vector3f getRotation() {
+        return null;
+    }
 
     @Override
     @Deprecated
-    public Vector3f setRotation(Vector3f rotation) {return null;}
+    public Vector3f setRotation(Vector3f rotation) {
+        return null;
+    }
 
     /** Gets the starting endpoint
      *
      * @return The starting endpoint
      */
-    public Vector3f getStartEndpoint() {return this.start;}
+    public Vector3f getStart() {
+        return this.start;
+    }
 
     /** Gets the ending endpoint
      *
      * @return The ending endpoint
      */
-    public Vector3f getEndEndpoint() {return this.end;}
-
+    public Vector3f getEnd() {
+        return this.end;
+    }
 
     @Override
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptedResult<ParticleLine, ParticleLine.emptyData> modifiedBefore =
-                this.interceptDrawCalcBefore(world, step, this);
+        InterceptedResult<ParticleLine, BeforeDrawData> modifiedBefore = this.doBeforeDraw(world, step);
         ParticleLine objectInUse = modifiedBefore.object;
         commonUtils.drawLine(this, world, this.start, this.end, this.amount);
-        this.interceptDrawCalcAfter(world, step, objectInUse);
+        this.doAfterDraw(world, step);
         this.endDraw(world, step, drawPos);
     }
 
-    private void interceptDrawCalcAfter(
-            ServerWorld world, int step, ParticleLine obj
-    ) {
-        InterceptData<ParticleLine.emptyData> interceptData = new InterceptData<>(world, null, step, ParticleLine.emptyData.class);
-        if (this.afterCalcsIntercept == null) return;
-        this.afterCalcsIntercept.apply(interceptData, obj);
+    /** Sets the interceptor to run after drawing the line.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the animation step number, and the ParticleLine
+     * instance.
+     *
+     * @param afterDraw the new interceptor to execute after drawing the line
+     */
+    public void setAfterDraw(DrawInterceptor<ParticleLine, AfterDrawData> afterDraw) {
+        this.afterDraw = afterDraw;
     }
 
-    private InterceptedResult<ParticleLine, ParticleLine.emptyData> interceptDrawCalcBefore(
-            ServerWorld world, int step, ParticleLine obj
-    ) {
-        InterceptData<ParticleLine.emptyData> interceptData = new InterceptData<>(world, null, step, ParticleLine.emptyData.class);
-        if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeCalcsIntercept.apply(interceptData, obj);
+    private void doAfterDraw(ServerWorld world, int step) {
+        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, null, step, AfterDrawData.class);
+        if (this.afterDraw == null) return;
+        this.afterDraw.apply(interceptData, this);
+    }
+
+    /** Set the interceptor to run before drawing the line.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the animation step number, and the ParticleLine
+     * instance.
+     *
+     * @param beforeDraw the new interceptor to execute before drawing the line
+     */
+    public void setBeforeDraw(DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw) {
+        this.beforeDraw = beforeDraw;
+    }
+
+    private InterceptedResult<ParticleLine, BeforeDrawData> doBeforeDraw(ServerWorld world, int step) {
+        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
+        if (this.beforeDraw == null) return new InterceptedResult<>(interceptData, this);
+        return this.beforeDraw.apply(interceptData, this);
     }
 }
