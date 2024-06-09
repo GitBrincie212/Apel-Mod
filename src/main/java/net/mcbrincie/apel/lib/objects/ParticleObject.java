@@ -7,6 +7,8 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
+import java.util.Optional;
+
 
 /** The base class for any particle object. Particle objects are the things
  * that will be rendered. This can be a cube, a sphere, a 2D circle, a cat, a
@@ -25,13 +27,13 @@ public class ParticleObject {
     protected Vector3f rotation;
     protected int amount = 1;
 
-    public DrawInterceptor<ParticleObject, beforeCalc> beforeDraw;
-    public DrawInterceptor<ParticleObject, afterCalc> afterDraw;
+    private DrawInterceptor<ParticleObject, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleObject, AfterDrawData> afterDraw = DrawInterceptor.identity();
 
-    public enum beforeCalc {
+    public enum BeforeDrawData {
         DRAW_POSITION
     }
-    public enum afterCalc {}
+    public enum AfterDrawData {}
 
 
     /** Constructor for the particle object which is a point. It accepts as parameters
@@ -156,11 +158,11 @@ public class ParticleObject {
      * @param drawPos The position to draw at
      */
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptedResult<ParticleObject, beforeCalc> modifiedResult = this.doBeforeDraw(world, drawPos, step, this);
-        drawPos = (Vector3f) modifiedResult.interceptData.getMetadata(beforeCalc.DRAW_POSITION);
-        this.drawParticle(world, drawPos);
-        this.doAfterDraw(world, drawPos, step, this);
-        this.endDraw(world, step, drawPos);
+        InterceptedResult<ParticleObject, BeforeDrawData> modifiedResult = this.doBeforeDraw(world, drawPos, step);
+        Vector3f objectDrawPosition = (Vector3f) modifiedResult.interceptData.getMetadata(BeforeDrawData.DRAW_POSITION);
+        this.drawParticle(world, objectDrawPosition);
+        this.doAfterDraw(world, objectDrawPosition, step);
+        this.endDraw(world, step, objectDrawPosition);
     }
 
     public void endDraw(ServerWorld world, int step, Vector3f pos) {
@@ -173,18 +175,22 @@ public class ParticleObject {
         );
     }
 
-    private InterceptedResult<ParticleObject, beforeCalc> doBeforeDraw(
-            ServerWorld world, Vector3f drawPos, int step, ParticleObject obj
-    ) {
-        InterceptData<beforeCalc> interceptData = new InterceptData<>(world, drawPos, step, beforeCalc.class);
-        interceptData.addMetadata(beforeCalc.DRAW_POSITION, drawPos);
-        if (this.beforeDraw == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeDraw.apply(interceptData, obj);
+    public void setBeforeDraw(DrawInterceptor<ParticleObject, BeforeDrawData> beforeDraw) {
+        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private void doAfterDraw(ServerWorld world, Vector3f drawPos, int step, ParticleObject obj) {
-        InterceptData<afterCalc> interceptData = new InterceptData<>(world, drawPos, step, afterCalc.class);
-        if (this.afterDraw == null) return;
-        this.afterDraw.apply(interceptData, obj);
+    public void setAfterDraw(DrawInterceptor<ParticleObject, AfterDrawData> afterDraw) {
+        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
+    }
+
+    private InterceptedResult<ParticleObject, BeforeDrawData> doBeforeDraw(ServerWorld world, Vector3f drawPos, int step) {
+        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, drawPos, step, BeforeDrawData.class);
+        interceptData.addMetadata(BeforeDrawData.DRAW_POSITION, drawPos);
+        return this.beforeDraw.apply(interceptData, this);
+    }
+
+    private InterceptedResult<ParticleObject, AfterDrawData> doAfterDraw(ServerWorld world, Vector3f drawPos, int step) {
+        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
+        return this.afterDraw.apply(interceptData, this);
     }
 }

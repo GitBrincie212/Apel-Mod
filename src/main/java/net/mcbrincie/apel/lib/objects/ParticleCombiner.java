@@ -12,6 +12,7 @@ import oshi.util.tuples.Pair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 
 /** A utility particle object class that groups all particle objects as
@@ -27,29 +28,29 @@ import java.util.List;
  * as well as the object being handled as 1 particle object instance instead of being multiple. Which
  * means that memory is dramatically reduced down for complex scenes(if you had 10 path animators for 10
  * objects, in which the path animators do 1 million rendering step. The entire bandwidth is cut down
- * from 10 million -> 1 million steps allocated to the scheduler for the processing)<br><br>
+ * from 10 million -> 1 million steps allocated to the scheduler for the processing).<br><br>
  *
  * <b>Easier Management On Multiple Complex Objects</b><br>
  * The main premise of the particle combiner is to combine particle objects as 1. Which can simplify
  * repetitive logic and instead of passing the objects into separate path animators(that contain the
  * almost same params and are the same type). Now you can pass it in only 1 path animator, there are
- * common methods for managing the object instances which further simplify the repetitive process<br><br>
+ * common methods for managing the object instances which further simplify the repetitive process.<br><br>
  *
  * <b>Dynamic Object Allocation At Runtime</b><br>
  * Without the particle combiner, it is difficult to create objects at runtime and create a new path animator
  * that inherits almost all the same attributes as all the other animators for the other objects & programmatically
  * changing the params is very tedious. This doesn't have to be the case, because you can allocate a new particle
- * object to the particle combiner and from there APEL would take care the rest<br><br>
+ * object to the particle combiner and from there APEL would take care the rest.<br><br>
  *
  * <b>Controlling Objects Before Being Drawn</b><br>
- * Thanks to the {@code beforeChildRenderIntercept}. The developer can control the object itself before other
- * interceptors from that object can do, they can also choose if they want to draw the object or not by modifying
- * {@code CAN_DRAW_OBJECT}, which this logic is not possible without changing the particle object's class<br><br>
+ * Developers may use {@link #setBeforeChildDrawIntercept(DrawInterceptor)} to control the object itself before other
+ * interceptors from that object apply.  They may also choose whether to draw the object or not by modifying
+ * {@code CAN_DRAW_OBJECT}, which this logic is not possible without changing the particle object's class.br><br>
  *
  * <b>Hierarchical Grouping</b><br>
- * Particle combiners can also combine themselves which can allow for the creation of tree-like particle objects,
- * without the need of making your own particle object class and configuring the params to work the way that. All
- * this logic you would have to go and implement is handled for you, you can also use recursive
+ * Particle combiners can also combine themselves which can allow for the creation of tree-like particle hierarchies,
+ * without the need of making your own particle object class and configuring the params to work that way. All
+ * this logic you would have to go and implement is handled for you. You can also use recursive
  * methods to scale down the tree and modify the values<br><br>
  *
  * @param <T> The type of the object, can also be set to <?> to accept all particle objects
@@ -60,17 +61,17 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     protected int amount = -1;
     protected List<Vector3f> offset = new ArrayList<>();
 
-    public DrawInterceptor<ParticleCombiner<T>, emptyData> afterChildRenderIntercept;
-    public DrawInterceptor<ParticleCombiner<T>, beforeChildRenderData> beforeChildRenderIntercept;
+    public DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDrawIntercept = DrawInterceptor.identity();
+    public DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDrawIntercept = DrawInterceptor.identity();
 
     @Deprecated public final DrawInterceptor<?, ?> afterCalcsIntercept = null;
     @Deprecated public final DrawInterceptor<?, ?> beforeCalcsIntercept = null;
 
     /** There is no data being transmitted */
-    public enum emptyData {}
+    public enum AfterChildDrawData {}
 
     /** This data is used after calculations(it contains the modified 4 vertices) */
-    public enum beforeChildRenderData {
+    public enum BeforeChildDrawData {
         OBJECT_IN_USE, CAN_DRAW_OBJECT
     }
 
@@ -152,8 +153,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         this.objects = combiner.objects;
         this.amount = combiner.amount;
         this.offset = combiner.offset;
-        this.afterChildRenderIntercept = combiner.afterChildRenderIntercept;
-        this.beforeChildRenderIntercept = combiner.beforeChildRenderIntercept;
+        this.afterChildDrawIntercept = combiner.afterChildDrawIntercept;
+        this.beforeChildDrawIntercept = combiner.beforeChildDrawIntercept;
     }
 
     /** Sets the rotation for all the particle objects. There is
@@ -661,48 +662,48 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @param index the index of the particle object
      * @return The list of particle objects
      */
-    public T getObject(int index) {return objects.get(index);}
+    public T getObject(int index) {
+        return objects.get(index);
+    }
 
     @Override
     public void draw(ServerWorld world, int step, Vector3f pos) {
         int index = -1;
         for (T object : this.objects) {
             index++;
-            InterceptedResult<ParticleCombiner<T>, beforeChildRenderData> modifiedDataBefore =
-                    this.interceptRenderChildBefore(world, step, this, object);
-            Boolean shouldDraw = (Boolean) modifiedDataBefore.interceptData.getMetadata(beforeChildRenderData.CAN_DRAW_OBJECT);
+            InterceptedResult<ParticleCombiner<T>, BeforeChildDrawData> modifiedDataBefore =
+                    this.doBeforeChildDraw(world, step, object);
+            Boolean shouldDraw = (Boolean) modifiedDataBefore.interceptData.getMetadata(BeforeChildDrawData.CAN_DRAW_OBJECT);
             if (shouldDraw == null || shouldDraw == Boolean.FALSE) {
-                // Unset or explicitly false == do not draw
                 continue;
             }
             ParticleObject objInUse = (ParticleObject) modifiedDataBefore.interceptData.getMetadata(
-                    beforeChildRenderData.OBJECT_IN_USE
+                    BeforeChildDrawData.OBJECT_IN_USE
             );
-            ParticleCombiner<T> comberInUse = modifiedDataBefore.object;
             objInUse.draw(world, step, pos.add(this.offset.get(index)));
-            this.interceptRenderChildAfter(world, step, comberInUse);
+            this.doAfterChildDraw(world, step);
         }
     }
 
-    private InterceptedResult<ParticleCombiner<T>, emptyData> interceptRenderChildAfter(
-            ServerWorld world, int step, ParticleCombiner<T> obj
-    ) {
-        InterceptData<emptyData> interceptData = new InterceptData<>(
-                world, null, step, emptyData.class
-        );
-        if (this.afterChildRenderIntercept == null) return new InterceptedResult<>(interceptData, obj);
-        return this.afterChildRenderIntercept.apply(interceptData, obj);
+    public void setBeforeChildDrawIntercept(DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDrawIntercept) {
+        this.beforeChildDrawIntercept = Optional.ofNullable(beforeChildDrawIntercept).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleCombiner<T>, beforeChildRenderData> interceptRenderChildBefore(
-            ServerWorld world, int step, ParticleCombiner<T> obj, T objectInUse
+    public void setAfterChildDrawIntercept(DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDrawIntercept) {
+        this.afterChildDrawIntercept = Optional.ofNullable(afterChildDrawIntercept).orElse(DrawInterceptor.identity());
+    }
+
+    private InterceptedResult<ParticleCombiner<T>, AfterChildDrawData> doAfterChildDraw(ServerWorld world, int step) {
+        InterceptData<AfterChildDrawData> interceptData = new InterceptData<>(world, null, step, AfterChildDrawData.class);
+        return this.afterChildDrawIntercept.apply(interceptData, this);
+    }
+
+    private InterceptedResult<ParticleCombiner<T>, BeforeChildDrawData> doBeforeChildDraw(
+            ServerWorld world, int step, T objectInUse
     ) {
-        InterceptData<beforeChildRenderData> interceptData = new InterceptData<>(
-                world, null, step, beforeChildRenderData.class
-        );
-        interceptData.addMetadata(beforeChildRenderData.OBJECT_IN_USE, objectInUse);
-        interceptData.addMetadata(beforeChildRenderData.CAN_DRAW_OBJECT, true);
-        if (this.beforeChildRenderIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeChildRenderIntercept.apply(interceptData, obj);
+        InterceptData<BeforeChildDrawData> interceptData = new InterceptData<>(world, null, step, BeforeChildDrawData.class);
+        interceptData.addMetadata(BeforeChildDrawData.OBJECT_IN_USE, objectInUse);
+        interceptData.addMetadata(BeforeChildDrawData.CAN_DRAW_OBJECT, true);
+        return this.beforeChildDrawIntercept.apply(interceptData, this);
     }
 }
