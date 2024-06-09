@@ -202,72 +202,6 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         return prevRotation;
     }
 
-    /** Sets the offset position per object. The offset positions have to be the same
-     * amount as the objects. New objects added will have their offset to (0,0,0). There
-     * is a helper method to allow to set for all objects the same offset
-     *
-     *
-     * @param offset The offsets for each object(corresponding on each index)
-     * @return The previous offsets
-     */
-    public Vector3f[] setOffsetPosition(Vector3f... offset) {
-        List<Vector3f> prevOffset = this.offset;
-        this.offset = Arrays.stream(offset).toList();
-        return prevOffset.toArray(Vector3f[]::new);
-    }
-
-    /** Sets the offset position to all objects. The offset applies to all objects and overwrites
-     * the values. New objects added will have their offset to (0,0,0). There is a
-     * helper method to allows to set different offsets to different objects
-     *
-     *
-     * @param offset The offsets for all the objects
-     * @return The previous offsets
-     */
-    public Vector3f[] setOffsetPosition(Vector3f offset) {
-        List<Vector3f> prevOffset = this.offset;
-        Vector3f[] newList = new Vector3f[this.objects.size()];
-        Arrays.fill(newList, this.offset);
-        this.offset = Arrays.stream(newList).toList();
-        return prevOffset.toArray(Vector3f[]::new);
-    }
-
-    /** Sets the offset position for the individual object. By supplying an index and the
-     * new offset for that object
-     *
-     *
-     * @param offset The offsets for the indexed object
-     * @return The previous offset
-     */
-    public Vector3f setIndividualOffsetPosition(int index, Vector3f offset) {
-        Vector3f prevOffset = this.offset.get(index);
-        this.offset.set(index, offset);
-        return prevOffset;
-    }
-
-    /** Gets the offsets per object and returns a list
-     *
-     * @return The list of offsets per object
-     */
-    public List<Vector3f> getOffsets() {
-        return this.offset;
-    }
-
-    /** Sets the offset position for the individual object. By supplying the object and the
-     * new offset for that object. If the object is not found it will return null
-     *
-     *
-     * @param offset The offsets for the individual object
-     * @return The previous offset
-     */
-    public Vector3f setIndividualOffsetPosition(T object, Vector3f offset) {
-        int index = this.objects.indexOf(object);
-        if (index == -1) return null;
-        Vector3f prevOffset = this.offset.get(index);
-        this.offset.set(index, offset);
-        return prevOffset;
-    }
-
     /** Sets the rotation for all the particle objects, there
      * is an offset of XYZ per object. There is also a simplified
      * method that doesn't use offsets
@@ -289,186 +223,6 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             i++;
         }
         return prevRotation;
-    }
-
-    /** Sets the particle to use to a new value and returns the previous particle that was used.
-     * This applies to all the object. The value can also be null meaning that there are different
-     * particle effects at play in the object
-     *
-     * @param particle The new particle
-     * @return The previous particle
-    */
-    @Override
-    public ParticleEffect setParticleEffect(ParticleEffect particle) {
-        ParticleEffect prevParticle = super.setParticleEffect(particle);
-        for (T object : this.objects) {
-            object.setParticleEffect(particle);
-        }
-        return prevParticle;
-    }
-
-    /** Sets the amount to use to a new value and returns the previous amount that was used.
-     * This applies to all the object. The value can also be -1 meaning that there are different
-     * particle effects at play in the object. There is a method that allows for offsets per
-     * particle objects
-     *
-     * @param amount The new particle
-     *
-     * @return The previous particle
-     *
-     * @see ParticleCombiner#setAmount(int, int)
-    */
-    @Override
-    public int setAmount(int amount) {
-        int prevAmount = super.setAmount(amount);
-        for (T object : this.objects) {
-            object.setAmount(amount);
-        }
-        return prevAmount;
-    }
-
-    /** Sets the amount to use to a new value and returns the previous amount that was used.
-     * This applies to all the object. The value can also be -1 meaning that there are different
-     * particle effects at play in the object. The offset param changes the amount per object by
-     * a specified amount. There is also a simplified version that doesn't use offsets
-     *
-     * @param amount The new particle
-     * @param offset The offset of the amount(can be positive or negative)
-     * @return The previous particle
-     *
-     * @see ParticleCombiner#setAmount(int)
-     */
-    public int setAmount(int amount, int offset) {
-        if (offset == 0) {
-            throw new IllegalArgumentException("offset must not equal to 0");
-        }
-        int prevAmount = super.setAmount(amount);
-        int i = 0;
-        for (T object : this.objects) {
-            object.setAmount(amount + (offset * i));
-            i++;
-        }
-        return prevAmount;
-    }
-
-
-    /** Sets the amount of particle objects to use and returns the previous objects that were used.
-     *
-     * @param objects The particle objects list
-     * @return The previous particle objects list
-    */
-    @SafeVarargs
-    public final List<T> setObjects(T... objects) {
-        if (objects.length <= 1) {
-            throw new IllegalArgumentException("There has to be needs than 1 object supplied");
-        }
-        System.out.println(Arrays.toString(objects));
-        List<T> prevObjects = this.objects;
-        this.objects = Arrays.asList(objects);
-        Vector3f[] offsets = new Vector3f[objects.length];
-        Arrays.fill(offsets, new Vector3f());
-        this.offset = Arrays.stream(offsets).toList();
-        int prevAmount = objects[0].amount;
-        ParticleEffect prevEffect = objects[0].particleEffect;
-        for (T object : this.objects) {
-            if (this.amount == -1 && this.particleEffect == null) break;
-            this.amount = (object.amount != this.amount) ? -1 : this.amount;
-            this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
-        }
-        return prevObjects;
-    }
-
-    /** Sets the amount of particle objects to use and returns the previous objects that were used.
-     *
-     * @param objects The particle objects list
-     * @return The previous particle objects list
-     */
-    public final List<T> setObjects(List<T> objects) {
-        if (objects.size() <= 1) {
-            throw new IllegalArgumentException("There has to be needs than 1 object supplied");
-        }
-        System.out.println(objects);
-        List<T> prevObjects = this.objects;
-        this.objects = objects;
-        Vector3f[] offsets = new Vector3f[objects.size()];
-        Arrays.fill(offsets, new Vector3f());
-        this.offset = Arrays.stream(offsets).toList();
-        int prevAmount = objects.getFirst().amount;
-        ParticleEffect prevEffect = objects.getFirst().particleEffect;
-        for (T object : this.objects) {
-            if (this.amount == -1 && this.particleEffect == null) break;
-            this.amount = (object.amount != this.amount) ? -1 : this.amount;
-            this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
-        }
-        return prevObjects;
-    }
-
-    /** Appends a new particle object to the combiner. This is at the back
-     *  of the list. Meaning that this object is the last one in the list.
-     *  The offset position is (0,0,0) when appending, although you can use
-     *  the same method but just supplying the offset
-     *
-     * @param object The object to add to the list
-     *
-     * @see ParticleCombiner#appendObject(ParticleObject, Vector3f)
-     */
-    public void appendObject(T object) {
-        if (object.amount != this.amount) this.amount = -1;
-        if (object.particleEffect != this.particleEffect) this.particleEffect = null;
-        this.objects.add(object);
-        this.offset.add(new Vector3f());
-    }
-
-    /** Appends a new particle object to the combiner. This is at the back
-     *  of the list. Meaning that this object is the last one in the list.
-     *  The offset position is (0,0,0) when appending, although you can use
-     *  the same method but just supplying the offset
-     *
-     * @param object The object to add to the list
-     *
-     * @see ParticleCombiner#appendObject(ParticleObject)
-     */
-    public void appendObject(T object, Vector3f offset) {
-        if (object.amount != this.amount) this.amount = -1;
-        if (object.particleEffect != this.particleEffect) this.particleEffect = null;
-        this.objects.add(object);
-        this.offset.add(offset);
-    }
-
-    /** Adds all the objects at the back of the list. All the objects
-     * will have an offset of (0,0,0).
-     *
-     * @param objects The objects to add
-    */
-    @SafeVarargs
-    public final void appendMulObjects(T... objects) {
-        List<T> objectList = Arrays.stream(objects).toList();
-        this.objects.addAll(objectList);
-        Vector3f[] offsets = new Vector3f[objects.length];
-        Arrays.fill(offsets, new Vector3f());
-        for (T object : this.objects) {
-            if (object.amount != this.amount) this.amount = -1;
-            if (object.particleEffect != this.particleEffect) this.particleEffect = null;
-        }
-        this.offset.addAll(Arrays.stream(offsets).toList());
-    }
-
-    /** Sets the individual object at that index to a different object
-     *
-     * @param index The index of the particle object to replace at
-     * @param newObject The new particle object
-     * @return The previous particle object
-     */
-    public T setIndividualObject(int index, T newObject) {
-        T prevObject = this.objects.get(index);
-        this.objects.set(index, newObject);
-        if (this.particleEffect != newObject.particleEffect) {
-            this.particleEffect = null;
-        }
-        if (this.amount != newObject.amount) {
-            this.amount = -1;
-        }
-        return prevObject;
     }
 
     /** Sets the rotation for all the particle objects(this includes objects
@@ -515,25 +269,86 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         }
     }
 
-    /** Removes an object from the combiner including its offset. Returns
-     * the object that was removed as well as the offset position
+    /** Gets the offsets per object and returns a list
      *
-     * @param index The index to remove at
-     * @return The pair of the object & offset
+     * @return The list of offsets per object
      */
-    public Pair<T, Vector3f> removeObject(int index) {
-        return new Pair<>(this.objects.remove(index), this.offset.remove(index));
+    public List<Vector3f> getOffsets() {
+        return this.offset;
     }
 
-    /** Removes an object from the combiner including its offset. Returns
-     * the object that was removed as well as the offset position
+    /** Sets the offset position per object. The offset positions have to be the same
+     * amount as the objects. New objects added will have their offset to (0,0,0). There
+     * is a helper method to allow to set for all objects the same offset
      *
-     * @param object The index to remove at
-     * @return The pair of the object & offset
+     *
+     * @param offset The offsets for each object(corresponding on each index)
+     * @return The previous offsets
      */
-    public Pair<T, Vector3f> removeObject(T object) {
+    public Vector3f[] setOffsetPosition(Vector3f... offset) {
+        List<Vector3f> prevOffset = this.offset;
+        this.offset = Arrays.stream(offset).toList();
+        return prevOffset.toArray(Vector3f[]::new);
+    }
+
+    /** Sets the offset position to all objects. The offset applies to all objects and overwrites
+     * the values. New objects added will have their offset to (0,0,0). There is a
+     * helper method to allows to set different offsets to different objects
+     *
+     *
+     * @param offset The offsets for all the objects
+     * @return The previous offsets
+     */
+    public Vector3f[] setOffsetPosition(Vector3f offset) {
+        List<Vector3f> prevOffset = this.offset;
+        Vector3f[] newList = new Vector3f[this.objects.size()];
+        Arrays.fill(newList, this.offset);
+        this.offset = Arrays.stream(newList).toList();
+        return prevOffset.toArray(Vector3f[]::new);
+    }
+
+    /** Sets the offset position for the individual object. By supplying an index and the
+     * new offset for that object
+     *
+     *
+     * @param offset The offsets for the indexed object
+     * @return The previous offset
+     */
+    public Vector3f setOffsetPosition(int index, Vector3f offset) {
+        Vector3f prevOffset = this.offset.get(index);
+        this.offset.set(index, offset);
+        return prevOffset;
+    }
+
+    /** Sets the offset position for the individual object. By supplying the object and the
+     * new offset for that object. If the object is not found it will return null
+     *
+     *
+     * @param offset The offsets for the individual object
+     * @return The previous offset
+     */
+    public Vector3f setOffsetPosition(T object, Vector3f offset) {
         int index = this.objects.indexOf(object);
-        return new Pair<>(this.objects.remove(index), this.offset.remove(index));
+        if (index == -1) return null;
+        Vector3f prevOffset = this.offset.get(index);
+        this.offset.set(index, offset);
+        return prevOffset;
+    }
+
+    /** Sets the particle to use to a new value and returns the previous particle that was used.
+     * This applies to all the object. The value can also be null meaning that there are different
+     * particle effects at play in the object
+     *
+     * @param particle The new particle
+     * @return The previous particle
+    */
+    @Override
+    public ParticleEffect setParticleEffect(ParticleEffect particle) {
+        ParticleEffect prevParticle = super.setParticleEffect(particle);
+        for (T object : this.objects) {
+            object.setParticleEffect(particle);
+        }
+        return prevParticle;
     }
 
     /** Sets the particle to use to a new value and returns the previous particle that was used.
@@ -582,6 +397,50 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             }
             object.setParticleEffect(particle[depth]);
         }
+    }
+
+    /** Sets the amount to use to a new value and returns the previous amount that was used.
+     * This applies to all the object. The value can also be -1 meaning that there are different
+     * particle effects at play in the object. There is a method that allows for offsets per
+     * particle objects
+     *
+     * @param amount The new particle
+     *
+     * @return The previous particle
+     *
+     * @see ParticleCombiner#setAmount(int, int)
+    */
+    @Override
+    public int setAmount(int amount) {
+        int prevAmount = super.setAmount(amount);
+        for (T object : this.objects) {
+            object.setAmount(amount);
+        }
+        return prevAmount;
+    }
+
+    /** Sets the amount to use to a new value and returns the previous amount that was used.
+     * This applies to all the object. The value can also be -1 meaning that there are different
+     * particle effects at play in the object. The offset param changes the amount per object by
+     * a specified amount. There is also a simplified version that doesn't use offsets
+     *
+     * @param amount The new particle
+     * @param offset The offset of the amount(can be positive or negative)
+     * @return The previous particle
+     *
+     * @see ParticleCombiner#setAmount(int)
+     */
+    public int setAmount(int amount, int offset) {
+        if (offset == 0) {
+            throw new IllegalArgumentException("offset must not equal to 0");
+        }
+        int prevAmount = super.setAmount(amount);
+        int i = 0;
+        for (T object : this.objects) {
+            object.setAmount(amount + (offset * i));
+            i++;
+        }
+        return prevAmount;
     }
 
     /** Sets the amount to use to a new value and returns the previous amount that was used.
@@ -662,6 +521,146 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @return The list of particle objects
      */
     public T getObject(int index) {return objects.get(index);}
+
+    /** Sets the amount of particle objects to use and returns the previous objects that were used.
+     *
+     * @param objects The particle objects list
+     * @return The previous particle objects list
+    */
+    @SafeVarargs
+    public final List<T> setObjects(T... objects) {
+        if (objects.length <= 1) {
+            throw new IllegalArgumentException("There has to be needs than 1 object supplied");
+        }
+        System.out.println(Arrays.toString(objects));
+        List<T> prevObjects = this.objects;
+        this.objects = Arrays.asList(objects);
+        Vector3f[] offsets = new Vector3f[objects.length];
+        Arrays.fill(offsets, new Vector3f());
+        this.offset = Arrays.stream(offsets).toList();
+        int prevAmount = objects[0].amount;
+        ParticleEffect prevEffect = objects[0].particleEffect;
+        for (T object : this.objects) {
+            if (this.amount == -1 && this.particleEffect == null) break;
+            this.amount = (object.amount != this.amount) ? -1 : this.amount;
+            this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
+        }
+        return prevObjects;
+    }
+
+    /** Sets the amount of particle objects to use and returns the previous objects that were used.
+     *
+     * @param objects The particle objects list
+     * @return The previous particle objects list
+     */
+    public final List<T> setObjects(List<T> objects) {
+        if (objects.size() <= 1) {
+            throw new IllegalArgumentException("There has to be needs than 1 object supplied");
+        }
+        System.out.println(objects);
+        List<T> prevObjects = this.objects;
+        this.objects = objects;
+        Vector3f[] offsets = new Vector3f[objects.size()];
+        Arrays.fill(offsets, new Vector3f());
+        this.offset = Arrays.stream(offsets).toList();
+        int prevAmount = objects.getFirst().amount;
+        ParticleEffect prevEffect = objects.getFirst().particleEffect;
+        for (T object : this.objects) {
+            if (this.amount == -1 && this.particleEffect == null) break;
+            this.amount = (object.amount != this.amount) ? -1 : this.amount;
+            this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
+        }
+        return prevObjects;
+    }
+
+    /** Sets the individual object at that index to a different object
+     *
+     * @param index The index of the particle object to replace at
+     * @param newObject The new particle object
+     * @return The previous particle object
+     */
+    public T setObject(int index, T newObject) {
+        T prevObject = this.objects.get(index);
+        this.objects.set(index, newObject);
+        if (this.particleEffect != newObject.particleEffect) {
+            this.particleEffect = null;
+        }
+        if (this.amount != newObject.amount) {
+            this.amount = -1;
+        }
+        return prevObject;
+    }
+
+    /** Adds all the objects at the back of the list. All the objects
+     * will have an offset of (0,0,0).
+     *
+     * @param objects The objects to add
+     */
+    @SafeVarargs
+    public final void appendObjects(T... objects) {
+        List<T> objectList = Arrays.stream(objects).toList();
+        this.objects.addAll(objectList);
+        Vector3f[] offsets = new Vector3f[objects.length];
+        Arrays.fill(offsets, new Vector3f());
+        for (T object : this.objects) {
+            if (object.amount != this.amount) this.amount = -1;
+            if (object.particleEffect != this.particleEffect) this.particleEffect = null;
+        }
+        this.offset.addAll(Arrays.stream(offsets).toList());
+    }
+
+    /** Appends a new particle object to the combiner. This is at the back
+     *  of the list. Meaning that this object is the last one in the list.
+     *  The offset position is (0,0,0) when appending, although you can use
+     *  the same method but just supplying the offset
+     *
+     * @param object The object to add to the list
+     *
+     * @see ParticleCombiner#appendObject(ParticleObject, Vector3f)
+     */
+    public void appendObject(T object) {
+        if (object.amount != this.amount) this.amount = -1;
+        if (object.particleEffect != this.particleEffect) this.particleEffect = null;
+        this.objects.add(object);
+        this.offset.add(new Vector3f());
+    }
+
+    /** Appends a new particle object to the combiner. This is at the back
+     *  of the list. Meaning that this object is the last one in the list.
+     *  The offset position is (0,0,0) when appending, although you can use
+     *  the same method but just supplying the offset
+     *
+     * @param object The object to add to the list
+     *
+     * @see ParticleCombiner#appendObject(ParticleObject)
+     */
+    public void appendObject(T object, Vector3f offset) {
+        if (object.amount != this.amount) this.amount = -1;
+        if (object.particleEffect != this.particleEffect) this.particleEffect = null;
+        this.objects.add(object);
+        this.offset.add(offset);
+    }
+
+    /** Removes an object from the combiner including its offset. Returns
+     * the object that was removed as well as the offset position
+     *
+     * @param index The index to remove at
+     * @return The pair of the object & offset
+     */
+    public Pair<T, Vector3f> removeObject(int index) {
+        return new Pair<>(this.objects.remove(index), this.offset.remove(index));
+    }
+
+    /** Removes an object from the combiner including its offset. Returns
+     * the object that was removed as well as the offset position
+     *
+     * @param object The index to remove at
+     * @return The pair of the object & offset
+     */
+    public Pair<T, Vector3f> removeObject(T object) {
+        int index = this.objects.indexOf(object);
+        return new Pair<>(this.objects.remove(index), this.offset.remove(index));
+    }
 
     @Override
     public void draw(ServerWorld world, int step, Vector3f pos) {
