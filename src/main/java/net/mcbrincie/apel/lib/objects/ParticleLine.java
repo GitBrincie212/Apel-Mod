@@ -131,6 +131,7 @@ public class ParticleLine extends ParticleObject {
      *
      * @param afterDraw the new interceptor to execute after drawing the line
      */
+    @Override
     public void setAfterDraw(DrawInterceptor<ParticleLine, AfterDrawData> afterDraw) {
         this.afterDraw = afterDraw;
     }
@@ -147,6 +148,7 @@ public class ParticleLine extends ParticleObject {
      *
      * @param beforeDraw the new interceptor to execute before drawing the line
      */
+    @Override
     public void setBeforeDraw(DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw) {
         this.beforeDraw = beforeDraw;
     }
