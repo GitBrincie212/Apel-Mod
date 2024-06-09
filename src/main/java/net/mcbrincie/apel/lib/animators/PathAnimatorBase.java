@@ -296,11 +296,11 @@ public abstract class PathAnimatorBase {
      *
      * @param world The server world instance
      * @param step The current step in
-     * @param curr The current position
+     * @param drawPosition The planned drawing position
      * @throws SeqMissingException When it finds that there is no sequence yet allocated
      */
-    public void handleDrawingStep(ServerWorld world, int step, Vector3f curr) throws SeqMissingException {
-        Runnable func = () -> this.particle.draw(world, step, curr);
+    public void handleDrawingStep(ServerWorld world, int step, Vector3f drawPosition) throws SeqMissingException {
+        Runnable func = () -> this.particle.draw(world, step, drawPosition);
         if (this.delay == 0) {
             Apel.drawThread.submit(func);
             return;
