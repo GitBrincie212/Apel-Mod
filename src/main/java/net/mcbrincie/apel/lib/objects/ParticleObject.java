@@ -16,7 +16,7 @@ public abstract class ParticleObject {
      * path animators that extend this class). There is also a simplified version
      * for no rotation.
      *
-     * @see ParticlePoint#ParticlePoint(ParticlePoint)
+     * @see ParticleObject#ParticleObject(ParticleObject)
      *
      * @param particleEffect The particle effect to use
      * @param rotation The rotation(IN RADIANS)
@@ -31,7 +31,7 @@ public abstract class ParticleObject {
      * and is meant to be used when you want the object to not have a rotation offset.
      * In the case you do want there is a constructor for that(won't apply to this class)
      *
-     * @see ParticlePoint#ParticlePoint(ParticleEffect, Vector3f)
+     * @see ParticleObject#ParticleObject(ParticleEffect, Vector3f)
      *
      * @param particleEffect The particle effect to use
     */
@@ -43,7 +43,7 @@ public abstract class ParticleObject {
      * the params, including the interceptors the particle object has
      *
      * @param object The particle object to copy from
-    */
+     */
     public ParticleObject(ParticleObject object) {
         this.particleEffect = object.particleEffect;
         this.rotation = object.rotation;
@@ -140,7 +140,9 @@ public abstract class ParticleObject {
      *
      * @return The offset
      */
-    public Vector3f getOffset() {return this.offset;}
+    public Vector3f getOffset() {
+        return this.offset;
+    }
 
     /** This method allows for drawing a particle object given the world, the current step and the drawing position.
      * <b>The method is used for internal workings, its not meant to be used for outside use</b>. Path animators
@@ -151,11 +153,11 @@ public abstract class ParticleObject {
      * @param drawPos The position to draw at
     */
     public abstract void draw(ServerWorld world, int step, Vector3f drawPos);
-    public void endDraw(ServerWorld world, int step, Vector3f pos) {}
+    public void endDraw(ServerWorld world, int step, Vector3f drawPos) {}
 
-    public void drawParticle(ServerWorld world, Vector3f position) {
+    public void drawParticle(ServerWorld world, Vector3f drawPos) {
         world.spawnParticles(
-                this.particleEffect, position.x, position.y, position.z, 0,
+                this.particleEffect, drawPos.x, drawPos.y, drawPos.z, 0,
                 0.0f, 0.0f, 0.0f, 1
         );
     }
