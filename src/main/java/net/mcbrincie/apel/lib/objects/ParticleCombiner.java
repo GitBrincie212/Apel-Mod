@@ -45,7 +45,7 @@ import java.util.Optional;
  * <b>Controlling Objects Before Being Drawn</b><br>
  * Developers may use {@link #setBeforeChildDrawIntercept(DrawInterceptor)} to control the object itself before other
  * interceptors from that object apply.  They may also choose whether to draw the object or not by modifying
- * {@code CAN_DRAW_OBJECT}, which this logic is not possible without changing the particle object's class.br><br>
+ * {@code CAN_DRAW_OBJECT}, which this logic is not possible without changing the particle object's class.<br><br>
  *
  * <b>Hierarchical Grouping</b><br>
  * Particle combiners can also combine themselves which can allow for the creation of tree-like particle hierarchies,
@@ -56,7 +56,7 @@ import java.util.Optional;
  * @param <T> The type of the object, can also be set to <?> to accept all particle objects
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCombiner<T extends ParticlePoint> extends ParticleObject {
+public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     protected List<T> objects = new ArrayList<>();
     protected int amount = -1;
     protected List<Vector3f> offset = new ArrayList<>();
@@ -87,7 +87,7 @@ public class ParticleCombiner<T extends ParticlePoint> extends ParticleObject {
      * @param rotation The rotation to apply
      * @param objects The objects to group together
      *
-     * @see ParticleCombiner#ParticleCombiner(ParticlePoint[])
+     * @see ParticleCombiner#ParticleCombiner(ParticleObject[])
      */
     @SafeVarargs
     public ParticleCombiner(Vector3f rotation, T... objects) {
@@ -111,7 +111,7 @@ public class ParticleCombiner<T extends ParticlePoint> extends ParticleObject {
      *
      * @param objects The objects to group together
      *
-     * @see ParticleCombiner#ParticleCombiner(ParticlePoint[])
+     * @see ParticleCombiner#ParticleCombiner(ParticleObject[])
      */
     public ParticleCombiner(List<T> objects) {
         super(ParticleTypes.SCRAPE); // We do not care about the particle
@@ -128,7 +128,7 @@ public class ParticleCombiner<T extends ParticlePoint> extends ParticleObject {
      *
      * @param objects The objects to group together
      *
-     * @see ParticleCombiner#ParticleCombiner(Vector3f, ParticlePoint[])
+     * @see ParticleCombiner#ParticleCombiner(Vector3f, ParticleObject[])
     */
     @SafeVarargs
     public ParticleCombiner(T... objects) {
@@ -619,7 +619,7 @@ public class ParticleCombiner<T extends ParticlePoint> extends ParticleObject {
      *
      * @param object The object to add to the list
      *
-     * @see ParticleCombiner#appendObject(ParticlePoint, Vector3f)
+     * @see ParticleCombiner#appendObject(ParticleObject, Vector3f)
      */
     public void appendObject(T object) {
         if (object.amount != this.amount) this.amount = -1;
@@ -635,7 +635,7 @@ public class ParticleCombiner<T extends ParticlePoint> extends ParticleObject {
      *
      * @param object The object to add to the list
      *
-     * @see ParticleCombiner#appendObject(ParticlePoint)
+     * @see ParticleCombiner#appendObject(ParticleObject)
      */
     public void appendObject(T object, Vector3f offset) {
         if (object.amount != this.amount) this.amount = -1;

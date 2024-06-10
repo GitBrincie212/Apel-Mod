@@ -1,7 +1,6 @@
 package net.mcbrincie.apel.lib.util;
 
 import net.mcbrincie.apel.lib.objects.ParticleObject;
-import net.mcbrincie.apel.lib.objects.ParticlePoint;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
