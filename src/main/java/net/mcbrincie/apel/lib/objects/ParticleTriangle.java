@@ -13,7 +13,7 @@ import org.joml.Vector3f;
  * The vertices can be set individually or by supplying a list of 4 vertices
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleTriangle extends ParticleObject{
+public class ParticleTriangle extends ParticleObject {
     public DrawInterceptor<ParticleTriangle, emptyData> afterCalcsIntercept;
     public DrawInterceptor<ParticleTriangle, emptyData> beforeCalcsIntercept;
 

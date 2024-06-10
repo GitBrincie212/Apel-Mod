@@ -14,7 +14,7 @@ import org.joml.Vector3f;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCircle extends ParticleObject {
-    public float radius;
+    protected float radius;
     public DrawInterceptor<ParticleCircle, afterCalc> afterCalcsIntercept;
     public DrawInterceptor<ParticleCircle, beforeCalc> beforeCalcsIntercept;
 

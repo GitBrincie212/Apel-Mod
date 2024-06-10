@@ -56,7 +56,7 @@ import java.util.Optional;
  * @param <T> The type of the object, can also be set to <?> to accept all particle objects
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
+public class ParticleCombiner<T extends ParticlePoint> extends ParticleObject {
     protected List<T> objects = new ArrayList<>();
     protected int amount = -1;
     protected List<Vector3f> offset = new ArrayList<>();
@@ -87,7 +87,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @param rotation The rotation to apply
      * @param objects The objects to group together
      *
-     * @see ParticleCombiner#ParticleCombiner(ParticleObject[])
+     * @see ParticleCombiner#ParticleCombiner(ParticlePoint[])
      */
     @SafeVarargs
     public ParticleCombiner(Vector3f rotation, T... objects) {
@@ -111,7 +111,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      *
      * @param objects The objects to group together
      *
-     * @see ParticleCombiner#ParticleCombiner(ParticleObject[])
+     * @see ParticleCombiner#ParticleCombiner(ParticlePoint[])
      */
     public ParticleCombiner(List<T> objects) {
         super(ParticleTypes.SCRAPE); // We do not care about the particle
@@ -128,7 +128,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      *
      * @param objects The objects to group together
      *
-     * @see ParticleCombiner#ParticleCombiner(Vector3f, ParticleObject[])
+     * @see ParticleCombiner#ParticleCombiner(Vector3f, ParticlePoint[])
     */
     @SafeVarargs
     public ParticleCombiner(T... objects) {
@@ -619,7 +619,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      *
      * @param object The object to add to the list
      *
-     * @see ParticleCombiner#appendObject(ParticleObject, Vector3f)
+     * @see ParticleCombiner#appendObject(ParticlePoint, Vector3f)
      */
     public void appendObject(T object) {
         if (object.amount != this.amount) this.amount = -1;
@@ -635,7 +635,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      *
      * @param object The object to add to the list
      *
-     * @see ParticleCombiner#appendObject(ParticleObject)
+     * @see ParticleCombiner#appendObject(ParticlePoint)
      */
     public void appendObject(T object, Vector3f offset) {
         if (object.amount != this.amount) this.amount = -1;
@@ -676,7 +676,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             if (shouldDraw == null || shouldDraw == Boolean.FALSE) {
                 continue;
             }
-            ParticleObject objInUse = (ParticleObject) modifiedDataBefore.interceptData.getMetadata(
+            ParticlePoint objInUse = (ParticlePoint) modifiedDataBefore.interceptData.getMetadata(
                     BeforeChildDrawData.OBJECT_IN_USE
             );
             objInUse.draw(world, step, pos.add(this.offset.get(index)));

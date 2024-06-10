@@ -3,7 +3,7 @@ package net.mcbrincie.apel.lib.animators;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.objects.ParticlePoint;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -75,7 +75,7 @@ public class ParallelAnimator extends PathAnimatorBase {
 
     @Deprecated
     @Override
-    public ParticleObject setParticleObject(@NotNull ParticleObject object) {
+    public ParticlePoint setParticleObject(@NotNull ParticlePoint object) {
         return null;
     }
 

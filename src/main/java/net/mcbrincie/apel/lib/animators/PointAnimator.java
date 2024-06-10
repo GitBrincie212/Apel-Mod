@@ -2,7 +2,7 @@ package net.mcbrincie.apel.lib.animators;
 
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.objects.ParticlePoint;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -12,12 +12,12 @@ import org.joml.Vector3f;
 public class PointAnimator extends PathAnimatorBase {
     protected Vector3f origin;
 
-    public PointAnimator(int delay, @NotNull ParticleObject particle, Vector3f origin, int renderingSteps) {
+    public PointAnimator(int delay, @NotNull ParticlePoint particle, Vector3f origin, int renderingSteps) {
         super(delay, particle, renderingSteps);
         this.origin = origin;
     }
 
-    public PointAnimator(int delay, @NotNull ParticleObject particle, Vector3f origin, float renderingSteps) {
+    public PointAnimator(int delay, @NotNull ParticlePoint particle, Vector3f origin, float renderingSteps) {
         super(delay, particle, Math.round(renderingSteps));
         this.origin = origin;
     }
@@ -62,7 +62,7 @@ public class PointAnimator extends PathAnimatorBase {
     @Override
     public void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException {
         this.allocateToScheduler();
-        for (int i = 0; i < renderingSteps; i++) {
+        for (int i = 0; i < this.renderingSteps; i++) {
             this.handleDrawingStep(world, i, this.origin);
         }
     }

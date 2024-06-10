@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Function4;
 import com.mojang.datafixers.util.Function5;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.objects.ParticlePoint;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -22,7 +22,7 @@ public class LinearAnimator extends PathAnimatorBase {
     protected Vector3f[] endpoints;
     protected int[] renderingSteps;
     protected float[] renderingInterval;
-    protected AnimationTrimming<Integer> trimming;
+    protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
 
     protected Function5<AnimationTrimming<Integer>, Vector3f, Vector3f, Integer, Float, Void> onEnd;
     protected Function4<AnimationTrimming<Integer>, Vector3f, Integer, Float, Void> onStart;
@@ -45,7 +45,7 @@ public class LinearAnimator extends PathAnimatorBase {
      */
     public LinearAnimator(
             int delay, @NotNull Vector3f start, @NotNull Vector3f end,
-            @NotNull ParticleObject particle, int renderingSteps
+            @NotNull ParticlePoint particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
         if (start.equals(end)) throw EQUAL_POSITIONS;
@@ -69,7 +69,7 @@ public class LinearAnimator extends PathAnimatorBase {
      */
     public LinearAnimator(
             int delay, @NotNull Vector3f[] endpoints,
-            ParticleObject particle, float renderingInterval
+            ParticlePoint particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
         if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
@@ -98,7 +98,7 @@ public class LinearAnimator extends PathAnimatorBase {
      */
     public LinearAnimator(
             int delay, @NotNull Vector3f[] endpoints,
-            @NotNull ParticleObject particle, int renderingSteps
+            @NotNull ParticlePoint particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
         if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
@@ -129,7 +129,7 @@ public class LinearAnimator extends PathAnimatorBase {
      */
     public LinearAnimator(
             int delay, @NotNull Vector3f[] endpoints,
-            ParticleObject particle, float[] renderingInterval
+            ParticlePoint particle, float[] renderingInterval
     ) {
         super(delay, particle, renderingInterval[0]);
         if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
@@ -163,7 +163,7 @@ public class LinearAnimator extends PathAnimatorBase {
      */
     public LinearAnimator(
             int delay, @NotNull Vector3f[] endpoints,
-            @NotNull ParticleObject particle, int[] renderingSteps
+            @NotNull ParticlePoint particle, int[] renderingSteps
     ) {
         super(delay, particle, renderingSteps[0]);
         if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
@@ -199,7 +199,7 @@ public class LinearAnimator extends PathAnimatorBase {
      */
     public LinearAnimator(
             int delay, Vector3f start, Vector3f end,
-            ParticleObject particle, float renderingInterval
+            ParticlePoint particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
         if (start.equals(end)) throw EQUAL_POSITIONS;
@@ -329,7 +329,7 @@ public class LinearAnimator extends PathAnimatorBase {
                 float newY = curr.y + (dirY * particleInterval);
                 float newZ = curr.z + (dirZ * particleInterval);
                 curr = new Vector3f(newX, newY, newZ);
-                if (i <= startStep) continue;
+                if (i < startStep) continue;
                 this.handleDrawingStep(world, i, curr);
                 if (this.onProcess != null) {
                     this.onProcess.apply(this.trimming, curr, endPos, particleAmount, particleInterval);

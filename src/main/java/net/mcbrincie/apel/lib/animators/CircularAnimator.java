@@ -3,7 +3,7 @@ package net.mcbrincie.apel.lib.animators;
 import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.objects.ParticlePoint;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -45,7 +45,7 @@ public class CircularAnimator extends PathAnimatorBase {
      */
     public CircularAnimator(
             int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            @NotNull ParticleObject particle, int renderingSteps
+            @NotNull ParticlePoint particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
         this.radius = radius;
@@ -69,7 +69,7 @@ public class CircularAnimator extends PathAnimatorBase {
      */
     public CircularAnimator(
             int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            @NotNull ParticleObject particle, float renderingInterval
+            @NotNull ParticlePoint particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
         this.radius = radius;
