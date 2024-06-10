@@ -13,7 +13,7 @@ import org.joml.Vector3f;
  * can be set individually or by supplying a list of 4 vertices
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleTetrahedron extends ParticleObject{
+public class ParticleTetrahedron extends ParticleObject {
     public DrawInterceptor<ParticleTetrahedron, emptyData> afterCalcsIntercept;
     public DrawInterceptor<ParticleTetrahedron, emptyData> beforeCalcsIntercept;
 
@@ -232,7 +232,6 @@ public class ParticleTetrahedron extends ParticleObject{
         commonUtils.drawLine(this, world, vertex1, vertex3, this.amount);
         commonUtils.drawLine(this, world, vertex2, vertex3, this.amount);
         this.interceptDrawCalcAfter(world, step, drawPos, this);
-        this.endDraw(world, step, drawPos);
     }
 
     private InterceptedResult<ParticleTetrahedron, emptyData> interceptDrawCalcAfter(

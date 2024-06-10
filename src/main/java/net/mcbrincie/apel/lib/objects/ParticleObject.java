@@ -1,13 +1,8 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 
 /** The base class for any particle object. Particle objects are the things
@@ -22,19 +17,10 @@ import java.util.Optional;
  * to the scope for that (-2π, 2π)
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleObject {
+public abstract class ParticleObject {
     protected ParticleEffect particleEffect;
     protected Vector3f rotation;
     protected int amount = 1;
-
-    private DrawInterceptor<ParticleObject, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleObject, AfterDrawData> afterDraw = DrawInterceptor.identity();
-
-    public enum BeforeDrawData {
-        DRAW_POSITION
-    }
-    public enum AfterDrawData {}
-
 
     /** Constructor for the particle object which is a point. It accepts as parameters
      * the particle to use and the rotation to apply(which has no effect. Only on the
@@ -73,8 +59,6 @@ public class ParticleObject {
         this.particleEffect = object.particleEffect;
         this.rotation = object.rotation;
         this.amount = object.amount;
-        this.beforeDraw = object.beforeDraw;
-        this.afterDraw = object.afterDraw;
     }
 
     /** Sets the rotation to a new value. The rotation is calculated in radians and
@@ -149,48 +133,29 @@ public class ParticleObject {
         return this.rotation;
     }
 
-    /** This method allows for drawing a particle point given the world, the current step and the drawing position.
-     * <b>The method is used for internal workings, its not meant to be used for outside use</b>. Path animators
-     * are the ones who calculate the position, the step & give the server world instance
+    /** This method draws the {@code ParticleObject} in the given world, on the given step,
+     * and relative to the given drawing position. Subclasses must implement this to render
+     * their objects. Path animators calculate the position and step and provide the server
+     * world instance.<br><br>
+     *
+     * All "native" {@code ParticleObject}s provide interceptors that are invoked before and
+     * after the actual drawing logic.  These provide opportunities for client developers to
+     * modify the drawing operation during each rendering step.  These methods are called
+     * {@code doBeforeDraw} and {@code doAfterDraw}, and they invoke the {@link net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor}s
+     * set via the {@code setBeforeDraw} and {@code setAfterDraw} setters.  It is recommended
+     * that "custom" {@code ParticleObject} classes provide the same hooks, especially if
+     * said objects will be distributed for use by other developers.
      * 
      * @param world The server world instance
-     * @param step The current rendering step at
+     * @param step The current rendering step
      * @param drawPos The position to draw at
      */
-    public void draw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptedResult<ParticleObject, BeforeDrawData> modifiedResult = this.doBeforeDraw(world, drawPos, step);
-        Vector3f objectDrawPosition = (Vector3f) modifiedResult.interceptData.getMetadata(BeforeDrawData.DRAW_POSITION);
-        this.drawParticle(world, objectDrawPosition);
-        this.doAfterDraw(world, objectDrawPosition, step);
-        this.endDraw(world, step, objectDrawPosition);
-    }
-
-    public void endDraw(ServerWorld world, int step, Vector3f pos) {
-    }
+    public abstract void draw(ServerWorld world, int step, Vector3f drawPos);
 
     public void drawParticle(ServerWorld world, Vector3f position) {
         world.spawnParticles(
                 this.particleEffect, position.x, position.y, position.z, 0,
                 0.0f, 0.0f, 0.0f, 1
         );
-    }
-
-    public void setBeforeDraw(DrawInterceptor<ParticleObject, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    public void setAfterDraw(DrawInterceptor<ParticleObject, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private InterceptedResult<ParticleObject, BeforeDrawData> doBeforeDraw(ServerWorld world, Vector3f drawPos, int step) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, drawPos, step, BeforeDrawData.class);
-        interceptData.addMetadata(BeforeDrawData.DRAW_POSITION, drawPos);
-        return this.beforeDraw.apply(interceptData, this);
-    }
-
-    private InterceptedResult<ParticleObject, AfterDrawData> doAfterDraw(ServerWorld world, Vector3f drawPos, int step) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
-        return this.afterDraw.apply(interceptData, this);
     }
 }

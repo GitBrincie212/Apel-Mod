@@ -122,7 +122,6 @@ public class ParticleLine extends ParticleObject {
         ParticleLine objectInUse = modifiedBefore.object;
         commonUtils.drawLine(this, world, this.start, this.end, this.amount);
         this.doAfterDraw(world, step);
-        this.endDraw(world, step, drawPos);
     }
 
     /** Sets the interceptor to run after drawing the line.  The interceptor will be provided
@@ -131,7 +130,6 @@ public class ParticleLine extends ParticleObject {
      *
      * @param afterDraw the new interceptor to execute after drawing the line
      */
-    @Override
     public void setAfterDraw(DrawInterceptor<ParticleLine, AfterDrawData> afterDraw) {
         this.afterDraw = afterDraw;
     }
@@ -148,7 +146,6 @@ public class ParticleLine extends ParticleObject {
      *
      * @param beforeDraw the new interceptor to execute before drawing the line
      */
-    @Override
     public void setBeforeDraw(DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw) {
         this.beforeDraw = beforeDraw;
     }

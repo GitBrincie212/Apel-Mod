@@ -104,7 +104,6 @@ public class ParticleCircle extends ParticleObject {
             finalPosVec = (Vector3f) (modifiedPairAfter.interceptData.getMetadata(afterCalc.DRAW_POSITION));
             this.drawParticle(world, finalPosVec);
         }
-        this.endDraw(world, step, drawPos);
     }
 
     private InterceptedResult<ParticleCircle, afterCalc> interceptDrawCalcAfter(

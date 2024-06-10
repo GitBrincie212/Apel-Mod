@@ -281,7 +281,6 @@ public class ParticleCuboid extends ParticleObject {
             commonUtils.drawLine(objectInUse, world, vertex1, vertex4, verticalBarsAmount);
         }
         this.doAfterDraw(world, step, objectInUse);
-        this.endDraw(world, step, drawPos);
     }
 
     private void doAfterDraw(ServerWorld world, int step, ParticleCuboid particleCuboid) {

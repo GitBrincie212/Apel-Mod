@@ -135,7 +135,6 @@ public class ParticleSphere extends ParticleObject {
             ParticleSphere objectInUseAfter = modifiedResultAfter.object;
             this.drawParticle(world, drawPos);
         }
-        this.endDraw(world, step, pos);
     }
 
     private Vector3f computeCoords(int i) {

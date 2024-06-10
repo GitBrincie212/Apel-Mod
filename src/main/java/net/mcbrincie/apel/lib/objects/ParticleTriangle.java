@@ -13,7 +13,7 @@ import org.joml.Vector3f;
  * The vertices can be set individually or by supplying a list of 4 vertices
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleTriangle extends ParticleObject{
+public class ParticleTriangle extends ParticleObject {
     public DrawInterceptor<ParticleTriangle, emptyData> afterCalcsIntercept;
     public DrawInterceptor<ParticleTriangle, emptyData> beforeCalcsIntercept;
 
@@ -200,7 +200,6 @@ public class ParticleTriangle extends ParticleObject{
         commonUtils.drawLine(objectToUse, world, vertex2, vertex3, objectToUse.amount);
         commonUtils.drawLine(objectToUse, world, vertex3, vertex1, objectToUse.amount);
         this.interceptDrawCalcAfter(world, step, drawPos, this);
-        this.endDraw(world, step, drawPos);
     }
 
     private InterceptedResult<ParticleTriangle, emptyData> interceptDrawCalcAfter(
