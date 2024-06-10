@@ -221,6 +221,7 @@ public class ParticleTetrahedron extends ParticleObject {
         InterceptedResult<ParticleTetrahedron, emptyData> modifiedBefore =
                 this.interceptDrawCalcBefore(world, step, drawPos, this);
         ParticleTetrahedron objectToUse = modifiedBefore.object;
+        drawPos = drawPos.add(this.offset);
         Vector3f vertex0 = this.vertex1.add(drawPos);
         Vector3f vertex1 = this.vertex2.add(drawPos);
         Vector3f vertex2 = this.vertex3.add(drawPos);

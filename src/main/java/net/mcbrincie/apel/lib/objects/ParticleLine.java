@@ -120,7 +120,10 @@ public class ParticleLine extends ParticleObject {
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
         InterceptedResult<ParticleLine, BeforeDrawData> modifiedBefore = this.doBeforeDraw(world, step);
         ParticleLine objectInUse = modifiedBefore.object;
-        commonUtils.drawLine(this, world, this.start, this.end, this.amount);
+        commonUtils.drawLine(
+                this, world, this.start.add(this.offset),
+                this.end.add(this.offset), this.amount
+        );
         this.doAfterDraw(world, step);
         this.endDraw(world, step, drawPos);
     }

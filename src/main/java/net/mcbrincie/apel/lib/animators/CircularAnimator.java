@@ -3,7 +3,7 @@ package net.mcbrincie.apel.lib.animators;
 import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticlePoint;
+import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -14,8 +14,7 @@ import org.joml.Vector3f;
  * be the start & end, to trim some parts. If you wanna fully revolve around the circle and end up back at the
  * same point then you can specify the revolutions it should do by using {@code setRevolutions}. By default, it's
  * set to 1 revolution which means it loops the circle once
- *
- */
+*/
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CircularAnimator extends PathAnimatorBase {
     protected float radius;
@@ -45,7 +44,7 @@ public class CircularAnimator extends PathAnimatorBase {
      */
     public CircularAnimator(
             int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            @NotNull ParticlePoint particle, int renderingSteps
+            @NotNull ParticleObject particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
         this.radius = radius;
@@ -69,7 +68,7 @@ public class CircularAnimator extends PathAnimatorBase {
      */
     public CircularAnimator(
             int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            @NotNull ParticlePoint particle, float renderingInterval
+            @NotNull ParticleObject particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
         this.radius = radius;
@@ -218,12 +217,6 @@ public class CircularAnimator extends PathAnimatorBase {
                     this.trimming, pos, this.radius, this.center, this.renderingSteps, this.renderingInterval
             );
         }
-    }
-
-
-    public void beginAnimation(
-            ServerWorld world, float startAngle, float endAngle, boolean clockwise
-    ) throws SeqMissingException, SeqDuplicateException {
     }
 
     private Vector3f calculatePoint(float currAngle) {

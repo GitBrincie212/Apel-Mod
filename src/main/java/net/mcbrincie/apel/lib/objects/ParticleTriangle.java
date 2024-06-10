@@ -193,6 +193,7 @@ public class ParticleTriangle extends ParticleObject {
         InterceptedResult<ParticleTriangle, emptyData> modifiedBefore =
                 this.interceptDrawCalcBefore(world, step, drawPos, this);
         ParticleTriangle objectToUse = modifiedBefore.object;
+        drawPos = drawPos.add(this.offset);
         Vector3f vertex1 = this.vertex1.add(drawPos);
         Vector3f vertex2 = this.vertex2.add(drawPos);
         Vector3f vertex3 = this.vertex3.add(drawPos);

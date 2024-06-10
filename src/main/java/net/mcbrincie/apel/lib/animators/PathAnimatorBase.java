@@ -5,7 +5,7 @@ import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticlePoint;
+import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ public abstract class PathAnimatorBase {
     protected int renderingSteps = 0;
     protected int delay;
     protected int processSpeed = 1;
-    protected ParticlePoint particle;
+    protected ParticleObject particle;
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
 
@@ -41,9 +41,9 @@ public abstract class PathAnimatorBase {
      * @param delay The delay per rendering step
      * @param particle The particle object to use
      * @param renderingSteps The rendering steps to use
-     * @see PathAnimatorBase#PathAnimatorBase(int, ParticlePoint, float)
+     * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, float)
     */
-    public PathAnimatorBase(int delay, ParticlePoint particle, int renderingSteps) {
+    public PathAnimatorBase(int delay, ParticleObject particle, int renderingSteps) {
         this.setDelay(delay);
         this.setParticleObject(particle);
         this.setRenderSteps(renderingSteps);
@@ -56,9 +56,9 @@ public abstract class PathAnimatorBase {
      * @param delay The delay per rendering step
      * @param particle The particle object to use
      * @param renderingInterval The rendering interval to use, which is how many blocks per new rendering step
-     * @see PathAnimatorBase#PathAnimatorBase(int, ParticlePoint, int)
+     * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, int)
     */
-    public PathAnimatorBase(int delay, @NotNull ParticlePoint particle, float renderingInterval) {
+    public PathAnimatorBase(int delay, @NotNull ParticleObject particle, float renderingInterval) {
         this.setDelay(delay);
         this.setParticleObject(particle);
         this.setRenderInterval(renderingInterval);
@@ -149,8 +149,8 @@ public abstract class PathAnimatorBase {
      *
      * @return The particle object
      */
-    public int getParticleObject() {
-        return this.renderingSteps;
+    public ParticleObject getParticleObject() {
+        return this.particle;
     }
 
     /** Sets the particle object to a new value. And returns the
@@ -158,8 +158,8 @@ public abstract class PathAnimatorBase {
      *
      * @return The previous amount of rendering steps
      */
-    public ParticlePoint setParticleObject(@NotNull ParticlePoint object) {
-        ParticlePoint particleObject = this.particle;
+    public ParticleObject setParticleObject(@NotNull ParticleObject object) {
+        ParticleObject particleObject = this.particle;
         this.particle = object;
         return particleObject;
     }

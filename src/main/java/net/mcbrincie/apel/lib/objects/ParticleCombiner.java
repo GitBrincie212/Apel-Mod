@@ -274,8 +274,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      *
      * @return The list of offsets per object
      */
-    public List<Vector3f> getOffsets() {
-        return this.offset;
+    public Vector3f[] getOffsets() {
+        return this.offset.toArray(Vector3f[]::new);
     }
 
     /** Sets the offset position per object. The offset positions have to be the same
@@ -683,6 +683,21 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             this.doAfterChildDraw(world, step);
         }
     }
+
+    /** Sets the offset to a new value. The offset position is added with the drawing position.
+     * Returns the previous offset that was used
+     *
+     * @param offset The new offset value
+     * @return The previous offset
+    */
+    public Vector3f[] setOffset(Vector3f... offset) {
+        List<Vector3f> prevOffset = this.offset;
+        this.offset = Arrays.stream(offset).toList();
+        return prevOffset.toArray(Vector3f[]::new);
+    }
+
+    public Vector3f getOffset(int index) {return this.offset.get(index);}
+
 
     public void setBeforeChildDrawIntercept(DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDrawIntercept) {
         this.beforeChildDrawIntercept = Optional.ofNullable(beforeChildDrawIntercept).orElse(DrawInterceptor.identity());

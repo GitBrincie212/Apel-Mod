@@ -247,6 +247,10 @@ public class ParticleQuad extends ParticleObject {
         alteredVertex2 = (Vector3f) modifiedResultAfter.interceptData.getMetadata(afterCalcData.VERTEX_2);
         alteredVertex3 = (Vector3f) modifiedResultAfter.interceptData.getMetadata(afterCalcData.VERTEX_3);
         alteredVertex4 = (Vector3f) modifiedResultAfter.interceptData.getMetadata(afterCalcData.VERTEX_4);
+        alteredVertex1 = alteredVertex1.add(this.offset);
+        alteredVertex2 = alteredVertex2.add(this.offset);
+        alteredVertex3 = alteredVertex3.add(this.offset);
+        alteredVertex4 = alteredVertex4.add(this.offset);
         commonUtils.drawLine(objectInUse, world, alteredVertex1, alteredVertex2, objectInUse.amount);
         commonUtils.drawLine(objectInUse, world, alteredVertex3, alteredVertex4, objectInUse.amount);
         commonUtils.drawLine(objectInUse, world, alteredVertex2, alteredVertex4, objectInUse.amount);

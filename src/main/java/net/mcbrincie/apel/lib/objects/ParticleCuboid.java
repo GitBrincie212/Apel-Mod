@@ -222,7 +222,7 @@ public class ParticleCuboid extends ParticleObject {
                 .rotateZ(this.rotation.z)
                 .rotateY(this.rotation.y)
                 .rotateX(this.rotation.x);
-        return vertex.add(translation);
+        return vertex.add(translation).add(this.offset);
     }
 
     @Override

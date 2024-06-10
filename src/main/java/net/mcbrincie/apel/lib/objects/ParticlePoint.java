@@ -73,16 +73,26 @@ public class ParticlePoint extends ParticleObject {
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
         InterceptedResult<ParticlePoint, BeforeDrawData> modifiedResult = this.doBeforeDraw(world, drawPos, step);
         Vector3f objectDrawPosition = (Vector3f) modifiedResult.interceptData.getMetadata(BeforeDrawData.DRAW_POSITION);
-        this.drawParticle(world, objectDrawPosition);
+        this.drawParticle(world, objectDrawPosition.add(this.offset));
         this.doAfterDraw(world, objectDrawPosition, step);
         this.endDraw(world, step, objectDrawPosition);
     }
 
 
+    /** Sets the before draw interceptor, the method executes right before the particle point
+     * is drawn onto the screen. And for data it has the drawing position
+     *
+     * @param beforeDraw The new interceptor to use
+     */
     public void setBeforeDraw(DrawInterceptor<ParticlePoint, BeforeDrawData> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
+    /** Sets the after draw interceptor, the method executes right after the particle point
+     * is drawn onto the screen. And has no data attached
+     *
+     * @param afterDraw The new interceptor to use
+    */
     public void setAfterDraw(DrawInterceptor<ParticlePoint, AfterDrawData> afterDraw) {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }

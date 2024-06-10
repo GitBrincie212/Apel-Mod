@@ -128,6 +128,7 @@ public class ParticleSphere extends ParticleObject {
                     this.interceptDrawCalcBefore(world, pos, i, step, this);
             ParticleSphere objectInUse = modifiedResultBefore.object;
             Vector3f drawPos = objectInUse.computeCoords(i);
+            drawPos = drawPos.add(this.offset);
             drawPos = objectInUse.applyRotation(drawPos.x, drawPos.y, drawPos.z).add(pos);
             InterceptedResult<ParticleSphere, afterCalc> modifiedResultAfter =
                     this.interceptDrawCalcAfter(world, pos, drawPos, step, i, objectInUse);

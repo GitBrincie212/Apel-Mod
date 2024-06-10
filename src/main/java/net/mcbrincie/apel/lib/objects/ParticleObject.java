@@ -1,20 +1,15 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class ParticleObject {
     protected ParticleEffect particleEffect;
     protected Vector3f rotation;
+    protected Vector3f offset = new Vector3f(0, 0, 0);
     protected int amount = 1;
-
-    protected DrawInterceptor<ParticleObject, ?> beforeDraw = DrawInterceptor.identity();
-    protected DrawInterceptor<ParticleObject, ?> afterDraw = DrawInterceptor.identity();
 
     /** Constructor for the particle object which is a point. It accepts as parameters
      * the particle to use and the rotation to apply(which has no effect. Only on the
@@ -53,8 +48,7 @@ public abstract class ParticleObject {
         this.particleEffect = object.particleEffect;
         this.rotation = object.rotation;
         this.amount = object.amount;
-        this.beforeDraw = object.beforeDraw;
-        this.afterDraw = object.afterDraw;
+        this.offset = object.offset;
     }
 
     /** Sets the rotation to a new value. The rotation is calculated in radians and
@@ -129,6 +123,25 @@ public abstract class ParticleObject {
         return this.rotation;
     }
 
+    /** Sets the offset to a new value. The offset position is added with the drawing position.
+     * Returns the previous offset that was used
+     *
+     * @param offset The new offset value
+     * @return The previous offset
+     */
+    public Vector3f setOffset(Vector3f offset) {
+        Vector3f prevOffset = this.offset;
+        this.offset = offset;
+        return prevOffset;
+    }
+
+    /** Gets the current offset value used. The offset position is added
+     * with the drawing position.
+     *
+     * @return The offset
+     */
+    public Vector3f getOffset() {return this.offset;}
+
     /** This method allows for drawing a particle object given the world, the current step and the drawing position.
      * <b>The method is used for internal workings, its not meant to be used for outside use</b>. Path animators
      * are the ones who calculate the position, the step & give the server world instance
@@ -145,13 +158,5 @@ public abstract class ParticleObject {
                 this.particleEffect, position.x, position.y, position.z, 0,
                 0.0f, 0.0f, 0.0f, 1
         );
-    }
-
-    public void setBeforeDraw(DrawInterceptor<ParticleObject, ?> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    public void setAfterDraw(DrawInterceptor<ParticleObject, ?> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 }

@@ -98,7 +98,7 @@ public class ParticleCircle extends ParticleObject {
                     .rotateZ(objectToUse.rotation.z)
                     .rotateY(objectToUse.rotation.y)
                     .rotateX(objectToUse.rotation.x);
-            Vector3f finalPosVec = circumferenceVec.add(drawPos);
+            Vector3f finalPosVec = circumferenceVec.add(drawPos.add(this.offset));
             InterceptedResult<ParticleCircle, afterCalc> modifiedPairAfter =
                     objectToUse.interceptDrawCalcAfter(world, drawPos, finalPosVec, step, objectToUse);
             finalPosVec = (Vector3f) (modifiedPairAfter.interceptData.getMetadata(afterCalc.DRAW_POSITION));
