@@ -676,7 +676,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             if (shouldDraw == null || shouldDraw == Boolean.FALSE) {
                 continue;
             }
-            ParticlePoint objInUse = (ParticlePoint) modifiedDataBefore.interceptData.getMetadata(
+            ParticleObject objInUse = (ParticleObject) modifiedDataBefore.interceptData.getMetadata(
                     BeforeChildDrawData.OBJECT_IN_USE
             );
             objInUse.draw(world, step, pos.add(this.offset.get(index)));
