@@ -12,11 +12,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 
+/** The parallel path animator. Which provides an interface for controlling multiple
+ * concurrent path animators(they can also nest themselves) and can have an unlimited
+ * amount of path animators attached. They also can have delays for each path animator.
+ * It is quite advanced but allows for easier management on multiple animators & is
+ * versatile compared to the other easier ones
+ */
 @SuppressWarnings("unused")
 public class ParallelAnimator extends PathAnimatorBase {
     protected List<PathAnimatorBase> animators = new ArrayList<>();
     protected List<Integer> delays = new ArrayList<>();
 
+    /** Constructor for the parallel animation. This constructor is
+     * meant to be used in the case that you want to supply a specific
+     * amount of path animators in the form of varargs
+     *
+     * @param delay The delay between each particle object render
+     * @param pathAnimators The path animators to append
+     */
     public ParallelAnimator(int delay, PathAnimatorBase... pathAnimators) {
         super(delay, null, pathAnimators.length);
         if (pathAnimators.length == 0) {
@@ -25,6 +38,13 @@ public class ParallelAnimator extends PathAnimatorBase {
         this.animators.addAll(List.of(pathAnimators));
     }
 
+    /** Constructor for the parallel animation. This constructor is
+     * meant to be used in the case that you have a list of path
+     * animators which you want to supply all of them
+     *
+     * @param delay The delay between each particle object render
+     * @param pathAnimators The path animators to append
+    */
     public ParallelAnimator(int delay, List<PathAnimatorBase> pathAnimators) {
         super(delay, null, pathAnimators.size());
         if (pathAnimators.isEmpty()) {
@@ -33,6 +53,13 @@ public class ParallelAnimator extends PathAnimatorBase {
         this.animators.addAll(pathAnimators);
     }
 
+    /** Constructor for the parallel animation. This constructor is
+     * meant to be used in the case that you have a list of path
+     * animators and a list of the delays
+     *
+     * @param delay The delays between each particle object render for each particle animator
+     * @param pathAnimators The path animators to append
+     */
     public ParallelAnimator(List<Integer> delay, List<PathAnimatorBase> pathAnimators) {
         super(0, null, pathAnimators.size());
         this.delay = -1;
@@ -46,6 +73,14 @@ public class ParallelAnimator extends PathAnimatorBase {
         this.delays.addAll(delay);
     }
 
+    /** Constructor for the parallel animation. This constructor is
+     * meant to be used in the case that you want to supply the path
+     * animators in the form of varargs and in addition you want a
+     * separate delays
+     *
+     * @param delay The delay between each particle object render
+     * @param pathAnimators The path animators to append
+     */
     public ParallelAnimator(List<Integer> delay, PathAnimatorBase... pathAnimators) {
         super(0, null, pathAnimators.length);
         this.delay = -1;
@@ -59,26 +94,39 @@ public class ParallelAnimator extends PathAnimatorBase {
         this.delays.addAll(delay);
     }
 
+    /** Appends a new child path animator to the collection of the child path animators
+     * from the particle combiner. The method returns nothing
+     *
+     * @param animator The path animator to append
+    */
     public void addAnimatorPath(PathAnimatorBase animator) {
         this.animators.add(animator);
     }
 
+    /** Removes a child path animator from the collection of the child path animators
+     * from the particle combiner. The method returns nothing
+     *
+     * @param animator The path animator to remove
+    */
     public void removeAnimatorPath(PathAnimatorBase animator) {
         this.animators.remove(animator);
     }
 
+    /** This method is DEPRECATED and SHOULD NOT BE USED */
     @Override
     @Deprecated
     public int setRenderSteps(int steps) {
         return -1;
     }
 
+    /** This method is DEPRECATED and SHOULD NOT BE USED */
     @Deprecated
     @Override
     public ParticleObject setParticleObject(@NotNull ParticleObject object) {
         return null;
     }
 
+    /** This method is DEPRECATED and SHOULD NOT BE USED */
     @Override
     @Deprecated
     public float setRenderInterval(float interval) {
@@ -100,7 +148,7 @@ public class ParallelAnimator extends PathAnimatorBase {
         }
     }
 
-    public void allocateNewAnimator(int step, ServerWorld world, PathAnimatorBase animator) {
+    protected void allocateNewAnimator(int step, ServerWorld world, PathAnimatorBase animator) {
         Runnable func = () -> animator.beginAnimation(world);
         int delayUsed = (this.delay == -1) ? this.delays.get(step - 1) : this.delay;
         if (delayUsed == 0) {
