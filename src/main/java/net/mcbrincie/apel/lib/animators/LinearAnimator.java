@@ -13,9 +13,9 @@ import org.joml.Vector3f;
 import java.util.Arrays;
 
 /** The linear animator. Which is used for linear paths(a.k.a. paths that are drawn as a line). It
- * accepts a start and an end which is where the 2 endpoints are. One of the least versatile animators
- * but still capable of doing basic animations and is friendlier compared to other animators. It accepts
- * the 2 endpoints of the line(start and end)
+ * accepts 2 or multiple points which draw the line and are called endpoints, they draw lines from the
+ * previous endpoint to the next(the first to the second then second to third....). One semi-versatile
+ * path animator but still capable of doing basic animations and is friendlier compared to other animators.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class LinearAnimator extends PathAnimatorBase {
@@ -32,8 +32,7 @@ public class LinearAnimator extends PathAnimatorBase {
     private final IllegalArgumentException BELOW_2_ENDPOINTS = new IllegalArgumentException("Endpoints should be above 2");
     private final IllegalArgumentException INVALID_TRIM_RANGE = new IllegalArgumentException("Invalid animation trimming range");
 
-    /**
-     * Constructor for the linear animation. This constructor is
+    /** Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want a constant amount
      * of particles. It doesn't look pretty on large distances tho
      *
