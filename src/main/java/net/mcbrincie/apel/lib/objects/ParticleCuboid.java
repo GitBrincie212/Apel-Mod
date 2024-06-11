@@ -10,6 +10,8 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
+import java.util.Optional;
+
 /** The particle object class that represents a cuboid. Which is a rectangle
  * living in 3D, it can also be a cube if all the values of the size vector
  * are supplied with the same value.
@@ -19,8 +21,8 @@ public class ParticleCuboid extends ParticleObject {
     protected Vector3f size = new Vector3f();
     protected Vector3i amount;
 
-    public DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw;
-    public DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw;
+    private DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
     private final CommonUtils commonUtils = new CommonUtils();
 
@@ -245,7 +247,7 @@ public class ParticleCuboid extends ParticleObject {
 
         Vector3f[] vertices = {vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7, vertex8};
         InterceptedResult<ParticleCuboid, BeforeDrawData> modifiedPairBefore =
-                this.doBeforeDraw(world, vertices, step, this);
+                this.doBeforeDraw(world, step, vertices);
         vertices = (Vector3f[]) modifiedPairBefore.interceptData.getMetadata(BeforeDrawData.VERTICES);
         ParticleCuboid objectInUse = modifiedPairBefore.object;
 
@@ -280,22 +282,39 @@ public class ParticleCuboid extends ParticleObject {
             commonUtils.drawLine(objectInUse, world, vertex3, vertex7, verticalBarsAmount);
             commonUtils.drawLine(objectInUse, world, vertex1, vertex4, verticalBarsAmount);
         }
-        this.doAfterDraw(world, step, objectInUse);
+        this.doAfterDraw(world, step);
         this.endDraw(world, step, drawPos);
     }
 
-    private void doAfterDraw(ServerWorld world, int step, ParticleCuboid particleCuboid) {
+    /** Set the interceptor to run after drawing the cuboid.  The interceptor will be provided
+     * with references to the {@link ServerWorld} and the step number of the animation.
+     *
+     * @param afterDraw the new interceptor to execute after drawing each particle
+     */
+    public void setAfterDraw(DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw) {
+        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
+    }
+
+    private void doAfterDraw(ServerWorld world, int step) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, null, step, AfterDrawData.class);
-        if (this.afterDraw == null) return;
-        this.afterDraw.apply(interceptData, particleCuboid);
+        this.afterDraw.apply(interceptData, this);
+    }
+
+    /** Set the interceptor to run prior to drawing the cuboid.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the step number of the animation, and the
+     * vertices of the cuboid.
+     *
+     * @param beforeDraw the new interceptor to execute prior to drawing each particle
+     */
+    public void setBeforeDraw(DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw) {
+        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
     private InterceptedResult<ParticleCuboid, BeforeDrawData> doBeforeDraw(
-            ServerWorld world, Vector3f[] vertices, int step, ParticleCuboid particleCuboid
+            ServerWorld world, int step, Vector3f[] vertices
     ) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
         interceptData.addMetadata(BeforeDrawData.VERTICES, vertices);
-        if (this.beforeDraw == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeDraw.apply(interceptData, particleCuboid);
+        return this.beforeDraw.apply(interceptData, this);
     }
 }
