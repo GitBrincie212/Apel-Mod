@@ -9,6 +9,8 @@ import net.minecraft.util.math.Vec2f;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
+import java.util.Optional;
+
 /** The particle object class that represents a sphere(3D shape) and not a 2D circle.
  * It has a radius which dictates how large or small the sphere is depending on the
  * radius value supplied. And it uses the Fibonacci point distribution algorithm
@@ -17,16 +19,17 @@ import org.joml.Vector3f;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleSphere extends ParticleObject {
     protected float radius;
-    public DrawInterceptor<ParticleSphere, afterCalc> afterCalcsIntercept;
-    public DrawInterceptor<ParticleSphere, beforeCalc> beforeCalcsIntercept;
+
+    private DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
     /** This data is used before calculations(it contains the amount of particles) */
-    public enum beforeCalc {
+    public enum BeforeDrawData {
         AMOUNT
     }
 
     /** This data is used after calculations(it contains the drawing position & the amount of particles) */
-    public enum afterCalc {
+    public enum AfterDrawData {
         DRAWING_POSITION, AMOUNT
     }
 
@@ -40,22 +43,19 @@ public class ParticleSphere extends ParticleObject {
     private float cachedAmount = -1.0f;
     private Vector3f cachedCoords;
 
-    /** Constructor for the particle sphere which is a 3D shape. It accepts as parameters
-     * the particle to use, the radius of the sphere, the rotation to apply & the amount of particles.
+    /**
+     * Constructor for the particle sphere which is a 3D shape. It accepts as parameters
+     * the particle to use, the radius of the sphere, the amount of particles, and the rotation to apply.
      * There is also a simplified version for no rotation.
      *
-     * @param particle The particle to use
-     * @param amount The amount of particles for the object
-     * @param radius The radius of the sphere
+     * @param particleEffect The particle to use
+     * @param radius   The radius of the sphere
+     * @param amount   The amount of particles for the object
      * @param rotation The rotation to apply
-     *
      * @see ParticleSphere#ParticleSphere(ParticleEffect, float, int)
-    */
-    public ParticleSphere(
-            @NotNull ParticleEffect particle, float radius,
-            Vector3f rotation, int amount
-    ) {
-        super(particle, rotation);
+     */
+    public ParticleSphere(@NotNull ParticleEffect particleEffect, float radius, int amount, Vector3f rotation) {
+        super(particleEffect, rotation);
         this.setRadius(radius);
         this.setAmount(amount);
     }
@@ -65,18 +65,14 @@ public class ParticleSphere extends ParticleObject {
      * for the case when no rotation is meant to be applied. For rotation offset you can
      * use another constructor
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param radius The radius of the sphere
      *
-     * @see ParticleSphere#ParticleSphere(ParticleEffect, float, Vector3f, int)
+     * @see ParticleSphere#ParticleSphere(ParticleEffect, float, int, Vector3f)
     */
-    public ParticleSphere(
-            @NotNull ParticleEffect particle, float radius, int amount
-    ) {
-        super(particle);
-        this.setRadius(radius);
-        this.setAmount(amount);
+    public ParticleSphere(@NotNull ParticleEffect particleEffect, float radius, int amount) {
+        this(particleEffect, radius, amount, new Vector3f(0));
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -88,8 +84,8 @@ public class ParticleSphere extends ParticleObject {
         super(sphere);
         this.radius = sphere.radius;
         this.amount = sphere.amount;
-        this.afterCalcsIntercept = sphere.afterCalcsIntercept;
-        this.beforeCalcsIntercept = sphere.beforeCalcsIntercept;
+        this.afterDraw = sphere.afterDraw;
+        this.beforeDraw = sphere.beforeDraw;
         this.cachedCoords = sphere.cachedCoords;
         this.cachedValI = sphere.cachedValI;
         this.cachedAmount = sphere.cachedAmount;
@@ -122,21 +118,15 @@ public class ParticleSphere extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
         for (int i = 0; i < this.amount; i++) {
-            InterceptedResult<ParticleSphere, beforeCalc> modifiedResultBefore =
-                    this.interceptDrawCalcBefore(world, pos, i, step, this);
-            ParticleSphere objectInUse = modifiedResultBefore.object;
-            Vector3f drawPos = objectInUse.computeCoords(i);
-            drawPos = drawPos.add(this.offset);
-            drawPos = objectInUse.applyRotation(drawPos.x, drawPos.y, drawPos.z).add(pos);
-            InterceptedResult<ParticleSphere, afterCalc> modifiedResultAfter =
-                    this.interceptDrawCalcAfter(world, pos, drawPos, step, i, objectInUse);
-            drawPos = (Vector3f) modifiedResultAfter.interceptData.getMetadata(afterCalc.DRAWING_POSITION);
-            ParticleSphere objectInUseAfter = modifiedResultAfter.object;
-            this.drawParticle(world, drawPos);
+            this.doBeforeDraw(world, step, drawPos, i);
+            Vector3f surfacePos = this.computeCoords(i);
+            surfacePos = this.applyRotation(surfacePos.x, surfacePos.y, surfacePos.z).add(drawPos).add(this.offset);
+            this.drawParticle(world, surfacePos);
+            this.doAfterDraw(world, step, drawPos, surfacePos, i);
         }
-        this.endDraw(world, step, pos);
+        this.endDraw(world, step, drawPos);
     }
 
     private Vector3f computeCoords(int i) {
@@ -220,23 +210,42 @@ public class ParticleSphere extends ParticleObject {
         return new Vector3f(x2, y2, z2);
     }
 
-    private InterceptedResult<ParticleSphere, afterCalc> interceptDrawCalcAfter(
-            ServerWorld world, Vector3f pos, Vector3f drawPos,
-            int step, int currAmount, ParticleSphere obj
-    ) {
-        InterceptData<afterCalc> interceptData = new InterceptData<>(world, pos, step, afterCalc.class);
-        interceptData.addMetadata(afterCalc.DRAWING_POSITION, drawPos);
-        interceptData.addMetadata(afterCalc.AMOUNT, currAmount);
-        if (this.afterCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.afterCalcsIntercept.apply(interceptData, obj);
+    /** Set the interceptor to run after drawing the sphere.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the step number of the animation, and the position
+     * where the sphere is rendered.  It will also have the surface point and
+     * number of the individual particle that was just drawn.
+     *
+     * @param afterDraw the new interceptor to execute after drawing each particle
+     */
+    public void setAfterDraw(DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw) {
+        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleSphere, beforeCalc> interceptDrawCalcBefore(
-            ServerWorld world, Vector3f pos, int currAmount, int step, ParticleSphere obj
+    private InterceptedResult<ParticleSphere, AfterDrawData> doAfterDraw(
+            ServerWorld world, int step, Vector3f drawPos, Vector3f surfacePos, int currAmount
     ) {
-        InterceptData<beforeCalc> interceptData = new InterceptData<>(world, pos, step, beforeCalc.class);
-        interceptData.addMetadata(beforeCalc.AMOUNT, currAmount);
-        if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeCalcsIntercept.apply(interceptData, obj);
+        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
+        interceptData.addMetadata(AfterDrawData.DRAWING_POSITION, surfacePos);
+        interceptData.addMetadata(AfterDrawData.AMOUNT, currAmount);
+        return this.afterDraw.apply(interceptData, this);
+    }
+
+    /** Set the interceptor to run prior to drawing the sphere.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the step number of the animation, and the position
+     * where the sphere is rendered.  It will also have the number of the individual particle
+     * about to be drawn.
+     *
+     * @param beforeDraw the new interceptor to execute prior to drawing each particle
+     */
+    public void setBeforeDraw(DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw) {
+        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
+    }
+
+    private InterceptedResult<ParticleSphere, BeforeDrawData> doBeforeDraw(
+            ServerWorld world, int step, Vector3f drawPos, int currAmount
+    ) {
+        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, drawPos, step, BeforeDrawData.class);
+        interceptData.addMetadata(BeforeDrawData.AMOUNT, currAmount);
+        return this.beforeDraw.apply(interceptData, this);
     }
 }
