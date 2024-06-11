@@ -51,6 +51,34 @@ public abstract class ParticleObject {
         this.offset = object.offset;
     }
 
+    /** Gets the particle that is currently in use and returns it
+     *
+     * @return The currently used particle
+     */
+    public ParticleEffect getParticleEffect() {
+        return this.particleEffect;
+    }
+
+    /** Sets the particle to use to a new value and returns the previous
+     *  particle that was used
+     *
+     * @param particle The new particle
+     * @return The previously used particle
+     */
+    public ParticleEffect setParticleEffect(ParticleEffect particle) {
+        ParticleEffect prevParticle = this.particleEffect;
+        this.particleEffect = particle;
+        return prevParticle;
+    }
+
+    /** Gets the rotation that is currently in use and returns it
+     *
+     * @return The currently used rotation
+     */
+    public Vector3f getRotation() {
+        return this.rotation;
+    }
+
     /** Sets the rotation to a new value. The rotation is calculated in radians and
      * when setting it rounds the rotation to match in the range of (-2π, 2π). It returns
      * the previous rotation used
@@ -71,56 +99,13 @@ public abstract class ParticleObject {
         return new Vector3f(x, y, z);
     }
 
-    /** Sets the amount of particles to use for rendering the object. This
-     * has no effect to this class but on shapes it does have an effect.
-     * It returns the previously used amount of particles
+    /** Gets the current offset value used. The offset position is added
+     * with the drawing position.
      *
-     * @param amount The new particle
-     * @return The previously used amount
+     * @return The offset
      */
-    public int setAmount(int amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Amount of particles has to be above 0");
-        }
-        int prevAmount = this.amount;
-        this.amount = amount;
-        return prevAmount;
-    }
-
-    /** Sets the particle to use to a new value and returns the previous
-     *  particle that was used
-     *
-     * @param particle The new particle
-     * @return The previously used particle
-     */
-    public ParticleEffect setParticleEffect(ParticleEffect particle) {
-        ParticleEffect prevParticle = this.particleEffect;
-        this.particleEffect = particle;
-        return prevParticle;
-    }
-
-    /** Gets the particle that is currently in use and returns it
-     *
-     * @return The currently used particle
-     */
-    public ParticleEffect getParticleEffect() {
-        return this.particleEffect;
-    }
-
-    /** Gets the amount of particles that are currently in use and returns it
-     *
-     * @return The currently used amount of particles
-     */
-    public int getAmount() {
-        return this.amount;
-    }
-
-    /** Gets the rotation that is currently in use and returns it
-     *
-     * @return The currently used rotation
-     */
-    public Vector3f getRotation() {
-        return this.rotation;
+    public Vector3f getOffset() {
+        return this.offset;
     }
 
     /** Sets the offset to a new value. The offset position is added with the drawing position.
@@ -135,13 +120,28 @@ public abstract class ParticleObject {
         return prevOffset;
     }
 
-    /** Gets the current offset value used. The offset position is added
-     * with the drawing position.
+    /** Gets the amount of particles that are currently in use and returns it
      *
-     * @return The offset
+     * @return The currently used amount of particles
      */
-    public Vector3f getOffset() {
-        return this.offset;
+    public int getAmount() {
+        return this.amount;
+    }
+
+    /** Sets the amount of particles to use for rendering the object. This
+     * has no effect to this class but on shapes it does have an effect.
+     * It returns the previously used amount of particles
+     *
+     * @param amount The new particle
+     * @return The previously used amount
+     */
+    public int setAmount(int amount) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount of particles has to be above 0");
+        }
+        int prevAmount = this.amount;
+        this.amount = amount;
+        return prevAmount;
     }
 
     /** This method allows for drawing a particle object given the world, the current step and the drawing position.
