@@ -7,9 +7,7 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
-import org.objectweb.asm.Opcodes;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
 
 /** The particle object class that represents a circle(2D shape) and not a 3D sphere.
@@ -104,34 +102,26 @@ public class ParticleCircle extends ParticleObject {
         float angleInterval = 360 / (float) this.amount;
         for (int i = 0; i < (this.amount / 2); i++) {
             double currRot = angleInterval * i;
-            InterceptedResult<ParticleCircle, BeforeDrawData> modifiedPairBefore =
-                    this.doBeforeDraw(world, drawPos, currRot, step, this);
-            ParticleCircle objectToUse = modifiedPairBefore.object;
-            currRot = (double) (modifiedPairBefore.interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION));
+            InterceptedResult<ParticleCircle, BeforeDrawData> modifiedPairBefore = this.doBeforeDraw(world, step, drawPos, currRot);
+            // Protect against `null` being placed into map (would NPE upon unboxing)
+            currRot = (double) Optional.ofNullable(modifiedPairBefore.interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION)).orElse(currRot);
             float x = (float) Math.sin(currRot);
             float y = (float) Math.cos(currRot);
-            Vector3f circumferenceVec = new Vector3f(
-                    objectToUse.radius * x,
-                    objectToUse.radius * y,
-                    0
-            );
-            circumferenceVec = circumferenceVec
-                    .rotateZ(objectToUse.rotation.z)
-                    .rotateY(objectToUse.rotation.y)
-                    .rotateX(objectToUse.rotation.x);
-            Vector3f finalPosVec = circumferenceVec.add(drawPos.add(this.offset));
-            InterceptedResult<ParticleCircle, AfterDrawData> modifiedPairAfter =
-                    objectToUse.doAfterDraw(world, drawPos, finalPosVec, step, objectToUse);
-            finalPosVec = (Vector3f) (modifiedPairAfter.interceptData.getMetadata(AfterDrawData.DRAW_POSITION));
+            Vector3f finalPosVec = new Vector3f(this.radius * x, this.radius * y, 0)
+                    // Rotate
+                    .rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x)
+                    // Translate
+                    .add(drawPos).add(this.offset);
             this.drawParticle(world, finalPosVec);
+            InterceptedResult<ParticleCircle, AfterDrawData> modifiedPairAfter = this.doAfterDraw(world, step, finalPosVec, drawPos);
         }
         this.endDraw(world, step, drawPos);
     }
 
     /** Set the interceptor to run after drawing the circle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the circle is rendered, and the
-     * step number of the animation.  It will also have the position around the circle at which the
-     * current particle was drawn.
+     * with references to the {@link ServerWorld}, the step number of the animation, and the
+     * position where the circle is rendered.  It will also have the position around the circle
+     * at which the current particle was drawn.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
@@ -140,7 +130,7 @@ public class ParticleCircle extends ParticleObject {
     }
 
     private InterceptedResult<ParticleCircle, AfterDrawData> doAfterDraw(
-            ServerWorld world, Vector3f centerPos, Vector3f drawPos, int step, ParticleCircle particleCircle
+            ServerWorld world, int step, Vector3f drawPos, Vector3f centerPos
     ) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, centerPos, step, AfterDrawData.class);
         interceptData.addMetadata(AfterDrawData.DRAW_POSITION, drawPos);
@@ -148,9 +138,9 @@ public class ParticleCircle extends ParticleObject {
     }
 
     /** Set the interceptor to run prior to drawing the circle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the circle is rendered, and the
-     * step number of the animation.  It will also have the angle around the circle at which the
-     * current particle is.
+     * with references to the {@link ServerWorld}, the step number of the animation, and the
+     * position where the circle is rendered.  It will also have the angle around the circle at
+     * which the current particle is.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing each particle
      */
@@ -159,7 +149,7 @@ public class ParticleCircle extends ParticleObject {
     }
 
     private InterceptedResult<ParticleCircle, BeforeDrawData> doBeforeDraw(
-            ServerWorld world, Vector3f pos, double currRot, int step, ParticleCircle particleCircle
+            ServerWorld world, int step, Vector3f pos, double currRot
     ) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
         interceptData.addMetadata(BeforeDrawData.ITERATED_ROTATION, currRot);
