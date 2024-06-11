@@ -7,6 +7,10 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
+import org.objectweb.asm.Opcodes;
+
+import javax.swing.text.html.Option;
+import java.util.Optional;
 
 /** The particle object class that represents a circle(2D shape) and not a 3D sphere.
  * It has a radius which dictates how large or small the circle is depending on the
@@ -132,7 +136,7 @@ public class ParticleCircle extends ParticleObject {
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
     public void setAfterDraw(DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw) {
-        this.afterDraw = afterDraw;
+        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
     private InterceptedResult<ParticleCircle, AfterDrawData> doAfterDraw(
@@ -151,7 +155,7 @@ public class ParticleCircle extends ParticleObject {
      * @param beforeDraw the new interceptor to execute prior to drawing each particle
      */
     public void setBeforeDraw(DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = beforeDraw;
+        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
     private InterceptedResult<ParticleCircle, BeforeDrawData> doBeforeDraw(
