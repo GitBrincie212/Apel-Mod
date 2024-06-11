@@ -20,12 +20,13 @@ import java.util.Optional;
  * The quadrilateral is drawn in order of the vertices provided (presume the line
  * from vertex2 to vertex3 is straight, ignoring the limitations of ASCII art):
  * <pre>
- *     vertex1 ----------------- vertex2
- *        \                         |
- *         \                        \
+ *     vertex1 ------------------ vertex2
+ *        \                          |
+ *         \                         |
  *          \                        |
  *        vertex4 --------------- vertex3
- * </pre>
+ * </pre><br>
+*  Of course a quad can also be a rectangle, a trapezoid and anything else in between
  */
 @SuppressWarnings("unused")
 public class ParticleQuad extends ParticleObject {
