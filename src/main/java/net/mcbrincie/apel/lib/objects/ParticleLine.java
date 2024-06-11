@@ -8,6 +8,8 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
+import java.util.Optional;
+
 /** The particle object class that represents a 2D line. It is one of the
  * most simple objects to use as it needs only a start & an ending position
  * in order to draw that line. The line cannot be curved and is only linear.
@@ -20,8 +22,8 @@ public class ParticleLine extends ParticleObject {
     protected Vector3f start;
     protected Vector3f end;
 
-    private DrawInterceptor<ParticleLine, AfterDrawData> afterDraw;
-    private DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw;
+    private DrawInterceptor<ParticleLine, AfterDrawData> afterDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
     public enum BeforeDrawData {}
     public enum AfterDrawData {}
@@ -135,7 +137,7 @@ public class ParticleLine extends ParticleObject {
      * @param afterDraw the new interceptor to execute after drawing the line
      */
     public void setAfterDraw(DrawInterceptor<ParticleLine, AfterDrawData> afterDraw) {
-        this.afterDraw = afterDraw;
+        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
     private void doAfterDraw(ServerWorld world, int step) {
@@ -151,7 +153,7 @@ public class ParticleLine extends ParticleObject {
      * @param beforeDraw the new interceptor to execute before drawing the line
      */
     public void setBeforeDraw(DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = beforeDraw;
+        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
     private InterceptedResult<ParticleLine, BeforeDrawData> doBeforeDraw(ServerWorld world, int step) {
