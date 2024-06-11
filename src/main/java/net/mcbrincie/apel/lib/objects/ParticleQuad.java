@@ -6,28 +6,45 @@ import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joml.Vector3f;
+
+import java.util.Optional;
 
 
 /** The particle object class that represents a 2D quad. It is a little
  * more complex than a line, since the user has to care about 4 endpoints(if
  * they don't want a square, otherwise they can supply a width & height).
+ * <br>
+ * The quadrilateral is drawn in order of the vertices provided (presume the line
+ * from vertex2 to vertex3 is straight, ignoring the limitations of ASCII art):
+ * <pre>
+ *     vertex1 ------------------ vertex2
+ *        \                          |
+ *         \                         |
+ *          \                        |
+ *        vertex4 --------------- vertex3
+ * </pre><br>
+*  Of course a quad can also be a rectangle, a trapezoid and anything else in between
  */
 @SuppressWarnings("unused")
 public class ParticleQuad extends ParticleObject {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     protected Vector3f vertex1;
     protected Vector3f vertex2;
     protected Vector3f vertex3;
     protected Vector3f vertex4;
 
-    public DrawInterceptor<ParticleQuad, afterCalcData> afterCalcsIntercept;
-    public DrawInterceptor<ParticleQuad, emptyData> beforeCalcsIntercept;
+    private DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
     /** There is no data being transmitted */
-    public enum emptyData {}
+    public enum BeforeDrawData {}
 
     /** This data is used after calculations(it contains the modified 4 vertices) */
-    public enum afterCalcData {
+    public enum AfterDrawData {
         VERTEX_1, VERTEX_2, VERTEX_3, VERTEX_4
     }
 
@@ -38,15 +55,15 @@ public class ParticleQuad extends ParticleObject {
      * the particle to use, the vertices coordinate, the amount of particles & the rotation to apply. There is also
      * a simplified version for no rotation.
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param vertices The vertices coordinate
      * @param rotation The rotation to apply
      *
      * @see ParticleQuad#ParticleQuad(ParticleEffect, Vector3f[], int)
     */
-    public ParticleQuad(ParticleEffect particle, Vector3f[] vertices, int amount, Vector3f rotation) {
-        super(particle, rotation);
+    public ParticleQuad(ParticleEffect particleEffect, Vector3f[] vertices, int amount, Vector3f rotation) {
+        super(particleEffect, rotation);
         this.setVertices(vertices);
         this.setAmount(amount);
     }
@@ -55,16 +72,14 @@ public class ParticleQuad extends ParticleObject {
      * the particle to use, the vertices coordinate & the amount of particles. There is also
      * a constructor that allows supplying rotation
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param vertices The vertices coordinate
      *
      * @see ParticleQuad#ParticleQuad(ParticleEffect, Vector3f[], int, Vector3f)
     */
-    public ParticleQuad(ParticleEffect particle, Vector3f[] vertices, int amount) {
-        super(particle);
-        this.setVertices(vertices);
-        this.setAmount(amount);
+    public ParticleQuad(ParticleEffect particleEffect, Vector3f[] vertices, int amount) {
+        this(particleEffect, vertices, amount, new Vector3f(0));
     }
 
     /** Constructor for the particle quad which is a 2D Quadrilateral. And more specifically
@@ -72,20 +87,15 @@ public class ParticleQuad extends ParticleObject {
      * the width of the rectangle, the height of the rectangle & the amount of particles.
      * There is also a constructor that allows supplying rotation
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param width The width of the rectangle
      * @param height The height of the rectangle
      *
      * @see ParticleQuad#ParticleQuad(ParticleEffect, float, float, int, Vector3f)
     */
-    public ParticleQuad(ParticleEffect particle, float width, float height, int amount) {
-        super(particle);
-        this.vertex1 = new Vector3f(width / 2, height / 2, 0);
-        this.vertex2 = new Vector3f(width / 2, -height / 2, 0);
-        this.vertex3 = new Vector3f(-width / 2, height / 2, 0);
-        this.vertex4 = new Vector3f(-width / 2, -height / 2, 0);
-        this.setAmount(amount);
+    public ParticleQuad(ParticleEffect particleEffect, float width, float height, int amount) {
+        this(particleEffect, rectangle(width, height), amount, new Vector3f(0));
     }
 
     /** Constructor for the particle quad which is a 2D Quadrilateral. And more specifically
@@ -93,7 +103,7 @@ public class ParticleQuad extends ParticleObject {
      * the width of the rectangle, the height of the rectangle, the amount of particles.
      * & the rotation to apply. There is also a constructor for no rotation
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param width The width of the rectangle
      * @param height The height of the rectangle
@@ -101,13 +111,17 @@ public class ParticleQuad extends ParticleObject {
      *
      * @see ParticleQuad#ParticleQuad(ParticleEffect, float, float, int, Vector3f)
     */
-    public ParticleQuad(ParticleEffect particle, float width, float height, int amount, Vector3f rotation) {
-        super(particle, rotation);
-        this.vertex1 = new Vector3f(width / 2, height / 2, 0);
-        this.vertex2 = new Vector3f(width / 2, -height / 2, 0);
-        this.vertex3 = new Vector3f(-width / 2, height / 2, 0);
-        this.vertex4 = new Vector3f(-width / 2, -height / 2, 0);
-        this.setAmount(amount);
+    public ParticleQuad(ParticleEffect particleEffect, float width, float height, int amount, Vector3f rotation) {
+        this(particleEffect, rectangle(width, height), amount, rotation);
+    }
+
+    // Constructor helper to transform width/height into vertices
+    private static Vector3f[] rectangle(float width, float height) {
+        Vector3f vertex1 = new Vector3f(width / 2, height / 2, 0);
+        Vector3f vertex2 = new Vector3f(width / 2, -height / 2, 0);
+        Vector3f vertex3 = new Vector3f(-width / 2, -height / 2, 0);
+        Vector3f vertex4 = new Vector3f(-width / 2, height / 2, 0);
+        return new Vector3f[]{vertex1, vertex2, vertex3, vertex4};
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -121,8 +135,8 @@ public class ParticleQuad extends ParticleObject {
         this.vertex2 = quad.vertex2;
         this.vertex3 = quad.vertex3;
         this.vertex4 = quad.vertex4;
-        this.beforeCalcsIntercept = quad.beforeCalcsIntercept;
-        this.afterCalcsIntercept = quad.afterCalcsIntercept;
+        this.beforeDraw = quad.beforeDraw;
+        this.afterDraw = quad.afterDraw;
     }
 
     /** Sets the individual vertices all at once. If you want set one vertex at a time
@@ -183,8 +197,8 @@ public class ParticleQuad extends ParticleObject {
      * @see ParticleQuad#setVertices(Vector3f[])
     */
     public Vector3f setVertex3(Vector3f newVertex) {
-        Vector3f prevVertex = this.vertex2;
-        this.vertex2 = newVertex;
+        Vector3f prevVertex = this.vertex3;
+        this.vertex3 = newVertex;
         return prevVertex;
     }
 
@@ -207,73 +221,87 @@ public class ParticleQuad extends ParticleObject {
      *
      * @return The first individual vertex
     */
-    protected Vector3f getVertex1() {return this.vertex1;}
+    protected Vector3f getVertex1() {
+        return this.vertex1;
+    }
 
     /** Gets the second individual vertex
      *
      * @return The second individual vertex
     */
-    protected Vector3f getVertex2() {return this.vertex2;}
+    protected Vector3f getVertex2() {
+        return this.vertex2;
+    }
 
     /** Gets the third individual vertex
      *
      * @return The third individual vertex
     */
-    protected Vector3f getVertex3() {return this.vertex3;}
+    protected Vector3f getVertex3() {
+        return this.vertex3;
+    }
 
     /** Gets the fourth individual vertex
      *
      * @return The fourth individual vertex
     */
-    protected Vector3f getVertex4() {return this.vertex4;}
+    protected Vector3f getVertex4() {
+        return this.vertex4;
+    }
 
     @Override
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
         float rotX = this.rotation.x;
         float rotY = this.rotation.y;
         float rotZ = this.rotation.z;
-        InterceptedResult<ParticleQuad, ParticleQuad.emptyData> modifiedResultBefore =
-                this.interceptDrawCalcBefore(world, step, this);
+        InterceptedResult<ParticleQuad, BeforeDrawData> modifiedResultBefore = this.beforeDraw(world, step);
         ParticleQuad objectInUse = modifiedResultBefore.object;
-        Vector3f alteredVertex1 = objectInUse.vertex1.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(drawPos);
-        Vector3f alteredVertex2 = objectInUse.vertex2.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(drawPos);
-        Vector3f alteredVertex3 = objectInUse.vertex3.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(drawPos);
-        Vector3f alteredVertex4 = objectInUse.vertex4.rotateZ(rotZ).rotateY(rotX).rotateX(rotX).add(drawPos);
-        InterceptedResult<ParticleQuad, ParticleQuad.afterCalcData> modifiedResultAfter = objectInUse.interceptDrawCalcAfter(
-                world, step, this, alteredVertex1, alteredVertex2, alteredVertex3, alteredVertex4
-        );
-        objectInUse = modifiedResultAfter.object;
-        alteredVertex1 = (Vector3f) modifiedResultAfter.interceptData.getMetadata(afterCalcData.VERTEX_1);
-        alteredVertex2 = (Vector3f) modifiedResultAfter.interceptData.getMetadata(afterCalcData.VERTEX_2);
-        alteredVertex3 = (Vector3f) modifiedResultAfter.interceptData.getMetadata(afterCalcData.VERTEX_3);
-        alteredVertex4 = (Vector3f) modifiedResultAfter.interceptData.getMetadata(afterCalcData.VERTEX_4);
-        alteredVertex1 = alteredVertex1.add(this.offset);
-        alteredVertex2 = alteredVertex2.add(this.offset);
-        alteredVertex3 = alteredVertex3.add(this.offset);
-        alteredVertex4 = alteredVertex4.add(this.offset);
+        // Note the defensive copies prior to rotating and adding
+        Vector3f alteredVertex1 = new Vector3f(objectInUse.vertex1).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f alteredVertex2 = new Vector3f(objectInUse.vertex2).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f alteredVertex3 = new Vector3f(objectInUse.vertex3).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f alteredVertex4 = new Vector3f(objectInUse.vertex4).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
         commonUtils.drawLine(objectInUse, world, alteredVertex1, alteredVertex2, objectInUse.amount);
+        commonUtils.drawLine(objectInUse, world, alteredVertex2, alteredVertex3, objectInUse.amount);
         commonUtils.drawLine(objectInUse, world, alteredVertex3, alteredVertex4, objectInUse.amount);
-        commonUtils.drawLine(objectInUse, world, alteredVertex2, alteredVertex4, objectInUse.amount);
-        commonUtils.drawLine(objectInUse, world, alteredVertex1, alteredVertex3, objectInUse.amount);
+        commonUtils.drawLine(objectInUse, world, alteredVertex4, alteredVertex1, objectInUse.amount);
+        InterceptedResult<ParticleQuad, AfterDrawData> modifiedResultAfter = objectInUse.doAfterDraw(
+                world, step, alteredVertex1, alteredVertex2, alteredVertex3, alteredVertex4
+        );
+        this.endDraw(world, step, drawPos);
     }
 
-    private InterceptedResult<ParticleQuad, ParticleQuad.afterCalcData> interceptDrawCalcAfter(
-            ServerWorld world, int step, ParticleQuad obj, Vector3f... vertices
-    ) {
-        InterceptData<ParticleQuad.afterCalcData> interceptData = new InterceptData<>(world, null, step, ParticleQuad.afterCalcData.class);
-        interceptData.addMetadata(afterCalcData.VERTEX_1, vertices[0]);
-        interceptData.addMetadata(afterCalcData.VERTEX_2, vertices[1]);
-        interceptData.addMetadata(afterCalcData.VERTEX_3, vertices[2]);
-        interceptData.addMetadata(afterCalcData.VERTEX_4, vertices[3]);
-        if (this.afterCalcsIntercept == null) return new InterceptedResult<>(interceptData, obj);
-        return this.afterCalcsIntercept.apply(interceptData, obj);
+    /** Sets the after draw interceptor, the method executes right after the particle quad
+     * is drawn onto the screen. It has the four modified vertices to attach.
+     *
+     * @param afterDraw The new interceptor to use
+     */
+    public void setAfterDraw(DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw) {
+        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleQuad, ParticleQuad.emptyData> interceptDrawCalcBefore(
-            ServerWorld world, int step, ParticleQuad obj
+    private InterceptedResult<ParticleQuad, AfterDrawData> doAfterDraw(
+            ServerWorld world, int step, Vector3f alteredVertex1, Vector3f alteredVertex2, Vector3f alteredVertex3, Vector3f alteredVertex4
     ) {
-        InterceptData<ParticleQuad.emptyData> interceptData = new InterceptData<>(world, null, step, ParticleQuad.emptyData.class);
-        if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeCalcsIntercept.apply(interceptData, obj);
+        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, null, step, AfterDrawData.class);
+        interceptData.addMetadata(AfterDrawData.VERTEX_1, alteredVertex1);
+        interceptData.addMetadata(AfterDrawData.VERTEX_2, alteredVertex2);
+        interceptData.addMetadata(AfterDrawData.VERTEX_3, alteredVertex3);
+        interceptData.addMetadata(AfterDrawData.VERTEX_4, alteredVertex4);
+        return this.afterDraw.apply(interceptData, this);
+    }
+
+    /** Sets the before draw interceptor, the method executes right before the particle quad
+     * is drawn onto the screen. It has no data attached.
+     *
+     * @param beforeDraw The new interceptor to use
+     */
+    public void setBeforeDraw(DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw) {
+        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
+    }
+
+    private InterceptedResult<ParticleQuad, BeforeDrawData> beforeDraw(ServerWorld world, int step) {
+        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
+        return this.beforeDraw.apply(interceptData, this);
     }
 }

@@ -8,19 +8,22 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
+import java.util.Optional;
+
 /** The particle object class that represents a 3D triangle(Tetrahedron). It has 4
  * vertices that make it up which must not be coplanar with each other. The vertices
  * can be set individually or by supplying a list of 4 vertices
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleTetrahedron extends ParticleObject {
-    public DrawInterceptor<ParticleTetrahedron, emptyData> afterCalcsIntercept;
-    public DrawInterceptor<ParticleTetrahedron, emptyData> beforeCalcsIntercept;
+    private DrawInterceptor<ParticleTetrahedron, AfterDrawData> afterDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleTetrahedron, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
     private final CommonUtils commonUtils = new CommonUtils();
 
     /** There is no data being transmitted */
-    public enum emptyData {}
+    public enum BeforeDrawData {}
+    public enum AfterDrawData {}
 
     protected Vector3f vertex1;
     protected Vector3f vertex2;
@@ -35,15 +38,15 @@ public class ParticleTetrahedron extends ParticleObject {
      * the particle to use, the vertices that connect the tetrahedron, the amount of particles & the
      * rotation to apply There is also a simplified version for no rotation.
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param amount The amount of particles for the object
      * @param vertices The vertices that make up the tetrahedron
      * @param rotation The rotation to apply
      *
      * @see ParticleTetrahedron#ParticleTetrahedron(ParticleEffect, Vector3f[], int)
     */
-    public ParticleTetrahedron(ParticleEffect particle, Vector3f[] vertices, int amount, Vector3f rotation) {
-        super(particle, rotation);
+    public ParticleTetrahedron(ParticleEffect particleEffect, Vector3f[] vertices, int amount, Vector3f rotation) {
+        super(particleEffect, rotation);
         if (vertices.length != 4) {
             throw UNBALANCED_VERTICES;
         }
@@ -60,23 +63,14 @@ public class ParticleTetrahedron extends ParticleObject {
      * It is a simplified version for the case when no rotation is meant to be applied.
      * For rotation offset you can use another constructor
      *
-     * @param particle The particle to use
+     * @param particleEffect The particle to use
      * @param vertices The vertices that make up the tetrahedron
      * @param amount The amount of particles for the object
      *
      * @see ParticleTetrahedron#ParticleTetrahedron(ParticleEffect, Vector3f[], int, Vector3f)
     */
-    public ParticleTetrahedron(ParticleEffect particle, Vector3f[] vertices, int amount) {
-        super(particle);
-        if (vertices.length != 4) {
-            throw UNBALANCED_VERTICES;
-        }
-        this.checkValidTetrahedron(vertices);
-        this.vertex1 = vertices[0];
-        this.vertex2 = vertices[1];
-        this.vertex3 = vertices[2];
-        this.vertex4 = vertices[3];
-        this.amount = amount;
+    public ParticleTetrahedron(ParticleEffect particleEffect, Vector3f[] vertices, int amount) {
+        this(particleEffect, vertices, amount, new Vector3f(0));
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -90,12 +84,17 @@ public class ParticleTetrahedron extends ParticleObject {
         this.vertex2 = tetrahedron.vertex2;
         this.vertex3 = tetrahedron.vertex3;
         this.vertex4 = tetrahedron.vertex4;
-        this.beforeCalcsIntercept = tetrahedron.beforeCalcsIntercept;
-        this.afterCalcsIntercept = tetrahedron.afterCalcsIntercept;
+        this.beforeDraw = tetrahedron.beforeDraw;
+        this.afterDraw = tetrahedron.afterDraw;
     }
 
     private void checkValidTetrahedron(Vector3f vertex1, Vector3f vertex2, Vector3f vertex3, Vector3f vertex4) {
-        float result = ((vertex2.sub(vertex1).cross(vertex3.sub(vertex1))).dot(vertex4.sub(vertex1)));
+        // Defensive copies prior to subtraction and cross-product, which are done in-place.
+        Vector3f v1 = new Vector3f(vertex1);
+        Vector3f v2 = new Vector3f(vertex2);
+        Vector3f v3 = new Vector3f(vertex3);
+        Vector3f v4 = new Vector3f(vertex4);
+        float result = ((v2.sub(v1).cross(v3.sub(v1))).dot(v4.sub(v1)));
         if (Math.abs(result) > 0.0001f) {
             throw new IllegalArgumentException("Provided vertices do not produce a tetrahedron");
         }
@@ -136,7 +135,7 @@ public class ParticleTetrahedron extends ParticleObject {
      */
     public Vector3f setVertex2(Vector3f newVertex) {
         Vector3f prevVertex2 = this.vertex2;
-        this.checkValidTetrahedron(this.vertex2, vertex2, this.vertex3, this.vertex4);
+        this.checkValidTetrahedron(this.vertex1, vertex2, this.vertex3, this.vertex4);
         this.vertex2 = newVertex;
         return prevVertex2;
     }
@@ -168,7 +167,7 @@ public class ParticleTetrahedron extends ParticleObject {
     */
     public Vector3f setVertex4(Vector3f newVertex) {
         Vector3f prevVertex4 = this.vertex4;
-        this.checkValidTetrahedron(this.vertex2, this.vertex2, this.vertex3, vertex4);
+        this.checkValidTetrahedron(this.vertex1, this.vertex2, this.vertex3, vertex4);
         this.vertex4 = newVertex;
         return prevVertex4;
     }
@@ -218,37 +217,56 @@ public class ParticleTetrahedron extends ParticleObject {
 
     @Override
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptedResult<ParticleTetrahedron, emptyData> modifiedBefore =
-                this.interceptDrawCalcBefore(world, step, drawPos, this);
-        ParticleTetrahedron objectToUse = modifiedBefore.object;
-        drawPos = drawPos.add(this.offset);
-        Vector3f vertex0 = this.vertex1.add(drawPos);
-        Vector3f vertex1 = this.vertex2.add(drawPos);
-        Vector3f vertex2 = this.vertex3.add(drawPos);
-        Vector3f vertex3 = this.vertex4.add(drawPos);
+        this.doBeforeDraw(world, step, drawPos);
+        // Defensive copy of `drawPos`
+        Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
+        // Defensive copies of internal vertices
+        System.out.println("Rotation: " + this.getRotation());
+        Vector3f vertex0 = new Vector3f(this.vertex1).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
+        Vector3f vertex1 = new Vector3f(this.vertex2).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
+        Vector3f vertex2 = new Vector3f(this.vertex3).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
+        Vector3f vertex3 = new Vector3f(this.vertex4).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
         commonUtils.drawLine(this, world, vertex0, vertex1, this.amount);
         commonUtils.drawLine(this, world, vertex0, vertex2, this.amount);
         commonUtils.drawLine(this, world, vertex0, vertex3, this.amount);
         commonUtils.drawLine(this, world, vertex1, vertex2, this.amount);
         commonUtils.drawLine(this, world, vertex1, vertex3, this.amount);
         commonUtils.drawLine(this, world, vertex2, vertex3, this.amount);
-        this.interceptDrawCalcAfter(world, step, drawPos, this);
+        this.doAfterDraw(world, step, drawPos);
         this.endDraw(world, step, drawPos);
     }
 
-    private InterceptedResult<ParticleTetrahedron, emptyData> interceptDrawCalcAfter(
-            ServerWorld world, int step, Vector3f pos, ParticleTetrahedron obj
-    ) {
-        InterceptData<emptyData> interceptData = new InterceptData<>(world, pos, step, emptyData.class);
-        if (this.afterCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.afterCalcsIntercept.apply(interceptData, obj);
+    /** Set the interceptor to run after drawing the tetrahedron.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the position where the tetrahedron is rendered, and the
+     * step number of the animation.  There is no other data attached.
+     *
+     * @param afterDraw the new interceptor to execute prior to drawing the tetrahedron
+     */
+    public void setAfterDraw(DrawInterceptor<ParticleTetrahedron, AfterDrawData> afterDraw) {
+        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleTetrahedron, emptyData> interceptDrawCalcBefore(
-            ServerWorld world, int step, Vector3f pos, ParticleTetrahedron obj
+    private InterceptedResult<ParticleTetrahedron, AfterDrawData> doAfterDraw(
+            ServerWorld world, int step, Vector3f pos
     ) {
-        InterceptData<emptyData> interceptData = new InterceptData<>(world, pos, step, emptyData.class);
-        if (this.beforeCalcsIntercept == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeCalcsIntercept.apply(interceptData, obj);
+        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, pos, step, AfterDrawData.class);
+        return this.afterDraw.apply(interceptData, this);
+    }
+
+    /** Set the interceptor to run prior to drawing the tetrahedron.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the position where the tetrahedron is rendered, and the
+     * step number of the animation.  There is no other data attached.
+     *
+     * @param beforeDraw the new interceptor to execute prior to drawing the tetrahedron
+     */
+    public void setBeforeDraw(DrawInterceptor<ParticleTetrahedron, BeforeDrawData> beforeDraw) {
+        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
+    }
+
+    private InterceptedResult<ParticleTetrahedron, BeforeDrawData> doBeforeDraw(
+            ServerWorld world, int step, Vector3f pos
+    ) {
+        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
+        return this.beforeDraw.apply(interceptData, this);
     }
 }
