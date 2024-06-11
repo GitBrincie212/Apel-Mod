@@ -156,8 +156,12 @@ public abstract class ParticleObject {
     public void endDraw(ServerWorld world, int step, Vector3f drawPos) {}
 
     public void drawParticle(ServerWorld world, Vector3f drawPos) {
+        this.drawParticle(this.particleEffect, world, drawPos);
+    }
+
+    public void drawParticle(ParticleEffect particle, ServerWorld world, Vector3f drawPos) {
         world.spawnParticles(
-                this.particleEffect, drawPos.x, drawPos.y, drawPos.z, 0,
+                particle, drawPos.x, drawPos.y, drawPos.z, 0,
                 0.0f, 0.0f, 0.0f, 1
         );
     }

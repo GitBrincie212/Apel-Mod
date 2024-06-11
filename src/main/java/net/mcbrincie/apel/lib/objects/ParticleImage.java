@@ -1,18 +1,14 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.util.image.DustPalateGenerator;
 import net.mcbrincie.apel.lib.util.image.PalateGenerator;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
-import org.joml.Vector2f;
-import org.joml.Vector2i;
 import org.joml.Vector3f;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.IOException;
 
