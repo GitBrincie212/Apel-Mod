@@ -95,7 +95,7 @@ public class ParticleTetrahedron extends ParticleObject {
         Vector3f v3 = new Vector3f(vertex3);
         Vector3f v4 = new Vector3f(vertex4);
         float result = ((v2.sub(v1).cross(v3.sub(v1))).dot(v4.sub(v1)));
-        if (Math.abs(result) > 0.0001f) {
+        if (Math.abs(result) < 0.0001f) {
             throw new IllegalArgumentException("Provided vertices do not produce a tetrahedron");
         }
     }
