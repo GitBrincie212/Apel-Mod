@@ -679,7 +679,9 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             ParticleObject objInUse = (ParticleObject) modifiedDataBefore.interceptData.getMetadata(
                     BeforeChildDrawData.OBJECT_IN_USE
             );
-            objInUse.draw(world, step, pos.add(this.offset.get(index)));
+            // Defensive copy before passing to child object
+            Vector3f childDrawPos = new Vector3f(pos).add(this.offset.get(index));
+            objInUse.draw(world, step, childDrawPos);
             this.doAfterChildDraw(world, step);
         }
     }
