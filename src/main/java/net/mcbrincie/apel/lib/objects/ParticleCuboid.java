@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -22,8 +21,6 @@ public class ParticleCuboid extends ParticleObject {
 
     private DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
-
-    private final CommonUtils commonUtils = new CommonUtils();
 
     /** There is no data being transmitted */
     public enum AfterDrawData {}
@@ -259,25 +256,25 @@ public class ParticleCuboid extends ParticleObject {
 
         // Bottom Face
         if (bottomFaceAmount != 0) {
-            commonUtils.drawLine(this, world, vertex2, vertex4, bottomFaceAmount);
-            commonUtils.drawLine(this, world, vertex4, vertex3, bottomFaceAmount);
-            commonUtils.drawLine(this, world, vertex3, vertex8, bottomFaceAmount);
-            commonUtils.drawLine(this, world, vertex8, vertex2, bottomFaceAmount);
+            this.drawLine(world, vertex2, vertex4, bottomFaceAmount);
+            this.drawLine(world, vertex4, vertex3, bottomFaceAmount);
+            this.drawLine(world, vertex3, vertex8, bottomFaceAmount);
+            this.drawLine(world, vertex8, vertex2, bottomFaceAmount);
         }
 
         // Top Face
         if (topFaceAmount != 0) {
-            commonUtils.drawLine(this, world, vertex1, vertex7, topFaceAmount);
-            commonUtils.drawLine(this, world, vertex7, vertex5, topFaceAmount);
-            commonUtils.drawLine(this, world, vertex5, vertex6, topFaceAmount);
-            commonUtils.drawLine(this, world, vertex6, vertex1, topFaceAmount);
+            this.drawLine(world, vertex1, vertex7, topFaceAmount);
+            this.drawLine(world, vertex7, vertex5, topFaceAmount);
+            this.drawLine(world, vertex5, vertex6, topFaceAmount);
+            this.drawLine(world, vertex6, vertex1, topFaceAmount);
         }
         // Vertical
         if (verticalBarsAmount != 0) {
-            commonUtils.drawLine(this, world, vertex5, vertex8, verticalBarsAmount);
-            commonUtils.drawLine(this, world, vertex2, vertex6, verticalBarsAmount);
-            commonUtils.drawLine(this, world, vertex3, vertex7, verticalBarsAmount);
-            commonUtils.drawLine(this, world, vertex1, vertex4, verticalBarsAmount);
+            this.drawLine(world, vertex5, vertex8, verticalBarsAmount);
+            this.drawLine(world, vertex2, vertex6, verticalBarsAmount);
+            this.drawLine(world, vertex3, vertex7, verticalBarsAmount);
+            this.drawLine(world, vertex1, vertex4, verticalBarsAmount);
         }
         this.doAfterDraw(world, step);
         this.endDraw(world, step, drawPos);

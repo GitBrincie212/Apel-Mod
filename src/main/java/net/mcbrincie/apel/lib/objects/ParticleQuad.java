@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -46,9 +45,6 @@ public class ParticleQuad extends ParticleObject {
     public enum AfterDrawData {
         VERTEX_1, VERTEX_2, VERTEX_3, VERTEX_4
     }
-
-    private final CommonUtils commonUtils = new CommonUtils();
-
 
     /** Constructor for the particle quad which is a 2D Quadrilateral. It accepts as parameters
      * the particle to use, the vertices coordinate, the amount of particles & the rotation to apply. There is also
@@ -254,16 +250,19 @@ public class ParticleQuad extends ParticleObject {
         float rotY = this.rotation.y;
         float rotZ = this.rotation.z;
         this.beforeDraw(world, step);
+
         // Note the defensive copies prior to rotating and adding
-        Vector3f alteredVertex1 = new Vector3f(this.vertex1).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        Vector3f alteredVertex2 = new Vector3f(this.vertex2).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        Vector3f alteredVertex3 = new Vector3f(this.vertex3).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        Vector3f alteredVertex4 = new Vector3f(this.vertex4).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        commonUtils.drawLine(this, world, alteredVertex1, alteredVertex2, this.amount);
-        commonUtils.drawLine(this, world, alteredVertex2, alteredVertex3, this.amount);
-        commonUtils.drawLine(this, world, alteredVertex3, alteredVertex4, this.amount);
-        commonUtils.drawLine(this, world, alteredVertex4, alteredVertex1, this.amount);
-        this.doAfterDraw(world, step, alteredVertex1, alteredVertex2, alteredVertex3, alteredVertex4);
+        Vector3f v1 = new Vector3f(this.vertex1).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f v2 = new Vector3f(this.vertex2).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f v3 = new Vector3f(this.vertex3).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f v4 = new Vector3f(this.vertex4).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+
+        this.drawLine(world, v1, v2, this.amount);
+        this.drawLine(world, v2, v3, this.amount);
+        this.drawLine(world, v3, v4, this.amount);
+        this.drawLine(world, v4, v1, this.amount);
+
+        this.doAfterDraw(world, step, v1, v2, v3, v4);
         this.endDraw(world, step, drawPos);
     }
 

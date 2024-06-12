@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -30,8 +29,6 @@ public class ParticleLine extends ParticleObject {
 
     public enum BeforeDrawData {}
     public enum AfterDrawData {}
-
-    private final CommonUtils commonUtils = new CommonUtils();
 
     /** Constructor for the particle line which is a line. It accepts as parameters
      * the particle to use, the starting endpoint & the ending endpoint. Rotation
@@ -124,9 +121,12 @@ public class ParticleLine extends ParticleObject {
     @Override
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
         this.doBeforeDraw(world, step);
-        Vector3f lineStart = new Vector3f(this.start).add(drawPos).add(this.offset);
-        Vector3f lineEnd = new Vector3f(this.end).add(drawPos).add(this.offset);
-        commonUtils.drawLine(this, world, lineStart, lineEnd, this.amount);
+
+        Vector3f v1 = new Vector3f(this.start).add(drawPos).add(this.offset);
+        Vector3f v2 = new Vector3f(this.end).add(drawPos).add(this.offset);
+
+        this.drawLine(world, v1, v2, this.amount);
+
         this.doAfterDraw(world, step);
         this.endDraw(world, step, drawPos);
     }
