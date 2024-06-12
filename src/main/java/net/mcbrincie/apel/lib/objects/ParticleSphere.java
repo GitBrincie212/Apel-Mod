@@ -2,7 +2,6 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec2f;
@@ -221,13 +220,14 @@ public class ParticleSphere extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleSphere, AfterDrawData> doAfterDraw(
+    private InterceptData<AfterDrawData> doAfterDraw(
             ServerWorld world, int step, Vector3f drawPos, Vector3f surfacePos, int currAmount
     ) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
         interceptData.addMetadata(AfterDrawData.DRAWING_POSITION, surfacePos);
         interceptData.addMetadata(AfterDrawData.AMOUNT, currAmount);
-        return this.afterDraw.apply(interceptData, this);
+        this.afterDraw.apply(interceptData, this);
+        return interceptData;
     }
 
     /** Set the interceptor to run prior to drawing the sphere.  The interceptor will be provided
@@ -241,11 +241,10 @@ public class ParticleSphere extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleSphere, BeforeDrawData> doBeforeDraw(
-            ServerWorld world, int step, Vector3f drawPos, int currAmount
-    ) {
+    private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, int step, Vector3f drawPos, int currAmount) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, drawPos, step, BeforeDrawData.class);
         interceptData.addMetadata(BeforeDrawData.AMOUNT, currAmount);
-        return this.beforeDraw.apply(interceptData, this);
+        this.beforeDraw.apply(interceptData, this);
+        return interceptData;
     }
 }

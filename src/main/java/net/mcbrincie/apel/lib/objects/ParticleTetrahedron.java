@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -221,7 +220,6 @@ public class ParticleTetrahedron extends ParticleObject {
         // Defensive copy of `drawPos`
         Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
         // Defensive copies of internal vertices
-        System.out.println("Rotation: " + this.getRotation());
         Vector3f vertex0 = new Vector3f(this.vertex1).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
         Vector3f vertex1 = new Vector3f(this.vertex2).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
         Vector3f vertex2 = new Vector3f(this.vertex3).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
@@ -246,11 +244,9 @@ public class ParticleTetrahedron extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleTetrahedron, AfterDrawData> doAfterDraw(
-            ServerWorld world, int step, Vector3f pos
-    ) {
+    private void doAfterDraw(ServerWorld world, int step, Vector3f pos) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, pos, step, AfterDrawData.class);
-        return this.afterDraw.apply(interceptData, this);
+        this.afterDraw.apply(interceptData, this);
     }
 
     /** Set the interceptor to run prior to drawing the tetrahedron.  The interceptor will be provided
@@ -263,10 +259,8 @@ public class ParticleTetrahedron extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleTetrahedron, BeforeDrawData> doBeforeDraw(
-            ServerWorld world, int step, Vector3f pos
-    ) {
+    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        return this.beforeDraw.apply(interceptData, this);
+        this.beforeDraw.apply(interceptData, this);
     }
 }

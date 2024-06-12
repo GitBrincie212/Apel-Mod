@@ -2,7 +2,6 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -670,18 +669,15 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         int index = -1;
         for (T object : this.objects) {
             index++;
-            InterceptedResult<ParticleCombiner<T>, BeforeChildDrawData> modifiedDataBefore =
-                    this.doBeforeChildDraw(world, step, object);
-            Boolean shouldDraw = (Boolean) modifiedDataBefore.interceptData.getMetadata(BeforeChildDrawData.CAN_DRAW_OBJECT);
-            if (shouldDraw == null || shouldDraw == Boolean.FALSE) {
+            InterceptData<BeforeChildDrawData> interceptData = this.doBeforeChildDraw(world, step, object);
+            boolean shouldDraw = interceptData.getMetadata(BeforeChildDrawData.CAN_DRAW_OBJECT, true);
+            if (!shouldDraw) {
                 continue;
             }
-            ParticleObject objInUse = (ParticleObject) modifiedDataBefore.interceptData.getMetadata(
-                    BeforeChildDrawData.OBJECT_IN_USE
-            );
+            ParticleObject childObject = interceptData.getMetadata(BeforeChildDrawData.OBJECT_IN_USE, object);
             // Defensive copy before passing to child object
             Vector3f childDrawPos = new Vector3f(pos).add(this.offset.get(index));
-            objInUse.draw(world, step, childDrawPos);
+            childObject.draw(world, step, childDrawPos);
             this.doAfterChildDraw(world, step);
         }
     }
@@ -709,17 +705,18 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         this.afterChildDrawIntercept = Optional.ofNullable(afterChildDrawIntercept).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleCombiner<T>, AfterChildDrawData> doAfterChildDraw(ServerWorld world, int step) {
+    private void doAfterChildDraw(ServerWorld world, int step) {
         InterceptData<AfterChildDrawData> interceptData = new InterceptData<>(world, null, step, AfterChildDrawData.class);
-        return this.afterChildDrawIntercept.apply(interceptData, this);
+        this.afterChildDrawIntercept.apply(interceptData, this);
     }
 
-    private InterceptedResult<ParticleCombiner<T>, BeforeChildDrawData> doBeforeChildDraw(
+    private InterceptData<BeforeChildDrawData> doBeforeChildDraw(
             ServerWorld world, int step, T objectInUse
     ) {
         InterceptData<BeforeChildDrawData> interceptData = new InterceptData<>(world, null, step, BeforeChildDrawData.class);
         interceptData.addMetadata(BeforeChildDrawData.OBJECT_IN_USE, objectInUse);
         interceptData.addMetadata(BeforeChildDrawData.CAN_DRAW_OBJECT, true);
-        return this.beforeChildDrawIntercept.apply(interceptData, this);
+        this.beforeChildDrawIntercept.apply(interceptData, this);
+        return interceptData;
     }
 }
