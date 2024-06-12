@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -17,8 +16,6 @@ import java.util.Optional;
 public class ParticleTetrahedron extends ParticleObject {
     private DrawInterceptor<ParticleTetrahedron, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleTetrahedron, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
-
-    private final CommonUtils commonUtils = new CommonUtils();
 
     /** There is no data being transmitted */
     public enum BeforeDrawData {}
@@ -217,19 +214,23 @@ public class ParticleTetrahedron extends ParticleObject {
     @Override
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
         this.doBeforeDraw(world, step, drawPos);
+
         // Defensive copy of `drawPos`
         Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
+
         // Defensive copies of internal vertices
-        Vector3f vertex0 = new Vector3f(this.vertex1).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
-        Vector3f vertex1 = new Vector3f(this.vertex2).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
-        Vector3f vertex2 = new Vector3f(this.vertex3).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
-        Vector3f vertex3 = new Vector3f(this.vertex4).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
-        commonUtils.drawLine(this, world, vertex0, vertex1, this.amount);
-        commonUtils.drawLine(this, world, vertex0, vertex2, this.amount);
-        commonUtils.drawLine(this, world, vertex0, vertex3, this.amount);
-        commonUtils.drawLine(this, world, vertex1, vertex2, this.amount);
-        commonUtils.drawLine(this, world, vertex1, vertex3, this.amount);
-        commonUtils.drawLine(this, world, vertex2, vertex3, this.amount);
+        Vector3f v1 = new Vector3f(this.vertex1).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
+        Vector3f v2 = new Vector3f(this.vertex2).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
+        Vector3f v3 = new Vector3f(this.vertex3).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
+        Vector3f v4 = new Vector3f(this.vertex4).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
+
+        this.drawLine(world, v1, v2, this.amount);
+        this.drawLine(world, v1, v3, this.amount);
+        this.drawLine(world, v1, v4, this.amount);
+        this.drawLine(world, v2, v3, this.amount);
+        this.drawLine(world, v2, v4, this.amount);
+        this.drawLine(world, v3, v4, this.amount);
+
         this.doAfterDraw(world, step, drawPos);
         this.endDraw(world, step, drawPos);
     }

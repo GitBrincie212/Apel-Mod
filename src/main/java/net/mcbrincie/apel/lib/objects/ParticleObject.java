@@ -165,4 +165,25 @@ public abstract class ParticleObject {
                 0.0f, 0.0f, 0.0f, 1
         );
     }
+
+    /** Draws a line of particles from {@code start} to {@code end}.  The line will have {@code amount}
+     * particles in it, inclusive of particles at both {@code start} and {@code end}.
+     *
+     * @param world The server world instance
+     * @param start The start point of the line
+     * @param end The end point of the line
+     * @param amount The number of particles in the line, must be greater than 1.
+     * @throws ArithmeticException if amount == 1
+     */
+    public void drawLine(ServerWorld world, Vector3f start, Vector3f end, int amount) {
+        float dist = start.distance(end);
+        float stepX = (end.x - start.x) / (amount - 1);
+        float stepY = (end.y - start.y) / (amount - 1);
+        float stepZ = (end.z - start.z) / (amount - 1);
+        Vector3f curr = new Vector3f(start);
+        for (int i = 0; i < amount; i++) {
+            this.drawParticle(world, curr);
+            curr.add(stepX, stepY, stepZ);
+        }
+    }
 }

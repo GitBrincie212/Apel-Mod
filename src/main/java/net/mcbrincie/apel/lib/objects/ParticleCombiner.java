@@ -534,7 +534,6 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         if (objects.length <= 1) {
             throw new IllegalArgumentException("There has to be needs than 1 object supplied");
         }
-        System.out.println(Arrays.toString(objects));
         List<T> prevObjects = this.objects;
         this.objects = Arrays.asList(objects);
         Vector3f[] offsets = new Vector3f[objects.length];
