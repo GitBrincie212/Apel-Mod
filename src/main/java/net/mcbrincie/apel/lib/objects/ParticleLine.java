@@ -5,6 +5,8 @@ import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -18,6 +20,8 @@ import java.util.Optional;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleLine extends ParticleObject {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     protected Vector3f start;
     protected Vector3f end;
 
@@ -120,10 +124,9 @@ public class ParticleLine extends ParticleObject {
     @Override
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
         this.doBeforeDraw(world, step);
-        commonUtils.drawLine(
-                this, world, this.start.add(this.offset),
-                this.end.add(this.offset), this.amount
-        );
+        Vector3f lineStart = new Vector3f(this.start).add(drawPos).add(this.offset);
+        Vector3f lineEnd = new Vector3f(this.end).add(drawPos).add(this.offset);
+        commonUtils.drawLine(this, world, lineStart, lineEnd, this.amount);
         this.doAfterDraw(world, step);
         this.endDraw(world, step, drawPos);
     }
