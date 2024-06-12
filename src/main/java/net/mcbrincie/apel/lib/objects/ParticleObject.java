@@ -155,11 +155,11 @@ public abstract class ParticleObject {
     public abstract void draw(ServerWorld world, int step, Vector3f drawPos);
     public void endDraw(ServerWorld world, int step, Vector3f drawPos) {}
 
-    public void drawParticle(ServerWorld world, Vector3f drawPos) {
+    protected void drawParticle(ServerWorld world, Vector3f drawPos) {
         this.drawParticle(this.particleEffect, world, drawPos);
     }
 
-    public void drawParticle(ParticleEffect particle, ServerWorld world, Vector3f drawPos) {
+    protected void drawParticle(ParticleEffect particle, ServerWorld world, Vector3f drawPos) {
         world.spawnParticles(
                 particle, drawPos.x, drawPos.y, drawPos.z, 0,
                 0.0f, 0.0f, 0.0f, 1
@@ -175,11 +175,12 @@ public abstract class ParticleObject {
      * @param amount The number of particles in the line, must be greater than 1.
      * @throws ArithmeticException if amount == 1
      */
-    public void drawLine(ServerWorld world, Vector3f start, Vector3f end, int amount) {
+    protected void drawLine(ServerWorld world, Vector3f start, Vector3f end, int amount) {
         float dist = start.distance(end);
-        float stepX = (end.x - start.x) / (amount - 1);
-        float stepY = (end.y - start.y) / (amount - 1);
-        float stepZ = (end.z - start.z) / (amount - 1);
+        int amountSubOne = (amount - 1);
+        float stepX = (end.x - start.x) / amountSubOne;
+        float stepY = (end.y - start.y) / amountSubOne;
+        float stepZ = (end.z - start.z) / amountSubOne;
         Vector3f curr = new Vector3f(start);
         for (int i = 0; i < amount; i++) {
             this.drawParticle(world, curr);
