@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.apache.logging.log4j.LogManager;
@@ -254,20 +253,17 @@ public class ParticleQuad extends ParticleObject {
         float rotX = this.rotation.x;
         float rotY = this.rotation.y;
         float rotZ = this.rotation.z;
-        InterceptedResult<ParticleQuad, BeforeDrawData> modifiedResultBefore = this.beforeDraw(world, step);
-        ParticleQuad objectInUse = modifiedResultBefore.object;
+        this.beforeDraw(world, step);
         // Note the defensive copies prior to rotating and adding
-        Vector3f alteredVertex1 = new Vector3f(objectInUse.vertex1).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        Vector3f alteredVertex2 = new Vector3f(objectInUse.vertex2).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        Vector3f alteredVertex3 = new Vector3f(objectInUse.vertex3).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        Vector3f alteredVertex4 = new Vector3f(objectInUse.vertex4).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        commonUtils.drawLine(objectInUse, world, alteredVertex1, alteredVertex2, objectInUse.amount);
-        commonUtils.drawLine(objectInUse, world, alteredVertex2, alteredVertex3, objectInUse.amount);
-        commonUtils.drawLine(objectInUse, world, alteredVertex3, alteredVertex4, objectInUse.amount);
-        commonUtils.drawLine(objectInUse, world, alteredVertex4, alteredVertex1, objectInUse.amount);
-        InterceptedResult<ParticleQuad, AfterDrawData> modifiedResultAfter = objectInUse.doAfterDraw(
-                world, step, alteredVertex1, alteredVertex2, alteredVertex3, alteredVertex4
-        );
+        Vector3f alteredVertex1 = new Vector3f(this.vertex1).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f alteredVertex2 = new Vector3f(this.vertex2).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f alteredVertex3 = new Vector3f(this.vertex3).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f alteredVertex4 = new Vector3f(this.vertex4).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        commonUtils.drawLine(this, world, alteredVertex1, alteredVertex2, this.amount);
+        commonUtils.drawLine(this, world, alteredVertex2, alteredVertex3, this.amount);
+        commonUtils.drawLine(this, world, alteredVertex3, alteredVertex4, this.amount);
+        commonUtils.drawLine(this, world, alteredVertex4, alteredVertex1, this.amount);
+        this.doAfterDraw(world, step, alteredVertex1, alteredVertex2, alteredVertex3, alteredVertex4);
         this.endDraw(world, step, drawPos);
     }
 
@@ -280,7 +276,7 @@ public class ParticleQuad extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleQuad, AfterDrawData> doAfterDraw(
+    private void doAfterDraw(
             ServerWorld world, int step, Vector3f alteredVertex1, Vector3f alteredVertex2, Vector3f alteredVertex3, Vector3f alteredVertex4
     ) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, null, step, AfterDrawData.class);
@@ -288,7 +284,7 @@ public class ParticleQuad extends ParticleObject {
         interceptData.addMetadata(AfterDrawData.VERTEX_2, alteredVertex2);
         interceptData.addMetadata(AfterDrawData.VERTEX_3, alteredVertex3);
         interceptData.addMetadata(AfterDrawData.VERTEX_4, alteredVertex4);
-        return this.afterDraw.apply(interceptData, this);
+        this.afterDraw.apply(interceptData, this);
     }
 
     /** Sets the before draw interceptor, the method executes right before the particle quad
@@ -300,8 +296,8 @@ public class ParticleQuad extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleQuad, BeforeDrawData> beforeDraw(ServerWorld world, int step) {
+    private void beforeDraw(ServerWorld world, int step) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
-        return this.beforeDraw.apply(interceptData, this);
+        this.beforeDraw.apply(interceptData, this);
     }
 }

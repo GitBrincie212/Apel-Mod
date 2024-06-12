@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -120,8 +119,7 @@ public class ParticleLine extends ParticleObject {
 
     @Override
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptedResult<ParticleLine, BeforeDrawData> modifiedBefore = this.doBeforeDraw(world, step);
-        ParticleLine objectInUse = modifiedBefore.object;
+        this.doBeforeDraw(world, step);
         commonUtils.drawLine(
                 this, world, this.start.add(this.offset),
                 this.end.add(this.offset), this.amount
@@ -142,7 +140,6 @@ public class ParticleLine extends ParticleObject {
 
     private void doAfterDraw(ServerWorld world, int step) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, null, step, AfterDrawData.class);
-        if (this.afterDraw == null) return;
         this.afterDraw.apply(interceptData, this);
     }
 
@@ -156,9 +153,8 @@ public class ParticleLine extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleLine, BeforeDrawData> doBeforeDraw(ServerWorld world, int step) {
+    private void doBeforeDraw(ServerWorld world, int step) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
-        if (this.beforeDraw == null) return new InterceptedResult<>(interceptData, this);
-        return this.beforeDraw.apply(interceptData, this);
+        this.beforeDraw.apply(interceptData, this);
     }
 }

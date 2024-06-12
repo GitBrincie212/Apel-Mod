@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -210,9 +209,9 @@ public class ParticleTriangle extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleTriangle, AfterDrawData> doAfterDraw(ServerWorld world, int step, Vector3f pos) {
+    private void doAfterDraw(ServerWorld world, int step, Vector3f pos) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, pos, step, AfterDrawData.class);
-        return this.afterDraw.apply(interceptData, this);
+        this.afterDraw.apply(interceptData, this);
     }
 
     /** Set the interceptor to run prior to drawing the triangle.  The interceptor will be provided
@@ -225,8 +224,8 @@ public class ParticleTriangle extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleTriangle, BeforeDrawData> doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
+    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        return this.beforeDraw.apply(interceptData, this);
+        this.beforeDraw.apply(interceptData, this);
     }
 }

@@ -2,7 +2,6 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -71,8 +70,8 @@ public class ParticlePoint extends ParticleObject {
     }
 
     public void draw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptedResult<ParticlePoint, BeforeDrawData> modifiedResult = this.doBeforeDraw(world, drawPos, step);
-        Vector3f objectDrawPosition = (Vector3f) modifiedResult.interceptData.getMetadata(BeforeDrawData.DRAW_POSITION);
+        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(world, drawPos, step);
+        Vector3f objectDrawPosition = interceptData.getMetadata(BeforeDrawData.DRAW_POSITION, drawPos);
         this.drawParticle(world, objectDrawPosition.add(this.offset));
         this.doAfterDraw(world, objectDrawPosition, step);
         this.endDraw(world, step, objectDrawPosition);
@@ -97,14 +96,15 @@ public class ParticlePoint extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticlePoint, BeforeDrawData> doBeforeDraw(ServerWorld world, Vector3f drawPos, int step) {
+    private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, Vector3f drawPos, int step) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, drawPos, step, BeforeDrawData.class);
         interceptData.addMetadata(BeforeDrawData.DRAW_POSITION, drawPos);
-        return this.beforeDraw.apply(interceptData, this);
+        this.beforeDraw.apply(interceptData, this);
+        return interceptData;
     }
 
-    private InterceptedResult<ParticlePoint, AfterDrawData> doAfterDraw(ServerWorld world, Vector3f drawPos, int step) {
+    private void doAfterDraw(ServerWorld world, Vector3f drawPos, int step) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
-        return this.afterDraw.apply(interceptData, this);
+        this.afterDraw.apply(interceptData, this);
     }
 }

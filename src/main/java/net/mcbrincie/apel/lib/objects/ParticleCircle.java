@@ -2,7 +2,6 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -102,9 +101,8 @@ public class ParticleCircle extends ParticleObject {
         float angleInterval = 360 / (float) this.amount;
         for (int i = 0; i < (this.amount / 2); i++) {
             double currRot = angleInterval * i;
-            InterceptedResult<ParticleCircle, BeforeDrawData> modifiedPairBefore = this.doBeforeDraw(world, step, drawPos, currRot);
-            // Protect against `null` being placed into map (would NPE upon unboxing)
-            currRot = (double) Optional.ofNullable(modifiedPairBefore.interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION)).orElse(currRot);
+            InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(world, step, drawPos, currRot);
+            currRot = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, currRot);
             float x = (float) Math.sin(currRot);
             float y = (float) Math.cos(currRot);
             Vector3f finalPosVec = new Vector3f(this.radius * x, this.radius * y, 0)
@@ -113,7 +111,7 @@ public class ParticleCircle extends ParticleObject {
                     // Translate
                     .add(drawPos).add(this.offset);
             this.drawParticle(world, finalPosVec);
-            InterceptedResult<ParticleCircle, AfterDrawData> modifiedPairAfter = this.doAfterDraw(world, step, finalPosVec, drawPos);
+            this.doAfterDraw(world, step, finalPosVec, drawPos);
         }
         this.endDraw(world, step, drawPos);
     }
@@ -129,12 +127,10 @@ public class ParticleCircle extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleCircle, AfterDrawData> doAfterDraw(
-            ServerWorld world, int step, Vector3f drawPos, Vector3f centerPos
-    ) {
+    private void doAfterDraw(ServerWorld world, int step, Vector3f drawPos, Vector3f centerPos) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, centerPos, step, AfterDrawData.class);
         interceptData.addMetadata(AfterDrawData.DRAW_POSITION, drawPos);
-        return this.afterDraw.apply(interceptData, this);
+        this.afterDraw.apply(interceptData, this);
     }
 
     /** Set the interceptor to run prior to drawing the circle.  The interceptor will be provided
@@ -148,11 +144,10 @@ public class ParticleCircle extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleCircle, BeforeDrawData> doBeforeDraw(
-            ServerWorld world, int step, Vector3f pos, double currRot
-    ) {
+    private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, int step, Vector3f pos, double currRot) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
         interceptData.addMetadata(BeforeDrawData.ITERATED_ROTATION, currRot);
-        return this.beforeDraw.apply(interceptData, this);
+        this.beforeDraw.apply(interceptData, this);
+        return interceptData;
     }
 }
