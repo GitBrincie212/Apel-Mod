@@ -11,6 +11,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleImage extends ParticleObject {
@@ -19,6 +20,9 @@ public class ParticleImage extends ParticleObject {
     private boolean transparency = false;
     private PalateGenerator palateGenerator = new DustPalateGenerator();
     private int[] rgbArray;
+
+    private int[] cachedRGBArray;
+    private HashMap<Vector3f, ParticleEffect> positions;
 
     public ParticleImage(String filename, Vector3f rotation) {
         super(null, rotation);
@@ -40,6 +44,11 @@ public class ParticleImage extends ParticleObject {
     public ParticleImage(ParticleImage image) {
         super(image);
         this.filename = image.filename;
+        this.rgbArray = image.rgbArray;
+        this.cachedRGBArray = image.cachedRGBArray;
+        this.positions = image.positions;
+        this.image = image.image;
+        this.palateGenerator = image.palateGenerator;
         this.transparency = image.transparency;
     }
 
@@ -88,8 +97,8 @@ public class ParticleImage extends ParticleObject {
                 int rgba = this.rgbArray[y * width + x];
                 int alpha = (rgba >> 24) & 0xff;
                 ParticleEffect particle = this.palateGenerator.apply(rgba, x, y, drawPos);
-                // if (this.transparency && alpha == 0) continue;
-                this.drawParticle(particle, world, drawPos.add(x, y, 0).mul(0.01f));
+                Vector3f pos = drawPos.add(x, y, 0).mul(0.01f);
+                // this.drawParticle(particle, world, pos);
             }
         }
     }
