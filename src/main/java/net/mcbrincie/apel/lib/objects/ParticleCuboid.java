@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.util.CommonUtils;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptedResult;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -246,10 +245,8 @@ public class ParticleCuboid extends ParticleObject {
         int verticalBarsAmount = this.amount.z;
 
         Vector3f[] vertices = {vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7, vertex8};
-        InterceptedResult<ParticleCuboid, BeforeDrawData> modifiedPairBefore =
-                this.doBeforeDraw(world, step, vertices);
-        vertices = (Vector3f[]) modifiedPairBefore.interceptData.getMetadata(BeforeDrawData.VERTICES);
-        ParticleCuboid objectInUse = modifiedPairBefore.object;
+        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(world, step, vertices);
+        vertices = interceptData.getMetadata(BeforeDrawData.VERTICES, vertices);
 
         vertex1 = vertices[0];
         vertex2 = vertices[1];
@@ -262,25 +259,25 @@ public class ParticleCuboid extends ParticleObject {
 
         // Bottom Face
         if (bottomFaceAmount != 0) {
-            commonUtils.drawLine(objectInUse, world, vertex2, vertex4, bottomFaceAmount);
-            commonUtils.drawLine(objectInUse, world, vertex4, vertex3, bottomFaceAmount);
-            commonUtils.drawLine(objectInUse, world, vertex3, vertex8, bottomFaceAmount);
-            commonUtils.drawLine(objectInUse, world, vertex8, vertex2, bottomFaceAmount);
+            commonUtils.drawLine(this, world, vertex2, vertex4, bottomFaceAmount);
+            commonUtils.drawLine(this, world, vertex4, vertex3, bottomFaceAmount);
+            commonUtils.drawLine(this, world, vertex3, vertex8, bottomFaceAmount);
+            commonUtils.drawLine(this, world, vertex8, vertex2, bottomFaceAmount);
         }
 
         // Top Face
         if (topFaceAmount != 0) {
-            commonUtils.drawLine(objectInUse, world, vertex1, vertex7, topFaceAmount);
-            commonUtils.drawLine(objectInUse, world, vertex7, vertex5, topFaceAmount);
-            commonUtils.drawLine(objectInUse, world, vertex5, vertex6, topFaceAmount);
-            commonUtils.drawLine(objectInUse, world, vertex6, vertex1, topFaceAmount);
+            commonUtils.drawLine(this, world, vertex1, vertex7, topFaceAmount);
+            commonUtils.drawLine(this, world, vertex7, vertex5, topFaceAmount);
+            commonUtils.drawLine(this, world, vertex5, vertex6, topFaceAmount);
+            commonUtils.drawLine(this, world, vertex6, vertex1, topFaceAmount);
         }
         // Vertical
         if (verticalBarsAmount != 0) {
-            commonUtils.drawLine(objectInUse, world, vertex5, vertex8, verticalBarsAmount);
-            commonUtils.drawLine(objectInUse, world, vertex2, vertex6, verticalBarsAmount);
-            commonUtils.drawLine(objectInUse, world, vertex3, vertex7, verticalBarsAmount);
-            commonUtils.drawLine(objectInUse, world, vertex1, vertex4, verticalBarsAmount);
+            commonUtils.drawLine(this, world, vertex5, vertex8, verticalBarsAmount);
+            commonUtils.drawLine(this, world, vertex2, vertex6, verticalBarsAmount);
+            commonUtils.drawLine(this, world, vertex3, vertex7, verticalBarsAmount);
+            commonUtils.drawLine(this, world, vertex1, vertex4, verticalBarsAmount);
         }
         this.doAfterDraw(world, step);
         this.endDraw(world, step, drawPos);
@@ -310,11 +307,10 @@ public class ParticleCuboid extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptedResult<ParticleCuboid, BeforeDrawData> doBeforeDraw(
-            ServerWorld world, int step, Vector3f[] vertices
-    ) {
+    private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, int step, Vector3f[] vertices) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
         interceptData.addMetadata(BeforeDrawData.VERTICES, vertices);
-        return this.beforeDraw.apply(interceptData, this);
+        this.beforeDraw.apply(interceptData, this);
+        return interceptData;
     }
 }
