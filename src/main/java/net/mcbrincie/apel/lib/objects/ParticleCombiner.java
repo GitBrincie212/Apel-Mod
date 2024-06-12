@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 /** A utility particle object class that groups all particle objects as
@@ -42,7 +44,7 @@ import java.util.Optional;
  * object to the particle combiner and from there APEL would take care the rest.<br><br>
  *
  * <b>Controlling Objects Before Being Drawn</b><br>
- * Developers may use {@link #setBeforeChildDrawIntercept(DrawInterceptor)} to control the object itself before other
+ * Developers may use {@link #setBeforeChildDraw(DrawInterceptor)} to control the object itself before other
  * interceptors from that object apply.  They may also choose whether to draw the object or not by modifying
  * {@code CAN_DRAW_OBJECT}, which this logic is not possible without changing the particle object's class.<br><br>
  *
@@ -58,13 +60,10 @@ import java.util.Optional;
 public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     protected List<T> objects = new ArrayList<>();
     protected int amount = -1;
-    protected List<Vector3f> offset = new ArrayList<>();
+    protected List<Vector3f> offsets = new ArrayList<>();
 
-    public DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDrawIntercept = DrawInterceptor.identity();
-    public DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDrawIntercept = DrawInterceptor.identity();
-
-    @Deprecated public final DrawInterceptor<?, ?> afterCalcsIntercept = null;
-    @Deprecated public final DrawInterceptor<?, ?> beforeCalcsIntercept = null;
+    public DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDraw = DrawInterceptor.identity();
+    public DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDraw = DrawInterceptor.identity();
 
     /** There is no data being transmitted */
     public enum AfterChildDrawData {}
@@ -131,14 +130,12 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     */
     @SafeVarargs
     public ParticleCombiner(T... objects) {
-        super(ParticleTypes.SCRAPE); // We do not care about the particle
-        this.particleEffect = null;
+        super((ParticleEffect) null); // We do not care about the particle
         this.setObjects(objects);
     }
 
     public ParticleCombiner() {
-        super(ParticleTypes.SCRAPE); // We do not care about the particle
-        this.particleEffect = null;
+        super((ParticleEffect) null); // We do not care about the particle
     }
 
     /** The copy constructor for the particle combiner. Which
@@ -151,9 +148,9 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         super(combiner);
         this.objects = combiner.objects;
         this.amount = combiner.amount;
-        this.offset = combiner.offset;
-        this.afterChildDrawIntercept = combiner.afterChildDrawIntercept;
-        this.beforeChildDrawIntercept = combiner.beforeChildDrawIntercept;
+        this.offsets = combiner.offsets;
+        this.afterChildDraw = combiner.afterChildDraw;
+        this.beforeChildDraw = combiner.beforeChildDraw;
     }
 
     /** Sets the rotation for all the particle objects. There is
@@ -269,70 +266,84 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         }
     }
 
-    /** Gets the offsets per object and returns a list
+    /**
+     * Gets the offsets per object and returns a list
      *
      * @return The list of offsets per object
      */
-    public Vector3f[] getOffsets() {
-        return this.offset.toArray(Vector3f[]::new);
+    public List<Vector3f> getOffsets() {
+        return this.offsets;
     }
 
-    /** Sets the offset position per object. The offset positions have to be the same
+    /** Get the offset for the object at the given index.
+     *
+     * @param index the index of the object
+     * @return the offset of the object at the given index
+     */
+    public Vector3f getOffset(int index) {
+        return this.offsets.get(index);
+    }
+
+    /**
+     * Sets the offset position per object. The offset positions have to be the same
      * amount as the objects. New objects added will have their offset to (0,0,0). There
      * is a helper method to allow to set for all objects the same offset
-     *
      *
      * @param offset The offsets for each object(corresponding on each index)
      * @return The previous offsets
      */
-    public Vector3f[] setOffsetPosition(Vector3f... offset) {
-        List<Vector3f> prevOffset = this.offset;
-        this.offset = Arrays.stream(offset).toList();
-        return prevOffset.toArray(Vector3f[]::new);
+    public List<Vector3f> setOffsets(Vector3f... offset) {
+        if (offset.length != this.objects.size()) {
+            throw new IllegalArgumentException("Must provide an offset for every object!");
+        }
+        List<Vector3f> prevOffset = this.offsets;
+        // Do not use 'toList()' as it results in an unmodifiable List
+        this.offsets = Arrays.stream(offset).collect(Collectors.toCollection(ArrayList::new));
+        return prevOffset;
     }
 
-    /** Sets the offset position to all objects. The offset applies to all objects and overwrites
+    /**
+     * Sets the offset position to all objects. The offset applies to all objects and overwrites
      * the values. New objects added will have their offset to (0,0,0). There is a
      * helper method to allows to set different offsets to different objects
-     *
      *
      * @param offset The offsets for all the objects
      * @return The previous offsets
      */
-    public Vector3f[] setOffsetPosition(Vector3f offset) {
-        List<Vector3f> prevOffset = this.offset;
-        Vector3f[] newList = new Vector3f[this.objects.size()];
-        Arrays.fill(newList, this.offset);
-        this.offset = Arrays.stream(newList).toList();
-        return prevOffset.toArray(Vector3f[]::new);
+    public List<Vector3f> setOffsets(Vector3f offset) {
+        List<Vector3f> prevOffset = this.offsets;
+        Vector3f newOffset = Optional.ofNullable(offset).orElse(new Vector3f());
+        int objectCount = this.objects.size();
+        this.offsets = new ArrayList<>(objectCount);
+        for(int i = 0; i < objectCount; i++) {
+            // Ensure every offset has a unique reference, so a future modification doesn't impact all of them
+            this.offsets.add(new Vector3f(newOffset));
+        }
+        return prevOffset;
     }
 
-    /** Sets the offset position for the individual object. By supplying an index and the
-     * new offset for that object
-     *
+    /** Sets the offset position for the individual object by supplying an index and the
+     * new offset for that object.
      *
      * @param offset The offsets for the indexed object
      * @return The previous offset
      */
-    public Vector3f setOffsetPosition(int index, Vector3f offset) {
-        Vector3f prevOffset = this.offset.get(index);
-        this.offset.set(index, offset);
+    public Vector3f setOffset(int index, Vector3f offset) {
+        Vector3f prevOffset = new Vector3f(this.offsets.get(index));
+        this.offsets.set(index, offset);
         return prevOffset;
     }
 
-    /** Sets the offset position for the individual object. By supplying the object and the
-     * new offset for that object. If the object is not found it will return null
-     *
+    /** Sets the offset position for the individual object by supplying the object and the
+     * new offset for that object. If the object is not found it will return null.
      *
      * @param offset The offsets for the individual object
      * @return The previous offset
      */
-    public Vector3f setOffsetPosition(T object, Vector3f offset) {
+    public Vector3f setOffset(T object, Vector3f offset) {
         int index = this.objects.indexOf(object);
         if (index == -1) return null;
-        Vector3f prevOffset = this.offset.get(index);
-        this.offset.set(index, offset);
-        return prevOffset;
+        return this.setOffset(index, offset);
     }
 
     /** Sets the particle to use to a new value and returns the previous particle that was used.
@@ -531,22 +542,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     */
     @SafeVarargs
     public final List<T> setObjects(T... objects) {
-        if (objects.length <= 1) {
-            throw new IllegalArgumentException("There has to be needs than 1 object supplied");
-        }
-        List<T> prevObjects = this.objects;
-        this.objects = Arrays.asList(objects);
-        Vector3f[] offsets = new Vector3f[objects.length];
-        Arrays.fill(offsets, new Vector3f());
-        this.offset = Arrays.stream(offsets).toList();
-        int prevAmount = objects[0].amount;
-        ParticleEffect prevEffect = objects[0].particleEffect;
-        for (T object : this.objects) {
-            if (this.amount == -1 && this.particleEffect == null) break;
-            this.amount = (object.amount != this.amount) ? -1 : this.amount;
-            this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
-        }
-        return prevObjects;
+        return this.setObjects(Arrays.asList(objects));
     }
 
     /** Sets the amount of particle objects to use and returns the previous objects that were used.
@@ -556,16 +552,15 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      */
     public final List<T> setObjects(List<T> objects) {
         if (objects.size() <= 1) {
-            throw new IllegalArgumentException("There has to be needs than 1 object supplied");
+            throw new IllegalArgumentException("There has to be more than 1 object supplied");
         }
-        System.out.println(objects);
         List<T> prevObjects = this.objects;
-        this.objects = objects;
-        Vector3f[] offsets = new Vector3f[objects.size()];
-        Arrays.fill(offsets, new Vector3f());
-        this.offset = Arrays.stream(offsets).toList();
-        int prevAmount = objects.getFirst().amount;
-        ParticleEffect prevEffect = objects.getFirst().particleEffect;
+
+        // Create a new list to control mutability
+        this.objects = new ArrayList<>(objects);
+        // Don't use Arrays.asList(): it results in an unmodifiable list, and then appendObject(s) will break.
+        this.offsets = IntStream.range(0, this.objects.size()).mapToObj(Vector3f::new).collect(Collectors.toCollection(ArrayList::new));
+
         for (T object : this.objects) {
             if (this.amount == -1 && this.particleEffect == null) break;
             this.amount = (object.amount != this.amount) ? -1 : this.amount;
@@ -599,15 +594,17 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      */
     @SafeVarargs
     public final void appendObjects(T... objects) {
-        List<T> objectList = Arrays.stream(objects).toList();
+        List<T> objectList = Arrays.asList(objects);
         this.objects.addAll(objectList);
+
         Vector3f[] offsets = new Vector3f[objects.length];
         Arrays.fill(offsets, new Vector3f());
+        this.offsets.addAll(Arrays.stream(offsets).toList());
+
         for (T object : this.objects) {
             if (object.amount != this.amount) this.amount = -1;
             if (object.particleEffect != this.particleEffect) this.particleEffect = null;
         }
-        this.offset.addAll(Arrays.stream(offsets).toList());
     }
 
     /** Appends a new particle object to the combiner. This is at the back
@@ -620,10 +617,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @see ParticleCombiner#appendObject(ParticleObject, Vector3f)
      */
     public void appendObject(T object) {
-        if (object.amount != this.amount) this.amount = -1;
-        if (object.particleEffect != this.particleEffect) this.particleEffect = null;
-        this.objects.add(object);
-        this.offset.add(new Vector3f());
+        this.appendObject(object, new Vector3f());
     }
 
     /** Appends a new particle object to the combiner. This is at the back
@@ -639,7 +633,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         if (object.amount != this.amount) this.amount = -1;
         if (object.particleEffect != this.particleEffect) this.particleEffect = null;
         this.objects.add(object);
-        this.offset.add(offset);
+        this.offsets.add(offset);
     }
 
     /** Removes an object from the combiner including its offset. Returns
@@ -649,7 +643,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @return The pair of the object & offset
      */
     public Pair<T, Vector3f> removeObject(int index) {
-        return new Pair<>(this.objects.remove(index), this.offset.remove(index));
+        return new Pair<>(this.objects.remove(index), this.offsets.remove(index));
     }
 
     /** Removes an object from the combiner including its offset. Returns
@@ -660,11 +654,11 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      */
     public Pair<T, Vector3f> removeObject(T object) {
         int index = this.objects.indexOf(object);
-        return new Pair<>(this.objects.remove(index), this.offset.remove(index));
+        return this.removeObject(index);
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ServerWorld world, int step, Vector3f drawPos) {
         int index = -1;
         for (T object : this.objects) {
             index++;
@@ -675,47 +669,31 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             }
             ParticleObject childObject = interceptData.getMetadata(BeforeChildDrawData.OBJECT_IN_USE, object);
             // Defensive copy before passing to child object
-            Vector3f childDrawPos = new Vector3f(pos).add(this.offset.get(index));
+            Vector3f childDrawPos = new Vector3f(drawPos).add(this.offsets.get(index));
             childObject.draw(world, step, childDrawPos);
             this.doAfterChildDraw(world, step);
         }
     }
 
-    /** Sets the offset to a new value. The offset position is added with the drawing position.
-     * Returns the previous offset that was used
-     *
-     * @param offset The new offset value
-     * @return The previous offset
-    */
-    public Vector3f[] setOffset(Vector3f... offset) {
-        List<Vector3f> prevOffset = this.offset;
-        this.offset = Arrays.stream(offset).toList();
-        return prevOffset.toArray(Vector3f[]::new);
+
+    public void setBeforeChildDraw(DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDraw) {
+        this.beforeChildDraw = Optional.ofNullable(beforeChildDraw).orElse(DrawInterceptor.identity());
     }
 
-    public Vector3f getOffset(int index) {return this.offset.get(index);}
-
-
-    public void setBeforeChildDrawIntercept(DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDrawIntercept) {
-        this.beforeChildDrawIntercept = Optional.ofNullable(beforeChildDrawIntercept).orElse(DrawInterceptor.identity());
-    }
-
-    public void setAfterChildDrawIntercept(DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDrawIntercept) {
-        this.afterChildDrawIntercept = Optional.ofNullable(afterChildDrawIntercept).orElse(DrawInterceptor.identity());
+    public void setAfterChildDraw(DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDraw) {
+        this.afterChildDraw = Optional.ofNullable(afterChildDraw).orElse(DrawInterceptor.identity());
     }
 
     private void doAfterChildDraw(ServerWorld world, int step) {
         InterceptData<AfterChildDrawData> interceptData = new InterceptData<>(world, null, step, AfterChildDrawData.class);
-        this.afterChildDrawIntercept.apply(interceptData, this);
+        this.afterChildDraw.apply(interceptData, this);
     }
 
-    private InterceptData<BeforeChildDrawData> doBeforeChildDraw(
-            ServerWorld world, int step, T objectInUse
-    ) {
+    private InterceptData<BeforeChildDrawData> doBeforeChildDraw(ServerWorld world, int step, T objectInUse) {
         InterceptData<BeforeChildDrawData> interceptData = new InterceptData<>(world, null, step, BeforeChildDrawData.class);
         interceptData.addMetadata(BeforeChildDrawData.OBJECT_IN_USE, objectInUse);
         interceptData.addMetadata(BeforeChildDrawData.CAN_DRAW_OBJECT, true);
-        this.beforeChildDrawIntercept.apply(interceptData, this);
+        this.beforeChildDraw.apply(interceptData, this);
         return interceptData;
     }
 }
