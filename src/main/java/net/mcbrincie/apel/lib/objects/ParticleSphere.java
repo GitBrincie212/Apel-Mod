@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -117,15 +118,15 @@ public class ParticleSphere extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f drawPos) {
+    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         for (int i = 0; i < this.amount; i++) {
-            this.doBeforeDraw(world, step, drawPos, i);
+            this.doBeforeDraw(renderer.getWorld(), step, drawPos, i);
             Vector3f surfacePos = this.computeCoords(i);
             surfacePos = this.applyRotation(surfacePos.x, surfacePos.y, surfacePos.z).add(drawPos).add(this.offset);
-            this.drawParticle(world, surfacePos);
-            this.doAfterDraw(world, step, drawPos, surfacePos, i);
+            this.drawParticle(renderer, surfacePos);
+            this.doAfterDraw(renderer.getWorld(), step, drawPos, surfacePos, i);
         }
-        this.endDraw(world, step, drawPos);
+        this.endDraw(renderer, step, drawPos);
     }
 
     private Vector3f computeCoords(int i) {

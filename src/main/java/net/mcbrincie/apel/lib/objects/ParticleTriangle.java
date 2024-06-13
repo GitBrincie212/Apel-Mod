@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -181,8 +182,8 @@ public class ParticleTriangle extends ParticleObject {
     public Vector3f getVertex3() {return this.vertex3;}
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f drawPos) {
-        this.doBeforeDraw(world, step, drawPos);
+    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
+        this.doBeforeDraw(renderer.getWorld(), step, drawPos);
 
         // Defensive copy of `drawPos`
         Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
@@ -192,12 +193,12 @@ public class ParticleTriangle extends ParticleObject {
         Vector3f v2 = new Vector3f(this.vertex2).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
         Vector3f v3 = new Vector3f(this.vertex3).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
 
-        this.drawLine(world, v1, v2, this.amount);
-        this.drawLine(world, v2, v3, this.amount);
-        this.drawLine(world, v3, v1, this.amount);
+        this.drawLine(renderer, v1, v2, this.amount);
+        this.drawLine(renderer, v2, v3, this.amount);
+        this.drawLine(renderer, v3, v1, this.amount);
 
-        this.doAfterDraw(world, step, drawPos);
-        this.endDraw(world, step, drawPos);
+        this.doAfterDraw(renderer.getWorld(), step, drawPos);
+        this.endDraw(renderer, step, drawPos);
     }
 
     /** Set the interceptor to run after drawing the triangle.  The interceptor will be provided

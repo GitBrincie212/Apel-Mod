@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -664,11 +665,11 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f pos) {
+    public void draw(ApelRenderer renderer, int step, Vector3f pos) {
         int index = -1;
         for (T object : this.objects) {
             index++;
-            InterceptData<BeforeChildDrawData> interceptData = this.doBeforeChildDraw(world, step, object);
+            InterceptData<BeforeChildDrawData> interceptData = this.doBeforeChildDraw(renderer.getWorld(), step, object);
             boolean shouldDraw = interceptData.getMetadata(BeforeChildDrawData.CAN_DRAW_OBJECT, true);
             if (!shouldDraw) {
                 continue;
@@ -676,8 +677,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             ParticleObject childObject = interceptData.getMetadata(BeforeChildDrawData.OBJECT_IN_USE, object);
             // Defensive copy before passing to child object
             Vector3f childDrawPos = new Vector3f(pos).add(this.offset.get(index));
-            childObject.draw(world, step, childDrawPos);
-            this.doAfterChildDraw(world, step);
+            childObject.draw(renderer, step, childDrawPos);
+            this.doAfterChildDraw(renderer.getWorld(), step);
         }
     }
 

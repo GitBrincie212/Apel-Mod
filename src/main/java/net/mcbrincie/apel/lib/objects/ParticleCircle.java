@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -97,11 +98,11 @@ public class ParticleCircle extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f drawPos) {
+    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         float angleInterval = 360 / (float) this.amount;
         for (int i = 0; i < (this.amount / 2); i++) {
             double currRot = angleInterval * i;
-            InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(world, step, drawPos, currRot);
+            InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getWorld(), step, drawPos, currRot);
             currRot = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, currRot);
             float x = (float) Math.sin(currRot);
             float y = (float) Math.cos(currRot);
@@ -110,10 +111,10 @@ public class ParticleCircle extends ParticleObject {
                     .rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x)
                     // Translate
                     .add(drawPos).add(this.offset);
-            this.drawParticle(world, finalPosVec);
-            this.doAfterDraw(world, step, finalPosVec, drawPos);
+            this.drawParticle(renderer, finalPosVec);
+            this.doAfterDraw(renderer.getWorld(), step, finalPosVec, drawPos);
         }
-        this.endDraw(world, step, drawPos);
+        this.endDraw(renderer, step, drawPos);
     }
 
     /** Set the interceptor to run after drawing the circle.  The interceptor will be provided

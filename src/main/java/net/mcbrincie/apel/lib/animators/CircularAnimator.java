@@ -4,6 +4,7 @@ import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -174,14 +175,13 @@ public class CircularAnimator extends PathAnimatorBase {
         return this.renderingSteps * this.revolutions;
     }
 
-    /** This method is used for beginning the animation logic.
+    /**
+     * This method is used for beginning the animation logic.
      * It accepts the server world as a parameter. Unlike most
      * path animators, this one uses angles for trimming
-     *
-     * @param world The server world instance
      */
     @Override
-    public void beginAnimation(ServerWorld world) throws SeqMissingException, SeqDuplicateException {
+    public void beginAnimation(ApelRenderer renderer) throws SeqMissingException, SeqDuplicateException {
         float startAngle = this.trimming.getStart();
         float differenceAngle = this.trimming.getEnd() - startAngle;
         this.tempDiffStore = differenceAngle;
@@ -201,7 +201,7 @@ public class CircularAnimator extends PathAnimatorBase {
         }
         this.allocateToScheduler();
         for (int i = 0; i < particleAmount ; i++) {
-            this.handleDrawingStep(world, i, pos);
+            this.handleDrawingStep(renderer, i, pos);
             if (this.onProcess != null) {
                 this.onProcess.apply(
                         i, this.trimming, this.radius, this.center, this.renderingSteps, this.renderingInterval

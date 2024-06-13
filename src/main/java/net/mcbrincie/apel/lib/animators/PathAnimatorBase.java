@@ -6,8 +6,8 @@ import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
-import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
@@ -26,7 +26,7 @@ public abstract class PathAnimatorBase {
     protected int renderingSteps = 0;
     protected int delay;
     protected int processSpeed = 1;
-    protected ParticleObject particle;
+    protected ParticleObject particleObject;
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
 
@@ -34,30 +34,32 @@ public abstract class PathAnimatorBase {
     protected Function5<Integer, Integer, Vector3f, Integer, Float, Void> onStart;
     protected Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onProcess;
 
-    /** Constructor for the path animator. This constructor is meant to be used when you want a
+    /**
+     * Constructor for the path animator. This constructor is meant to be used when you want a
      * constant amount of rendering steps. It is worth pointing out that this won't look
      * pleasant in the eyes on larger distances. For that it is recommended to look into:
-
-     * @param delay The delay per rendering step
-     * @param particle The particle object to use
+     *
+     * @param delay          The delay per rendering step
+     * @param particleObject The particle object to use
      * @param renderingSteps The rendering steps to use
      * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, float)
-    */
-    public PathAnimatorBase(int delay, ParticleObject particle, int renderingSteps) {
+     */
+    public PathAnimatorBase(int delay, ParticleObject particleObject, int renderingSteps) {
         this.setDelay(delay);
-        this.setParticleObject(particle);
+        this.setParticleObject(particleObject);
         this.setRenderSteps(renderingSteps);
     }
 
-    /** Constructor for the path animator. This constructor is meant to be used when you want a
+    /**
+     * Constructor for the path animator. This constructor is meant to be used when you want a
      * consistent amount of rendering steps no matter the distance. It is worth pointing out that
      * there will be performance overhead for large distances. To minimise, it is recommended to look into:
      *
-     * @param delay The delay per rendering step
-     * @param particle The particle object to use
+     * @param delay             The delay per rendering step
+     * @param particle          The particle object to use
      * @param renderingInterval The rendering interval to use, which is how many blocks per new rendering step
      * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, int)
-    */
+     */
     public PathAnimatorBase(int delay, @NotNull ParticleObject particle, float renderingInterval) {
         this.setDelay(delay);
         this.setParticleObject(particle);
@@ -74,7 +76,7 @@ public abstract class PathAnimatorBase {
     */
     public PathAnimatorBase(PathAnimatorBase animator) {
         this.delay = animator.delay;
-        this.particle = animator.particle;
+        this.particleObject = animator.particleObject;
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
         this.processSpeed = animator.processSpeed;
@@ -150,7 +152,7 @@ public abstract class PathAnimatorBase {
      * @return The particle object
      */
     public ParticleObject getParticleObject() {
-        return this.particle;
+        return this.particleObject;
     }
 
     /** Sets the particle object to a new value. And returns the
@@ -159,8 +161,8 @@ public abstract class PathAnimatorBase {
      * @return The previous amount of rendering steps
      */
     public ParticleObject setParticleObject(@NotNull ParticleObject object) {
-        ParticleObject particleObject = this.particle;
-        this.particle = object;
+        ParticleObject particleObject = this.particleObject;
+        this.particleObject = object;
         return particleObject;
     }
 
@@ -282,25 +284,30 @@ public abstract class PathAnimatorBase {
      */
     public abstract int convertToSteps();
 
-    /** This method is used for beginning the animation logic.
+    /**
+     * This method is used for beginning the animation logic.
      * This method must be used when creating a particle animator.
      * Ideally the animators should implement their own trimming
      *
-     * @param world The server world instance
      * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
-     * @throws SeqMissingException When it finds there is no sequence yet allocated
-    */
-    public abstract void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException;
+     * @throws SeqMissingException   When it finds there is no sequence yet allocated
+     */
+    public abstract void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException;
 
-    /** This method is used for drawing the object. It does more than just drawing, primarily scheduling
+    /**
+     * This method is used for drawing the object. It does more than just drawing, primarily scheduling
      *
-     * @param world The server world instance
-     * @param step The current step in
+     * @param renderer     The renderer used for drawing
+     * @param step         The current step in
      * @param drawPosition The planned drawing position
      * @throws SeqMissingException When it finds that there is no sequence yet allocated
      */
-    public void handleDrawingStep(ServerWorld world, int step, Vector3f drawPosition) throws SeqMissingException {
-        Runnable func = () -> this.particle.draw(world, step, drawPosition);
+    public void handleDrawingStep(ApelRenderer renderer, int step, Vector3f drawPosition) throws SeqMissingException {
+        Runnable func = () -> {
+            renderer.beforeFrame(this.particleObject, step, drawPosition);
+            this.particleObject.draw(renderer, step, drawPosition);
+            renderer.afterFrame(this.particleObject, step, drawPosition);
+        };
         if (this.delay == 0) {
             Apel.drawThread.submit(func);
             return;

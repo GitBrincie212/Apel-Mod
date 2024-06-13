@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -69,12 +70,12 @@ public class ParticlePoint extends ParticleObject {
         this.afterDraw = object.afterDraw;
     }
 
-    public void draw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(world, drawPos, step);
+    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
+        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getWorld(), drawPos, step);
         Vector3f objectDrawPosition = interceptData.getMetadata(BeforeDrawData.DRAW_POSITION, drawPos);
-        this.drawParticle(world, objectDrawPosition.add(this.offset));
-        this.doAfterDraw(world, objectDrawPosition, step);
-        this.endDraw(world, step, objectDrawPosition);
+        this.drawParticle(renderer, objectDrawPosition.add(this.offset));
+        this.doAfterDraw(renderer.getWorld(), objectDrawPosition, step);
+        this.endDraw(renderer, step, objectDrawPosition);
     }
 
 

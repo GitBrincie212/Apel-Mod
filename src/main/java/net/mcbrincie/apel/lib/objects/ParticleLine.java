@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -119,16 +120,16 @@ public class ParticleLine extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f drawPos) {
-        this.doBeforeDraw(world, step);
+    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
+        this.doBeforeDraw(renderer.getWorld(), step);
 
         Vector3f v1 = new Vector3f(this.start).add(drawPos).add(this.offset);
         Vector3f v2 = new Vector3f(this.end).add(drawPos).add(this.offset);
 
-        this.drawLine(world, v1, v2, this.amount);
+        this.drawLine(renderer, v1, v2, this.amount);
 
-        this.doAfterDraw(world, step);
-        this.endDraw(world, step, drawPos);
+        this.doAfterDraw(renderer.getWorld(), step);
+        this.endDraw(renderer, step, drawPos);
     }
 
     /** Sets the interceptor to run after drawing the line.  The interceptor will be provided

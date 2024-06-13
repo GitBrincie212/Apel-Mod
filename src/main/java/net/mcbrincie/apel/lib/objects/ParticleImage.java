@@ -1,9 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.image.DustPalateGenerator;
 import net.mcbrincie.apel.lib.util.image.PalateGenerator;
 import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import org.joml.Vector3f;
 
@@ -87,7 +87,7 @@ public class ParticleImage extends ParticleObject {
     public ParticleEffect getParticleEffect() {return null;}
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f drawPos) {
+    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         int width = this.image.getWidth();
         int height = this.image.getHeight();
         for (int x = 0; x < width; x++) {

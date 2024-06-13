@@ -3,6 +3,7 @@ package net.mcbrincie.apel.lib.animators;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -66,10 +67,10 @@ public class PointAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException {
+    public void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         this.allocateToScheduler();
         for (int i = 0; i < this.renderingSteps; i++) {
-            this.handleDrawingStep(world, i, this.origin);
+            this.handleDrawingStep(renderer, i, this.origin);
         }
     }
 }

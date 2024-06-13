@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -224,7 +225,7 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f drawPos) {
+    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         float width = size.x;
         float height = size.y;
         float depth = size.z;
@@ -242,7 +243,7 @@ public class ParticleCuboid extends ParticleObject {
         int verticalBarsAmount = this.amount.z;
 
         Vector3f[] vertices = {vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7, vertex8};
-        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(world, step, vertices);
+        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getWorld(), step, vertices);
         vertices = interceptData.getMetadata(BeforeDrawData.VERTICES, vertices);
 
         vertex1 = vertices[0];
@@ -256,28 +257,28 @@ public class ParticleCuboid extends ParticleObject {
 
         // Bottom Face
         if (bottomFaceAmount != 0) {
-            this.drawLine(world, vertex2, vertex4, bottomFaceAmount);
-            this.drawLine(world, vertex4, vertex3, bottomFaceAmount);
-            this.drawLine(world, vertex3, vertex8, bottomFaceAmount);
-            this.drawLine(world, vertex8, vertex2, bottomFaceAmount);
+            this.drawLine(renderer, vertex2, vertex4, bottomFaceAmount);
+            this.drawLine(renderer, vertex4, vertex3, bottomFaceAmount);
+            this.drawLine(renderer, vertex3, vertex8, bottomFaceAmount);
+            this.drawLine(renderer, vertex8, vertex2, bottomFaceAmount);
         }
 
         // Top Face
         if (topFaceAmount != 0) {
-            this.drawLine(world, vertex1, vertex7, topFaceAmount);
-            this.drawLine(world, vertex7, vertex5, topFaceAmount);
-            this.drawLine(world, vertex5, vertex6, topFaceAmount);
-            this.drawLine(world, vertex6, vertex1, topFaceAmount);
+            this.drawLine(renderer, vertex1, vertex7, topFaceAmount);
+            this.drawLine(renderer, vertex7, vertex5, topFaceAmount);
+            this.drawLine(renderer, vertex5, vertex6, topFaceAmount);
+            this.drawLine(renderer, vertex6, vertex1, topFaceAmount);
         }
         // Vertical
         if (verticalBarsAmount != 0) {
-            this.drawLine(world, vertex5, vertex8, verticalBarsAmount);
-            this.drawLine(world, vertex2, vertex6, verticalBarsAmount);
-            this.drawLine(world, vertex3, vertex7, verticalBarsAmount);
-            this.drawLine(world, vertex1, vertex4, verticalBarsAmount);
+            this.drawLine(renderer, vertex5, vertex8, verticalBarsAmount);
+            this.drawLine(renderer, vertex2, vertex6, verticalBarsAmount);
+            this.drawLine(renderer, vertex3, vertex7, verticalBarsAmount);
+            this.drawLine(renderer, vertex1, vertex4, verticalBarsAmount);
         }
-        this.doAfterDraw(world, step);
-        this.endDraw(world, step, drawPos);
+        this.doAfterDraw(renderer.getWorld(), step);
+        this.endDraw(renderer, step, drawPos);
     }
 
     /** Set the interceptor to run after drawing the cuboid.  The interceptor will be provided
