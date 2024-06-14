@@ -30,7 +30,7 @@ public class ApelScheduler {
     }
 
     /** Allocates a new delayed step. It accepts the animator object and the scheduled step.
-     * If the method finds that the object hasn't allocated a sequence chunk then it throws
+     * If the method finds that the object hasn't allocated a sequence chunk, then it throws
      * a {@link SeqMissingException}. The allocated step gets deleted once it is executed
      */
     public void allocateNewStep(
