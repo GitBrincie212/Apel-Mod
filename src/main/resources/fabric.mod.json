@@ -17,6 +17,9 @@
 	"entrypoints": {
 		"main": [
 			"net.mcbrincie.apel.Apel"
+		],
+		"client": [
+			"net.mcbrincie.apel.client.ApelClient"
 		]
 	},
 	"mixins": [

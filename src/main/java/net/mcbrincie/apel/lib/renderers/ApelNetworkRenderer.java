@@ -65,11 +65,11 @@ public class ApelNetworkRenderer implements ApelRenderer {
         }
     }
 
-    sealed interface Instruction {
+    public sealed interface Instruction {
         void write(RegistryByteBuf buf);
     }
 
-    record Frame(Vector3f origin) implements Instruction {
+    public record Frame(Vector3f origin) implements Instruction {
 
         static Frame from(RegistryByteBuf buf) {
             return new Frame(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
@@ -84,7 +84,7 @@ public class ApelNetworkRenderer implements ApelRenderer {
         }
     }
 
-    record PType(ParticleEffect particleEffect) implements Instruction {
+    public record PType(ParticleEffect particleEffect) implements Instruction {
 
         static PType from(RegistryByteBuf buf) {
             return new PType(ParticleTypes.PACKET_CODEC.decode(buf));
@@ -97,7 +97,7 @@ public class ApelNetworkRenderer implements ApelRenderer {
         }
     }
 
-    record Particle(Vector3f pos) implements Instruction {
+    public record Particle(Vector3f pos) implements Instruction {
 
         static Particle from(RegistryByteBuf buf) {
             return new Particle(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
@@ -112,7 +112,7 @@ public class ApelNetworkRenderer implements ApelRenderer {
         }
     }
 
-    record Line(Vector3f start, Vector3f end, int amount) implements Instruction {
+    public record Line(Vector3f start, Vector3f end, int amount) implements Instruction {
 
         static Line from(RegistryByteBuf buf) {
             return new Line(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
