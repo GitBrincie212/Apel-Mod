@@ -21,7 +21,6 @@ public class ParticleImage extends ParticleObject {
     private PalateGenerator palateGenerator = new DustPalateGenerator();
     private int[] rgbArray;
 
-    private int[] cachedRGBArray;
     private HashMap<Vector3f, ParticleEffect> positions;
 
     public ParticleImage(String filename, Vector3f rotation) {
@@ -45,7 +44,6 @@ public class ParticleImage extends ParticleObject {
         super(image);
         this.filename = image.filename;
         this.rgbArray = image.rgbArray;
-        this.cachedRGBArray = image.cachedRGBArray;
         this.positions = image.positions;
         this.image = image.image;
         this.palateGenerator = image.palateGenerator;
