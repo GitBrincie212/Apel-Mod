@@ -1,9 +1,10 @@
 package net.mcbrincie.apel.lib.renderers;
 
-import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
+
+import java.io.IOException;
 
 /**
  * ApelRenderer allows Apel animations to be rendered to multiple "canvases."
@@ -30,6 +31,10 @@ import org.joml.Vector3f;
 public interface ApelRenderer {
     static ApelRenderer create(ServerWorld world) {
         return new DefaultApelRenderer(world);
+    }
+
+    static ApelRenderer client(ServerWorld world) {
+        return new ApelNetworkRenderer(world);
     }
 
     /**
@@ -75,10 +80,10 @@ public interface ApelRenderer {
         return finalPosVec;
     }
 
-    default void beforeFrame(ParticleObject particleObject, int step, Vector3f frameOrigin) {
+    default void beforeFrame(int step, Vector3f frameOrigin) {
     }
 
-    default void afterFrame(ParticleObject particleObject, int step, Vector3f frameOrigin) {
+    default void afterFrame(int step, Vector3f frameOrigin) {
     }
 
     ServerWorld getWorld();
