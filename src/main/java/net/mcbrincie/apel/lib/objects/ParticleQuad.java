@@ -260,10 +260,10 @@ public class ParticleQuad extends ParticleObject {
         Vector3f v3 = new Vector3f(this.vertex3).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
         Vector3f v4 = new Vector3f(this.vertex4).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
 
-        this.drawLine(renderer, v1, v2, this.amount);
-        this.drawLine(renderer, v2, v3, this.amount);
-        this.drawLine(renderer, v3, v4, this.amount);
-        this.drawLine(renderer, v4, v1, this.amount);
+        this.drawLine(renderer, v1, v2, step, this.amount);
+        this.drawLine(renderer, v2, v3, step, this.amount);
+        this.drawLine(renderer, v3, v4, step, this.amount);
+        this.drawLine(renderer, v4, v1, step, this.amount);
 
         this.doAfterDraw(renderer.getWorld(), step, v1, v2, v3, v4);
         this.endDraw(renderer, step, drawPos);

@@ -123,7 +123,7 @@ public class ParticleSphere extends ParticleObject {
             this.doBeforeDraw(renderer.getWorld(), step, drawPos, i);
             Vector3f surfacePos = this.computeCoords(i);
             surfacePos = this.applyRotation(surfacePos.x, surfacePos.y, surfacePos.z).add(drawPos).add(this.offset);
-            this.drawParticle(renderer, surfacePos);
+            this.drawParticle(renderer, step, surfacePos);
             this.doAfterDraw(renderer.getWorld(), step, drawPos, surfacePos, i);
         }
         this.endDraw(renderer, step, drawPos);

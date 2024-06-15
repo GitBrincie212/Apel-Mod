@@ -73,7 +73,7 @@ public class ParticlePoint extends ParticleObject {
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getWorld(), drawPos, step);
         Vector3f objectDrawPosition = interceptData.getMetadata(BeforeDrawData.DRAW_POSITION, drawPos);
-        this.drawParticle(renderer, objectDrawPosition.add(this.offset));
+        this.drawParticle(renderer, step, objectDrawPosition.add(this.offset));
         this.doAfterDraw(renderer.getWorld(), objectDrawPosition, step);
         this.endDraw(renderer, step, objectDrawPosition);
     }

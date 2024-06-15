@@ -126,7 +126,7 @@ public class ParticleLine extends ParticleObject {
         Vector3f v1 = new Vector3f(this.start).add(drawPos).add(this.offset);
         Vector3f v2 = new Vector3f(this.end).add(drawPos).add(this.offset);
 
-        this.drawLine(renderer, v1, v2, this.amount);
+        this.drawLine(renderer, v1, v2, step, this.amount);
 
         this.doAfterDraw(renderer.getWorld(), step);
         this.endDraw(renderer, step, drawPos);

@@ -111,7 +111,7 @@ public class ParticleCircle extends ParticleObject {
                     .rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x)
                     // Translate
                     .add(drawPos).add(this.offset);
-            this.drawParticle(renderer, finalPosVec);
+            this.drawParticle(renderer, step, finalPosVec);
             this.doAfterDraw(renderer.getWorld(), step, finalPosVec, drawPos);
         }
         this.endDraw(renderer, step, drawPos);

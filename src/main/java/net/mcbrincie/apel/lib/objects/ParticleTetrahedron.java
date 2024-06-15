@@ -225,12 +225,12 @@ public class ParticleTetrahedron extends ParticleObject {
         Vector3f v3 = new Vector3f(this.vertex3).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
         Vector3f v4 = new Vector3f(this.vertex4).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
 
-        this.drawLine(renderer, v1, v2, this.amount);
-        this.drawLine(renderer, v1, v3, this.amount);
-        this.drawLine(renderer, v1, v4, this.amount);
-        this.drawLine(renderer, v2, v3, this.amount);
-        this.drawLine(renderer, v2, v4, this.amount);
-        this.drawLine(renderer, v3, v4, this.amount);
+        this.drawLine(renderer, v1, v2, step, this.amount);
+        this.drawLine(renderer, v1, v3, step, this.amount);
+        this.drawLine(renderer, v1, v4, step, this.amount);
+        this.drawLine(renderer, v2, v3, step, this.amount);
+        this.drawLine(renderer, v2, v4, step, this.amount);
+        this.drawLine(renderer, v3, v4, step, this.amount);
 
         this.doAfterDraw(renderer.getWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);

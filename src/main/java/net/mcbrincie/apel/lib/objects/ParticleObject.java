@@ -156,12 +156,12 @@ public abstract class ParticleObject {
     public abstract void draw(ApelRenderer renderer, int step, Vector3f drawPos);
     public void endDraw(ApelRenderer renderer, int step, Vector3f drawPos) {}
 
-    protected void drawParticle(ApelRenderer renderer, Vector3f drawPos) {
-        this.drawParticle(this.particleEffect, renderer, drawPos);
+    protected void drawParticle(ApelRenderer renderer, int step, Vector3f drawPos) {
+        this.drawParticle(this.particleEffect, renderer, step, drawPos);
     }
 
-    protected void drawParticle(ParticleEffect particle, ApelRenderer renderer, Vector3f drawPos) {
-        renderer.drawParticle(particle, drawPos);
+    protected void drawParticle(ParticleEffect particle, ApelRenderer renderer, int step, Vector3f drawPos) {
+        renderer.drawParticle(particle, step, drawPos);
     }
 
     /**
@@ -171,11 +171,11 @@ public abstract class ParticleObject {
      * @param renderer The server world instance
      * @param start    The start point of the line
      * @param end      The end point of the line
-     * @param amount   The number of particles in the line, must be greater than 1.
+     * @param amount   The number of particles in the line must be greater than 1.
      *
      * @throws ArithmeticException if amount == 1
      */
-    protected void drawLine(ApelRenderer renderer, Vector3f start, Vector3f end, int amount) {
-        renderer.drawLine(this.particleEffect, start, end, amount);
+    protected void drawLine(ApelRenderer renderer, Vector3f start, Vector3f end, int step, int amount) {
+        renderer.drawLine(this.particleEffect, step, start, end, amount);
     }
 }
