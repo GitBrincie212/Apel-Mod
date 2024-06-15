@@ -12,14 +12,14 @@ public abstract class ParticleObject {
     protected int amount = 1;
 
     /** Constructor for the particle object which is a point. It accepts as parameters
-     * the particle to use and the rotation to apply(which has no effect. Only on the
+     * the particle to use and the rotation to apply (which has no effect. Only on the
      * path animators that extend this class). There is also a simplified version
      * for no rotation.
      *
      * @see ParticleObject#ParticleObject(ParticleObject)
      *
      * @param particleEffect The particle effect to use
-     * @param rotation The rotation(IN RADIANS)
+     * @param rotation The rotation (IN RADIANS)
      */
     public ParticleObject(ParticleEffect particleEffect, Vector3f rotation) {
         this.particleEffect = particleEffect;
@@ -27,9 +27,9 @@ public abstract class ParticleObject {
     }
 
     /** Constructor for the particle object which is a point. It accepts as parameters
-     * the particle to use. It is a simplified version of the previous constructor
+     * the particle effect to use. It is a simplified version of the previous constructor
      * and is meant to be used when you want the object to not have a rotation offset.
-     * In the case you do want there is a constructor for that(won't apply to this class)
+     * In the case you do want, there is a constructor for that (won't apply to this class)
      *
      * @see ParticleObject#ParticleObject(ParticleEffect, Vector3f)
      *
@@ -51,7 +51,7 @@ public abstract class ParticleObject {
         this.offset = object.offset;
     }
 
-    /** Gets the particle that is currently in use and returns it
+    /** Gets the particle which is currently in use and returns it
      *
      * @return The currently used particle
      */
@@ -71,7 +71,7 @@ public abstract class ParticleObject {
         return prevParticle;
     }
 
-    /** Gets the rotation that is currently in use and returns it
+    /** Gets the rotation which is currently in use and returns it
      *
      * @return The currently used rotation
      */
@@ -83,7 +83,7 @@ public abstract class ParticleObject {
      * when setting it rounds the rotation to match in the range of (-2π, 2π). It returns
      * the previous rotation used
      *
-     * @param rotation The new rotation(IN RADIANS)
+     * @param rotation The new rotation (IN RADIANS)
      * @return the previously used rotation
      */
     public Vector3f setRotation(Vector3f rotation) {
@@ -120,17 +120,17 @@ public abstract class ParticleObject {
         return prevOffset;
     }
 
-    /** Gets the amount of particles that are currently in use and returns it
+    /** Gets the number of particles that are currently in use and returns it
      *
-     * @return The currently used amount of particles
+     * @return The currently used number of particles
      */
     public int getAmount() {
         return this.amount;
     }
 
-    /** Sets the amount of particles to use for rendering the object. This
-     * has no effect to this class but on shapes it does have an effect.
-     * It returns the previously used amount of particles
+    /** Sets the number of particles to use for rendering the object.
+     * This has no effect on this class, but on shapes it does have an effect.
+     * It returns the previously used number of particles
      *
      * @param amount The new particle
      * @return The previously used amount
@@ -172,7 +172,7 @@ public abstract class ParticleObject {
      * @param world The server world instance
      * @param start The start point of the line
      * @param end The end point of the line
-     * @param amount The number of particles in the line, must be greater than 1.
+     * @param amount The number of particles in the line must be greater than 1.
      * @throws ArithmeticException if amount == 1
      */
     protected void drawLine(ServerWorld world, Vector3f start, Vector3f end, int amount) {

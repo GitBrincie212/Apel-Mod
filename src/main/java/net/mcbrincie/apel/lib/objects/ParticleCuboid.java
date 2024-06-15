@@ -10,7 +10,7 @@ import org.joml.Vector3i;
 
 import java.util.Optional;
 
-/** The particle object class that represents a cuboid. Which is a rectangle
+/** The particle object class that represents a cuboid which is a rectangle
  * living in 3D, it can also be a cube if all the values of the size vector
  * are supplied with the same value.
  */
@@ -25,7 +25,7 @@ public class ParticleCuboid extends ParticleObject {
     /** There is no data being transmitted */
     public enum AfterDrawData {}
 
-    /** This data is used before calculations(it contains the vertices)*/
+    /** This data is used before calculations (it contains the vertices)*/
     public enum BeforeDrawData {
         VERTICES,
     }
@@ -36,12 +36,12 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle to use, the amount of particles per face section(bottom is X, top is Y and the bars are Z)
-     * the size of the cuboid(width, height, depth) & the rotation to apply There is also a simplified version
-     * for no rotation.
+     * the particle effect to use, the number of particles per face section (bottom is X, top is Y and the bars are Z)
+     * the size of the cuboid (width, height, depth) & the rotation to apply. There is also a simplified version
+     * for no rotation
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param size The size in regard to width, height, depth
      * @param rotation The rotation to apply
      *
@@ -55,12 +55,12 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle to use, the amount of particles per face section(bottom is X, top is Y and the bars are Z)
-     * the size of the cuboid(width, height, depth). It is a simplified version for the case when
-     * no rotation is meant to be applied. For rotation offset you can use another constructor
+     * the particle to use, the number of particles per face section (bottom is X, top is Y and the bars are Z)
+     * the size of the cuboid (width, height, depth). It is a simplified version for the case when
+     * no rotation is meant to be applied. For rotation offset, you can use another constructor
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param size The size in regard to width, height, depth
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
@@ -70,14 +70,14 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle to use, the amount of particles per face section(bottom is X, top is Y and the bars are Z)
-     * the size of the cuboid(width, height, depth). It is a simplified version for the case when
-     * no rotation is meant to be applied. This constructor is meant when you want a constant amount of
+     * the particle to use, the number of particles per face section (bottom is X, top is Y and the bars are Z)
+     * the size of the cuboid (width, height, depth). It is a simplified version for the case when
+     * no rotation is meant to be applied. This constructor is meant when you want a constant number of
      * particles per face section. There is a constructor that allows to handle different amounts per face
      * and another that is meant to be used when no rotation is meant to be applied
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param size The size in regard to width, height, depth
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
@@ -90,12 +90,12 @@ public class ParticleCuboid extends ParticleObject {
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
      * the particle to use, the amount of particles per face section(bottom is X, top is Y and the bars are Z)
      * the size of the cuboid(width, height, depth) It is a simplified version for the case when
-     * no rotation is meant to be applied. This constructor is meant when you want a constant amount of
+     * no rotation is meant to be applied. This constructor is meant when you want a constant number of
      * particles per face section. There is a constructor that allows to handle different amounts per face
      * and another that is meant to be used when no rotation is meant to be applied
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param size The size in regard to width, height, depth
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f)
@@ -124,7 +124,7 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     /** Sets the size of the cuboid object. The X axis corresponds to width,
-     * Y axis corresponds to height and Z axis corresponds to depth. There is
+     * Y axis corresponds to height, and Z axis corresponds to depth. There is
      * an additional way to set size via providing a float (which makes a cube).
      *
      * @param size The size
@@ -141,7 +141,7 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     /** Sets the size of the cuboid object. The width, height & depth is a constant amount
-     *  which makes a cube (and not a cuboid). There is an additional way to set size via
+     *  that makes a cube (and not a cuboid). There is an additional way to set size via
      *  providing a Vector3f (which can make a cuboid and not just a cube)
      *
      * @param size The size of the cube
@@ -190,15 +190,15 @@ public class ParticleCuboid extends ParticleObject {
         throw new UnsupportedOperationException("The method used is deprecated. It is not meant to be used");
     }
 
-    /** Gets the amount of particles. Where each coordinate corresponds to an area,
-     *  you can get it via using the area enum
+    /** Gets the number of particles where each coordinate corresponds to an area.
+     *  You can get it via using the area enum
      *
      * @return The amount of that face
     */
     public Vector3i getAmount(AreaLabel faceIndex) {
         /*
-        Quite junk code but I don't care. I know that I need to favour composition over inheritance.
-        But this is just one exception which doesn't make sense to develop a whole composition system
+        Quite junk code, but I don't care, I know that I need to favor composition over inheritance.
+        But this is just one exception that doesn't make sense to develop a whole composition system
         */
         return (faceIndex == AreaLabel.ALL_FACES) ? this.amount :
                 (faceIndex == AreaLabel.BOTTOM_FACE) ? new Vector3i(this.amount.x, -1, -1) :

@@ -13,7 +13,7 @@ import java.util.Optional;
 /** The particle object class that represents a sphere(3D shape) and not a 2D circle.
  * It has a radius which dictates how large or small the sphere is depending on the
  * radius value supplied. And it uses the Fibonacci point distribution algorithm
- * to place the particles around the sphere(which makes it convincing)
+ * to place the particles around the sphere (which makes it convincing)
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleSphere extends ParticleObject {
@@ -22,12 +22,12 @@ public class ParticleSphere extends ParticleObject {
     private DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
-    /** This data is used before calculations(it contains the amount of particles) */
+    /** This data is used before calculations (it contains the number of particles) */
     public enum BeforeDrawData {
         AMOUNT
     }
 
-    /** This data is used after calculations(it contains the drawing position & the amount of particles) */
+    /** This data is used after calculations (it contains the drawing position & the number of particles) */
     public enum AfterDrawData {
         DRAWING_POSITION, AMOUNT
     }
@@ -44,12 +44,12 @@ public class ParticleSphere extends ParticleObject {
 
     /**
      * Constructor for the particle sphere which is a 3D shape. It accepts as parameters
-     * the particle to use, the radius of the sphere, the amount of particles, and the rotation to apply.
-     * There is also a simplified version for no rotation.
+     * the particle effect to use, the radius of the sphere, the number of particles.
+     * And the rotation to apply. There is also a simplified version for no rotation.
      *
      * @param particleEffect The particle to use
      * @param radius   The radius of the sphere
-     * @param amount   The amount of particles for the object
+     * @param amount   The number of particles for the object
      * @param rotation The rotation to apply
      * @see ParticleSphere#ParticleSphere(ParticleEffect, float, int)
      */
@@ -60,12 +60,12 @@ public class ParticleSphere extends ParticleObject {
     }
 
     /** Constructor for the particle cuboid which is a 3D shape. It accepts as parameters
-     * the particle to use, the radius of the sphere & the amount of particles. It is a simplified version
-     * for the case when no rotation is meant to be applied. For rotation offset you can
-     * use another constructor
+     * the particle effect to use, the radius of the sphere & the number of particles.
+     * It is a simplified version for the case when no rotation is meant to be applied.
+     * For rotation offset, you can use another constructor
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param radius The radius of the sphere
      *
      * @see ParticleSphere#ParticleSphere(ParticleEffect, float, int, Vector3f)
@@ -232,7 +232,7 @@ public class ParticleSphere extends ParticleObject {
 
     /** Set the interceptor to run prior to drawing the sphere.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the position
-     * where the sphere is rendered.  It will also have the number of the individual particle
+     * where the sphere is rendered.  It will also have the number of the individual particle effect
      * about to be drawn.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing each particle

@@ -19,23 +19,23 @@ public class ParticleCircle extends ParticleObject {
     private DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
-    /** This data is used before calculations(it contains the iterated rotation) */
+    /** This data is used before calculations (it contains the iterated rotation) */
     public enum BeforeDrawData {
         ITERATED_ROTATION
     }
 
-    /** This data is used after calculations(it contains the drawing position) */
+    /** This data is used after calculations (it contains the drawing position) */
     public enum AfterDrawData {
         DRAW_POSITION
     }
 
     /** Constructor for the particle circle which is a 2D shape. It accepts as parameters
-     * the particle to use, the radius of the circle, the rotation to apply & the amount of particles.
+     * the particle effect to use, the radius of the circle, the rotation to apply & the number of particles.
      * There is also a simplified version for no rotation.
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
-     * @param radius The radius of the circle(how big it is)
+     * @param amount The number of particles for the object
+     * @param radius The radius of the circle (how big it is)
      * @param rotation The rotation to apply
      *
      * @see ParticleCircle#ParticleCircle(ParticleEffect, float, int)
@@ -49,12 +49,12 @@ public class ParticleCircle extends ParticleObject {
     }
 
     /** Constructor for the particle circle which is a 2D shape. It accepts as parameters
-     * the particle to use, the radius of the circle, & the amount of particles.
+     * the particle effect to use, the radius of the circle, & the number of particles.
      * There is also a version that allows for rotation.
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
-     * @param radius The radius of the circle(how big it is)
+     * @param amount The number of particles for the object
+     * @param radius The radius of the circle (how big it is)
      *
      * @see ParticleCircle#ParticleCircle(ParticleEffect, float, Vector3f, int)
     */

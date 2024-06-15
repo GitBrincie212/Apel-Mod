@@ -11,13 +11,13 @@ import java.util.Optional;
 
 /** The base class for any particle object. Particle objects are the things
  * that will be rendered. This can be a cube, a sphere, a 2D circle, a cat, a
- * dog.... etc. The calculation logic is done in the draw method which the
+ * dog... etc. The calculation logic is done in the draw method which the
  * handler system periodically calls each render step. You can inherit
- * from the class and even use it(it will be a point), it has common interceptors
+ * from the class and even use it (it will be a point), it has common interceptors
  * like the before calculation interceptor & the after calculation interceptor.
  * <br><br>
  * <strong>Note</strong> rotation calculations are in radians and not in degrees.
- * As well as if the rotation on one or multiple axis exceeds 2π then it is rounded
+ * As well as if the rotation on one or multiple axis exceeds 2π, then it is rounded
  * to the scope for that (-2π, 2π)
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
@@ -32,23 +32,23 @@ public class ParticlePoint extends ParticleObject {
 
 
     /** Constructor for the particle object which is a point. It accepts as parameters
-     * the particle to use and the rotation to apply(which has no effect. Only on the
+     * the particle to use and the rotation to apply (which has no effect. Only on the
      * path animators that extend this class). There is also a simplified version
      * for no rotation.
      *
      * @see ParticlePoint#ParticlePoint(ParticlePoint)
      *
      * @param particleEffect The particle effect to use
-     * @param rotation The rotation(IN RADIANS)
+     * @param rotation The rotation (IN RADIANS)
     */
     public ParticlePoint(ParticleEffect particleEffect, Vector3f rotation) {
         super(particleEffect, rotation);
     }
 
     /** Constructor for the particle object which is a point. It accepts as parameters
-     * the particle to use. It is a simplified version of the previous constructor
+     * the particle effect to use. It is a simplified version of the previous constructor
      * and is meant to be used when you want the object to not have a rotation offset.
-     * In the case you do want there is a constructor for that(won't apply to this class)
+     * In the case you do want, there is a constructor for that (won't apply to this class)
      *
      * @see ParticlePoint#ParticlePoint(ParticleEffect, Vector3f)
      *
