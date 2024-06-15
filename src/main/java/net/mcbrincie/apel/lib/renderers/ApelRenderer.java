@@ -26,9 +26,10 @@ import org.joml.Vector3f;
  * }
  * </pre>
  */
+@SuppressWarnings("unused")
 public interface ApelRenderer {
     static ApelRenderer create(ServerWorld world) {
-        return new ApelServerWorldRenderer(world);
+        return new DefaultApelRenderer(world);
     }
 
     /**
@@ -37,7 +38,7 @@ public interface ApelRenderer {
      * @param particleEffect The ParticleEffect to draw
      * @param drawPos The position at which to draw
      */
-    void drawParticle(ParticleEffect particleEffect, Vector3f drawPos);
+    void drawParticle(ParticleEffect particleEffect, int step, Vector3f drawPos);
 
     /**
      * Instructs the renderer to draw a line of the given particle effect from {@code start} to {@code end} using
@@ -49,7 +50,7 @@ public interface ApelRenderer {
      * @param end The 3D point at which to end
      * @param count The number of particles to draw along the line
      */
-    default void drawLine(ParticleEffect particleEffect, Vector3f start, Vector3f end, int count) {
+    default void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int count) {
         int amountSubOne = (count - 1);
         // Do not use 'sub', it modifies in-place
         float stepX = (end.x - start.x) / amountSubOne;
@@ -57,7 +58,7 @@ public interface ApelRenderer {
         float stepZ = (end.z - start.z) / amountSubOne;
         Vector3f curr = new Vector3f(start);
         for (int i = 0; i < count; i++) {
-            drawParticle(particleEffect, curr);
+            drawParticle(particleEffect, step, curr);
             curr.add(stepX, stepY, stepZ);
         }
     }
