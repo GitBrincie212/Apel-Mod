@@ -4,9 +4,9 @@ import com.mojang.datafixers.util.Function3;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
-import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
@@ -281,7 +281,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException {
+    public void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         int index = -1;
         int step = -1;
         int particleAmount;
@@ -302,7 +302,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             for (int i = 0; i < particleAmount; i++) {
                 step++;
                 Vector3f pos = endpoint.compute(particleInterval * i);
-                this.handleDrawingStep(world, step, pos);
+                this.handleDrawingStep(renderer, step, pos);
                 if (this.onProcess != null) {
                     this.onProcess.apply(this.trimming, endpoint, this.endpoints);
                 }

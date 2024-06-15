@@ -5,6 +5,7 @@ import com.mojang.datafixers.util.Function5;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -286,7 +287,7 @@ public class LinearAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException {
+    public void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         int particleAmount;
         float particleInterval;
         int startStep = this.trimming.getStart();
@@ -329,7 +330,7 @@ public class LinearAnimator extends PathAnimatorBase {
                 float newZ = curr.z + (dirZ * particleInterval);
                 curr = new Vector3f(newX, newY, newZ);
                 if (i < startStep) continue;
-                this.handleDrawingStep(world, i, curr);
+                this.handleDrawingStep(renderer, i, curr);
                 if (this.onProcess != null) {
                     this.onProcess.apply(this.trimming, curr, endPos, particleAmount, particleInterval);
                 }

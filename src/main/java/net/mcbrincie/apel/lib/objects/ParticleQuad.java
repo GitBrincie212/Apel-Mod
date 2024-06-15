@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -247,11 +248,11 @@ public class ParticleQuad extends ParticleObject {
     }
 
     @Override
-    public void draw(ServerWorld world, int step, Vector3f drawPos) {
+    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         float rotX = this.rotation.x;
         float rotY = this.rotation.y;
         float rotZ = this.rotation.z;
-        this.beforeDraw(world, step);
+        this.beforeDraw(renderer.getWorld(), step);
 
         // Note the defensive copies prior to rotating and adding
         Vector3f v1 = new Vector3f(this.vertex1).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
@@ -259,13 +260,13 @@ public class ParticleQuad extends ParticleObject {
         Vector3f v3 = new Vector3f(this.vertex3).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
         Vector3f v4 = new Vector3f(this.vertex4).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
 
-        this.drawLine(world, v1, v2, this.amount);
-        this.drawLine(world, v2, v3, this.amount);
-        this.drawLine(world, v3, v4, this.amount);
-        this.drawLine(world, v4, v1, this.amount);
+        this.drawLine(renderer, v1, v2, this.amount);
+        this.drawLine(renderer, v2, v3, this.amount);
+        this.drawLine(renderer, v3, v4, this.amount);
+        this.drawLine(renderer, v4, v1, this.amount);
 
-        this.doAfterDraw(world, step, v1, v2, v3, v4);
-        this.endDraw(world, step, drawPos);
+        this.doAfterDraw(renderer.getWorld(), step, v1, v2, v3, v4);
+        this.endDraw(renderer, step, drawPos);
     }
 
     /** Sets the after draw interceptor, the method executes right after the particle quad

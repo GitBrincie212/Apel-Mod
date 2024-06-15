@@ -4,6 +4,7 @@ import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -139,17 +140,17 @@ public class ParallelAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public void beginAnimation(ServerWorld world) throws SeqDuplicateException, SeqMissingException {
+    public void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         this.allocateToScheduler();
         int step = 0;
         for (PathAnimatorBase animator : this.animators) {
             step++;
-            this.allocateNewAnimator(step, world, animator);
+            this.allocateNewAnimator(renderer, step, animator);
         }
     }
 
-    protected void allocateNewAnimator(int step, ServerWorld world, PathAnimatorBase animator) {
-        Runnable func = () -> animator.beginAnimation(world);
+    protected void allocateNewAnimator(ApelRenderer renderer, int step, PathAnimatorBase animator) {
+        Runnable func = () -> animator.beginAnimation(renderer);
         int delayUsed = (this.delay == -1) ? this.delays.get(step - 1) : this.delay;
         if (delayUsed == 0) {
             Apel.drawThread.submit(func);

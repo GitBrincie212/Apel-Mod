@@ -1,7 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
@@ -144,47 +144,38 @@ public abstract class ParticleObject {
         return prevAmount;
     }
 
-    /** This method allows for drawing a particle object given the world, the current step and the drawing position.
+    /**
+     * This method allows for drawing a particle object given the world, the current step and the drawing position.
      * <b>The method is used for internal workings, its not meant to be used for outside use</b>. Path animators
      * are the ones who calculate the position, the step & give the server world instance
      *
-     * @param world The server world instance
-     * @param step The current rendering step at
-     * @param drawPos The position to draw at
-    */
-    public abstract void draw(ServerWorld world, int step, Vector3f drawPos);
-    public void endDraw(ServerWorld world, int step, Vector3f drawPos) {}
+     * @param renderer The server world instance
+     * @param step     The current rendering step at
+     * @param drawPos  The position to draw at
+     */
+    public abstract void draw(ApelRenderer renderer, int step, Vector3f drawPos);
+    public void endDraw(ApelRenderer renderer, int step, Vector3f drawPos) {}
 
-    protected void drawParticle(ServerWorld world, Vector3f drawPos) {
-        this.drawParticle(this.particleEffect, world, drawPos);
+    protected void drawParticle(ApelRenderer renderer, Vector3f drawPos) {
+        this.drawParticle(this.particleEffect, renderer, drawPos);
     }
 
-    protected void drawParticle(ParticleEffect particle, ServerWorld world, Vector3f drawPos) {
-        world.spawnParticles(
-                particle, drawPos.x, drawPos.y, drawPos.z, 0,
-                0.0f, 0.0f, 0.0f, 1
-        );
+    protected void drawParticle(ParticleEffect particle, ApelRenderer renderer, Vector3f drawPos) {
+        renderer.drawParticle(particle, drawPos);
     }
 
-    /** Draws a line of particles from {@code start} to {@code end}.  The line will have {@code amount}
+    /**
+     * Draws a line of particles from {@code start} to {@code end}.  The line will have {@code amount}
      * particles in it, inclusive of particles at both {@code start} and {@code end}.
      *
-     * @param world The server world instance
-     * @param start The start point of the line
-     * @param end The end point of the line
-     * @param amount The number of particles in the line must be greater than 1.
+     * @param renderer The server world instance
+     * @param start    The start point of the line
+     * @param end      The end point of the line
+     * @param amount   The number of particles in the line, must be greater than 1.
+     *
      * @throws ArithmeticException if amount == 1
      */
-    protected void drawLine(ServerWorld world, Vector3f start, Vector3f end, int amount) {
-        float dist = start.distance(end);
-        int amountSubOne = (amount - 1);
-        float stepX = (end.x - start.x) / amountSubOne;
-        float stepY = (end.y - start.y) / amountSubOne;
-        float stepZ = (end.z - start.z) / amountSubOne;
-        Vector3f curr = new Vector3f(start);
-        for (int i = 0; i < amount; i++) {
-            this.drawParticle(world, curr);
-            curr.add(stepX, stepY, stepZ);
-        }
+    protected void drawLine(ApelRenderer renderer, Vector3f start, Vector3f end, int amount) {
+        renderer.drawLine(this.particleEffect, start, end, amount);
     }
 }
