@@ -25,7 +25,7 @@ import java.util.Optional;
  *
  * <b>Fewer Memory Overhead(s) & Smaller Memory Footprint</b><br>
  * Since objects are grouped together. This means that there will be fewer particle animators created
- * as well as the object being handled as 1 particle object instance instead of being multiple. Which
+ * as well as the object being handled as one particle object instance instead of being multiple. Which
  * means that memory is dramatically reduced down for complex scenes (if you had 10 path animators for 10
  * objects, in which the path animators do 1 million rendering steps. The entire bandwidth is cut down
  * from 10 million -> 1 million steps allocated to the scheduler for the processing).<br><br>
@@ -37,7 +37,7 @@ import java.util.Optional;
  * common methods for managing the object instances which further simplify the repetitive process.<br><br>
  *
  * <b>Dynamic Object Allocation At Runtime</b><br>
- * Without the particle combiner, it is difficult to create objects at runtime and create a new path animator
+ * Without the particle combiner, it is challenging to create objects at runtime and create a new path animator
  * that inherits almost all the same attributes as all the other animators for the other objects & programmatically
  * changing the params is very tedious. This doesn't have to be the case, because you can allocate a new particle
  * object to the particle combiner and from there APEL would take care the rest.<br><br>
@@ -70,7 +70,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     /** There is no data being transmitted */
     public enum AfterChildDrawData {}
 
-    /** This data is used after calculations (it contains the modified 4 vertices) */
+    /** This data is used after calculations (it contains the modified four vertices) */
     public enum BeforeChildDrawData {
         OBJECT_IN_USE, CAN_DRAW_OBJECT
     }
@@ -283,7 +283,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * is a helper method to allow setting for all objects the same offset
      *
      *
-     * @param offset The offsets for each object(corresponding on each index)
+     * @param offset The offsets for each object (corresponding on each index)
      * @return The previous offsets
      */
     public Vector3f[] setOffsetPosition(Vector3f... offset) {
@@ -322,7 +322,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the offset position for the individual object. By supplying the object and the
-     * new offset for that object. If the object is not found it will return null
+     * new offset for that object. If the object is not found, it will return null
      *
      *
      * @param offset The offsets for the individual object
@@ -675,7 +675,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
                 continue;
             }
             ParticleObject childObject = interceptData.getMetadata(BeforeChildDrawData.OBJECT_IN_USE, object);
-            // Defensive copy before passing to child object
+            // Defensive copy before passing to a child object
             Vector3f childDrawPos = new Vector3f(pos).add(this.offset.get(index));
             childObject.draw(renderer, step, childDrawPos);
             this.doAfterChildDraw(renderer.getWorld(), step);
