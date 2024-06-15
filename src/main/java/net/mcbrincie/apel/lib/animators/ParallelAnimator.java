@@ -6,7 +6,6 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
-import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -14,8 +13,8 @@ import java.util.List;
 
 
 /** The parallel path animator. Which provides an interface for controlling multiple
- * concurrent path animators(they can also nest themselves) and can have an unlimited
- * amount of path animators attached. They also can have delays for each path animator.
+ * concurrent path animators (they can also nest themselves) and can have an unlimited
+ * number of path animators attached. They also can have delays for each path animator.
  * It is quite advanced but allows for easier management on multiple animators & is
  * versatile compared to the other easier ones
  */
@@ -26,7 +25,7 @@ public class ParallelAnimator extends PathAnimatorBase {
 
     /** Constructor for the parallel animation. This constructor is
      * meant to be used in the case that you want to supply a specific
-     * amount of path animators in the form of varargs
+     * number of path animators in the form of varargs
      *
      * @param delay The delay between each particle object render
      * @param pathAnimators The path animators to append
@@ -76,7 +75,7 @@ public class ParallelAnimator extends PathAnimatorBase {
 
     /** Constructor for the parallel animation. This constructor is
      * meant to be used in the case that you want to supply the path
-     * animators in the form of varargs and in addition you want a
+     * animators in the form of varargs, and in addition you want a
      * separate delays
      *
      * @param delay The delay between each particle object render

@@ -17,7 +17,7 @@ import java.util.List;
 
 /** The abstract base class that all path animators inherit from. It
  * does some stuff under the hood and provides useful methods for working
- * with the path animators. The scheduling is abstracted away from the user
+ * with the path animators. The scheduling is abstracted away from the user,
  * so the only thing they need to care is setting the logic
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
@@ -37,7 +37,7 @@ public abstract class PathAnimatorBase {
     /**
      * Constructor for the path animator. This constructor is meant to be used when you want a
      * constant amount of rendering steps. It is worth pointing out that this won't look
-     * pleasant in the eyes on larger distances. For that it is recommended to look into:
+     * pleasant in the eyes at larger distances. For that, it is recommended to look into:
      *
      * @param delay          The delay per rendering step
      * @param particleObject The particle object to use
@@ -53,7 +53,7 @@ public abstract class PathAnimatorBase {
     /**
      * Constructor for the path animator. This constructor is meant to be used when you want a
      * consistent amount of rendering steps no matter the distance. It is worth pointing out that
-     * there will be performance overhead for large distances. To minimise, it is recommended to look into:
+     * there will be performance overhead for large distances. To minimize, it is recommended to look into:
      *
      * @param delay             The delay per rendering step
      * @param particle          The particle object to use
@@ -70,7 +70,7 @@ public abstract class PathAnimatorBase {
      * Constructor for the path base animator. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * path base animator instance with all of its parameters regardless
-     * of their visibility(this means protected & private params are copied)
+     * of their visibility (this means protected & private params are copied)
      *
      * @param animator The animator to copy from
     */
@@ -100,17 +100,17 @@ public abstract class PathAnimatorBase {
         return this.renderingSteps;
     }
 
-    /** Gets the amount of rendering steps. Which can be 0 indicating
-     * that there wasn't any rendering steps specified
+    /** Gets the amount of rendering steps, which can be zero indicating
+     * that there weren't any rendering steps specified
      *
-     * @return The amount of particles
+     * @return The number of particles
      */
     public int getRenderSteps() {
         return this.renderingSteps;
     }
 
     /** Gets the interval of blocks per particle object render.
-     * Which can be 0 indicating that there wasn't any
+     * Which can be zero indicating that there wasn't any
      * interval specified
      *
      * @return The interval of blocks per particle object render
@@ -119,8 +119,8 @@ public abstract class PathAnimatorBase {
         return this.renderingInterval;
     }
 
-    /** Gets the delay per rendering step. This can be 0 indicating
-     * that the animation plays in an instant, the amount of delay is
+    /** Gets the delay per rendering step, this can be zero indicating
+     * that the animation plays in an instant; the amount of delay is
      * also controlled via processing speed
      *
      * @see PathAnimatorBase#setProcessingSpeed(int)
@@ -146,7 +146,7 @@ public abstract class PathAnimatorBase {
     }
 
     /** Gets the particle object that is used. Particle objects in short are the
-     * particles that the user sees per rendering step, they have a draw method
+     * particles that the user sees per rendering step; they have a draw method
      *
      *
      * @return The particle object
@@ -203,7 +203,7 @@ public abstract class PathAnimatorBase {
      *  Ends. The function cannot modify anything but exposes some variables
      *  to be read from
      *
-     * @param onEnd The function that accepts 6 arguments and returns nothing.
+     * @param onEnd The function that accepts six arguments and returns nothing.
      *                  <strong>start step</strong>, <strong>ending step</strong>,
      *                  <strong>starting position</strong>, <strong>current position</strong>,
      *                  <strong>particle amount</strong>, <strong>interval of blocks</strong>
@@ -219,7 +219,7 @@ public abstract class PathAnimatorBase {
      *  Begins. The function cannot modify anything but exposes some variables
      *  to be read from
      *
-     * @param onStart The function that accepts 5 arguments and returns nothing.
+     * @param onStart The function that accepts five arguments and returns nothing.
      *                  <strong>start step</strong>, <strong>ending step</strong>,
      *                  <strong>ending position</strong>, <strong>particle amount</strong>,
      *                  <strong>interval of blocks</strong>
@@ -231,11 +231,11 @@ public abstract class PathAnimatorBase {
     }
 
 
-    /** Binds a function to listen to each step which happens when the animation
+    /** Binds a function to listen to each step that happens when the animation
      *  is processing the steps. The function cannot modify anything
      *  but exposes some variables to be read from
      *
-     * @param onProcess The function that accepts 6 arguments and returns nothing.
+     * @param onProcess The function that accepts six arguments and returns nothing.
      *                  <strong>current step</strong>, <strong>ending step</strong>,
      *                  <strong>current position</strong>, <strong>ending position</strong>,
      *                  <strong>particle amount</strong>, <strong>interval of blocks</strong>
@@ -248,15 +248,15 @@ public abstract class PathAnimatorBase {
 
     /** Sets the processing speed to allow for even faster animations on larger rendering steps.
      *  This tells the system how many functions for that animator to execute per tick. Which means
-     *  that the amount of steps per tick. It has to be above 1 (speed 1 counts normal). The speed is
+     *  that the number of steps per tick. It has to be above 1 (speed 1 counts normal). The speed is
      *  measured in render steps / server ticks or rs/st. It returns the previous processing speed used
      *  <br><br>
-     *  Use this function when you want detailed animations go faster(if delay 1 doesn't satisfy)
+     *  Use this function when you want detailed animations to want to go faster (if delay 1 doesn't satisfy)
      *  <br><br>
      *  <strong>note:</strong> when it is delay 0. Processing speed is completely ignored
      *
      * @see PathAnimatorBase#setDelay(int)
-     * @param speed The amount of steps to execute per tick
+     * @param speed The number of steps to execute per tick
      * @return The previous processing speed used
      */
     public int setProcessingSpeed(int speed) {
@@ -280,17 +280,17 @@ public abstract class PathAnimatorBase {
 
     /** Does the calculations to convert from an interval to rendering steps
      *
-     * @return The amount of steps
+     * @return The number of steps
      */
     public abstract int convertToSteps();
 
     /**
      * This method is used for beginning the animation logic.
      * This method must be used when creating a particle animator.
-     * Ideally the animators should implement their own trimming
+     * Ideally, the animators should implement their own trimming
      *
      * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
-     * @throws SeqMissingException   When it finds there is no sequence yet allocated
+     * @throws SeqMissingException   When it finds, there is no sequence yet allocated
      */
     public abstract void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException;
 

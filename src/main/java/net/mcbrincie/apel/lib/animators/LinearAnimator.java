@@ -7,7 +7,6 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
@@ -15,7 +14,7 @@ import java.util.Arrays;
 
 /** The linear animator. Which is used for linear paths(a.k.a. paths that are drawn as a line). It
  * accepts 2 or multiple points which draw the line and are called endpoints, they draw lines from the
- * previous endpoint to the next(the first to the second then second to third....). One semi-versatile
+ * previous endpoint to the next (the first to the second then second to third...). One semi-versatile
  * path animator but still capable of doing basic animations and is friendlier compared to other animators.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
@@ -34,8 +33,8 @@ public class LinearAnimator extends PathAnimatorBase {
     private final IllegalArgumentException INVALID_TRIM_RANGE = new IllegalArgumentException("Invalid animation trimming range");
 
     /** Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a constant amount
-     * of particles. It doesn't look pretty on large distances tho
+     * meant to be used in the case that you want a constant number
+     * of particles. It doesn't look pretty at large distances tho
      *
      * @param delay The delay between each particle object render
      * @param start The starting position
@@ -58,14 +57,14 @@ public class LinearAnimator extends PathAnimatorBase {
      * Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want a good consistent
      * looking particle line & also want to create multiple endpoints.
-     * Because of the interval, the amount is dynamic which can cause
-     * performance issues for larger distances(The higher the interval
+     * Because of the interval, the amount is dynamic that can cause
+     * performance issues for larger distances (The higher the interval
      * the fewer particles are rendered, and it is also applied vice versa)
      *
      * @param delay The delay between each particle object render
      * @param endpoints The endpoint positions
      * @param particle The particle to use
-     * @param renderingInterval The amount of blocks before placing a new render step
+     * @param renderingInterval The number of blocks before placing a new render step
      */
     public LinearAnimator(
             int delay, @NotNull Vector3f[] endpoints,
@@ -88,7 +87,7 @@ public class LinearAnimator extends PathAnimatorBase {
     /**
      * Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want a constant amount &
-     * of particles also multiple endpoints. It doesn't look pretty on
+     * of particles also multiple endpoints. It doesn't look pretty at
      * large distances tho
      *
      * @param delay The delay between each particle object render
@@ -125,7 +124,7 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param delay The delay between each particle object render
      * @param endpoints The endpoint positions
      * @param particle The particle to use
-     * @param renderingInterval The amount of blocks before placing a new render step
+     * @param renderingInterval The number of blocks before placing a new render step
      */
     public LinearAnimator(
             int delay, @NotNull Vector3f[] endpoints,
@@ -153,7 +152,7 @@ public class LinearAnimator extends PathAnimatorBase {
     /**
      * Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want a constant amount &
-     * of particles also multiple endpoints. It doesn't look pretty on
+     * of particles also multiple endpoints. It doesn't look pretty at
      * large distances tho
      *
      * @param delay The delay between each particle object render
@@ -187,15 +186,15 @@ public class LinearAnimator extends PathAnimatorBase {
     /**
      * Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want a good consistent
-     * looking particle line. The amount is dynamic which can cause
-     * performance issues for larger distances(The higher the interval
+     * looking particle line. The amount is dynamic that can cause
+     * performance issues for larger distances (The higher the interval,
      * the fewer particles are rendered, and it is also applied vice versa)
      *
      * @param delay The delay between each particle object render
      * @param start The starting position
      * @param end The ending position
      * @param particle The particle to use
-     * @param renderingInterval The amount of blocks before placing a new render step
+     * @param renderingInterval The number of blocks before placing a new render step
      */
     public LinearAnimator(
             int delay, Vector3f start, Vector3f end,
@@ -212,7 +211,7 @@ public class LinearAnimator extends PathAnimatorBase {
      * Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * linear animator instance with all of its parameters regardless
-     * of their visibility(this means protected & private params are copied)
+     * of their visibility (this means protected & private params are copied)
      *
      * @param animator The animator to copy from
     */

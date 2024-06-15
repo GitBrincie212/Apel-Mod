@@ -6,15 +6,14 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 /** A slightly more complex animator than linear animator or point animator because it deals with a circle.
- * The animator basically creates a circle and when animating on it, you specify which angle(IN RADIANS) should
+ * The animator basically creates a circle, and when animating on it, you specify which angle (IN RADIANS) should
  * be the start & end, to trim some parts. If you wanna fully revolve around the circle and end up back at the
- * same point then you can specify the revolutions it should do by using {@code setRevolutions}. By default, it's
- * set to 1 revolution which means it loops the circle once
+ * same point, then you can specify the revolutions it should do by using {@code setRevolutions}. By default, it's
+ * set to one revolution, which means it loops the circle once
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CircularAnimator extends PathAnimatorBase {
@@ -33,8 +32,8 @@ public class CircularAnimator extends PathAnimatorBase {
 
     /**
      * Constructor for the circular animation. This constructor is
-     * meant to be used in the case that you want a constant amount
-     * of particles. It doesn't look pretty on large distances tho
+     * meant to be used in the case that you want a constant number
+     * of particles. It doesn't look pretty at large distances tho
      *
      * @param delay The delay between each particle object render
      * @param radius The radius of the 2D circle
@@ -56,8 +55,8 @@ public class CircularAnimator extends PathAnimatorBase {
     /**
      * Constructor for the circular animation. This constructor is
      * meant to be used in the case that you want a good consistent
-     * looking particle circle. The amount is dynamic which can cause
-     * performance issues for larger distances(The higher the interval
+     * looking particle circle. The amount is dynamic that can cause
+     * performance issues for larger distances (The higher the interval,
      * the fewer particles are rendered, and it is also applied vice versa)
      *
      * @param delay The delay between each particle object render
@@ -65,7 +64,7 @@ public class CircularAnimator extends PathAnimatorBase {
      * @param center The center point of the 2D circle
      * @param rotation the rotation in XYZ of the 2D circle<strong>(IN RADIANS)</strong>
      * @param particle The particle to use
-     * @param renderingInterval The amount of blocks before placing a new render step
+     * @param renderingInterval The number of blocks before placing a new render step
      */
     public CircularAnimator(
             int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
@@ -81,7 +80,7 @@ public class CircularAnimator extends PathAnimatorBase {
      * Constructor for the circular animator. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * circular animator instance with all of its parameters regardless
-     * of their visibility(this means protected & private params are copied)
+     * of their visibility (this means protected & private params are copied)
      *
      * @param animator The animator to copy from
     */
@@ -111,10 +110,10 @@ public class CircularAnimator extends PathAnimatorBase {
         this.rotation = new Vector3f(x, y, z);
     }
 
-    /** Sets the revolutions(looping around the circle)
+    /** Sets the revolutions (looping around the circle)
      * the animator can do around the circle when animating
      *
-     * @param revolutions The amount of loops to do on a circle
+     * @param revolutions The number of loops to do on a circle
     */
     public void setRevolutions(int revolutions) {
         if (revolutions < 1) {
@@ -161,7 +160,7 @@ public class CircularAnimator extends PathAnimatorBase {
         return this.clockwise;
     }
 
-    /** Converts any render interval based animation into render steps
+    /** Converts any render-interval-based animation into render steps
      *
      * @return The converted step
      */

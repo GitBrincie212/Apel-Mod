@@ -13,11 +13,11 @@ import org.joml.Vector3f;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 
-/** The Bézier curve animator. Which is used for curved paths. It accepts 2 or multiple different bézier curves,
- * the curves are called endpoints unlike the linear animator. This one computes the curves one by one which means
- * you can have a curve on one ending position and another that starts in a completely different one. This animator
- * is more advanced than the linear animator and some math knowledge is required on the internal workings of a bézier
- * curve, nonetheless it is very capable of creating beautiful complex curved paths
+/** The Bézier curve animator which is used for curved paths, it accepts two or multiple different bézier curves,
+ * the curves are called endpoints unlike the linear animator, the Bézier curve path animator the curves one by one.
+ * This means that you can have a curve on one ending position and another that starts in a completely different one.
+ * This animator is more advanced than the linear animator, and some math knowledge is required on the internal workings
+ * of a bézier curve nonetheless, it is very capable of creating beautiful complex curved paths
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class BezierCurveAnimator extends PathAnimatorBase {
@@ -35,8 +35,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     private final IllegalArgumentException INVALID_TRIM_RANGE = new IllegalArgumentException("Invalid animation trimming range");
 
     /** Constructor for the bézier curve animation. This constructor is
-     * meant to be used in the case that you want a constant amount
-     * of particles. It doesn't look pretty on large distances tho
+     * meant to be used in the case that you want a constant number
+     * of particles. It doesn't look pretty at large distances tho
      *
      * @param delay The delay between each particle object render
      * @param curve The bézier curve
@@ -56,14 +56,14 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * Constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want a good consistent
      * looking particle line & also want to create multiple bézier curves.
-     * Because of the interval, the amount is dynamic which can cause
-     * performance issues for larger distances(The higher the interval
+     * Because of the interval, the amount is dynamic that can cause
+     * performance issues for larger distances (The higher the interval
      * the fewer particles are rendered, and it is also applied vice versa)
      *
      * @param delay The delay between each particle object render
      * @param endpoints The bézier curves
      * @param particle The particle to use
-     * @param renderingInterval The amount of blocks before placing a new render step
+     * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
             int delay, @NotNull BezierCurve[] endpoints,
@@ -85,8 +85,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
 
     /**
      * Constructor for the Bézier curve animation. This constructor is
-     * meant to be used in the case that you want a constant amount
-     * of particles & also multiple bézier curves. It doesn't look pretty on
+     * meant to be used in the case that you want a constant number
+     * of particles & also multiple bézier curves. It doesn't look pretty at
      * large distances tho
      *
      * @param delay The delay between each particle object render
@@ -123,7 +123,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param delay The delay between each particle object render
      * @param endpoints The bézier curves
      * @param particle The particle to use
-     * @param renderingInterval The amount of blocks before placing a new render step
+     * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
             int delay, @NotNull BezierCurve[] endpoints,
@@ -151,7 +151,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     /**
      * Constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want a constant amount &
-     * of particles also multiple bézier curves. It doesn't look pretty on
+     * of particles also multiple bézier curves. It doesn't look pretty at
      * large distances tho
      *
      * @param delay The delay between each particle object render
@@ -185,15 +185,15 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     /**
      * Constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want a good consistent
-     * looking particle curve. The amount is dynamic which can cause
-     * performance issues for larger distances(The higher the interval
+     * looking particle curve. The amount is dynamic that can cause
+     * performance issues for larger distances (The higher the interval,
      * the fewer particles are rendered, and it is also applied vice versa)
      *
      * @param delay The delay between each particle object render
      * @param start The starting bézier curve
      * @param end The ending bézier curve
      * @param particle The particle to use
-     * @param renderingInterval The amount of blocks before placing a new render step
+     * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
             int delay, BezierCurve start, BezierCurve end,
@@ -210,7 +210,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * Constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * bézier animator instance with all of its parameters regardless
-     * of their visibility(this means protected & private params are copied)
+     * of their visibility (this means protected & private params are copied)
      *
      * @param animator The animator to copy from
     */
