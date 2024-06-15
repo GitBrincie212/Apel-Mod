@@ -17,9 +17,6 @@
 	"entrypoints": {
 		"main": [
 			"net.mcbrincie.apel.Apel"
-		],
-		"fabric-datagen": [
-			"net.mcbrincie.apel.ApelDataGenerator"
 		]
 	},
 	"mixins": [
