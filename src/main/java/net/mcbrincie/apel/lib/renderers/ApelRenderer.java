@@ -6,8 +6,6 @@ import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
-import java.io.IOException;
-
 /**
  * ApelRenderer allows Apel animations to be rendered to multiple "canvases."
  * <p>
@@ -55,16 +53,16 @@ public interface ApelRenderer {
      * @param particleEffect The ParticleEffect to use
      * @param start The 3D point at which to start
      * @param end The 3D point at which to end
-     * @param count The number of particles to draw along the line
+     * @param amount The number of particles to draw along the line
      */
-    default void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int count) {
-        int amountSubOne = (count - 1);
+    default void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int amount) {
+        int amountSubOne = (amount - 1);
         // Do not use 'sub', it modifies in-place
         float stepX = (end.x - start.x) / amountSubOne;
         float stepY = (end.y - start.y) / amountSubOne;
         float stepZ = (end.z - start.z) / amountSubOne;
         Vector3f curr = new Vector3f(start);
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < amount; i++) {
             drawParticle(particleEffect, step, curr);
             curr.add(stepX, stepY, stepZ);
         }
@@ -120,6 +118,30 @@ public interface ApelRenderer {
                 .add(center);
         this.drawParticle(particleEffect, step, finalPosVec);
         return finalPosVec;
+    }
+
+    /**
+     * Instructs the renderer to draw an ellipse at {@code drawPos} with {@code radius} and {@code rotation} applied
+     * using {@code amount} particles.  The ellipse will be stretched by {@code stretch}.  Particles will be spaced
+     * evenly around the ellipse.
+     *
+     * @param particleEffect The ParticleEffect to use
+     * @param center The point at the center of the ellipse
+     * @param radius The radius of the ellipse
+     * @param stretch The stretch of the ellipse
+     * @param rotation Rotation applied to the ellipse (to change the plane in which it's drawn)
+     * @param amount The amount of particles to use to draw the ellipse
+     */
+    default void drawEllipse(ParticleEffect particleEffect, int step, Vector3f center, float radius, float stretch, Vector3f rotation, int amount) {
+        float angleInterval = (float) Math.TAU / (float) amount;
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+        for (int i = 0; i < amount; i++) {
+            double currRot = angleInterval * i;
+            float x = (float) Math.cos(currRot) * radius;
+            float y = (float) Math.sin(currRot) * stretch;
+            Vector3f pos = new Vector3f(x, y, 0).rotate(quaternion).add(center);
+            drawParticle(particleEffect, step, pos);
+        }
     }
 
     default void beforeFrame(int step, Vector3f frameOrigin) {

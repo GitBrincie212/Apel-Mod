@@ -226,4 +226,32 @@ public abstract class ParticleObject {
                 this.particleEffect, r, h, angle, this.rotation, new Vector3f(center).add(this.offset), step
         );
     }
+
+    /**
+     * Draws a circle of {@code amount} particles at {@code drawPos} with {@code radius} and {@code rotation} applied.
+     *
+     * @param renderer The renderer to use
+     * @param step The step being rendered
+     * @param drawPos The point at the center of the circle
+     * @param radius The radius of the circle
+     * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
+     * @param amount The amount of particles to use to draw the circle
+     */
+    protected void drawCircle(ApelRenderer renderer, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount) {
+        renderer.drawEllipse(this.particleEffect, step, drawPos, radius, radius, rotation, amount);
+    }
+
+    /**
+     * Draws a circle of {@code amount} particles at {@code drawPos} with {@code radius} and {@code rotation} applied.
+     *
+     * @param renderer The renderer to use
+     * @param step     The step being rendered
+     * @param drawPos  The point at the center of the circle
+     * @param radius   The radius of the circle
+     * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
+     * @param amount   The amount of particles to use to draw the circle
+     */
+    protected void drawEllipse(ApelRenderer renderer, int step, Vector3f drawPos, float radius, float stretch, Vector3f rotation, int amount) {
+        renderer.drawEllipse(this.particleEffect, step, drawPos, radius, stretch, rotation, amount);
+    }
 }

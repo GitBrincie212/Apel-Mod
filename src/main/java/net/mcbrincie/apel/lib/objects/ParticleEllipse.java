@@ -131,24 +131,16 @@ public class ParticleEllipse extends ParticleObject {
 
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
-        float stepHeight = this.stretch / this.amount;
-        float stepAngle = (float) Math.TAU / 1.618033f;
-        for (int i = 0; i < this.amount; i++) {
-            float angle = i * stepAngle;
-            InterceptData<ParticleEllipse.BeforeDrawData> interceptData = this.doBeforeDraw(
-                    renderer.getWorld(), step, drawPos, angle
-            );
-            angle = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, angle);
-            Vector3f finalPosVec = this.drawEllipsePoint(renderer, this.radius, this.stretch, angle, drawPos, step);
-            this.doAfterDraw(renderer.getWorld(), step, finalPosVec, drawPos);
-        }
+        this.doBeforeDraw(renderer.getWorld(), step, drawPos);
+        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        this.drawEllipse(renderer, step, objectDrawPos, this.radius, this.stretch, this.rotation, this.amount);
+        this.doAfterDraw(renderer.getWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
     }
 
     /** Set the interceptor to run after drawing the ellipse. The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the ellipse is rendered.  It will also have the position around the ellipse
-     * at which the current particle was drawn.
+     * position where the ellipse is rendered.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
@@ -156,16 +148,14 @@ public class ParticleEllipse extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private void doAfterDraw(ServerWorld world, int step, Vector3f drawPos, Vector3f centerPos) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, centerPos, step, AfterDrawData.class);
-        interceptData.addMetadata(AfterDrawData.DRAW_POSITION, drawPos);
+    private void doAfterDraw(ServerWorld world, int step, Vector3f drawPos) {
+        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
         this.afterDraw.apply(interceptData, this);
     }
 
     /** Set the interceptor to run prior to drawing the ellipse. The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the ellipse is rendered. It will also have the angle around the ellipse at
-     * which the current particle is.
+     * position where the ellipse is rendered.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing each particle
      */
@@ -173,10 +163,8 @@ public class ParticleEllipse extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, int step, Vector3f pos, float angle) {
+    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        interceptData.addMetadata(BeforeDrawData.ITERATED_ROTATION, angle);
         this.beforeDraw.apply(interceptData, this);
-        return interceptData;
     }
 }
