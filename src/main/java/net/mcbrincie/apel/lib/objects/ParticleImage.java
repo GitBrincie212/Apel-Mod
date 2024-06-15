@@ -100,7 +100,7 @@ public class ParticleImage extends ParticleObject {
                 int alpha = (rgba >> 24) & 0xff;
                 ParticleEffect particle = this.palateGenerator.apply(rgba, x, y, drawPos);
                 Vector3f pos = drawPos.add(x, y, 0).mul(0.01f);
-                // this.drawParticle(particle, world, pos);
+                // this.drawParticle(particle, renderer, step, pos);
             }
         }
     }
