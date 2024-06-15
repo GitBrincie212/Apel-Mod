@@ -116,21 +116,21 @@ public class ParallelAnimator extends PathAnimatorBase {
     @Override
     @Deprecated
     public int setRenderSteps(int steps) {
-        return -1;
+        throw new UnsupportedOperationException("Parallel Animators cannot set rendering steps");
     }
 
     /** This method is DEPRECATED and SHOULD NOT BE USED */
     @Deprecated
     @Override
     public ParticleObject setParticleObject(@NotNull ParticleObject object) {
-        return null;
+        throw new UnsupportedOperationException("Parallel Animators cannot set an individual particle object");
     }
 
     /** This method is DEPRECATED and SHOULD NOT BE USED */
     @Override
     @Deprecated
     public float setRenderInterval(float interval) {
-        return -1.0f;
+        throw new UnsupportedOperationException("Parallel Animators cannot set rendering interval");
     }
 
     @Override

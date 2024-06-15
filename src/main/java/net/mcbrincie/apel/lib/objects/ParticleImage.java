@@ -79,12 +79,16 @@ public class ParticleImage extends ParticleObject {
     /** THIS METHOD SHOULD NOT BE USED */
     @Deprecated
     @Override
-    public ParticleEffect setParticleEffect(ParticleEffect particle) {return null;}
+    public ParticleEffect setParticleEffect(ParticleEffect particle) {
+        throw new UnsupportedOperationException("ParticleImage doesn't support setting a particle effect.");
+    }
 
     /** THIS METHOD SHOULD NOT BE USED */
     @Override
     @Deprecated
-    public ParticleEffect getParticleEffect() {return null;}
+    public ParticleEffect getParticleEffect() {
+        throw new UnsupportedOperationException("ParticleImage doesn't support getting a particle effect.");
+    }
 
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {

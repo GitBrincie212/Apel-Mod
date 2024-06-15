@@ -64,9 +64,6 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     public DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDrawIntercept = DrawInterceptor.identity();
     public DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDrawIntercept = DrawInterceptor.identity();
 
-    @Deprecated public final DrawInterceptor<?, ?> afterCalcsIntercept = null;
-    @Deprecated public final DrawInterceptor<?, ?> beforeCalcsIntercept = null;
-
     /** There is no data being transmitted */
     public enum AfterChildDrawData {}
 
