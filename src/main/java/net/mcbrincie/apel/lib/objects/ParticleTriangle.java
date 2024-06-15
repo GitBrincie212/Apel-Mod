@@ -9,9 +9,9 @@ import org.joml.Vector3f;
 
 import java.util.Optional;
 
-/** The particle object class that represents a 2D triangle. It has 3
- * vertices that make it up, all of them must be coplanar with each other.
- * The vertices can be set individually or by supplying a list of 4 vertices
+/** The particle object class that represents a 2D triangle.
+ * It has three vertices that make it up, all of them must be coplanar with each other.
+ * The vertices can be set individually or by supplying a list of four vertices
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleTriangle extends ParticleObject {
@@ -31,11 +31,11 @@ public class ParticleTriangle extends ParticleObject {
     );
 
     /** Constructor for the particle triangle which is a 2D shape. It accepts as parameters
-     * the particle to use, the vertices that connect the triangle, the amount of particles & the
+     * the particle effect to use, the vertices that connect the triangle, the number of particles & the
      * rotation to apply There is also a simplified version for no rotation.
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param vertices The vertices that make up the triangle
      * @param rotation The rotation to apply
      *
@@ -54,13 +54,13 @@ public class ParticleTriangle extends ParticleObject {
     }
 
     /** Constructor for the particle triangle which is a 2D shape. It accepts as parameters
-     * the particle to use, the vertices that connect the triangle & the amount of particles.
+     * the particle to use, the vertices that connect the triangle & the number of particles.
      * It is a simplified version for the case when no rotation is meant to be applied.
-     * For rotation offset you can use another constructor
+     * For rotation offset, you can use another constructor
      *
      * @param particleEffect The particle to use
      * @param vertices The vertices that make up the triangle
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      *
      * @see ParticleTriangle#ParticleTriangle(ParticleEffect, Vector3f[], int, Vector3f)
     */
@@ -145,13 +145,14 @@ public class ParticleTriangle extends ParticleObject {
         return prevVertex3;
     }
 
-    /** Sets the individual vertices all at once. If you want set one vertex at a time
-     * then its recommend to use the methods ``setVertex1``, ``setVertex2``.... etc.
-     * The vertices have to be 4 in order to modify the values. It returns nothing back
+    /** Sets the individual vertices all at once given a list of the vertices.
+     * If you want to set one vertex at a time, then its recommend to use the methods ``setVertex1``,
+     * ``setVertex2``... etc. The vertices have to be 4 to modify the values.
+     * It returns nothing
      *
      * @param vertices The vertices to modify
      *
-     * @throws IllegalArgumentException if the amount of vertices supplied isn't equal to 4
+     * @throws IllegalArgumentException if the number of vertices supplied isn't equal to 4
     */
     public void setVertices(Vector3f... vertices) {
         if (vertices.length != 3) {

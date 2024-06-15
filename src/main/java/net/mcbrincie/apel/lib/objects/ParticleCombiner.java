@@ -17,7 +17,7 @@ import java.util.Optional;
 
 /** A utility particle object class that groups all particle objects as
  * one object instead of multiple. Particle combiners can also group themselves
- * which can produce an object hierarchy. There many good things about using
+ * which can produce an object hierarchy. There are many good things about using
  * a particle combiner in most cases, examples include but are not limited to
  * <br><br>
  * <center><h2>Advantages</h2></center>
@@ -26,14 +26,14 @@ import java.util.Optional;
  * <b>Fewer Memory Overhead(s) & Smaller Memory Footprint</b><br>
  * Since objects are grouped together. This means that there will be fewer particle animators created
  * as well as the object being handled as 1 particle object instance instead of being multiple. Which
- * means that memory is dramatically reduced down for complex scenes(if you had 10 path animators for 10
- * objects, in which the path animators do 1 million rendering step. The entire bandwidth is cut down
+ * means that memory is dramatically reduced down for complex scenes (if you had 10 path animators for 10
+ * objects, in which the path animators do 1 million rendering steps. The entire bandwidth is cut down
  * from 10 million -> 1 million steps allocated to the scheduler for the processing).<br><br>
  *
  * <b>Easier Management On Multiple Complex Objects</b><br>
  * The main premise of the particle combiner is to combine particle objects as 1. Which can simplify
- * repetitive logic and instead of passing the objects into separate path animators(that contain the
- * almost same params and are the same type). Now you can pass it in only 1 path animator, there are
+ * repetitive logic and instead of passing the objects into separate path animators (that contain the
+ * almost same params and are the same type). Now you can pass it in only one path animator, there are
  * common methods for managing the object instances which further simplify the repetitive process.<br><br>
  *
  * <b>Dynamic Object Allocation At Runtime</b><br>
@@ -53,7 +53,7 @@ import java.util.Optional;
  * this logic you would have to go and implement is handled for you. You can also use recursive
  * methods to scale down the tree and modify the values<br><br>
  *
- * @param <T> The type of the object, can also be set to <?> to accept all particle objects
+ * @param <T> The type of the object can also be set to <?> to accept all particle objects
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
@@ -70,14 +70,14 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     /** There is no data being transmitted */
     public enum AfterChildDrawData {}
 
-    /** This data is used after calculations(it contains the modified 4 vertices) */
+    /** This data is used after calculations (it contains the modified 4 vertices) */
     public enum BeforeChildDrawData {
         OBJECT_IN_USE, CAN_DRAW_OBJECT
     }
 
     /** The constructor for the particle combiner. Which is a utility class that
-     * helps in grouping particle objects together as 1 single particle object.
-     * Which of course has many benefits such as being able to directly modify
+     * helps in grouping particle objects together as one single particle object.
+     * Which, of course, has many benefits, such as being able to directly modify
      * the objects themselves without needing to set one after the other to a
      * specific value. There is a simpler constructor for no rotation
      * <br><br>
@@ -101,8 +101,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** The constructor for the particle combiner. Which is a utility class that
-     * helps in grouping particle objects together as 1 single particle object.
-     * Which of course has many benefits such as being able to directly modify
+     * helps in grouping particle objects together as one single particle object.
+     * Which, of course, has many benefits, such as being able to directly modify
      * the objects themselves without needing to set one after the other to a
      * specific value. There is a simpler constructor for no rotation
      * <br><br>
@@ -121,8 +121,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** The constructor for the particle combiner. Which is a utility class that
-     * helps in grouping particle objects together as 1 single particle object.
-     * Which of course has many benefits such as being able to directly modify
+     * helps in grouping particle objects together as one single particle object.
+     * Which, of course, has many benefits, such as being able to directly modify
      * the objects themselves without needing to set one after the other to a
      * specific value. There is a more complex constructor for rotation
      *
@@ -161,7 +161,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * another method that allows for offsetting the rotation per particle
      * object, it is the same as using this one with the offset params
      *
-     * @param rotation The new rotation(IN RADIANS)
+     * @param rotation The new rotation (IN RADIANS)
      * @return The previous rotation used
      *
      * @see ParticleCombiner#setRotation(Vector3f, float, float, float)
@@ -181,7 +181,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * is an offset of XYZ per object. There is also a simplified
      * method that doesn't use offsets
      *
-     * @param rotation The new rotation(IN RADIANS)
+     * @param rotation The new rotation (IN RADIANS)
      * @param offsetX the offset x
      * @param offsetY the offset y
      * @param offsetZ the offset z
@@ -207,7 +207,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * is an offset of XYZ per object. There is also a simplified
      * method that doesn't use offsets
      *
-     * @param rotation The new rotation(IN RADIANS)
+     * @param rotation The new rotation (IN RADIANS)
      * @param offset the offset x
      * @return The previous rotation
      *
@@ -226,12 +226,12 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         return prevRotation;
     }
 
-    /** Sets the rotation for all the particle objects(this includes objects
+    /** Sets the rotation for all the particle objects (this includes objects
      * that are way below the hierarchy). There is another method that allows
      * for offsetting the rotation per particle object, it is the same
      * as using this one with the offset params
      *
-     * @param rotation The new rotation(IN RADIANS)
+     * @param rotation The new rotation (IN RADIANS)
      *
      * @see ParticleCombiner#setRotation(Vector3f, float, float, float)
      * @see ParticleCombiner#setRotation(Vector3f, Vector3f)
@@ -245,11 +245,11 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         }
     }
 
-    /** Sets the rotation for all the particle objects(including the objects that are
+    /** Sets the rotation for all the particle objects (including the objects that are
      * below the hierarchy), there is an offset of XYZ per object. There is as well a
      * simplified method that doesn't use offsets
      *
-     * @param rotation The new rotation(IN RADIANS)
+     * @param rotation The new rotation (IN RADIANS)
      * @param offset the offset rotation
      *
      * @see ParticleCombiner#setRotationRecursively(Vector3f)
@@ -280,7 +280,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** Sets the offset position per object. The offset positions have to be the same
      * amount as the objects. New objects added will have their offset to (0,0,0). There
-     * is a helper method to allow to set for all objects the same offset
+     * is a helper method to allow setting for all objects the same offset
      *
      *
      * @param offset The offsets for each object(corresponding on each index)
@@ -294,7 +294,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** Sets the offset position to all objects. The offset applies to all objects and overwrites
      * the values. New objects added will have their offset to (0,0,0). There is a
-     * helper method to allows to set different offsets to different objects
+     * helper method to allow setting different offsets to different objects
      *
      *
      * @param offset The offsets for all the objects
@@ -337,7 +337,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the particle to use to a new value and returns the previous particle that was used.
-     * This applies to all the object. The value can also be null meaning that there are different
+     * This applies to all the object the value can also be null, meaning that there are different
      * particle effects at play in the object
      *
      * @param particle The new particle
@@ -353,8 +353,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the particle to use to a new value and returns the previous particle that was used.
-     * This applies to all the object(including objects that are way below the hierarchy). The value
-     * can also be null meaning that there are different particle effects at play in the object
+     * This applies to all the objects (including objects that are way below the hierarchy). The value
+     * can also be null, meaning that there are different particle effects at play in the object
      * <br><br>
      *
      * @param particle The new particle
@@ -372,13 +372,13 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the particle to use to a new value and returns the previous particle that was used.
-     * This applies to all the object(including objects that are way below the hierarchy). The value
-     * can also be null meaning that there are different particle effects at play in the object.
+     * This applies to all the objects (including objects that are way below the hierarchy). The value
+     * can also be null, meaning that there are different particle effects at play in the object.
      * However unlike the {@code setParticleEffectRecursively(ParticleEffect)} which is a list of
      * the particles to use per depth level<br><br>
      *
-     * <b>Note:</b> If there is no more particles to supply in the current depth level the system is,
-     * it will resort in not going below. Keep that in mind
+     * <b>Note:</b> If there are no more particles to supply in the current depth level the system is,
+     * it will resort not going deeper, keep that in mind
      *
      * @param particle The particles per level
      *
@@ -401,7 +401,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the amount to use to a new value and returns the previous amount that was used.
-     * This applies to all the object. The value can also be -1 meaning that there are different
+     * This applies to all the objects. The value can also be -1 meaning that there are different
      * particle effects at play in the object. There is a method that allows for offsets per
      * particle objects
      *
@@ -421,12 +421,12 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the amount to use to a new value and returns the previous amount that was used.
-     * This applies to all the object. The value can also be -1 meaning that there are different
+     * This applies to all the objects. The value can also be -1 meaning that there are different
      * particle effects at play in the object. The offset param changes the amount per object by
      * a specified amount. There is also a simplified version that doesn't use offsets
      *
      * @param amount The new particle
-     * @param offset The offset of the amount(can be positive or negative)
+     * @param offset The offset of the amount (can be positive or negative)
      * @return The previous particle
      *
      * @see ParticleCombiner#setAmount(int)
@@ -445,16 +445,16 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the amount to use to a new value and returns the previous amount that was used.
-     * This applies to all the object(including objects that are way below the hierarchy). The returned
+     * This applies to all the objects (including objects that are way below the hierarchy). The returned
      * value can also be -1 meaning that there are different particle effects at play in the object.
      * The offset param changes the amount per object by a specified amount. There is also a simplified version
      * that doesn't recursively scale down the tree & another that allows specifying the recursion offset<br><br>
      *
-     * <b>Note:</b> when the program encounters another combiner. It calls the same method but
+     * <b>Note:</b> when the program encounters another combiner. It calls the same method, but
      * the amount is added with the iterated offset and the offset remains unchanged
      *
      * @param amount The new particle
-     * @param offset The offset of the amount(can be positive or negative)
+     * @param offset The offset of the amount (can be positive or negative)
      *
      * @see ParticleCombiner#setAmount(int)
      * @see ParticleCombiner#setAmount(int, int)
@@ -475,16 +475,16 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the amount to use to a new value and returns the previous amount that was used.
-     * This applies to all the object(including objects that are way below the hierarchy). The returned
+     * This applies to all the objects (including objects that are way below the hierarchy). The returned
      * value can also be -1 meaning that there are different particle effects at play in the object.
      * The offset param changes the amount per object by a specified amount. There is also a simplified version
      * that doesn't recursively scale down the tree & another that doesn't accept the recursion offset<br><br>
      *
-     * <b>Note:</b> when the program encounters another combiner. It calls the same method but
+     * <b>Note:</b> when the program encounters another combiner. It calls the same method, but
      * the amount is added with the recursive offset and the recursive offset remains unchanged
      *
      * @param amount The new particle
-     * @param offset The offset of the amount(can be positive or negative)
+     * @param offset The offset of the amount (can be positive or negative)
      * @param recursiveOffset The offset of the amount once the program encounters another combiner
      *
      * @see ParticleCombiner#setAmountRecursively(int, int)
@@ -525,7 +525,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         return objects.get(index);
     }
 
-    /** Sets the amount of particle objects to use and returns the previous objects that were used.
+    /** Sets the number of particle objects to use and returns the previous objects that were used.
      *
      * @param objects The particle objects list
      * @return The previous particle objects list
@@ -550,7 +550,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         return prevObjects;
     }
 
-    /** Sets the amount of particle objects to use and returns the previous objects that were used.
+    /** Sets the number of particle objects to use and returns the previous objects that were used.
      *
      * @param objects The particle objects list
      * @return The previous particle objects list
@@ -614,7 +614,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     /** Appends a new particle object to the combiner. This is at the back
      *  of the list. Meaning that this object is the last one in the list.
      *  The offset position is (0,0,0) when appending, although you can use
-     *  the same method but just supplying the offset
+     *  the same method by just supplying the offset
      *
      * @param object The object to add to the list
      *
@@ -630,7 +630,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     /** Appends a new particle object to the combiner. This is at the back
      *  of the list. Meaning that this object is the last one in the list.
      *  The offset position is (0,0,0) when appending, although you can use
-     *  the same method but just supplying the offset
+     *  the same method by just supplying the offset
      *
      * @param object The object to add to the list
      *

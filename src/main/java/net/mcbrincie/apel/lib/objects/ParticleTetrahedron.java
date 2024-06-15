@@ -9,9 +9,9 @@ import org.joml.Vector3f;
 
 import java.util.Optional;
 
-/** The particle object class that represents a 3D triangle(Tetrahedron). It has 4
- * vertices that make it up which must not be coplanar with each other. The vertices
- * can be set individually or by supplying a list of 4 vertices
+/** The particle object class that represents a 3D triangle (Tetrahedron).
+ *  It has four vertices that make it up which must not be coplanar with each other.
+ *  The vertices can be set individually or by supplying a list of four vertices
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleTetrahedron extends ParticleObject {
@@ -32,11 +32,11 @@ public class ParticleTetrahedron extends ParticleObject {
     );
 
     /** Constructor for the particle tetrahedron which is a 3D triangle. It accepts as parameters
-     * the particle to use, the vertices that connect the tetrahedron, the amount of particles & the
+     * the particle effect to use, the vertices that connect the tetrahedron, the number of particles & the
      * rotation to apply There is also a simplified version for no rotation.
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param vertices The vertices that make up the tetrahedron
      * @param rotation The rotation to apply
      *
@@ -56,13 +56,13 @@ public class ParticleTetrahedron extends ParticleObject {
     }
 
     /** Constructor for the particle tetrahedron which is a 3D triangle. It accepts as parameters
-     * the particle to use, the vertices that connect the tetrahedron & the amount of particles.
+     * the particle to use, the vertices that connect the tetrahedron & the number of particles.
      * It is a simplified version for the case when no rotation is meant to be applied.
-     * For rotation offset you can use another constructor
+     * For rotation offset, you can use another constructor
      *
      * @param particleEffect The particle to use
      * @param vertices The vertices that make up the tetrahedron
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      *
      * @see ParticleTetrahedron#ParticleTetrahedron(ParticleEffect, Vector3f[], int, Vector3f)
     */
@@ -169,13 +169,13 @@ public class ParticleTetrahedron extends ParticleObject {
         return prevVertex4;
     }
 
-    /** Sets the individual vertices all at once. If you want set one vertex at a time
-     * then its recommend to use the methods ``setVertex1``, ``setVertex2``.... etc.
-     * The vertices have to be 4 in order to modify the values. It returns nothing back
+    /** Sets the individual vertices all at once if you want to set one vertex at a time,
+     * then its recommend to use the methods ``setVertex1``, ``setVertex2``... etc.
+     * The vertices have to be 4 to modify the values, it returns nothing
      *
      * @param vertices The vertices to modify
      *
-     * @throws IllegalArgumentException if the amount of vertices supplied isn't equal to 4
+     * @throws IllegalArgumentException if the number of vertices supplied isn't equal to 4
     */
     public void setVertices(Vector3f... vertices) {
         if (vertices.length != 4) {

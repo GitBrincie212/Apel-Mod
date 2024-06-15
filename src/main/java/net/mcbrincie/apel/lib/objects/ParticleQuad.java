@@ -13,8 +13,8 @@ import java.util.Optional;
 
 
 /** The particle object class that represents a 2D quad. It is a little
- * more complex than a line, since the user has to care about 4 endpoints(if
- * they don't want a square, otherwise they can supply a width & height).
+ * more complex than a line, since the user has to care about four endpoints
+ * (if they don't want a square, otherwise they can supply a width & height).
  * <br>
  * The quadrilateral is drawn in order of the vertices provided (presume the line
  * from vertex2 to vertex3 is straight, ignoring the limitations of ASCII art):
@@ -25,7 +25,7 @@ import java.util.Optional;
  *          \                        |
  *        vertex4 --------------- vertex3
  * </pre><br>
-*  Of course a quad can also be a rectangle, a trapezoid and anything else in between
+*  Of course, a quad can also be a rectangle, a trapezoid and anything else in between
  */
 @SuppressWarnings("unused")
 public class ParticleQuad extends ParticleObject {
@@ -42,17 +42,17 @@ public class ParticleQuad extends ParticleObject {
     /** There is no data being transmitted */
     public enum BeforeDrawData {}
 
-    /** This data is used after calculations(it contains the modified 4 vertices) */
+    /** This data is used after calculations (it contains the modified four vertices) */
     public enum AfterDrawData {
         VERTEX_1, VERTEX_2, VERTEX_3, VERTEX_4
     }
 
     /** Constructor for the particle quad which is a 2D Quadrilateral. It accepts as parameters
-     * the particle to use, the vertices coordinate, the amount of particles & the rotation to apply. There is also
-     * a simplified version for no rotation.
+     * the particle effect to use, the vertices coordinate, the number of particles & the rotation to apply.
+     * There is also a simplified version for no rotation.
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param vertices The vertices coordinate
      * @param rotation The rotation to apply
      *
@@ -65,11 +65,11 @@ public class ParticleQuad extends ParticleObject {
     }
 
     /** Constructor for the particle quad which is a 2D Quadrilateral. It accepts as parameters
-     * the particle to use, the vertices coordinate & the amount of particles. There is also
+     * the particle to use, the vertices coordinate & the number of particles. There is also
      * a constructor that allows supplying rotation
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param vertices The vertices coordinate
      *
      * @see ParticleQuad#ParticleQuad(ParticleEffect, Vector3f[], int, Vector3f)
@@ -78,13 +78,13 @@ public class ParticleQuad extends ParticleObject {
         this(particleEffect, vertices, amount, new Vector3f(0));
     }
 
-    /** Constructor for the particle quad which is a 2D Quadrilateral. And more specifically
-     * a rectangle(or square if width = height). It accepts as parameters the particle to use,
-     * the width of the rectangle, the height of the rectangle & the amount of particles.
+    /** Constructor for the particle quad which is a 2D Quadrilateral and more specifically a rectangle.
+     * (or square if width = height), it accepts as parameters the particle effect to use,
+     * the width of the rectangle, the height of the rectangle & the number of particles.
      * There is also a constructor that allows supplying rotation
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param width The width of the rectangle
      * @param height The height of the rectangle
      *
@@ -94,13 +94,14 @@ public class ParticleQuad extends ParticleObject {
         this(particleEffect, rectangle(width, height), amount, new Vector3f(0));
     }
 
-    /** Constructor for the particle quad which is a 2D Quadrilateral. And more specifically
-     * a rectangle(or square if width = height). It accepts as parameters the particle to use,
-     * the width of the rectangle, the height of the rectangle, the amount of particles.
-     * & the rotation to apply. There is also a constructor for no rotation
+    /** Constructor for the particle quad which is a 2D Quadrilateral.
+     * And more specifically, a rectangle (or square if width = height).
+     * It accepts as parameters the particle effect to use, the width of the rectangle,
+     * the height of the rectangle, the number of particles, and the rotation to apply.
+     * There is also a constructor for no rotation
      *
      * @param particleEffect The particle to use
-     * @param amount The amount of particles for the object
+     * @param amount The number of particles for the object
      * @param width The width of the rectangle
      * @param height The height of the rectangle
      * @param rotation The rotation to apply
@@ -135,13 +136,14 @@ public class ParticleQuad extends ParticleObject {
         this.afterDraw = quad.afterDraw;
     }
 
-    /** Sets the individual vertices all at once. If you want set one vertex at a time
-     * then its recommend to use the methods ``setVertex1``, ``setVertex2``.... etc.
-     * The vertices have to be 4 in order to modify the values. It returns nothing back
+    /** Sets the individual vertices all at once instead of one at a time.
+     * If you want to set one vertex at a time, then its recommend to use
+     * the methods ``setVertex1``, ``setVertex2``... etc. The vertices have to
+     * be 4 to modify the values, it returns nothing
      *
      * @param vertices The vertices to modify
      *
-     * @throws IllegalArgumentException if the amount of vertices supplied isn't equal to 4
+     * @throws IllegalArgumentException if the number of vertices supplied isn't equal to 4
      */
     public void setVertices(Vector3f[] vertices) throws IllegalArgumentException {
         if (vertices.length != 4) {

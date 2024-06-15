@@ -13,7 +13,7 @@ import java.util.Optional;
 
 /** The particle object class that represents a 2D line. It is one of the
  * most simple objects to use as it needs only a start & an ending position
- * in order to draw that line. The line cannot be curved and is only linear.
+ * to draw that line. The line cannot be curved and is only linear.
  * <br><br>
  * <b>Note:</b> rotation won't be applied to the calculations, as such it doesn't make
  * any difference.
@@ -32,13 +32,13 @@ public class ParticleLine extends ParticleObject {
     public enum AfterDrawData {}
 
     /** Constructor for the particle line which is a line. It accepts as parameters
-     * the particle to use, the starting endpoint & the ending endpoint. Rotation
+     * the particle effect to use, the starting endpoint & the ending endpoint. Rotation
      * doesn't matter in this context.
      *
      * @param particleEffect The particle effect to use
      * @param start The starting endpoint
      * @param end The ending endpoint
-     * @param amount The amount of particles
+     * @param amount The number of particles
     */
     public ParticleLine(ParticleEffect particleEffect, Vector3f start, Vector3f end, int amount) {
         super(particleEffect);
