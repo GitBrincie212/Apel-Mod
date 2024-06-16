@@ -69,7 +69,7 @@
       code is at).
 
       "Medium amount of modifications" shall mean modifications made to the source code, for this to be considered
-      modified at a medium level there must be at least 5 DIFFERENT files modified / created / deleted with a NOTICABLE
+      modified at a medium level there must be at least 5 DIFFERENT files modified / created / deleted with a NOTABLE
       impact. Changes for miscellaneous files(which include but not limited to markdown files, config files, github
       actions.... etc) DO NOT COUNT, only changes made or additions added or removal of features to the source code are
       counted. The 'title' is also applied even if you surpass the count but you have to meet the minimum amount in order
