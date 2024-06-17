@@ -9,6 +9,8 @@ import net.minecraft.util.math.Vec2f;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /** The particle object class that represents a sphere(3D shape) and not a 2D circle.
@@ -18,6 +20,7 @@ import java.util.Optional;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleSphere extends ParticleObject {
+    public static final double SQRT_5_PLUS_1 = 3.23606;
     protected float radius;
 
     private DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw = DrawInterceptor.identity();
@@ -39,9 +42,7 @@ public class ParticleSphere extends ParticleObject {
     private Vec2f cachedRoll = Vec2f.ZERO;
     private Vector3f prevRotation = null;
 
-    private float cachedValI = -1.0f;
-    private float cachedAmount = -1.0f;
-    private Vector3f cachedCoords;
+    private List<Vector3f> cachedCoordinates;
 
     /**
      * Constructor for the particle sphere which is a 3D shape. It accepts as parameters
@@ -58,6 +59,7 @@ public class ParticleSphere extends ParticleObject {
         super(particleEffect, rotation);
         this.setRadius(radius);
         this.setAmount(amount);
+        this.distributePoints();
     }
 
     /** Constructor for the particle cuboid which is a 3D shape. It accepts as parameters
@@ -86,9 +88,7 @@ public class ParticleSphere extends ParticleObject {
         this.amount = sphere.amount;
         this.afterDraw = sphere.afterDraw;
         this.beforeDraw = sphere.beforeDraw;
-        this.cachedCoords = sphere.cachedCoords;
-        this.cachedValI = sphere.cachedValI;
-        this.cachedAmount = sphere.cachedAmount;
+        this.cachedCoordinates = sphere.cachedCoordinates;
         this.cachedYaw = sphere.cachedYaw;
         this.cachedPitch = sphere.cachedPitch;
         this.cachedRoll = sphere.cachedRoll;
@@ -118,10 +118,19 @@ public class ParticleSphere extends ParticleObject {
     }
 
     @Override
+    public int setAmount(int amount) {
+        int prevAmount = super.setAmount(amount);
+        if (prevAmount != amount) {
+            this.distributePoints();
+        }
+        return prevAmount;
+    }
+
+    @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         for (int i = 0; i < this.amount; i++) {
             this.doBeforeDraw(renderer.getWorld(), step, drawPos, i);
-            Vector3f surfacePos = this.computeCoords(i);
+            Vector3f surfacePos = this.cachedCoordinates.get(i);
             surfacePos = this.applyRotation(surfacePos.x, surfacePos.y, surfacePos.z).add(drawPos).add(this.offset);
             this.drawParticle(renderer, step, surfacePos);
             this.doAfterDraw(renderer.getWorld(), step, drawPos, surfacePos, i);
@@ -129,22 +138,20 @@ public class ParticleSphere extends ParticleObject {
         this.endDraw(renderer, step, drawPos);
     }
 
-    private Vector3f computeCoords(int i) {
-        if (i == this.cachedValI && this.amount == this.cachedAmount) {
-            return cachedCoords.mul(this.radius);
+    // Uses the "golden spiral" algorithm described here: https://stackoverflow.com/a/44164075
+    private void distributePoints() {
+        this.cachedCoordinates = new ArrayList<>(this.amount);
+        for (int i = 0; i < this.amount; i++) {
+            float k = i + .5f;
+            double phi = Math.acos(1f - ((2f * k) / this.amount));
+            double theta = Math.PI * k * SQRT_5_PLUS_1;
+            double sinPhi = Math.sin(phi);
+            float x = (float) (Math.cos(theta) * sinPhi);
+            float y = (float) (Math.sin(theta) * sinPhi);
+            float z = (float) Math.cos(phi);
+            Vector3f pos = new Vector3f(x, y, z).mul(this.radius);
+            this.cachedCoordinates.add(pos);
         }
-        float k = i + .5f;
-        double phi = Math.acos(1f - ((2f * k) / this.amount));
-        double theta = Math.PI * k * 3.23606;
-        double sinPhi = Math.sin(phi);
-        float x = (float) (Math.cos(theta) * sinPhi);
-        float y = (float) (Math.sin(theta) * sinPhi);
-        float z = (float) Math.cos(phi);
-        this.cachedValI = i;
-        this.cachedAmount = this.amount;
-        Vector3f pos = new Vector3f(x, y, z);
-        this.cachedCoords = pos;
-        return pos.mul(this.radius);
     }
 
     private Vec2f computeYaw() {
