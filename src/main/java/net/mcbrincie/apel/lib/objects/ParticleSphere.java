@@ -27,14 +27,10 @@ public class ParticleSphere extends ParticleObject {
     private DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
     /** This data is used before calculations (it contains the number of particles) */
-    public enum BeforeDrawData {
-        AMOUNT
-    }
+    public enum BeforeDrawData {}
 
     /** This data is used after calculations (it contains the drawing position & the number of particles) */
-    public enum AfterDrawData {
-        DRAWING_POSITION, AMOUNT
-    }
+    public enum AfterDrawData {}
 
     // Caching the trig function
     private Vec2f cachedYaw = Vec2f.ZERO;
@@ -128,13 +124,13 @@ public class ParticleSphere extends ParticleObject {
 
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
+        this.doBeforeDraw(renderer.getWorld(), step, drawPos);
         for (int i = 0; i < this.amount; i++) {
-            this.doBeforeDraw(renderer.getWorld(), step, drawPos, i);
             Vector3f surfacePos = this.cachedCoordinates.get(i);
             surfacePos = this.applyRotation(surfacePos.x, surfacePos.y, surfacePos.z).add(drawPos).add(this.offset);
             this.drawParticle(renderer, step, surfacePos);
-            this.doAfterDraw(renderer.getWorld(), step, drawPos, surfacePos, i);
         }
+        this.doAfterDraw(renderer.getWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
     }
 
@@ -228,14 +224,9 @@ public class ParticleSphere extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptData<AfterDrawData> doAfterDraw(
-            ServerWorld world, int step, Vector3f drawPos, Vector3f surfacePos, int currAmount
-    ) {
+    private void doAfterDraw(ServerWorld world, int step, Vector3f drawPos) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
-        interceptData.addMetadata(AfterDrawData.DRAWING_POSITION, surfacePos);
-        interceptData.addMetadata(AfterDrawData.AMOUNT, currAmount);
         this.afterDraw.apply(interceptData, this);
-        return interceptData;
     }
 
     /** Set the interceptor to run prior to drawing the sphere.  The interceptor will be provided
@@ -243,16 +234,14 @@ public class ParticleSphere extends ParticleObject {
      * where the sphere is rendered.  It will also have the number of the individual particle effect
      * about to be drawn.
      *
-     * @param beforeDraw the new interceptor to execute prior to drawing each particle
+     * @param beforeDraw the new interceptor to execute prior to drawing the sphere
      */
     public void setBeforeDraw(DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, int step, Vector3f drawPos, int currAmount) {
+    private void doBeforeDraw(ServerWorld world, int step, Vector3f drawPos) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, drawPos, step, BeforeDrawData.class);
-        interceptData.addMetadata(BeforeDrawData.AMOUNT, currAmount);
         this.beforeDraw.apply(interceptData, this);
-        return interceptData;
     }
 }
