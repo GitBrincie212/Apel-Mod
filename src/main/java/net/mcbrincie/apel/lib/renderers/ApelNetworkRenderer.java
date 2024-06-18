@@ -51,6 +51,8 @@ public class ApelNetworkRenderer implements ApelRenderer {
         }
         // Recreate, with initial capacity
         this.instructions = new ArrayList<>(this.instructions.size());
+        // Clear the particle type, so the next frame will send it, too
+        this.prevParticleEffect = null;
     }
 
     @Override

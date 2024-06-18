@@ -174,6 +174,8 @@ public class ParticleBezierCurve extends ParticleObject {
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         int index = 0;
+        // Compute total offset from origin
+        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
         for (BezierCurve endpoint : this.endpoints) {
             int amountForCurve = this.amount[index];
             float interval = 1.0f / amountForCurve;
@@ -183,7 +185,7 @@ public class ParticleBezierCurve extends ParticleObject {
             amountForCurve = (int) interceptData.getMetadata(CommonDrawData.AMOUNT);
             for (int i = 0; i < amountForCurve; i++) {
                 Vector3f pos = endpoint.compute(interval * i);
-                this.rigidTransformation(renderer, this.rotation, this.offset, pos);
+                pos = this.rigidTransformation(renderer, this.rotation, objectDrawPos, pos);
                 this.drawParticle(renderer, step, pos);
             }
             this.doAfterDraw(renderer.getWorld(), endpoint, amountForCurve, step);
