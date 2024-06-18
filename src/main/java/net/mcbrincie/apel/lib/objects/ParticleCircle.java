@@ -45,8 +45,8 @@ public class ParticleCircle extends ParticleObject {
             @NotNull ParticleEffect particleEffect, float radius, Vector3f rotation, int amount
     ) {
         super(particleEffect, rotation);
-        this.radius = radius;
-        this.amount = amount;
+        this.setRadius(radius);
+        this.setAmount(amount);
     }
 
     /** Constructor for the particle circle which is a 2D shape. It accepts as parameters
@@ -92,6 +92,9 @@ public class ParticleCircle extends ParticleObject {
      * @return the previously used radius
      */
     public float setRadius(float radius) {
+        if (radius < 0) {
+            throw new IllegalArgumentException("Radius cannot be negative");
+        }
         float prevRadius = this.radius;
         this.radius = radius;
         return prevRadius;
@@ -100,7 +103,7 @@ public class ParticleCircle extends ParticleObject {
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         float angleInterval = 360 / (float) this.amount;
-        for (int i = 0; i < (this.amount / 2); i++) {
+        for (int i = 0; i < this.amount; i++) {
             double currRot = angleInterval * i;
             InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getWorld(), step, drawPos, currRot);
             currRot = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, currRot);
