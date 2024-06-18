@@ -5,7 +5,6 @@ import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec2f;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
@@ -31,12 +30,6 @@ public class ParticleSphere extends ParticleObject {
 
     /** This data is used after calculations (it contains the drawing position & the number of particles) */
     public enum AfterDrawData {}
-
-    // Caching the trig function
-    private Vec2f cachedYaw = Vec2f.ZERO;
-    private Vec2f cachedPitch = Vec2f.ZERO;
-    private Vec2f cachedRoll = Vec2f.ZERO;
-    private Vector3f prevRotation = null;
 
     private List<Vector3f> cachedCoordinates;
 
@@ -85,10 +78,6 @@ public class ParticleSphere extends ParticleObject {
         this.afterDraw = sphere.afterDraw;
         this.beforeDraw = sphere.beforeDraw;
         this.cachedCoordinates = sphere.cachedCoordinates;
-        this.cachedYaw = sphere.cachedYaw;
-        this.cachedPitch = sphere.cachedPitch;
-        this.cachedRoll = sphere.cachedRoll;
-        this.prevRotation = sphere.prevRotation;
     }
 
     /** Sets the radius of the sphere
@@ -126,8 +115,8 @@ public class ParticleSphere extends ParticleObject {
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         this.doBeforeDraw(renderer.getWorld(), step, drawPos);
         for (int i = 0; i < this.amount; i++) {
-            Vector3f surfacePos = this.cachedCoordinates.get(i);
-            surfacePos = this.applyRotation(surfacePos.x, surfacePos.y, surfacePos.z).add(drawPos).add(this.offset);
+            Vector3f surfacePos = new Vector3f(this.cachedCoordinates.get(i));
+            surfacePos.rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(drawPos).add(this.offset);
             this.drawParticle(renderer, step, surfacePos);
         }
         this.doAfterDraw(renderer.getWorld(), step, drawPos);
@@ -148,69 +137,6 @@ public class ParticleSphere extends ParticleObject {
             Vector3f pos = new Vector3f(x, y, z).mul(this.radius);
             this.cachedCoordinates.add(pos);
         }
-    }
-
-    private Vec2f computeYaw() {
-        double rotY = this.rotation.y;
-        if (this.prevRotation != null && rotY == this.prevRotation.y) {
-            return this.cachedYaw;
-        }
-        float cosYaw = (float) Math.cos(rotY);
-        float sinYaw = (float) Math.sin(rotY);
-        Vec2f yawVec = new Vec2f(cosYaw, sinYaw);
-        this.cachedYaw = yawVec;
-        return yawVec;
-    }
-
-    private Vec2f computePitch() {
-        double rotX = this.rotation.x;
-        if (this.prevRotation != null && rotX == this.prevRotation.x) {
-            return this.cachedPitch;
-        }
-        float cosPitch = (float) Math.cos(rotX);
-        float sinPitch = (float) Math.sin(rotX);
-        Vec2f pitchVec = new Vec2f(cosPitch, sinPitch);
-        this.cachedPitch = pitchVec;
-        return pitchVec;
-    }
-
-    private Vec2f computeRoll() {
-        double rotZ = this.rotation.z;
-        if (this.prevRotation != null && rotZ == this.prevRotation.z) {
-            return this.cachedRoll;
-        }
-        float cosRoll = (float) Math.cos(rotZ);
-        float sinRoll = (float) Math.sin(rotZ);
-        Vec2f rollVec = new Vec2f(cosRoll, sinRoll);
-        this.cachedRoll = rollVec;
-        return rollVec;
-    }
-
-    private Vector3f applyRotation(double x, double y, double z) {
-        Vec2f pitchVec = computePitch();
-        Vec2f yawVec = computeYaw();
-        Vec2f rollVec = computeRoll();
-        double cosYaw = yawVec.x;
-        double sinYaw = yawVec.y;
-        double cosPitch = pitchVec.x;
-        double sinPitch = pitchVec.y;
-        double cosRoll = rollVec.x;
-        double sinRoll = rollVec.y;
-        this.prevRotation = this.rotation;
-
-        // Apply pitch (rotation around X-axis)
-        double y1 = y * cosPitch - z * sinPitch;
-        double z1 = y * sinPitch + z * cosPitch;
-
-        // Apply yaw (rotation around Y-axis)
-        double x1 = x * cosYaw + z1 * sinYaw;
-        float z2 = (float) (-x * sinYaw + z1 * cosYaw);
-
-        // Apply roll (rotation around Z-axis)
-        float x2 = (float) (x1 * cosRoll - y1 * sinRoll);
-        float y2 = (float) (x1 * sinRoll + y1 * cosRoll);
-
-        return new Vector3f(x2, y2, z2);
     }
 
     /** Set the interceptor to run after drawing the sphere.  The interceptor will be provided
