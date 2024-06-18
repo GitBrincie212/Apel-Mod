@@ -139,15 +139,7 @@ public class ParticleEllipse extends ParticleObject {
                     renderer.getWorld(), step, drawPos, angle
             );
             angle = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, angle);
-            float x = (float) (this.radius * Math.cos(angle));
-            float y = (float) (this.stretch * Math.sin(angle));
-            Vector3f finalPosVec = new Vector3f(x, y, 0)
-                    .rotateZ(this.rotation.z)
-                    .rotateY(this.rotation.y)
-                    .rotateX(this.rotation.x)
-                    .add(drawPos)
-                    .add(this.offset);
-            this.drawParticle(renderer, step, finalPosVec);
+            Vector3f finalPosVec = this.drawEllipsePoint(renderer, this.radius, this.stretch, angle, drawPos, step);
             this.doAfterDraw(renderer.getWorld(), step, finalPosVec, drawPos);
         }
         this.endDraw(renderer, step, drawPos);

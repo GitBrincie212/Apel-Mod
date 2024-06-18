@@ -138,16 +138,7 @@ public class ParticleCylinder extends ParticleObject {
                     renderer.getWorld(), step, drawPos, angle
             );
             angle = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, angle);
-            float x = (float) (this.radius * Math.cos(angle));
-            float y = stepHeight * i;
-            float z = (float) (this.radius * Math.sin(angle));
-            Vector3f finalPosVec = new Vector3f(x, y, z)
-                    .rotateZ(this.rotation.z)
-                    .rotateY(this.rotation.y)
-                    .rotateX(this.rotation.x)
-                    .add(drawPos)
-                    .add(this.offset);
-            this.drawParticle(renderer, step, finalPosVec);
+            Vector3f finalPosVec = this.drawEllipsePoint(renderer, this.radius, this.radius, angle, drawPos, step);
             this.doAfterDraw(renderer.getWorld(), step, finalPosVec, drawPos);
         }
         this.endDraw(renderer, step, drawPos);

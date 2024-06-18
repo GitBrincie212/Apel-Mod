@@ -104,17 +104,10 @@ public class ParticleCircle extends ParticleObject {
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         float angleInterval = 360 / (float) this.amount;
         for (int i = 0; i < this.amount; i++) {
-            double currRot = angleInterval * i;
+            float currRot = angleInterval * i;
             InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getWorld(), step, drawPos, currRot);
             currRot = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, currRot);
-            float x = (float) Math.sin(currRot);
-            float y = (float) Math.cos(currRot);
-            Vector3f finalPosVec = new Vector3f(this.radius * x, this.radius * y, 0)
-                    // Rotate
-                    .rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x)
-                    // Translate
-                    .add(drawPos).add(this.offset);
-            this.drawParticle(renderer, step, finalPosVec);
+            Vector3f finalPosVec = this.drawEllipsePoint(renderer, this.radius, this.radius, currRot, drawPos, step);
             this.doAfterDraw(renderer.getWorld(), step, finalPosVec, drawPos);
         }
         this.endDraw(renderer, step, drawPos);

@@ -220,10 +220,10 @@ public class ParticleTetrahedron extends ParticleObject {
         Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
 
         // Defensive copies of internal vertices
-        Vector3f v1 = new Vector3f(this.vertex1).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
-        Vector3f v2 = new Vector3f(this.vertex2).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
-        Vector3f v3 = new Vector3f(this.vertex3).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
-        Vector3f v4 = new Vector3f(this.vertex4).rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(totalOffset);
+        Vector3f v1 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex1);
+        Vector3f v2 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex2);
+        Vector3f v3 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex3);
+        Vector3f v4 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex4);
 
         this.drawLine(renderer, v1, v2, step, this.amount);
         this.drawLine(renderer, v1, v3, step, this.amount);

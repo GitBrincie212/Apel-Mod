@@ -254,11 +254,10 @@ public class ParticleQuad extends ParticleObject {
         float rotZ = this.rotation.z;
         this.beforeDraw(renderer.getWorld(), step);
 
-        // Note the defensive copies prior to rotating and adding
-        Vector3f v1 = new Vector3f(this.vertex1).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        Vector3f v2 = new Vector3f(this.vertex2).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        Vector3f v3 = new Vector3f(this.vertex3).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
-        Vector3f v4 = new Vector3f(this.vertex4).rotateZ(rotZ).rotateY(rotY).rotateX(rotX).add(drawPos).add(this.offset);
+        Vector3f v1 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex1);
+        Vector3f v2 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex2);
+        Vector3f v3 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex3);
+        Vector3f v4 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex4);
 
         this.drawLine(renderer, v1, v2, step, this.amount);
         this.drawLine(renderer, v2, v3, step, this.amount);

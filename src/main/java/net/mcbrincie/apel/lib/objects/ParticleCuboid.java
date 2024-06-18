@@ -215,13 +215,10 @@ public class ParticleCuboid extends ParticleObject {
      * @param translation The center position relative to the origin
      * @return The vertex's coordinates
      */
-    public Vector3f getVertex(float width, float height, float depth, Vector3f translation) {
-        Vector3f vertex = new Vector3f(width, height, depth);
-        vertex = vertex
-                .rotateZ(this.rotation.z)
-                .rotateY(this.rotation.y)
-                .rotateX(this.rotation.x);
-        return vertex.add(translation).add(this.offset);
+    public Vector3f getVertex(ApelRenderer renderer, float width, float height, float depth, Vector3f translation) {
+        return this.rigidTransformation(
+                renderer, this.rotation, new Vector3f(translation).add(this.offset), width, height, depth
+        );
     }
 
     @Override
@@ -229,14 +226,14 @@ public class ParticleCuboid extends ParticleObject {
         float width = size.x;
         float height = size.y;
         float depth = size.z;
-        Vector3f vertex1 = this.getVertex(width, height, depth, drawPos);
-        Vector3f vertex2 = this.getVertex(width, -height, -depth, drawPos);
-        Vector3f vertex3 = this.getVertex(-width, height, -depth, drawPos);
-        Vector3f vertex4 = this.getVertex(width, height, -depth, drawPos);
-        Vector3f vertex5 = this.getVertex(-width, -height, depth, drawPos);
-        Vector3f vertex6 = this.getVertex(width, -height, depth, drawPos);
-        Vector3f vertex7 = this.getVertex(-width, height, depth, drawPos);
-        Vector3f vertex8 = this.getVertex(-width, -height, -depth, drawPos);
+        Vector3f vertex1 = this.getVertex(renderer, width, height, depth, drawPos);
+        Vector3f vertex2 = this.getVertex(renderer, width, -height, -depth, drawPos);
+        Vector3f vertex3 = this.getVertex(renderer, -width, height, -depth, drawPos);
+        Vector3f vertex4 = this.getVertex(renderer, width, height, -depth, drawPos);
+        Vector3f vertex5 = this.getVertex(renderer, -width, -height, depth, drawPos);
+        Vector3f vertex6 = this.getVertex(renderer, width, -height, depth, drawPos);
+        Vector3f vertex7 = this.getVertex(renderer, -width, height, depth, drawPos);
+        Vector3f vertex8 = this.getVertex(renderer, -width, -height, -depth, drawPos);
 
         int bottomFaceAmount = this.amount.x;
         int topFaceAmount = this.amount.y;

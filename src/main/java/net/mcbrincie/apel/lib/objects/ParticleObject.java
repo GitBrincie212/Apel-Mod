@@ -156,6 +156,14 @@ public abstract class ParticleObject {
     public abstract void draw(ApelRenderer renderer, int step, Vector3f drawPos);
     public void endDraw(ApelRenderer renderer, int step, Vector3f drawPos) {}
 
+    protected Vector3f rigidTransformation(ApelRenderer renderer, Vector3f rotation, Vector3f offset, float x, float y, float z) {
+        return renderer.rigidTranslation(rotation, offset, x, y, z);
+    }
+
+    protected Vector3f rigidTransformation(ApelRenderer renderer, Vector3f rotation, Vector3f offset, Vector3f position) {
+        return renderer.rigidTranslation(rotation, offset, position.x, position.y, position.z);
+    }
+
     protected void drawParticle(ApelRenderer renderer, int step, Vector3f drawPos) {
         this.drawParticle(this.particleEffect, renderer, step, drawPos);
     }
@@ -177,5 +185,22 @@ public abstract class ParticleObject {
      */
     protected void drawLine(ApelRenderer renderer, Vector3f start, Vector3f end, int step, int amount) {
         renderer.drawLine(this.particleEffect, step, start, end, amount);
+    }
+
+    /**
+     * Draws a point along an ellipse shape that has a center {@code center}.
+     *
+     * @param renderer The renderer to use
+     * @param r The radius
+     * @param h The stretch / height
+     * @param angle The angle value
+     * @param center The center position
+     * @param step The step
+     * @return The coordinates of the point in the ellipse
+     */
+    protected Vector3f drawEllipsePoint(ApelRenderer renderer, float r, float h, float angle, Vector3f center, int step) {
+        return renderer.drawEllipsePoint(
+                this.particleEffect, r, h, angle, this.rotation, new Vector3f(center).add(this.offset), step
+        );
     }
 }

@@ -63,6 +63,22 @@ public interface ApelRenderer {
         }
     }
 
+    default Vector3f drawEllipsePoint(ParticleEffect particleEffect, float r, float h, float angle, Vector3f rotation, Vector3f center, int step) {
+        float x = (float) (r * Math.cos(angle));
+        float y = (float) (h * Math.sin(angle));
+        Vector3f finalPosVec = this.rigidTranslation(rotation, center, x, y, 0);
+        this.drawParticle(particleEffect, step, finalPosVec);
+        return finalPosVec;
+    }
+
+    default Vector3f rigidTranslation(Vector3f rotation, Vector3f offset, float x, float y, float z) {
+        return new Vector3f(x, y, z)
+                .rotateZ(rotation.z)
+                .rotateY(rotation.y)
+                .rotateX(rotation.x)
+                .add(offset);
+    }
+
     default void beforeFrame(ParticleObject particleObject, int step, Vector3f frameOrigin) {
     }
 
