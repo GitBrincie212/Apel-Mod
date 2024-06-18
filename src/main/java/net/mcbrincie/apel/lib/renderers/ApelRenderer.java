@@ -3,6 +3,8 @@ package net.mcbrincie.apel.lib.renderers;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
+import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 /**
@@ -61,6 +63,46 @@ public interface ApelRenderer {
             drawParticle(particleEffect, step, curr);
             curr.add(stepX, stepY, stepZ);
         }
+    }
+
+    /**
+     * Instructs the renderer to draw a sphere of the given particle effect at {@code drawPos} with the given
+     * {@code radius}, {@code rotation}, and {@code amount} of particles.
+     * <p>
+     * The default implementation is inefficient due to repeated trigonometry calculations, so it is strongly
+     * recommended that implementations needing the list of specific particles override this to provide some amount of
+     * caching.
+     * </p>
+     * Reference: <a href="https://stackoverflow.com/a/44164075">"golden spiral" algorithm</a>
+     *
+     * @param particleEffect The ParticleEffect to use
+     * @param step The current animation step
+     * @param drawPos The position of the center of the sphere
+     * @param radius The radius of the sphere
+     * @param rotation The rotation of the sphere; this is not terribly useful, but it can be used for
+     *         interesting effect, if the number of particles in the sphere changes over time.
+     * @param amount The number of particles in the sphere
+     */
+    default void drawSphere(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount
+    ) {
+        final double sqrt5Plus1 = 3.23606;
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+        for (int i = 0; i < amount; i++) {
+            // Offset into the real-number distribution
+            float k = i + .5f;
+            // Project point on unit sphere
+            double phi = Math.acos(1f - ((2f * k) / amount));
+            double theta = Math.PI * k * sqrt5Plus1;
+            double sinPhi = Math.sin(phi);
+            float x = (float) (Math.cos(theta) * sinPhi);
+            float y = (float) (Math.sin(theta) * sinPhi);
+            float z = (float) Math.cos(phi);
+            // Scale, rotate, translate
+            Vector3f pos = new Vector3f(x, y, z).mul(radius).rotate(quaternion).add(drawPos);
+            drawParticle(particleEffect, step, pos);
+        }
+
     }
 
     default Vector3f drawEllipsePoint(ParticleEffect particleEffect, float r, float h, float angle, Vector3f rotation, Vector3f center, int step) {

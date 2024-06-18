@@ -8,7 +8,6 @@ import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +47,6 @@ public class ParticleSphere extends ParticleObject {
         super(particleEffect, rotation);
         this.setRadius(radius);
         this.setAmount(amount);
-        this.distributePoints();
     }
 
     /** Constructor for the particle cuboid which is a 3D shape. It accepts as parameters
@@ -103,40 +101,12 @@ public class ParticleSphere extends ParticleObject {
     }
 
     @Override
-    public int setAmount(int amount) {
-        int prevAmount = super.setAmount(amount);
-        if (prevAmount != amount) {
-            this.distributePoints();
-        }
-        return prevAmount;
-    }
-
-    @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         this.doBeforeDraw(renderer.getWorld(), step, drawPos);
-        for (int i = 0; i < this.amount; i++) {
-            Vector3f surfacePos = new Vector3f(this.cachedCoordinates.get(i));
-            surfacePos.rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x).add(drawPos).add(this.offset);
-            this.drawParticle(renderer, step, surfacePos);
-        }
+        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        this.drawSphere(renderer, step, objectDrawPos, this.radius, this.rotation, this.amount);
         this.doAfterDraw(renderer.getWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
-    }
-
-    // Uses the "golden spiral" algorithm described here: https://stackoverflow.com/a/44164075
-    private void distributePoints() {
-        this.cachedCoordinates = new ArrayList<>(this.amount);
-        for (int i = 0; i < this.amount; i++) {
-            float k = i + .5f;
-            double phi = Math.acos(1f - ((2f * k) / this.amount));
-            double theta = Math.PI * k * SQRT_5_PLUS_1;
-            double sinPhi = Math.sin(phi);
-            float x = (float) (Math.cos(theta) * sinPhi);
-            float y = (float) (Math.sin(theta) * sinPhi);
-            float z = (float) Math.cos(phi);
-            Vector3f pos = new Vector3f(x, y, z).mul(this.radius);
-            this.cachedCoordinates.add(pos);
-        }
     }
 
     /** Set the interceptor to run after drawing the sphere.  The interceptor will be provided
