@@ -196,6 +196,21 @@ public abstract class ParticleObject {
     }
 
     /**
+     * Draws a sphere of the given particle effect at {@code drawPos} with the given {@code radius}, {@code rotation}, and {@code amount} of particles.
+     *
+     * @param renderer The renderer to use
+     * @param step The current animation step
+     * @param drawPos The position of the center of the sphere
+     * @param radius The radius of the sphere
+     * @param rotation The rotation of the sphere; this is not terribly useful, but it can be used for
+     *         interesting effect, if the number of particles in the sphere changes over time.
+     * @param amount The number of particles in the sphere
+     */
+    protected void drawSphere(ApelRenderer renderer, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount) {
+        renderer.drawSphere(this.particleEffect, step, drawPos, radius, rotation, amount);
+    }
+
+    /**
      * Draws a point along an ellipse shape that has a center {@code center}.
      *
      * @param renderer The renderer to use
