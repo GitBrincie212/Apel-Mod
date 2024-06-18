@@ -1,7 +1,9 @@
 package net.mcbrincie.apel;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.mcbrincie.apel.item.ModItems;
+import net.mcbrincie.apel.lib.renderers.ApelFramePayload;
 import net.mcbrincie.apel.lib.util.scheduler.ApelScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,5 +21,7 @@ public class Apel implements ModInitializer {
 	public void onInitialize() {
 		LOGGER.info("Library Mod Initializing");
 		ModItems.initItems();
+		// TODO: This uses Fabric's networking wrappers, which I'm not convinced are necessary.
+		PayloadTypeRegistry.playS2C().register(ApelFramePayload.ID, ApelFramePayload.PACKET_CODEC);
 	}
 }
