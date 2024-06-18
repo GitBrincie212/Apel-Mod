@@ -12,13 +12,13 @@ import java.util.Optional;
 
 /** The particle object class that represents a 2D ellipse.
  * It has a radius which dictates how large or small the ellipse is depending on the
- * radius value supplied and a height value for how stretched is the ellipse. A value of
- * height that equals the radius means it is a circle
+ * radius value supplied and a stretch value for how stretched is the ellipse. A value of
+ * stretch that equals the radius means it is a circle
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleEllipse extends ParticleObject {
     protected float radius;
-    protected float height;
+    protected float stretch;
     private DrawInterceptor<ParticleEllipse, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleEllipse, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
@@ -33,44 +33,44 @@ public class ParticleEllipse extends ParticleObject {
     }
 
     /** Constructor for the particle ellipse which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the ellipse, the height of the ellipse,
+     * the particle effect to use, the radius of the ellipse, the stretch of the ellipse,
      * the rotation to apply & the number of particles. There is also a simplified version
      * for no rotation.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
      * @param radius The radius of the ellipse (how big it is)
-     * @param height The height of the ellipse (how stretched it is)
+     * @param stretch The stretch of the ellipse (how stretched it is)
      * @param rotation The rotation to apply
      *
      * @see ParticleEllipse#ParticleEllipse(ParticleEffect, float, float, int)
      */
     public ParticleEllipse(
             @NotNull ParticleEffect particleEffect, float radius,
-            float height, Vector3f rotation, int amount
+            float stretch, Vector3f rotation, int amount
     ) {
         super(particleEffect, rotation);
         this.setRadius(radius);
         this.setAmount(amount);
-        this.setHeight(height);
+        this.setStretch(stretch);
     }
 
     /** Constructor for the particle ellipse which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the ellipse, the height of the ellipse
+     * the particle effect to use, the radius of the ellipse, the stretch of the ellipse
      * & the number of particles. There is also a version that allows for rotation.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
-     * @param height The height of the ellipse (how stretched it is)
+     * @param stretch The stretch of the ellipse (how stretched it is)
      * @param radius The radius of the ellipse (how big it is)
      *
      * @see ParticleEllipse#ParticleEllipse(ParticleEffect, float, float, Vector3f, int)
      */
     public ParticleEllipse(
             @NotNull ParticleEffect particleEffect,
-            float radius, float height, int amount
+            float radius, float stretch, int amount
     ) {
-        this(particleEffect, radius, height, new Vector3f(0,0,0), amount);
+        this(particleEffect, radius, stretch, new Vector3f(0,0,0), amount);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -84,7 +84,7 @@ public class ParticleEllipse extends ParticleObject {
         this.amount = ellipse.amount;
         this.afterDraw = ellipse.afterDraw;
         this.beforeDraw = ellipse.beforeDraw;
-        this.height = ellipse.height;
+        this.stretch = ellipse.stretch;
     }
 
     /** Gets the radius of the ParticleEllipse and returns it.
@@ -102,36 +102,36 @@ public class ParticleEllipse extends ParticleObject {
      */
     public float setRadius(float radius) {
         if (radius < 0) {
-            throw new IllegalArgumentException("Height cannot be negative");
+            throw new IllegalArgumentException("stretch cannot be negative");
         }
         float prevRadius = this.radius;
         this.radius = radius;
         return prevRadius;
     }
 
-    /** Gets the height of the ParticleEllipse and returns it
+    /** Gets the stretch of the ParticleEllipse and returns it
      *
-     * @return the height of the ParticleEllipse
+     * @return the stretch of the ParticleEllipse
      */
-    public float getHeight() {return height;}
+    public float getStretch() {return stretch;}
 
-    /** Sets the height of the ParticleEllipse and returns the previous height that was used
+    /** Sets the stretch of the ParticleEllipse and returns the previous stretch that was used
      *
-     * @param height The new height
-     * @return The previous used height
+     * @param stretch The new stretch
+     * @return The previous used stretch
      */
-    public float setHeight(float height) {
-        if (height < 0) {
-            throw new IllegalArgumentException("Height cannot be negative");
+    public float setStretch(float stretch) {
+        if (stretch < 0) {
+            throw new IllegalArgumentException("stretch cannot be negative");
         }
-        float prevHeight = this.height;
-        this.height = height;
+        float prevHeight = this.stretch;
+        this.stretch = stretch;
         return prevHeight;
     }
 
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
-        float stepHeight = this.height / this.amount;
+        float stepHeight = this.stretch / this.amount;
         float stepAngle = (float) Math.TAU / 1.618033f;
         for (int i = 0; i < this.amount; i++) {
             float angle = i * stepAngle;
@@ -140,7 +140,7 @@ public class ParticleEllipse extends ParticleObject {
             );
             angle = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, angle);
             float x = (float) (this.radius * Math.cos(angle));
-            float y = (float) (this.height * Math.sin(angle));
+            float y = (float) (this.stretch * Math.sin(angle));
             Vector3f finalPosVec = new Vector3f(x, y, 0)
                     .rotateZ(this.rotation.z)
                     .rotateY(this.rotation.y)
