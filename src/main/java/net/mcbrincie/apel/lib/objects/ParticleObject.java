@@ -157,11 +157,19 @@ public abstract class ParticleObject {
     public void endDraw(ApelRenderer renderer, int step, Vector3f drawPos) {}
 
     protected Vector3f rigidTransformation(ApelRenderer renderer, Vector3f rotation, Vector3f offset, float x, float y, float z) {
-        return renderer.rigidTranslation(rotation, offset, x, y, z);
+        return new Vector3f(x, y, z)
+                .rotateZ(rotation.z)
+                .rotateY(rotation.y)
+                .rotateX(rotation.x)
+                .add(offset);
     }
 
     protected Vector3f rigidTransformation(ApelRenderer renderer, Vector3f rotation, Vector3f offset, Vector3f position) {
-        return renderer.rigidTranslation(rotation, offset, position.x, position.y, position.z);
+        return new Vector3f(position)
+                .rotateZ(rotation.z)
+                .rotateY(rotation.y)
+                .rotateX(rotation.x)
+                .add(offset);
     }
 
     protected void drawParticle(ApelRenderer renderer, int step, Vector3f drawPos) {
