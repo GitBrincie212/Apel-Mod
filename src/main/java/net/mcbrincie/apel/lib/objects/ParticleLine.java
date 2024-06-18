@@ -5,8 +5,6 @@ import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -20,8 +18,6 @@ import java.util.Optional;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleLine extends ParticleObject {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     protected Vector3f start;
     protected Vector3f end;
 
