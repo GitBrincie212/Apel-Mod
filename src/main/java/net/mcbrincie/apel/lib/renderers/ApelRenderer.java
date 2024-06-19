@@ -80,7 +80,7 @@ public interface ApelRenderer {
      *
      * @param particleEffect The ParticleEffect to use
      * @param step The current animation step
-     * @param drawPos The position of the center of the sphere
+     * @param drawPos The center position of the sphere
      * @param radius The radius of the sphere
      * @param rotation The rotation of the sphere; this is not terribly useful, but it can be used for
      *         interesting effect, if the number of particles in the sphere changes over time.
@@ -94,7 +94,7 @@ public interface ApelRenderer {
         for (int i = 0; i < amount; i++) {
             // Offset into the real-number distribution
             float k = i + .5f;
-            // Project point on unit sphere
+            // Project point on a unit sphere
             double phi = Math.acos(1f - ((2f * k) / amount));
             double theta = Math.PI * k * sqrt5Plus1;
             double sinPhi = Math.sin(phi);
