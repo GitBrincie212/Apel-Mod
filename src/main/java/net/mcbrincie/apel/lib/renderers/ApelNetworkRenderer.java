@@ -38,6 +38,18 @@ public class ApelNetworkRenderer implements ApelRenderer {
     }
 
     @Override
+    public void drawEllipse(ParticleEffect particleEffect,
+                            int step,
+                            Vector3f center,
+                            float radius,
+                            float stretch,
+                            Vector3f rotation,
+                            int amount) {
+        this.detectParticleTypeChange(particleEffect);
+        this.instructions.add(new Ellipse(center, radius, stretch, rotation, amount));
+    }
+
+    @Override
     public void beforeFrame(int step, Vector3f frameOrigin) {
         ApelRenderer.super.beforeFrame(step, frameOrigin);
         this.instructions.add(new Frame(frameOrigin));
@@ -131,6 +143,32 @@ public class ApelNetworkRenderer implements ApelRenderer {
             buf.writeFloat(end.x);
             buf.writeFloat(end.y);
             buf.writeFloat(end.z);
+            buf.writeShort(amount);
+        }
+    }
+
+    public record Ellipse(Vector3f center, float radius, float stretch, Vector3f rotation, int amount)
+            implements Instruction {
+
+        static Ellipse from(RegistryByteBuf buf) {
+            return new Ellipse(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                               buf.readFloat(),
+                               buf.readFloat(),
+                               new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                               buf.readShort());
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('E');
+            buf.writeFloat(center.x);
+            buf.writeFloat(center.y);
+            buf.writeFloat(center.z);
+            buf.writeFloat(radius);
+            buf.writeFloat(stretch);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
             buf.writeShort(amount);
         }
     }

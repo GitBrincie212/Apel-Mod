@@ -6,6 +6,8 @@ import net.mcbrincie.apel.lib.renderers.ApelFramePayload;
 import net.mcbrincie.apel.lib.renderers.ApelNetworkRenderer;
 import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.particle.ParticleEffect;
+import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 public class ApelClient implements ClientModInitializer {
@@ -39,9 +41,22 @@ public class ApelClient implements ClientModInitializer {
                                 curr.add(stepX, stepY, stepZ);
                             }
                         }
+
+                        case ApelNetworkRenderer.Ellipse(
+                                Vector3f center, float radius, float stretch, Vector3f rotation, int amount
+                        ) -> {
+                            float angleInterval = (float) Math.TAU / (float) amount;
+                            Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+                            for (int i = 0; i < amount; i++) {
+                                double currRot = angleInterval * i;
+                                float x = (float) Math.cos(currRot) * radius;
+                                float y = (float) Math.sin(currRot) * stretch;
+                                Vector3f pos = new Vector3f(x, y, 0).rotate(quaternion).add(center);
+                                drawParticle(particleManager, particleEffect, pos);
+                            }
+                        }
                     }
                 }
-
             });
         }));
     }
