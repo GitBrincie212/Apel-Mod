@@ -129,13 +129,13 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     */
     @SafeVarargs
     public ParticleCombiner(T... objects) {
-        super(ParticleTypes.SCRAPE); // We do not care about the particle
+        super((ParticleEffect) null); // We do not care about the particle
         this.particleEffect = null;
         this.setObjects(objects);
     }
 
     public ParticleCombiner() {
-        super(ParticleTypes.SCRAPE); // We do not care about the particle
+        super((ParticleEffect) null); // We do not care about the particle
         this.particleEffect = null;
     }
 
