@@ -12,7 +12,9 @@ import java.util.Optional;
 
 /** The particle object class that represents a circle(2D shape) and not a 3D sphere.
  * It has a radius which dictates how large or small the circle is depending on the
- * radius value supplied
+ * radius value supplied.  The circle is drawn in the XY-plane by default, but can
+ * be drawn in any plane by using {@link #setRotation(Vector3f)} to provide Euler
+ * angles for rotation.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCircle extends ParticleObject {
@@ -20,15 +22,11 @@ public class ParticleCircle extends ParticleObject {
     private DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
-    /** This data is used before calculations (it contains the iterated rotation) */
-    public enum BeforeDrawData {
-        ITERATED_ROTATION
-    }
+    /** This data is used before calculations(it contains the iterated rotation) */
+    public enum BeforeDrawData {}
 
-    /** This data is used after calculations (it contains the drawing position) */
-    public enum AfterDrawData {
-        DRAW_POSITION
-    }
+    /** This data is used after calculations(it contains the drawing position) */
+    public enum AfterDrawData {}
 
     /** Constructor for the particle circle which is a 2D shape. It accepts as parameters
      * the particle effect to use, the radius of the circle, the rotation to apply & the number of particles.
@@ -102,14 +100,10 @@ public class ParticleCircle extends ParticleObject {
 
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
-        float angleInterval = 360 / (float) this.amount;
-        for (int i = 0; i < this.amount; i++) {
-            float currRot = angleInterval * i;
-            InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getWorld(), step, drawPos, currRot);
-            currRot = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, currRot);
-            Vector3f finalPosVec = this.drawEllipsePoint(renderer, this.radius, this.radius, currRot, drawPos, step);
-            this.doAfterDraw(renderer.getWorld(), step, finalPosVec, drawPos);
-        }
+        this.doBeforeDraw(renderer.getWorld(), step, drawPos);
+        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        this.drawCircle(renderer, step, objectDrawPos, this.radius, this.rotation, this.amount);
+        this.doAfterDraw(renderer.getWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
     }
 
@@ -124,9 +118,8 @@ public class ParticleCircle extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private void doAfterDraw(ServerWorld world, int step, Vector3f drawPos, Vector3f centerPos) {
+    private void doAfterDraw(ServerWorld world, int step, Vector3f centerPos) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, centerPos, step, AfterDrawData.class);
-        interceptData.addMetadata(AfterDrawData.DRAW_POSITION, drawPos);
         this.afterDraw.apply(interceptData, this);
     }
 
@@ -141,10 +134,8 @@ public class ParticleCircle extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, int step, Vector3f pos, double currRot) {
+    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        interceptData.addMetadata(BeforeDrawData.ITERATED_ROTATION, currRot);
         this.beforeDraw.apply(interceptData, this);
-        return interceptData;
     }
 }

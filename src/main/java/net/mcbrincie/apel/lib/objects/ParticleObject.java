@@ -172,12 +172,27 @@ public abstract class ParticleObject {
                 .add(offset);
     }
 
+    /**
+     * Draws a particle at {@code drawPos} using the object's existing {@code particleEffect}.
+     *
+     * @param renderer The server world instance
+     * @param step     The step being rendered
+     * @param drawPos  The position at which to draw the particle
+     */
     protected void drawParticle(ApelRenderer renderer, int step, Vector3f drawPos) {
         this.drawParticle(this.particleEffect, renderer, step, drawPos);
     }
 
-    protected void drawParticle(ParticleEffect particle, ApelRenderer renderer, int step, Vector3f drawPos) {
-        renderer.drawParticle(particle, step, drawPos);
+    /**
+     * Draws a particle at {@code drawPos} using the given {@code particleEffect}.
+     *
+     * @param particleEffect The particle effect to use
+     * @param renderer       The server world instance
+     * @param step           The step being rendered
+     * @param drawPos        The position at which to draw the particle
+     */
+    protected void drawParticle(ParticleEffect particleEffect, ApelRenderer renderer, int step, Vector3f drawPos) {
+        renderer.drawParticle(particleEffect, step, drawPos);
     }
 
     /**
@@ -187,6 +202,7 @@ public abstract class ParticleObject {
      * @param renderer The server world instance
      * @param start    The start point of the line
      * @param end      The end point of the line
+     * @param step     The step being rendered
      * @param amount   The number of particles in the line must be greater than 1.
      *
      * @throws ArithmeticException if amount == 1
@@ -225,5 +241,33 @@ public abstract class ParticleObject {
         return renderer.drawEllipsePoint(
                 this.particleEffect, r, h, angle, this.rotation, new Vector3f(center).add(this.offset), step
         );
+    }
+
+    /**
+     * Draws a circle of {@code amount} particles at {@code drawPos} with {@code radius} and {@code rotation} applied.
+     *
+     * @param renderer The renderer to use
+     * @param step     The step being rendered
+     * @param drawPos  The point at the center of the circle
+     * @param radius   The radius of the circle
+     * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
+     * @param amount   The amount of particles to use to draw the circle
+     */
+    protected void drawCircle(ApelRenderer renderer, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount) {
+        renderer.drawEllipse(this.particleEffect, step, drawPos, radius, radius, rotation, amount);
+    }
+
+    /**
+     * Draws a circle of {@code amount} particles at {@code drawPos} with {@code radius} and {@code rotation} applied.
+     *
+     * @param renderer The renderer to use
+     * @param step     The step being rendered
+     * @param drawPos  The point at the center of the circle
+     * @param radius   The radius of the circle
+     * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
+     * @param amount   The amount of particles to use to draw the circle
+     */
+    protected void drawEllipse(ApelRenderer renderer, int step, Vector3f drawPos, float radius, float stretch, Vector3f rotation, int amount) {
+        renderer.drawEllipse(this.particleEffect, step, drawPos, radius, stretch, rotation, amount);
     }
 }
