@@ -19,7 +19,7 @@ import java.util.List;
  * versatile compared to the other easier ones
  */
 @SuppressWarnings("unused")
-public class ParallelAnimator extends PathAnimatorBase {
+public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimator<PathAnimatorBase> {
     protected List<PathAnimatorBase> animators = new ArrayList<>();
     protected List<Integer> delays = new ArrayList<>();
 
@@ -31,7 +31,9 @@ public class ParallelAnimator extends PathAnimatorBase {
      * @param pathAnimators The path animators to append
      */
     public ParallelAnimator(int delay, PathAnimatorBase... pathAnimators) {
-        super(delay, null, pathAnimators.length);
+        super();
+        this.renderingSteps = pathAnimators.length;
+        this.setDelay(delay);
         if (pathAnimators.length == 0) {
             throw new IllegalArgumentException("There must be at least one path animator");
         }
@@ -46,7 +48,9 @@ public class ParallelAnimator extends PathAnimatorBase {
      * @param pathAnimators The path animators to append
     */
     public ParallelAnimator(int delay, List<PathAnimatorBase> pathAnimators) {
-        super(delay, null, pathAnimators.size());
+        super();
+        this.renderingSteps = pathAnimators.size();
+        this.setDelay(delay);
         if (pathAnimators.isEmpty()) {
             throw new IllegalArgumentException("There must be at least one path animator");
         }
@@ -61,8 +65,9 @@ public class ParallelAnimator extends PathAnimatorBase {
      * @param pathAnimators The path animators to append
      */
     public ParallelAnimator(List<Integer> delay, List<PathAnimatorBase> pathAnimators) {
-        super(0, null, pathAnimators.size());
+        super();
         this.delay = -1;
+        this.renderingSteps = pathAnimators.size();
         if (pathAnimators.isEmpty()) {
             throw new IllegalArgumentException("There must be at least one path animator");
         }
@@ -82,8 +87,9 @@ public class ParallelAnimator extends PathAnimatorBase {
      * @param pathAnimators The path animators to append
      */
     public ParallelAnimator(List<Integer> delay, PathAnimatorBase... pathAnimators) {
-        super(0, null, pathAnimators.length);
+        super();
         this.delay = -1;
+        this.renderingSteps = pathAnimators.length;
         if (pathAnimators.length == 0) {
             throw new IllegalArgumentException("There must be at least one path animator");
         }
@@ -99,6 +105,7 @@ public class ParallelAnimator extends PathAnimatorBase {
      *
      * @param animator The path animator to append
     */
+    @Override
     public void addAnimatorPath(PathAnimatorBase animator) {
         this.animators.add(animator);
     }
@@ -108,8 +115,19 @@ public class ParallelAnimator extends PathAnimatorBase {
      *
      * @param animator The path animator to remove
     */
+    @Override
     public void removeAnimatorPath(PathAnimatorBase animator) {
         this.animators.remove(animator);
+    }
+
+    @Override
+    public List<PathAnimatorBase> getPathAnimators() {
+        return this.animators;
+    }
+
+    @Override
+    public PathAnimatorBase getPathAnimator(int index) {
+        return this.animators.get(index);
     }
 
     /** This method is DEPRECATED and SHOULD NOT BE USED */
