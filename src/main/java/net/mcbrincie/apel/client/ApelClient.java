@@ -55,6 +55,28 @@ public class ApelClient implements ClientModInitializer {
                                 drawParticle(particleManager, particleEffect, pos);
                             }
                         }
+                        case ApelNetworkRenderer.Ellipsoid(
+                                Vector3f drawPos, float radius, float stretch1, float stretch2, Vector3f rotation,
+                                int amount
+                        ) -> {
+                            final double sqrt5Plus1 = 3.23606;
+                            Vector3f scale = new Vector3f(radius, stretch1, stretch2);
+                            Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+                            for (int i = 0; i < amount; i++) {
+                                // Offset into the real-number distribution
+                                float k = i + .5f;
+                                // Project point on unit sphere
+                                double phi = Math.acos(1f - ((2f * k) / amount));
+                                double theta = Math.PI * k * sqrt5Plus1;
+                                double sinPhi = Math.sin(phi);
+                                float x = (float) (Math.cos(theta) * sinPhi);
+                                float y = (float) (Math.sin(theta) * sinPhi);
+                                float z = (float) Math.cos(phi);
+                                // Scale, rotate, translate
+                                Vector3f pos = new Vector3f(x, y, z).mul(scale).rotate(quaternion).add(drawPos);
+                                drawParticle(particleManager, particleEffect, pos);
+                            }
+                        }
                     }
                 }
             });

@@ -30,6 +30,7 @@ public record ApelFramePayload(List<ApelNetworkRenderer.Instruction> instruction
                 case 'L' -> instructions.add(ApelNetworkRenderer.Line.from(buf));
                 case 'P' -> instructions.add(ApelNetworkRenderer.Particle.from(buf));
                 case 'E' -> instructions.add(ApelNetworkRenderer.Ellipse.from(buf));
+                case 'S' -> instructions.add(ApelNetworkRenderer.Ellipsoid.from(buf));
             }
         }
         return instructions;

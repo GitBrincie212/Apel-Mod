@@ -38,6 +38,17 @@ public class ApelNetworkRenderer implements ApelRenderer {
     }
 
     @Override
+    public void drawSphere(ParticleEffect particleEffect,
+                           int step,
+                           Vector3f drawPos,
+                           float radius,
+                           Vector3f rotation,
+                           int amount) {
+        this.detectParticleTypeChange(particleEffect);
+        this.instructions.add(new Ellipsoid(drawPos, radius, radius, radius, rotation, amount));
+    }
+
+    @Override
     public void drawEllipse(ParticleEffect particleEffect,
                             int step,
                             Vector3f center,
@@ -166,6 +177,34 @@ public class ApelNetworkRenderer implements ApelRenderer {
             buf.writeFloat(center.z);
             buf.writeFloat(radius);
             buf.writeFloat(stretch);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+    }
+
+    public record Ellipsoid(Vector3f drawPos, float radius, float stretch1, float stretch2, Vector3f rotation,
+                            int amount) implements Instruction {
+
+        static Ellipsoid from(RegistryByteBuf buf) {
+            return new Ellipsoid(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                                 buf.readFloat(),
+                                 buf.readFloat(),
+                                 buf.readFloat(),
+                                 new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                                 buf.readShort());
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('S');
+            buf.writeFloat(drawPos.x);
+            buf.writeFloat(drawPos.y);
+            buf.writeFloat(drawPos.z);
+            buf.writeFloat(radius);
+            buf.writeFloat(stretch1);
+            buf.writeFloat(stretch2);
             buf.writeFloat(rotation.x);
             buf.writeFloat(rotation.y);
             buf.writeFloat(rotation.z);
