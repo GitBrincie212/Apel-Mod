@@ -50,6 +50,10 @@ public abstract class PathAnimatorBase {
         this.setRenderSteps(renderingSteps);
     }
 
+    /** This is an empty constructor meant as a placeholder */
+    public PathAnimatorBase() {
+    }
+
     /**
      * Constructor for the path animator. This constructor is meant to be used when you want a
      * consistent amount of rendering steps no matter the distance. It is worth pointing out that
