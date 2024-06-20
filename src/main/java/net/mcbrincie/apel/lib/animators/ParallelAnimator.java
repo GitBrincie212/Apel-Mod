@@ -9,6 +9,7 @@ import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 
@@ -154,6 +155,15 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
     @Override
     public int convertToSteps() {
         return this.animators.size();
+    }
+
+    @Override
+    protected int calculateDuration() {
+        int delay = (this.delay != -1) ? this.delay : this.delays.parallelStream().reduce(0, Integer::sum);
+        return delay + this.animators.parallelStream()
+                .map(PathAnimatorBase::calculateDuration)
+                .max(Comparator.naturalOrder())
+                .orElse(0);
     }
 
     @Override

@@ -168,32 +168,23 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
         }
     }
 
-    protected int calculateDelay(PathAnimatorBase animator) {
-        // TODO: Add a method that allows for the method "calculateDelay" to the tree path animator interface
-        if (!(animator instanceof TreePathAnimator<?> treePathAnimator)) {
-            int steps = animator.getRenderSteps();
-            int speed = animator.getProcessingSpeed();
-            return animator.delay * ((steps == 0 ? animator.convertToSteps() : steps) / speed);
-        } else if (animator instanceof SequentialAnimator sequentialAnimator) {
-            int index = 0;
-            int delaySum = 0;
-            int seqDelay = ((sequentialAnimator.delay == -1) ? sequentialAnimator.delays.get(index) : animator.delay);
-            for (PathAnimatorBase animatorChild : sequentialAnimator.getPathAnimators()) {
-                delaySum += seqDelay + calculateDelay(animatorChild);
-            }
-            return delaySum;
+    @Override
+    protected int calculateDuration() {
+        int index = 0;
+        int delaySum = 0;
+        for (PathAnimatorBase animatorChild : this.animators) {
+            int seqDelay = ((this.delay == -1) ? this.delays.get(index) : this.delay);
+            delaySum += seqDelay + animatorChild.calculateDuration();
+            System.out.println(delaySum);
+            index++;
         }
-        int delayCalc = 0;
-        for (PathAnimatorBase animatorBase : treePathAnimator.getPathAnimators()) {
-            delayCalc += calculateDelay(animatorBase);
-        }
-        return delayCalc;
+        return delaySum;
     }
 
     protected void allocateNewAnimator(ApelRenderer renderer, int step, PathAnimatorBase animator, PathAnimatorBase prev) {
         Runnable func = () -> animator.beginAnimation(renderer);
         int childDelay = 0;
-        if (prev != null) childDelay = this.calculateDelay(prev);
+        if (prev != null) childDelay = prev.calculateDuration();
         int delayUsed = childDelay + ((this.delay == -1) ? this.delays.get(step - 1) : this.delay);
         if (delayUsed == 0) {
             Apel.drawThread.submit(func);

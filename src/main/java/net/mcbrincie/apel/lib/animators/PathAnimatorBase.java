@@ -298,6 +298,16 @@ public abstract class PathAnimatorBase {
      */
     public abstract void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException;
 
+    /** Calculates the total delay for the path animator
+     *
+     * @return The delay as an integer
+     */
+    protected int calculateDuration() {
+        int steps = this.getRenderSteps();
+        int speed = this.getProcessingSpeed();
+        return this.delay * ((steps == 0 ? this.convertToSteps() : steps) / speed);
+    };
+
     /**
      * This method is used for drawing the object. It does more than just drawing, primarily scheduling
      *
