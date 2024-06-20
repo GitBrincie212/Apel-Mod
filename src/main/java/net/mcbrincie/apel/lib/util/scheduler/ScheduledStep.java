@@ -1,11 +1,24 @@
 package net.mcbrincie.apel.lib.util.scheduler;
 
-public class ScheduledStep {
-    public Runnable[] func;
-    public int delay;
+import net.mcbrincie.apel.Apel;
 
-    public ScheduledStep(Integer delay, Runnable[] func) {
+public class ScheduledStep {
+    private final Runnable[] actions;
+    private int delay;
+
+    public ScheduledStep(Integer delay, Runnable[] actions) {
         this.delay = delay;
-        this.func = func;
+        this.actions = actions;
+    }
+
+    public boolean tick() {
+        this.delay--;
+        if (this.delay == 0) {
+            for (Runnable action : this.actions) {
+                Apel.drawThread.submit(action);
+            }
+            return true;
+        }
+        return false;
     }
 }

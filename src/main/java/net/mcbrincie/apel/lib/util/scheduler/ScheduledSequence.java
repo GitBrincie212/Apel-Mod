@@ -5,7 +5,7 @@ import java.util.Queue;
 
 public class ScheduledSequence {
     private final Queue<ScheduledStep> scheduledSteps;
-    public boolean hasAllocatedOnce = false;
+    private boolean hasAllocatedOnce = false;
 
     public ScheduledSequence() {
         this.scheduledSteps = new LinkedList<>();
@@ -16,15 +16,23 @@ public class ScheduledSequence {
         this.scheduledSteps.add(step);
     }
 
-    public void deallocateStep() {
-        this.scheduledSteps.remove();
-    }
-
     public boolean isEmpty() {
         return this.scheduledSteps.isEmpty();
     }
 
-    public ScheduledStep first() {
-        return this.scheduledSteps.peek();
+    public boolean isFinished() {
+        return isEmpty() && this.hasAllocatedOnce;
+    }
+
+    public boolean tick() {
+        ScheduledStep firstStep = this.scheduledSteps.peek();
+        if (firstStep == null) {
+            return false;
+        }
+        boolean stepExecuted = firstStep.tick();
+        if (stepExecuted) {
+            this.scheduledSteps.remove();
+        }
+        return stepExecuted;
     }
 }
