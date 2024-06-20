@@ -2,6 +2,8 @@ package net.mcbrincie.apel.lib.util.math.bezier;
 
 import org.joml.Vector3f;
 
+import java.util.List;
+
 /** The linear bézier curve is the simplest of all bézier curves since it is a line.
  * It has no control points and is fast to compute (if you plan to use a lot of linear
  * bézier curves for the bézier path animator, then it is best to use the linear animator
@@ -19,6 +21,11 @@ public class LinearBezierCurve extends BezierCurve {
      */
     public LinearBezierCurve(Vector3f start, Vector3f end) {
         super(start, end);
+    }
+
+    @Override
+    public List<Vector3f> getControlPoints() {
+        return List.of();
     }
 
     @Override

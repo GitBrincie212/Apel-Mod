@@ -2,6 +2,8 @@ package net.mcbrincie.apel.lib.util.math.bezier;
 
 import org.joml.Vector3f;
 
+import java.util.List;
+
 /** The quadratic bézier curve which is a bit more advanced curve that has only one control point
  * and allows for control over how the curve bends, although not as much control as the cubic one.
  * It still allows for flexible behavior, and is one of the most popular choices among graphics
@@ -22,6 +24,11 @@ public class QuadraticBezierCurve extends BezierCurve {
     public QuadraticBezierCurve(Vector3f start, Vector3f end, Vector3f controlPoint) {
         super(start, end);
         this.controlPoint = controlPoint;
+    }
+
+    @Override
+    public List<Vector3f> getControlPoints() {
+        return List.of(this.controlPoint);
     }
 
     @Override
