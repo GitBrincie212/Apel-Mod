@@ -179,6 +179,10 @@ ApelRenderer renderer = ApelRenderer.client(world);
 linearAnimator.beginAnimation(renderer);
 ```
 
+
+https://github.com/GitBrincie212/Apel-Mod/assets/92397968/eb473bde-93ea-47ad-af65-f45b57c60153
+
+
 In the second example,
 we define a particle line which has a starting and an ending position which are represented as
 offsets to the draw position (for example, on the draw position of [5, 0, 0] the starting position
