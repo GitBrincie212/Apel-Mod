@@ -1,6 +1,8 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.util.TrigTable;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Vector3f;
 
@@ -10,6 +12,8 @@ public abstract class ParticleObject {
     protected Vector3f rotation;
     protected Vector3f offset = new Vector3f(0, 0, 0);
     protected int amount = 1;
+
+    protected static TrigTable trigTable = Apel.trigonometryTable;
 
     /** Constructor for the particle object which is a point. It accepts as parameters
      * the particle to use and the rotation to apply (which has no effect. Only on the
@@ -216,7 +220,7 @@ public abstract class ParticleObject {
      *
      * @param renderer The renderer to use
      * @param step The current animation step
-     * @param drawPos The position of the center of the sphere
+     * @param drawPos The center position of the sphere
      * @param radius The radius of the sphere
      * @param rotation The rotation of the sphere; this is not terribly useful, but it can be used for
      *         interesting effect, if the number of particles in the sphere changes over time.
@@ -251,7 +255,7 @@ public abstract class ParticleObject {
      * @param drawPos  The point at the center of the circle
      * @param radius   The radius of the circle
      * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
-     * @param amount   The amount of particles to use to draw the circle
+     * @param amount   The number of particles to use to draw the circle
      */
     protected void drawCircle(ApelRenderer renderer, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount) {
         renderer.drawEllipse(this.particleEffect, step, drawPos, radius, radius, rotation, amount);
@@ -265,7 +269,7 @@ public abstract class ParticleObject {
      * @param drawPos  The point at the center of the circle
      * @param radius   The radius of the circle
      * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
-     * @param amount   The amount of particles to use to draw the circle
+     * @param amount   The number of particles to use to draw the circle
      */
     protected void drawEllipse(ApelRenderer renderer, int step, Vector3f drawPos, float radius, float stretch, Vector3f rotation, int amount) {
         renderer.drawEllipse(this.particleEffect, step, drawPos, radius, stretch, rotation, amount);

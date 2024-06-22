@@ -1,5 +1,7 @@
 package net.mcbrincie.apel.lib.renderers;
 
+import net.mcbrincie.apel.Apel;
+import net.mcbrincie.apel.lib.util.TrigTable;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaternionf;
@@ -29,10 +31,11 @@ import org.joml.Vector3f;
  */
 @SuppressWarnings("unused")
 public interface ApelRenderer {
+    TrigTable trigTable = Apel.trigonometryTable;
+
     static ApelRenderer create(ServerWorld world) {
         return new DefaultApelRenderer(world);
     }
-
     static ApelRenderer client(ServerWorld world) {
         return new ApelNetworkRenderer(world);
     }
@@ -95,12 +98,12 @@ public interface ApelRenderer {
             // Offset into the real-number distribution
             float k = i + .5f;
             // Project point on a unit sphere
-            double phi = Math.acos(1f - ((2f * k) / amount));
-            double theta = Math.PI * k * sqrt5Plus1;
-            double sinPhi = Math.sin(phi);
-            float x = (float) (Math.cos(theta) * sinPhi);
-            float y = (float) (Math.sin(theta) * sinPhi);
-            float z = (float) Math.cos(phi);
+            float phi = trigTable.getArcCosine(1f - ((2f * k) / amount));
+            float theta = (float) (Math.PI * k * sqrt5Plus1);
+            float sinPhi = trigTable.getSine(phi);
+            float x = (trigTable.getCosine(theta) * sinPhi);
+            float y = (trigTable.getSine(theta) * sinPhi);
+            float z = trigTable.getCosine(phi);
             // Scale, rotate, translate
             Vector3f pos = new Vector3f(x, y, z).mul(radius).rotate(quaternion).add(drawPos);
             drawParticle(particleEffect, step, pos);
@@ -109,8 +112,8 @@ public interface ApelRenderer {
     }
 
     default Vector3f drawEllipsePoint(ParticleEffect particleEffect, float r, float h, float angle, Vector3f rotation, Vector3f center, int step) {
-        float x = (float) (r * Math.cos(angle));
-        float y = (float) (h * Math.sin(angle));
+        float x = (r * trigTable.getCosine(angle));
+        float y = (h * trigTable.getSine(angle));
         Vector3f finalPosVec = new Vector3f(x, y, 0)
                 .rotateZ(rotation.z)
                 .rotateY(rotation.y)
@@ -130,15 +133,15 @@ public interface ApelRenderer {
      * @param radius The radius of the ellipse
      * @param stretch The stretch of the ellipse
      * @param rotation Rotation applied to the ellipse (to change the plane in which it's drawn)
-     * @param amount The amount of particles to use to draw the ellipse
+     * @param amount The number of particles to use to draw the ellipse
      */
     default void drawEllipse(ParticleEffect particleEffect, int step, Vector3f center, float radius, float stretch, Vector3f rotation, int amount) {
         float angleInterval = (float) Math.TAU / (float) amount;
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (int i = 0; i < amount; i++) {
-            double currRot = angleInterval * i;
-            float x = (float) Math.cos(currRot) * radius;
-            float y = (float) Math.sin(currRot) * stretch;
+            float currRot = angleInterval * i;
+            float x = trigTable.getCosine(currRot) * radius;
+            float y = trigTable.getSine(currRot) * stretch;
             Vector3f pos = new Vector3f(x, y, 0).rotate(quaternion).add(center);
             drawParticle(particleEffect, step, pos);
         }

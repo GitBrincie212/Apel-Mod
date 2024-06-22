@@ -138,9 +138,9 @@ public class ParticleCylinder extends ParticleObject {
                     renderer.getWorld(), step, drawPos, angle
             );
             angle = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, angle);
-            float x = (float) (this.radius * Math.cos(angle));
+            float x = this.radius * trigTable.getCosine(angle);
             float y = stepHeight * i;
-            float z = (float) (this.radius * Math.sin(angle));
+            float z = this.radius * trigTable.getSine(angle);
             Vector3f finalPosVec = this.rigidTransformation(
                     renderer, this.rotation, new Vector3f(drawPos).add(this.offset), x, y, z
             );

@@ -11,9 +11,9 @@ import org.joml.Vector3f;
 
 import java.util.Optional;
 
-/** The particle object class that represents a 3D cone. It requires a tip offset which
- * is where the tip of the cone will be, and this offset measures its size. It also accepts
- * rotation which is done to the tip of the cone
+/** The particle object class that represents a 3D shape(a cone).
+ * It requires a height value which dictates how tall the cone is as well as
+ * the maximum radius, it also accepts rotation for the cone
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCone extends ParticleObject {
@@ -27,11 +27,13 @@ public class ParticleCone extends ParticleObject {
     public enum AfterDrawData {}
 
     /** Constructor for the particle cone which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the height of the cone, the rotation to apply and the
-     * number of particles. There is also a simplified constructor for no rotation
+     * the particle effect to use, the height of the cone, the maximum radius,
+     * the rotation to apply and the number of particles.
+     * There is also a simplified constructor for no rotation
      *
      * @param particleEffect The particle effect to use
      * @param height The height of the cone
+     * @param radius The radius of the cone
      * @param rotation The rotation to apply
      * @param amount The number of particles
      *
@@ -46,11 +48,13 @@ public class ParticleCone extends ParticleObject {
     }
 
     /** Constructor for the particle cone which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the height of the cone, the rotation to apply and the
-     * number of particles. There is also a more complex version for rotation
+     * the particle effect to use, the height of the cone, the maximum radius,
+     * the rotation to apply and the number of particles.
+     * There is also a more complex version for rotation
      *
      * @param particleEffect The particle effect to use
      * @param height The height of the cone
+     * @param radius The radius of the cone
      * @param amount The number of particles
      *
      * @see ParticleCone#ParticleCone(ParticleEffect, float, float, Vector3f, int)
@@ -86,24 +90,24 @@ public class ParticleCone extends ParticleObject {
         return prevHeight;
     }
 
-    /** Gets the height
+    /** Gets the height of the cone
      *
-     * @return The height
+     * @return The height of the cone
      */
     public float getHeight() {return this.height;}
 
-    /** Gets the radius of the cone and returns it.
+    /** Gets the maximum radius of the cone and returns it.
      *
-     * @return the radius of the cone
+     * @return the maximum radius of the cone
      */
     public float getRadius() {
         return radius;
     }
 
-    /** Set the radius of this cone and returns the previous radius that was used.
+    /** Set the maximum radius of this cone and returns the previous maximum radius that was used.
      *
-     * @param radius the new radius
-     * @return the previously used cone
+     * @param radius the new maximum radius
+     * @return the previously used maximum radius
      */
     public float setRadius(float radius) {
         if (radius < 0) {
@@ -127,14 +131,17 @@ public class ParticleCone extends ParticleObject {
             // Offset into the real-number distribution
             float k = i + .5f;
             // Project point on a unit sphere
-            double phi = Math.acos(1f - ((2f * k) / this.amount));
-            double theta = Math.PI * k * sqrt5Plus1;
-            double sinPhi = Math.sin(phi);
-            float x = (float) (Math.cos(theta) * sinPhi);
-            float z = (float) (Math.sin(theta) * sinPhi);
+            float phi = trigTable.getArcCosine(1f - ((2f * k) / this.amount));
+            float theta = (float) (Math.PI * k * sqrt5Plus1);
+            double sinPhi = trigTable.getSine(phi);
+            float x = (float) (trigTable.getCosine(theta) * sinPhi);
+            float z = (float) (trigTable.getSine(theta) * sinPhi);
             float y = (x * x + z * z) * this.height;
             // Scale, rotate, translate
-            Vector3f pos = new Vector3f(x * this.radius, y, z * this.radius).rotate(quaternion).add(drawPos);
+            Vector3f pos = new Vector3f(x * this.radius, y, z * this.radius)
+                    .rotate(quaternion)
+                    .add(drawPos)
+                    .add(this.offset);
             renderer.drawParticle(this.particleEffect, step, pos);
         }
         this.doAfterDraw(renderer.getWorld(), step);
