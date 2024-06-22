@@ -143,13 +143,12 @@ This in minecraft translates into visually:<br>
 
 https://github.com/GitBrincie212/Apel-Mod/assets/92397968/8e4f3a9c-547c-4ff8-8ade-63abd7fb7f86
 
-
 In this code snippet we can clearly see that we define a particle object, and we define a path animator which contains
-the `point` particle object.
-We then create a renderer which is rendered as server-side in our case (we can use
+the `point` particle object. We then create a renderer which is rendered as server-side in our case (we can use
 client rendering which produces the same thing but does the rendering on the client).
 Then we begin animation and supply the renderer to the animation which begins the animation
 and displays a point (with that this explanation is done).
+
 ---
 ## Example 2
 ```java
@@ -178,6 +177,7 @@ linearAnimator.setTrimming(trimming);
 ApelRenderer renderer = ApelRenderer.client(world);
 linearAnimator.beginAnimation(renderer);
 ```
+This in minecraft translates into visually:<br>
 
 
 https://github.com/GitBrincie212/Apel-Mod/assets/92397968/eb473bde-93ea-47ad-af65-f45b57c60153
