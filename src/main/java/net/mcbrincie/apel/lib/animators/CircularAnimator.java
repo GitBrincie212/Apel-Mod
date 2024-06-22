@@ -47,9 +47,9 @@ public class CircularAnimator extends PathAnimatorBase {
             @NotNull ParticleObject particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
-        this.radius = radius;
-        this.center = center;
-        this.rotation = rotation;
+        this.setRadius(radius);
+        this.setCenter(center);
+        this.rotate(rotation.x, rotation.y, rotation.z);
     }
 
     /**
@@ -71,9 +71,9 @@ public class CircularAnimator extends PathAnimatorBase {
             @NotNull ParticleObject particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
-        this.radius = radius;
-        this.center = center;
-        this.rotation = rotation;
+        this.setRadius(radius);
+        this.setCenter(center);
+        this.rotate(rotation.x, rotation.y, rotation.z);
     }
 
     /**
@@ -111,15 +111,46 @@ public class CircularAnimator extends PathAnimatorBase {
     }
 
     /** Sets the revolutions (looping around the circle)
-     * the animator can do around the circle when animating
+     * the animator can do around the shape when animating
      *
-     * @param revolutions The number of loops to do on a circle
+     * @param revolutions The number of loops to do on a shape
     */
     public void setRevolutions(int revolutions) {
         if (revolutions < 1) {
             throw new IllegalArgumentException("Revolutions cannot be below 1");
         }
         this.revolutions = revolutions;
+    }
+
+    /** Sets the center position
+     *
+     * @param center The new center position
+     */
+    public void setCenter(Vector3f center) {
+        this.center = center;
+    }
+
+    public Vector3f getCenter() {
+        return this.center;
+    }
+
+    /** Sets the radius
+     *
+     * @param radius The new radius
+     */
+    public void setRadius(float radius) {
+        if (radius <= 0) {
+            throw new IllegalArgumentException("Radius cannot be below or equal to 0");
+        }
+        this.radius = radius;
+    }
+
+    /** Gets the radius
+     *
+     * @return The radius
+     */
+    public float getRadius() {
+        return this.radius;
     }
 
     /** Sets the animation trimming which accepts a start trim or
@@ -207,7 +238,7 @@ public class CircularAnimator extends PathAnimatorBase {
                 );
             }
             currAngle += this.clockwise ? angleInterval : -angleInterval;
-            currAngle = (float) (currAngle % Math.TAU);
+            currAngle = (float) ((currAngle + Math.TAU) % Math.TAU);
             pos = this.calculatePoint(currAngle);
         }
 
@@ -219,10 +250,9 @@ public class CircularAnimator extends PathAnimatorBase {
     }
 
     private Vector3f calculatePoint(float currAngle) {
-        if (this.radius <= 0) throw new IllegalArgumentException("Radius cannot be negative or 0");
         Vector3f pos = new Vector3f(
                 this.radius * trigTable.getCosine(currAngle),
-                this.radius * trigTable.getSine((currAngle)),
+                this.radius * trigTable.getSine(currAngle),
                 0
         );
         pos = pos
