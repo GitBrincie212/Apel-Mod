@@ -7,6 +7,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.util.TrigTable;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -29,6 +30,8 @@ public abstract class PathAnimatorBase {
     protected ParticleObject particleObject;
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
+
+    protected static TrigTable trigTable = Apel.trigonometryTable;
 
     protected Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onEnd;
     protected Function5<Integer, Integer, Vector3f, Integer, Float, Void> onStart;
@@ -306,7 +309,7 @@ public abstract class PathAnimatorBase {
         int steps = this.getRenderSteps();
         int speed = this.getProcessingSpeed();
         return this.delay * ((steps == 0 ? this.convertToSteps() : steps) / speed);
-    };
+    }
 
     /**
      * This method is used for drawing the object. It does more than just drawing, primarily scheduling
