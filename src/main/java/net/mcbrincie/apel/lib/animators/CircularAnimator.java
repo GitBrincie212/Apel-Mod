@@ -220,10 +220,9 @@ public class CircularAnimator extends PathAnimatorBase {
 
     private Vector3f calculatePoint(float currAngle) {
         if (this.radius <= 0) throw new IllegalArgumentException("Radius cannot be negative or 0");
-
         Vector3f pos = new Vector3f(
-                (float) (this.radius * Math.cos(currAngle)),
-                (float) (this.radius * Math.sin(currAngle)),
+                this.radius * trigTable.getCosine(currAngle),
+                this.radius * trigTable.getSine((currAngle)),
                 0
         );
         pos = pos
