@@ -8,7 +8,6 @@ import net.minecraft.server.world.ServerWorld;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joml.Quaternionf;
-import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
@@ -35,8 +34,9 @@ public class ParticleRegularPolygon extends ParticleObject {
     /** There is no data being transmitted */
     public enum CommonData {}
 
-    /** Constructor for the particle quad which is a 2D Quadrilateral. It accepts as parameters
-     * the particle effect to use, the vertices coordinate, the number of particles & the rotation to apply.
+    /** Constructor for the particle polygon which is a 2D regular polygon(shape).
+     * It accepts as parameters the particle effect to use, the sides of the polygon,
+     * the size of the polygon, the number of particles & the rotation to apply.
      * There is also a simplified version for no rotation.
      *
      * @param particleEffect The particle to use
@@ -54,9 +54,10 @@ public class ParticleRegularPolygon extends ParticleObject {
         this.setAmount(amount);
     }
 
-    /** Constructor for the particle quad which is a 2D Quadrilateral. It accepts as parameters
-     * the particle to use, the vertices coordinate & the number of particles. There is also
-     * a constructor that allows supplying rotation
+    /** Constructor for the particle polygon which is a 2D regular polygon(shape).
+     * It accepts as parameters the particle effect to use, the sides of the polygon,
+     * the size of the polygon, the number of particles & the rotation to apply.
+     * There is also a more complex version for supplying rotation.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
@@ -125,7 +126,15 @@ public class ParticleRegularPolygon extends ParticleObject {
      */
     public float getSize() {return this.size;}
 
-    protected void fromVertices(ApelRenderer renderer, int step, Vector3f center, Vector3f[] vertices) {
+    /** Connect the vertices of the polygon and apply rotation as well as the offset to reallocate it to where
+     * the center is (and not where the origin is), uses a very simple algorithm for connecting the vertices
+     *
+     * @param renderer The renderer
+     * @param step The current rendering step
+     * @param center The center of the polygon
+     * @param vertices The list of the vertices
+     */
+    protected void connectVertices(ApelRenderer renderer, int step, Vector3f center, Vector3f[] vertices) {
         Vector3f start = vertices[0];
         int index = 1;
         Vector3f nextVertex;
@@ -150,7 +159,7 @@ public class ParticleRegularPolygon extends ParticleObject {
         Vector3f[] vertices = this.cachedShapes.get(this.sides);
         if (vertices == null) {
             float angleInterval = (float) (Math.TAU / this.sides);
-            float offset = (float) (2.5f * Math.PI);
+            float offset = (float) (2.5f * Math.PI); // Apply this angle offset to make it point up to 0º
             vertices = new Vector3f[this.sides + 1];
             for (int i = 0; i <= this.sides; i++) {
                 float currAngle = (angleInterval * i) + offset;
@@ -158,9 +167,11 @@ public class ParticleRegularPolygon extends ParticleObject {
                 float y = this.size * trigTable.getSine(currAngle);
                 vertices[i] = new Vector3f(x, y, 0);
             }
+            // Cache the vertices, does not the rotation and the center
+            // (since these change a lot and the goal is to use the cache as much as possible)
             this.cachedShapes.put(this.sides, vertices);
         }
-        this.fromVertices(renderer, step, drawPos.add(this.offset), vertices);
+        this.connectVertices(renderer, step, drawPos.add(this.offset), vertices);
 
         this.doAfterDraw(renderer.getWorld(), step);
         this.endDraw(renderer, step, drawPos);
