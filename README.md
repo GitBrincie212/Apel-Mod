@@ -41,14 +41,6 @@ the method ``handleDrawingStep`` should be used. Path animators come in a bundle
 specific events which happen when the animator starts when it processes (each step it is called) and 
 when the animator ends (either normally or abruptly)<br><br>
 
-- **Ease Functions:** These are mathematical functions that specify how a parameter should react based
-on the rendering step it is in. An ease function can be simple as a constant(which just returns the constant),
-a linear function or much more complex ones like elastic, back, rough.... etc. Some values accept an ease 
-function while others don't, ease functions live in the XY plane where X is the rendering steps and Y is the 
-new value for the parameter. You can define your custom ease functions via two ways. The first is to extend the
-class & the second is by using the ``CustomEase`` and providing multiple ``EaseEntry`` (although it should be used
-in scenarios where the rendering steps are known)<br><br>
-
 - **Renderers:** These are objects that define how the rendering should be done, the basic default renderer allows for
 drawing individual particle effects onto the world, other renderers allow for more complex rendering methods.
 Although this system is a bit more niche than the other systems, still this system is useful in certain problems 
