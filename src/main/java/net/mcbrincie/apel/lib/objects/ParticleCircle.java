@@ -12,8 +12,9 @@ import java.util.Optional;
 
 /** The particle object class that represents a circle(2D shape) and not a 3D sphere.
  * It has a radius which dictates how large or small the circle is depending on the
- * radius value supplied.  The circle is drawn in the XY-plane by default, but can
- * be drawn in any plane by using {@link #setRotation(Vector3f)} to provide Euler
+ * radius value supplied.
+ * The circle is drawn on the XY-plane by default, but can
+ * be drawn on any plane by using {@link #setRotation(Vector3f)} to provide Euler
  * angles for rotation.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
@@ -22,10 +23,10 @@ public class ParticleCircle extends ParticleObject {
     private DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
-    /** This data is used before calculations(it contains the iterated rotation) */
+    /** This data is used before calculations (it contains the iterated rotation) */
     public enum BeforeDrawData {}
 
-    /** This data is used after calculations(it contains the drawing position) */
+    /** This data is used after calculations (it contains the drawing position) */
     public enum AfterDrawData {}
 
     /** Constructor for the particle circle which is a 2D shape. It accepts as parameters
