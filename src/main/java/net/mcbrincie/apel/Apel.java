@@ -17,7 +17,7 @@ public class Apel implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger(mod_id);
 	public static ApelScheduler apelScheduler = new ApelScheduler();
 	public static ExecutorService drawThread = Executors.newSingleThreadExecutor();
-	public static TrigTable trigonometryTable = new TrigTable(2000);
+	public static TrigTable trigonometryTable = new TrigTable(700);
 
 	@Override
 	public void onInitialize() {
