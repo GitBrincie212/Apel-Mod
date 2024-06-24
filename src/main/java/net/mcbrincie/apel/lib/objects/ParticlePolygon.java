@@ -7,6 +7,7 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
@@ -36,13 +37,13 @@ public class ParticlePolygon extends ParticleObject {
 
     /** Constructor for the particle polygon which is a 2D regular polygon(shape).
      * It accepts as parameters the particle effect to use, the sides of the polygon,
-     * the size of the polygon, the number of particles & the rotation to apply.
+     * the size of the polygon, the number of particles, and the rotation to apply.
      * There is also a simplified version for no rotation.
      *
      * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param size The size of the regular polygon
      * @param sides The of the regular polygon
+     * @param size The size of the regular polygon
+     * @param amount The number of particles for the object
      * @param rotation The rotation to apply
      *
      * @see ParticlePolygon#ParticlePolygon(ParticleEffect, int, float, int)
@@ -56,13 +57,13 @@ public class ParticlePolygon extends ParticleObject {
 
     /** Constructor for the particle polygon which is a 2D regular polygon(shape).
      * It accepts as parameters the particle effect to use, the sides of the polygon,
-     * the size of the polygon, the number of particles & the rotation to apply.
+     * the size of the polygon, and the number of particles.
      * There is also a more complex version for supplying rotation.
      *
      * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param sides The sides of the regular polygon
      * @param size The size of the regular polygon
+     * @param sides The sides of the regular polygon
+     * @param amount The number of particles for the object
      *
      * @see ParticlePolygon#ParticlePolygon(ParticleEffect, int, float, int, Vector3f)
      */
@@ -103,7 +104,9 @@ public class ParticlePolygon extends ParticleObject {
      *
      * @return The sides of the regular polygon
      */
-    public int getSides() {return this.sides;}
+    public int getSides() {
+        return this.sides;
+    }
 
     /** Sets the size of the polygon to a new value and returns the previous size used
      *
@@ -124,57 +127,63 @@ public class ParticlePolygon extends ParticleObject {
      *
      * @return The size of the regular polygon
      */
-    public float getSize() {return this.size;}
-
-    /** Connect the vertices of the polygon and apply rotation as well as the offset to reallocate it to where
-     * the center is (and not where the origin is), uses a very simple algorithm for connecting the vertices
-     *
-     * @param renderer The renderer
-     * @param step The current rendering step
-     * @param center The center of the polygon
-     * @param vertices The list of the vertices
-     */
-    protected void connectVertices(ApelRenderer renderer, int step, Vector3f center, Vector3f[] vertices) {
-        Vector3f start = vertices[0];
-        int index = 1;
-        Vector3f nextVertex;
-        Quaternionf quaternion = new Quaternionf()
-                .rotateZ(this.rotation.z)
-                .rotateY(this.rotation.y)
-                .rotateX(this.rotation.x);
-        int lastIndex = vertices.length - 1;
-        for (Vector3f vertex : vertices) {
-            nextVertex = vertices[index];
-            nextVertex = new Vector3f(nextVertex).rotate(quaternion).add(center);
-            vertex = new Vector3f(vertex).rotate(quaternion).add(center);
-            this.drawLine(renderer, vertex, nextVertex, step, this.amount);
-            index++;
-        }
+    public float getSize() {
+        return this.size;
     }
 
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
-        this.beforeDraw(renderer.getWorld(), step);
+        this.doBeforeDraw(renderer.getWorld(), step);
 
-        Vector3f[] vertices = this.cachedShapes.get(this.sides);
-        if (vertices == null) {
-            float angleInterval = (float) (Math.TAU / this.sides);
-            float offset = (float) (2.5f * Math.PI); // Apply this angle offset to make it point up to 0º
-            vertices = new Vector3f[this.sides + 1];
-            for (int i = 0; i <= this.sides; i++) {
-                float currAngle = (angleInterval * i) + offset;
-                float x = this.size * trigTable.getCosine(currAngle);
-                float y = this.size * trigTable.getSine(currAngle);
-                vertices[i] = new Vector3f(x, y, 0);
-            }
-            // Cache the vertices, does not the rotation and the center
-            // (since these change a lot and the goal is to use the cache as much as possible)
-            this.cachedShapes.put(this.sides, vertices);
+        Vector3f[] vertices = getRawVertices();
+        // Defensive copy
+        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        this.computeVertices(vertices, objectDrawPos);
+
+        // Divide the particles evenly among sides
+        int particlesPerLine = this.amount / this.sides;
+        for (int i = 0; i < vertices.length - 1; i++) {
+            this.drawLine(renderer, vertices[i], vertices[i + 1], step, particlesPerLine);
         }
-        this.connectVertices(renderer, step, drawPos.add(this.offset), vertices);
 
         this.doAfterDraw(renderer.getWorld(), step);
         this.endDraw(renderer, step, drawPos);
+    }
+
+    private @NotNull Vector3f[] getRawVertices() {
+        // Cache the vertices, does not rotate or offset
+        // (since these change a lot and the goal is to use the cache as much as possible)
+        Vector3f[] cachedVertices = this.cachedShapes.computeIfAbsent(this.sides, sides -> {
+            float angleInterval = (float) (Math.TAU / this.sides);
+            // Apply this angle offset to make it point up to 0º
+            float offset = (float) (2.5f * Math.PI);
+            // Sides + 1 to repeat the starting point to prevent modulo math later
+            Vector3f[] newVertices = new Vector3f[this.sides + 1];
+            for (int i = 0; i < this.sides; i++) {
+                float currAngle = (angleInterval * i) + offset;
+                float x = this.size * trigTable.getCosine(currAngle);
+                float y = this.size * trigTable.getSine(currAngle);
+                newVertices[i] = new Vector3f(x, y, 0);
+            }
+            // Ensure the last particle is exactly the same as the first
+            newVertices[this.sides] = new Vector3f(newVertices[0]);
+            return newVertices;
+        });
+        // Defensive copy of vertices so the cache isn't corrupted
+        Vector3f[] verticesCopy = new Vector3f[cachedVertices.length];
+        for (int i = 0; i < cachedVertices.length; i++) {
+            verticesCopy[i] = new Vector3f(cachedVertices[i]);
+        }
+        return verticesCopy;
+    }
+
+    private void computeVertices(Vector3f[] vertices, Vector3f center) {
+        Quaternionf quaternion = new Quaternionf().rotateZ(this.rotation.z)
+                                                  .rotateY(this.rotation.y)
+                                                  .rotateX(this.rotation.x);
+        for (Vector3f vertex : vertices) {
+            vertex.rotate(quaternion).add(center);
+        }
     }
 
     /** Sets the after draw interceptor, the method executes right after the particle polygon
@@ -200,7 +209,7 @@ public class ParticlePolygon extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private void beforeDraw(ServerWorld world, int step) {
+    private void doBeforeDraw(ServerWorld world, int step) {
         InterceptData<CommonData> interceptData = new InterceptData<>(world, null, step, CommonData.class);
         this.beforeDraw.apply(interceptData, this);
     }
