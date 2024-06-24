@@ -20,7 +20,7 @@ import java.util.Optional;
  * calculates the vertices of that shape and connects them
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleRegularPolygon extends ParticleObject {
+public class ParticlePolygon extends ParticleObject {
     private static final Logger LOGGER = LogManager.getLogger();
 
     protected int sides;
@@ -28,8 +28,8 @@ public class ParticleRegularPolygon extends ParticleObject {
 
     protected HashMap<Integer, Vector3f[]> cachedShapes = new HashMap<>();
 
-    private DrawInterceptor<ParticleRegularPolygon, CommonData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleRegularPolygon, CommonData> beforeDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticlePolygon, CommonData> afterDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticlePolygon, CommonData> beforeDraw = DrawInterceptor.identity();
 
     /** There is no data being transmitted */
     public enum CommonData {}
@@ -45,9 +45,9 @@ public class ParticleRegularPolygon extends ParticleObject {
      * @param sides The of the regular polygon
      * @param rotation The rotation to apply
      *
-     * @see ParticleRegularPolygon#ParticleRegularPolygon(ParticleEffect, int, float, int)
+     * @see ParticlePolygon#ParticlePolygon(ParticleEffect, int, float, int)
      */
-    public ParticleRegularPolygon(ParticleEffect particleEffect, int sides, float size, int amount, Vector3f rotation) {
+    public ParticlePolygon(ParticleEffect particleEffect, int sides, float size, int amount, Vector3f rotation) {
         super(particleEffect, rotation);
         this.setSides(sides);
         this.setSize(size);
@@ -64,9 +64,9 @@ public class ParticleRegularPolygon extends ParticleObject {
      * @param sides The sides of the regular polygon
      * @param size The size of the regular polygon
      *
-     * @see ParticleRegularPolygon#ParticleRegularPolygon(ParticleEffect, int, float, int, Vector3f)
+     * @see ParticlePolygon#ParticlePolygon(ParticleEffect, int, float, int, Vector3f)
      */
-    public ParticleRegularPolygon(ParticleEffect particleEffect, int sides, float size, int amount) {
+    public ParticlePolygon(ParticleEffect particleEffect, int sides, float size, int amount) {
         this(particleEffect, sides, size, amount, new Vector3f(0));
     }
 
@@ -75,7 +75,7 @@ public class ParticleRegularPolygon extends ParticleObject {
      *
      * @param polygon The particle polygon object to copy from
     */
-    public ParticleRegularPolygon(ParticleRegularPolygon polygon) {
+    public ParticlePolygon(ParticlePolygon polygon) {
         super(polygon);
         this.sides = polygon.sides;
         this.size = polygon.size;
@@ -182,7 +182,7 @@ public class ParticleRegularPolygon extends ParticleObject {
      *
      * @param afterDraw The new interceptor to use
      */
-    public void setAfterDraw(DrawInterceptor<ParticleRegularPolygon, CommonData> afterDraw) {
+    public void setAfterDraw(DrawInterceptor<ParticlePolygon, CommonData> afterDraw) {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
@@ -196,7 +196,7 @@ public class ParticleRegularPolygon extends ParticleObject {
      *
      * @param beforeDraw The new interceptor to use
      */
-    public void setBeforeDraw(DrawInterceptor<ParticleRegularPolygon, CommonData> beforeDraw) {
+    public void setBeforeDraw(DrawInterceptor<ParticlePolygon, CommonData> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
