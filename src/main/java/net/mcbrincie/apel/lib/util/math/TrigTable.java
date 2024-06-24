@@ -1,4 +1,4 @@
-package net.mcbrincie.apel.lib.util;
+package net.mcbrincie.apel.lib.util.math;
 
 import net.mcbrincie.apel.Apel;
 import org.joml.Math;

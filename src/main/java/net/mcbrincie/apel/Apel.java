@@ -4,7 +4,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.mcbrincie.apel.item.ModItems;
 import net.mcbrincie.apel.lib.renderers.ApelFramePayload;
-import net.mcbrincie.apel.lib.util.TrigTable;
+import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.scheduler.ApelScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

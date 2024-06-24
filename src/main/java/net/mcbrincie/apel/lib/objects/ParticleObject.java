@@ -2,7 +2,7 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelRenderer;
-import net.mcbrincie.apel.lib.util.TrigTable;
+import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Vector3f;
