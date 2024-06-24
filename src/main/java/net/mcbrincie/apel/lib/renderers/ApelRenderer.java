@@ -93,7 +93,37 @@ public interface ApelRenderer {
     default void drawSphere(
             ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount
     ) {
+        drawEllipsoid(particleEffect, step, drawPos, radius, radius, radius, rotation, amount);
+    }
+
+    /**
+     * Instructs the renderer to draw an ellipsoid of the given particle effect at {@code drawPos} with the given
+     * {@code radius}, stretch factors, {@code rotation}, and {@code amount} of particles.
+     * <p>
+     * {@code Radius}, {@code stretch1}, and {@code stretch2} are the lengths of the three axes of the ellipsoid.
+     * </p>
+     * <p>
+     * The default implementation is inefficient due to repeated trigonometry calculations, so it is strongly
+     * recommended that implementations needing the list of specific particles override this to provide some amount of
+     * caching.
+     * </p>
+     * Reference: <a href="https://stackoverflow.com/a/44164075">"golden spiral" algorithm</a>
+     *
+     * @param particleEffect The ParticleEffect to use
+     * @param step The current animation step
+     * @param drawPos The center position of the sphere
+     * @param radius The length of the x semi-axis of the ellipsoid
+     * @param stretch1 The length of the y semi-axis of the ellipsoid
+     * @param stretch2 The length of the z semi-axis of the ellipsoid
+     * @param rotation The rotation of the ellipsoid
+     * @param amount The number of particles in the ellipsoid
+     */
+    default void drawEllipsoid(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, float stretch1, float stretch2,
+            Vector3f rotation, int amount
+    ) {
         final double sqrt5Plus1 = 3.23606;
+        Vector3f scale = new Vector3f(radius, stretch1, stretch2);
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (int i = 0; i < amount; i++) {
             // Offset into the real-number distribution
@@ -109,7 +139,6 @@ public interface ApelRenderer {
             Vector3f pos = new Vector3f(x, y, z).mul(radius).rotate(quaternion).add(drawPos);
             drawParticle(particleEffect, step, pos);
         }
-
     }
 
     default Vector3f drawEllipsePoint(ParticleEffect particleEffect, float r, float h, float angle, Vector3f rotation, Vector3f center, int step) {
