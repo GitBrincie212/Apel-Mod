@@ -22,14 +22,10 @@ public class ParticleCylinder extends ParticleObject {
     private DrawInterceptor<ParticleCylinder, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
     /** This data is used before calculations (it contains the iterated rotation) */
-    public enum BeforeDrawData {
-        ITERATED_ROTATION
-    }
+    public enum BeforeDrawData {}
 
     /** This data is used after calculations (it contains the drawing position) */
-    public enum AfterDrawData {
-        DRAW_POSITION
-    }
+    public enum AfterDrawData {}
 
     /** Constructor for the particle cylinder which is a 3D shape. It accepts as parameters
      * the particle effect to use, the radius of the cylinder, the height of the cylinder,
@@ -132,12 +128,9 @@ public class ParticleCylinder extends ParticleObject {
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         float stepHeight = this.height / this.amount;
         float stepAngle = (float) Math.TAU / 1.618033f;
-        for (int i = 1; i <= this.amount; i++) {
+        this.doBeforeDraw(renderer.getWorld(), step, drawPos);
+        for (int i = 0; i < this.amount; i++) {
             float angle = i * stepAngle;
-            InterceptData<ParticleCylinder.BeforeDrawData> interceptData = this.doBeforeDraw(
-                    renderer.getWorld(), step, drawPos, angle
-            );
-            angle = interceptData.getMetadata(BeforeDrawData.ITERATED_ROTATION, angle);
             float x = this.radius * trigTable.getCosine(angle);
             float y = stepHeight * i;
             float z = this.radius * trigTable.getSine(angle);
@@ -145,8 +138,8 @@ public class ParticleCylinder extends ParticleObject {
                     renderer, this.rotation, new Vector3f(drawPos).add(this.offset), x, y, z
             );
             this.drawParticle(renderer, step, finalPosVec);
-            this.doAfterDraw(renderer.getWorld(), step, finalPosVec, drawPos);
         }
+        this.doAfterDraw(renderer.getWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
     }
 
@@ -161,9 +154,8 @@ public class ParticleCylinder extends ParticleObject {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
-    private void doAfterDraw(ServerWorld world, int step, Vector3f drawPos, Vector3f centerPos) {
+    private void doAfterDraw(ServerWorld world, int step, Vector3f centerPos) {
         InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, centerPos, step, AfterDrawData.class);
-        interceptData.addMetadata(AfterDrawData.DRAW_POSITION, drawPos);
         this.afterDraw.apply(interceptData, this);
     }
 
@@ -178,10 +170,8 @@ public class ParticleCylinder extends ParticleObject {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
-    private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, int step, Vector3f pos, float angle) {
+    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        interceptData.addMetadata(BeforeDrawData.ITERATED_ROTATION, angle);
         this.beforeDraw.apply(interceptData, this);
-        return interceptData;
     }
 }
