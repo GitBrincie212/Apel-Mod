@@ -2,6 +2,8 @@ package net.mcbrincie.apel.lib.util.math.bezier;
 
 import org.joml.Vector3f;
 
+import java.util.List;
+
 /** The cubic bézier curve is another popular choice of use. It has 2 control points
  * which define how the curve should bend, which means the user has more control on how
  * the curve's shape. It is a second popular choice to use along the quadratic bézier curve.
@@ -24,6 +26,11 @@ public class CubicBezierCurve extends QuadraticBezierCurve {
     public CubicBezierCurve(Vector3f start, Vector3f end, Vector3f controlPoint1, Vector3f controlPoint2) {
         super(start, end, controlPoint1);
         this.controlPoint2 = controlPoint2;
+    }
+
+    @Override
+    public List<Vector3f> getControlPoints() {
+        return List.of(this.controlPoint, this.controlPoint2);
     }
 
     @Override

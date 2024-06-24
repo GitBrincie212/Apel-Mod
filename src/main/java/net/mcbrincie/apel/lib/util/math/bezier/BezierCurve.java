@@ -2,6 +2,8 @@ package net.mcbrincie.apel.lib.util.math.bezier;
 
 import org.joml.Vector3f;
 
+import java.util.List;
+
 /** The Bézier curve which is a family of curves that are defined by control points.
  * The first control point is the starting position, the last one is the ending position,
  * and all the rest are the control points that bend the curve(not connect it) towards that
@@ -9,8 +11,8 @@ import org.joml.Vector3f;
  */
 @SuppressWarnings("unused")
 public abstract class BezierCurve {
-    public Vector3f start;
-    public Vector3f end;
+    protected Vector3f start;
+    protected Vector3f end;
 
     /** Constructor for the bézier curve which has a starting position and an ending position.
      * There are no control points involved in the constructor, and it is up to the user to define
@@ -61,6 +63,8 @@ public abstract class BezierCurve {
         this.start = start;
         return prev;
     }
+
+    public abstract List<Vector3f> getControlPoints();
 
     /** Returns the length of the bézier curve (how long is it, not the distance).
      * The length calculations are different for each bézier curve (since they are composed differently).

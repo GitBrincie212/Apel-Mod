@@ -3,6 +3,7 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.TrigTable;
+import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Vector3f;
 
@@ -273,5 +274,9 @@ public abstract class ParticleObject {
      */
     protected void drawEllipse(ApelRenderer renderer, int step, Vector3f drawPos, float radius, float stretch, Vector3f rotation, int amount) {
         renderer.drawEllipse(this.particleEffect, step, drawPos, radius, stretch, rotation, amount);
+    }
+
+    protected void drawBezierCurve(ApelRenderer renderer, int step, Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount) {
+        renderer.drawBezier(this.particleEffect, step, drawPos, bezierCurve, rotation, amount);
     }
 }

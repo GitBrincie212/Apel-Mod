@@ -2,6 +2,7 @@ package net.mcbrincie.apel.lib.renderers;
 
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.util.TrigTable;
+import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaternionf;
@@ -144,6 +145,17 @@ public interface ApelRenderer {
             float y = trigTable.getSine(currRot) * stretch;
             Vector3f pos = new Vector3f(x, y, 0).rotate(quaternion).add(center);
             drawParticle(particleEffect, step, pos);
+        }
+    }
+
+    default void drawBezier(ParticleEffect particleEffect, int step, Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount) {
+        float interval = 1.0f / amount;
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+
+        for (int i = 0; i < amount; i++) {
+            Vector3f pos = bezierCurve.compute(interval * i);
+            pos.rotate(quaternion).add(drawPos);
+            this.drawParticle(particleEffect, step, pos);
         }
     }
 

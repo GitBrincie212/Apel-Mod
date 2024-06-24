@@ -50,6 +50,11 @@ public class ParameterizedBezierCurve extends BezierCurve {
     }
 
     @Override
+    public List<Vector3f> getControlPoints() {
+        return controlPoints;
+    }
+
+    @Override
     public float length(int amount) {
         float sumDistance = 0;
         Vector3f prevPoint = this.start;

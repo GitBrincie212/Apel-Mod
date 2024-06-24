@@ -4,11 +4,18 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.mcbrincie.apel.lib.renderers.ApelFramePayload;
 import net.mcbrincie.apel.lib.renderers.ApelNetworkRenderer;
+import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
+import net.mcbrincie.apel.lib.util.math.bezier.CubicBezierCurve;
+import net.mcbrincie.apel.lib.util.math.bezier.LinearBezierCurve;
+import net.mcbrincie.apel.lib.util.math.bezier.ParameterizedBezierCurve;
+import net.mcbrincie.apel.lib.util.math.bezier.QuadraticBezierCurve;
 import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
+
+import java.util.List;
 
 public class ApelClient implements ClientModInitializer {
     @Override
@@ -74,6 +81,26 @@ public class ApelClient implements ClientModInitializer {
                                 float z = (float) Math.cos(phi);
                                 // Scale, rotate, translate
                                 Vector3f pos = new Vector3f(x, y, z).mul(scale).rotate(quaternion).add(drawPos);
+                                drawParticle(particleManager, particleEffect, pos);
+                            }
+                        }
+                        case ApelNetworkRenderer.BezierCurve(
+                                Vector3f drawPos, Vector3f start, List<Vector3f> controlPoints, Vector3f end,
+                                Vector3f rotation, int amount
+                        ) -> {
+                            BezierCurve bezierCurve = switch(controlPoints.size()) {
+                                case 0 -> new LinearBezierCurve(start, end);
+                                case 1 -> new QuadraticBezierCurve(start, end, controlPoints.get(0));
+                                case 2 -> new CubicBezierCurve(start, end, controlPoints.get(0), controlPoints.get(1));
+                                default -> new ParameterizedBezierCurve(start, end, controlPoints);
+                            };
+
+                            float interval = 1.0f / amount;
+                            Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+
+                            for (int i = 0; i < amount; i++) {
+                                Vector3f pos = bezierCurve.compute(interval * i);
+                                pos.rotate(quaternion).add(drawPos);
                                 drawParticle(particleManager, particleEffect, pos);
                             }
                         }

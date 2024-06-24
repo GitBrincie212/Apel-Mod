@@ -18,8 +18,8 @@ import java.util.Optional;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleBezierCurve extends ParticleObject {
-    protected BezierCurve[] endpoints;
-    protected int[] amount;
+    protected BezierCurve[] bezierCurves;
+    protected int[] amounts;
 
     private DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw = DrawInterceptor.identity();
@@ -33,13 +33,13 @@ public class ParticleBezierCurve extends ParticleObject {
      *
      * @param particleEffect The particle effect to use
      * @param curves The Bézier curves to use
-     * @param amount The number of particles
+     * @param amounts The number of particles
      *
      * @see ParticleBezierCurve#ParticleBezierCurve(ParticleEffect, BezierCurve[], int[])
     */
-    public ParticleBezierCurve(ParticleEffect particleEffect, BezierCurve[] curves, int[] amount, Vector3f rotation) {
+    public ParticleBezierCurve(ParticleEffect particleEffect, BezierCurve[] curves, int[] amounts, Vector3f rotation) {
         super(particleEffect);
-        this.setPair(amount, curves);
+        this.setPairs(curves, amounts);
         this.setRotation(rotation);
     }
 
@@ -49,12 +49,12 @@ public class ParticleBezierCurve extends ParticleObject {
      *
      * @param particleEffect The particle effect to use
      * @param curves The Bézier curves to use
-     * @param amount The number of particles
+     * @param amounts The number of particles
      *
      * @see ParticleBezierCurve#ParticleBezierCurve(ParticleEffect, BezierCurve[], int[], Vector3f)
      */
-    public ParticleBezierCurve(ParticleEffect particleEffect, BezierCurve[] curves, int[] amount) {
-        this(particleEffect, curves, amount, new Vector3f());
+    public ParticleBezierCurve(ParticleEffect particleEffect, BezierCurve[] curves, int[] amounts) {
+        this(particleEffect, curves, amounts, new Vector3f());
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -64,9 +64,9 @@ public class ParticleBezierCurve extends ParticleObject {
     */
     public ParticleBezierCurve(ParticleBezierCurve curve) {
         super(curve);
-        this.endpoints = curve.endpoints;
+        this.bezierCurves = curve.bezierCurves;
         this.beforeDraw = curve.beforeDraw;
-        this.amount = curve.amount;
+        this.amounts = curve.amounts;
         this.afterDraw = curve.afterDraw;
     }
 
@@ -76,11 +76,11 @@ public class ParticleBezierCurve extends ParticleObject {
      * @return The previous starting point
     */
     public BezierCurve[] setBezierEndpoints(BezierCurve[] newEndpoints) {
-        if (newEndpoints.length != this.amount.length) {
+        if (newEndpoints.length != this.amounts.length) {
             throw new IllegalArgumentException("The endpoint's length has to match with the amount's length");
         }
-        BezierCurve[] prevEndpoints = this.endpoints;
-        this.endpoints = newEndpoints;
+        BezierCurve[] prevEndpoints = this.bezierCurves;
+        this.bezierCurves = newEndpoints;
         return prevEndpoints;
     }
 
@@ -95,11 +95,11 @@ public class ParticleBezierCurve extends ParticleObject {
         if (amount <= 0) {
             throw new IllegalArgumentException("The amount is below or equal to 0");
         }
-        int[] prevAmount = this.amount;
-        int[] intArray = new int[this.endpoints.length];
+        int[] prevAmount = this.amounts;
+        int[] intArray = new int[this.bezierCurves.length];
         Arrays.fill(intArray, amount);
-        this.amount = intArray;
-        int[] dummyArray = new int[this.endpoints.length];
+        this.amounts = intArray;
+        int[] dummyArray = new int[this.bezierCurves.length];
         int firstElement = prevAmount[0];
         Arrays.fill(dummyArray, firstElement);
         return Arrays.equals(dummyArray, prevAmount) ? firstElement : -1;
@@ -111,34 +111,35 @@ public class ParticleBezierCurve extends ParticleObject {
      * @return The previous amounts value
      */
     public int[] setAmount(int[] amount) {
-        if (amount.length != this.endpoints.length) {
+        if (amount.length != this.bezierCurves.length) {
             throw new IllegalArgumentException("The amount length has to match with the endpoint's length");
         }
         for (int i : amount) {
             if (i <= 0) throw new IllegalArgumentException("One of the amount is set below or equal to 0");
         }
-        int[] prevAmount = this.amount;
-        this.amount = amount;
+        int[] prevAmount = this.amounts;
+        this.amounts = amount;
         return prevAmount;
     }
 
-    /** Sets both the Bézier curves and the amounts to new arrays and returns them
+    /**
+     * Sets both the Bézier curves and the amounts to new arrays and returns them
      *
-     * @param amount The amounts
      * @param curves The curves
+     * @param amounts The amounts
      * @return The pair of the previous used values
      */
-    public Pair<int[], BezierCurve[]> setPair(int[] amount, BezierCurve[] curves) {
-        if (amount.length != curves.length) {
-            throw new IllegalArgumentException("The amount length has to match with the endpoint's length");
+    public Pair<int[], BezierCurve[]> setPairs(BezierCurve[] curves, int[] amounts) {
+        if (amounts.length != curves.length) {
+            throw new IllegalArgumentException("The number of curves and number of amounts must be equal");
         }
-        for (int i : amount) {
-            if (i <= 0) throw new IllegalArgumentException("One of the amount is set below or equal to 0");
+        for (int i : amounts) {
+            if (i <= 0) throw new IllegalArgumentException("One of the amounts is set below or equal to 0");
         }
-        int[] prevAmount = this.amount;
-        this.amount = amount;
-        BezierCurve[] prevEndpoints = this.endpoints;
-        this.endpoints = curves;
+        int[] prevAmount = this.amounts;
+        this.amounts = amounts;
+        BezierCurve[] prevEndpoints = this.bezierCurves;
+        this.bezierCurves = curves;
         return new Pair<>(prevAmount, prevEndpoints);
     }
 
@@ -149,10 +150,10 @@ public class ParticleBezierCurve extends ParticleObject {
      */
     @Override
     public int getAmount() {
-        int[] dummyArray = new int[this.endpoints.length];
-        int firstElement = this.amount[0];
+        int[] dummyArray = new int[this.bezierCurves.length];
+        int firstElement = this.amounts[0];
         Arrays.fill(dummyArray, firstElement);
-        return Arrays.equals(dummyArray, this.amount) ? firstElement : -1;
+        return Arrays.equals(dummyArray, this.amounts) ? firstElement : -1;
     }
 
     /** Gets the ENTIRE amount array and returns it
@@ -160,15 +161,15 @@ public class ParticleBezierCurve extends ParticleObject {
      * @return the amount array
      */
     public int[] getAmounts() {
-        return this.amount;
+        return this.amounts;
     }
 
-    /** Gets the bézier endpoints and returns them
+    /** Gets the bézier curves and returns them
      *
-     * @return The bézier endpoints
+     * @return The bézier curves
      */
-    public BezierCurve[] getEndpoints() {
-        return this.endpoints;
+    public BezierCurve[] getBezierCurves() {
+        return this.bezierCurves;
     }
 
     @Override
@@ -176,19 +177,16 @@ public class ParticleBezierCurve extends ParticleObject {
         int index = 0;
         // Compute total offset from origin
         Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
-        for (BezierCurve endpoint : this.endpoints) {
-            int amountForCurve = this.amount[index];
-            float interval = 1.0f / amountForCurve;
+
+        for (BezierCurve bezierCurve : this.bezierCurves) {
+            int amountForCurve = this.amounts[index];
             InterceptData<CommonDrawData> interceptData =
-                    this.doBeforeDraw(renderer.getWorld(), endpoint, amountForCurve, step);
-            endpoint = (BezierCurve) interceptData.getMetadata(CommonDrawData.BEZIER_CURVE);
-            amountForCurve = (int) interceptData.getMetadata(CommonDrawData.AMOUNT);
-            for (int i = 0; i < amountForCurve; i++) {
-                Vector3f pos = endpoint.compute(interval * i);
-                pos = this.rigidTransformation(renderer, this.rotation, objectDrawPos, pos);
-                this.drawParticle(renderer, step, pos);
-            }
-            this.doAfterDraw(renderer.getWorld(), endpoint, amountForCurve, step);
+                    this.doBeforeDraw(renderer.getWorld(), bezierCurve, amountForCurve, step);
+            bezierCurve = interceptData.getMetadata(CommonDrawData.BEZIER_CURVE, bezierCurve);
+            amountForCurve = interceptData.getMetadata(CommonDrawData.AMOUNT, amountForCurve);
+
+            this.drawBezierCurve(renderer, step, drawPos, bezierCurve, this.rotation, amountForCurve);
+            this.doAfterDraw(renderer.getWorld(), bezierCurve, amountForCurve, step);
         }
         this.endDraw(renderer, step, drawPos);
     }

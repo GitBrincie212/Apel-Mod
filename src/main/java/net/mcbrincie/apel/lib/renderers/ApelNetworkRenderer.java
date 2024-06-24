@@ -114,6 +114,17 @@ public class ApelNetworkRenderer implements ApelRenderer {
 
 
     @Override
+    public void drawBezier(ParticleEffect particleEffect,
+                           int step,
+                           Vector3f drawPos,
+                           net.mcbrincie.apel.lib.util.math.bezier.BezierCurve bezierCurve,
+                           Vector3f rotation,
+                           int amount) {
+        this.detectParticleTypeChange(particleEffect);
+        this.instructions.add(new BezierCurve(drawPos, bezierCurve.getStart(), bezierCurve.getControlPoints(), bezierCurve.getEnd(), rotation, amount));
+    }
+
+    @Override
     public void beforeFrame(int step, Vector3f frameOrigin) {
         ApelRenderer.super.beforeFrame(step, frameOrigin);
         this.instructions.add(new Frame(frameOrigin));
@@ -258,6 +269,49 @@ public class ApelNetworkRenderer implements ApelRenderer {
             buf.writeFloat(radius);
             buf.writeFloat(stretch1);
             buf.writeFloat(stretch2);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+    }
+
+    public record BezierCurve(Vector3f drawPos, Vector3f start, List<Vector3f> controlPoints, Vector3f end,
+                              Vector3f rotation, int amount) implements Instruction {
+
+        static BezierCurve from(RegistryByteBuf buf) {
+            int controlPointCount = buf.readByte();
+            Vector3f drawPos = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            Vector3f start = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            List<Vector3f> controlPoints = new ArrayList<>(controlPointCount);
+            for (int i = 0; i < controlPointCount; i++) {
+                controlPoints.add(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
+            }
+            Vector3f end = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            Vector3f rotation = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            int amount = buf.readShort();
+
+            return new BezierCurve(drawPos, start, controlPoints, end, rotation, amount);
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('B');
+            buf.writeByte(controlPoints.size());
+            buf.writeFloat(drawPos.x);
+            buf.writeFloat(drawPos.y);
+            buf.writeFloat(drawPos.z);
+            buf.writeFloat(start.x);
+            buf.writeFloat(start.y);
+            buf.writeFloat(start.z);
+            for (Vector3f controlPoint : controlPoints) {
+                buf.writeFloat(controlPoint.x);
+                buf.writeFloat(controlPoint.y);
+                buf.writeFloat(controlPoint.z);
+            }
+            buf.writeFloat(end.x);
+            buf.writeFloat(end.y);
+            buf.writeFloat(end.z);
             buf.writeFloat(rotation.x);
             buf.writeFloat(rotation.y);
             buf.writeFloat(rotation.z);
