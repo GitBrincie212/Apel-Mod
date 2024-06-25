@@ -109,18 +109,6 @@ public interface ApelRenderer {
         }
     }
 
-    default Vector3f drawEllipsePoint(ParticleEffect particleEffect, float r, float h, float angle, Vector3f rotation, Vector3f center, int step) {
-        float x = (r * trigTable.getCosine(angle));
-        float y = (h * trigTable.getSine(angle));
-        Vector3f finalPosVec = new Vector3f(x, y, 0)
-                .rotateZ(rotation.z)
-                .rotateY(rotation.y)
-                .rotateX(rotation.x)
-                .add(center);
-        this.drawParticle(particleEffect, step, finalPosVec);
-        return finalPosVec;
-    }
-
     /**
      * Instructs the renderer to draw an ellipse at {@code drawPos} with {@code radius} and {@code rotation} applied
      * using {@code amount} particles.  The ellipse will be stretched by {@code stretch}.  Particles will be spaced

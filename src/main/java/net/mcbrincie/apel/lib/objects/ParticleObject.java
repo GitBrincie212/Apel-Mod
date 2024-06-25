@@ -217,23 +217,6 @@ public abstract class ParticleObject {
     }
 
     /**
-     * Draws a point along an ellipse shape that has a center {@code center}.
-     *
-     * @param renderer The renderer to use
-     * @param r The radius
-     * @param h The stretch / height
-     * @param angle The angle value
-     * @param center The center position
-     * @param step The step
-     * @return The coordinates of the point in the ellipse
-     */
-    protected Vector3f drawEllipsePoint(ApelServerRenderer renderer, float r, float h, float angle, Vector3f center, int step) {
-        return renderer.drawEllipsePoint(
-                this.particleEffect, r, h, angle, this.rotation, new Vector3f(center).add(this.offset), step
-        );
-    }
-
-    /**
      * Draws a circle of {@code amount} particles at {@code drawPos} with {@code radius} and {@code rotation} applied.
      *
      * @param renderer The renderer to use
