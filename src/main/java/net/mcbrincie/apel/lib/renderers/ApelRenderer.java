@@ -208,6 +208,8 @@ public interface ApelRenderer {
 
     sealed interface Instruction {
         void write(RegistryByteBuf buf);
+
+        Vector3f[] computePoints();
     }
 
     record Frame(Vector3f origin) implements Instruction {
@@ -223,6 +225,11 @@ public interface ApelRenderer {
             buf.writeFloat(origin.y);
             buf.writeFloat(origin.z);
         }
+
+        @Override
+        public Vector3f[] computePoints() {
+            throw new UnsupportedOperationException("Frames do not have points");
+        }
     }
 
     record PType(ParticleEffect particleEffect) implements Instruction {
@@ -235,6 +242,11 @@ public interface ApelRenderer {
         public void write(RegistryByteBuf buf) {
             buf.writeByte('T');
             ParticleTypes.PACKET_CODEC.encode(buf, this.particleEffect);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            throw new UnsupportedOperationException("PTypes do not have points");
         }
     }
 
@@ -250,6 +262,11 @@ public interface ApelRenderer {
             buf.writeFloat(pos.x);
             buf.writeFloat(pos.y);
             buf.writeFloat(pos.z);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            return new Vector3f[] { new Vector3f(pos) };
         }
     }
 
@@ -271,6 +288,22 @@ public interface ApelRenderer {
             buf.writeFloat(end.y);
             buf.writeFloat(end.z);
             buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            int amountSubOne = (amount - 1);
+            // Do not use 'sub', it modifies in-place
+            float stepX = (end.x - start.x) / amountSubOne;
+            float stepY = (end.y - start.y) / amountSubOne;
+            float stepZ = (end.z - start.z) / amountSubOne;
+            Vector3f curr = new Vector3f(start);
+            for (int i = 0; i < amount; i++) {
+                points[i] = new Vector3f(curr);
+                curr.add(stepX, stepY, stepZ);
+            }
+            return points;
         }
     }
 
@@ -297,6 +330,19 @@ public interface ApelRenderer {
             buf.writeFloat(rotation.y);
             buf.writeFloat(rotation.z);
             buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            float angleInterval = (float) Math.TAU / (float) amount;
+            for (int i = 0; i < amount; i++) {
+                float currRot = angleInterval * i;
+                float x = trigTable.getCosine(currRot) * radius;
+                float y = trigTable.getSine(currRot) * stretch;
+                points[i] = new Vector3f(x, y, 0);
+            }
+            return points;
         }
     }
 
@@ -325,6 +371,25 @@ public interface ApelRenderer {
             buf.writeFloat(rotation.y);
             buf.writeFloat(rotation.z);
             buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            final double sqrt5Plus1 = 3.23606;
+            for (int i = 0; i < amount; i++) {
+                // Offset into the real-number distribution
+                float k = i + .5f;
+                // Project point on a unit sphere
+                float phi = trigTable.getArcCosine(1f - ((2f * k) / amount));
+                float theta = (float) (Math.PI * k * sqrt5Plus1);
+                float sinPhi = trigTable.getSine(phi);
+                float x = trigTable.getCosine(theta) * sinPhi * radius;
+                float y = trigTable.getSine(theta) * sinPhi * stretch1;
+                float z = trigTable.getCosine(phi) * stretch2;
+                points[i] = new Vector3f(x, y, z);
+            }
+            return points;
         }
     }
 
@@ -371,6 +436,16 @@ public interface ApelRenderer {
             buf.writeFloat(rotation.y);
             buf.writeFloat(rotation.z);
             buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            float interval = 1.0f / amount;
+            for (int i = 0; i < amount; i++) {
+                points[i] = bezierCurve.compute(interval * i);
+            }
+            return points;
         }
     }
 }

@@ -3,6 +3,7 @@ package net.mcbrincie.apel.lib.util.math.bezier;
 import org.joml.Vector3f;
 
 import java.util.List;
+import java.util.Objects;
 
 /** The Bézier curve which is a family of curves that are defined by control points.
  * The first control point is the starting position, the last one is the ending position,
@@ -91,4 +92,22 @@ public abstract class BezierCurve {
      * @return The 3D coordinates of the point
      */
     public abstract Vector3f compute(float t);
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BezierCurve that = (BezierCurve) o;
+        return Objects.equals(getStart(), that.getStart()) && Objects.equals(getEnd(), that.getEnd()) && Objects.equals(
+                getControlPoints(), that.getControlPoints());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getStart(), getEnd(), getControlPoints());
+    }
 }
