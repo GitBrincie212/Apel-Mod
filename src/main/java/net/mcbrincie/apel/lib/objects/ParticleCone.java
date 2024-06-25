@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -117,11 +117,11 @@ public class ParticleCone extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getWorld(), step);
+    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
+        this.doBeforeDraw(renderer.getServerWorld(), step);
         Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
         renderer.drawCone(this.particleEffect, step, objectDrawPos, this.height, this.radius, this.rotation, this.amount);
-        this.doAfterDraw(renderer.getWorld(), step);
+        this.doAfterDraw(renderer.getServerWorld(), step);
         this.endDraw(renderer, step, drawPos);
     }
 

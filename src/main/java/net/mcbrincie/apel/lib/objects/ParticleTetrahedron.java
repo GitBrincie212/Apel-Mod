@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -213,17 +213,17 @@ public class ParticleTetrahedron extends ParticleObject {
     public Vector3f getVertex4() {return this.vertex4;}
 
     @Override
-    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getWorld(), step, drawPos);
+    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
+        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
 
         // Defensive copy of `drawPos`
         Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
 
         // Defensive copies of internal vertices
-        Vector3f v1 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex1);
-        Vector3f v2 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex2);
-        Vector3f v3 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex3);
-        Vector3f v4 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex4);
+        Vector3f v1 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex1);
+        Vector3f v2 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex2);
+        Vector3f v3 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex3);
+        Vector3f v4 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex4);
 
         this.drawLine(renderer, v1, v2, step, this.amount);
         this.drawLine(renderer, v1, v3, step, this.amount);
@@ -232,7 +232,7 @@ public class ParticleTetrahedron extends ParticleObject {
         this.drawLine(renderer, v2, v4, step, this.amount);
         this.drawLine(renderer, v3, v4, step, this.amount);
 
-        this.doAfterDraw(renderer.getWorld(), step, drawPos);
+        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
     }
 

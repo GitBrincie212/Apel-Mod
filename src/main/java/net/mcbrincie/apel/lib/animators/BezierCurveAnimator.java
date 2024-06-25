@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Function3;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import org.jetbrains.annotations.NotNull;
@@ -281,7 +281,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException {
+    public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         int index = -1;
         int step = -1;
         int particleAmount;

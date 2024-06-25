@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -215,14 +215,13 @@ public class ParticleCuboid extends ParticleObject {
      * @param translation The center position relative to the origin
      * @return The vertex's coordinates
      */
-    public Vector3f getVertex(ApelRenderer renderer, float width, float height, float depth, Vector3f translation) {
-        return this.rigidTransformation(
-                renderer, this.rotation, new Vector3f(translation).add(this.offset), width, height, depth
+    public Vector3f getVertex(ApelServerRenderer renderer, float width, float height, float depth, Vector3f translation) {
+        return this.rigidTransformation(this.rotation, new Vector3f(translation).add(this.offset), width, height, depth
         );
     }
 
     @Override
-    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
+    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
         float width = size.x;
         float height = size.y;
         float depth = size.z;
@@ -240,7 +239,7 @@ public class ParticleCuboid extends ParticleObject {
         int verticalBarsAmount = this.amount.z;
 
         Vector3f[] vertices = {vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7, vertex8};
-        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getWorld(), step, vertices);
+        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getServerWorld(), step, vertices);
         vertices = interceptData.getMetadata(BeforeDrawData.VERTICES, vertices);
 
         vertex1 = vertices[0];
@@ -274,7 +273,7 @@ public class ParticleCuboid extends ParticleObject {
             this.drawLine(renderer, vertex3, vertex7, step, verticalBarsAmount);
             this.drawLine(renderer, vertex1, vertex4, step, verticalBarsAmount);
         }
-        this.doAfterDraw(renderer.getWorld(), step);
+        this.doAfterDraw(renderer.getServerWorld(), step);
         this.endDraw(renderer, step, drawPos);
     }
 

@@ -4,7 +4,7 @@ import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import org.jetbrains.annotations.NotNull;
 
@@ -167,7 +167,7 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
     }
 
     @Override
-    public void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException {
+    public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         this.allocateToScheduler();
         int step = 0;
         for (PathAnimatorBase animator : this.animators) {
@@ -176,7 +176,7 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
         }
     }
 
-    protected void allocateNewAnimator(ApelRenderer renderer, int step, PathAnimatorBase animator) {
+    protected void allocateNewAnimator(ApelServerRenderer renderer, int step, PathAnimatorBase animator) {
         Runnable func = () -> animator.beginAnimation(renderer);
         int delayUsed = (this.delay == -1) ? this.delays.get(step - 1) : this.delay;
         if (delayUsed == 0) {

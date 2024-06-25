@@ -34,16 +34,8 @@ import java.util.List;
  * }
  * </pre>
  */
-@SuppressWarnings("unused")
 public interface ApelRenderer {
     TrigTable trigTable = Apel.trigonometryTable;
-
-    static ApelRenderer create(ServerWorld world) {
-        return new DefaultApelRenderer(world);
-    }
-    static ApelRenderer client(ServerWorld world) {
-        return new ApelNetworkRenderer(world);
-    }
 
     /**
      * Instructs the renderer to draw the given particle effect at the given position.
@@ -242,9 +234,6 @@ public interface ApelRenderer {
 
     default void afterFrame(int step, Vector3f frameOrigin) {
     }
-
-    ServerWorld getWorld();
-
 
     sealed interface Instruction {
         void write(RegistryByteBuf buf);

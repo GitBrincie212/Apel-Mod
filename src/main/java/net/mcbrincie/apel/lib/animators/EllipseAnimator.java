@@ -4,7 +4,7 @@ import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -115,7 +115,7 @@ public class EllipseAnimator extends CircularAnimator {
      * path animators, this one uses angles for trimming
      */
     @Override
-    public void beginAnimation(ApelRenderer renderer) throws SeqMissingException, SeqDuplicateException {
+    public void beginAnimation(ApelServerRenderer renderer) throws SeqMissingException, SeqDuplicateException {
         float startAngle = this.trimming.getStart();
         float differenceAngle = this.trimming.getEnd() - startAngle;
 

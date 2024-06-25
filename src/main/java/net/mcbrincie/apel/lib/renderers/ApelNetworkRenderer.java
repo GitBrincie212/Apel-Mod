@@ -15,7 +15,7 @@ import java.util.List;
  * It sends off a packet to the client that contains instructions
  * on what shape to render along with the parameters to render it
  */
-public class ApelNetworkRenderer implements ApelRenderer {
+public class ApelNetworkRenderer implements ApelServerRenderer {
 
     private final ServerWorld world;
     private List<Instruction> instructions;
@@ -122,14 +122,13 @@ public class ApelNetworkRenderer implements ApelRenderer {
 
     @Override
     public void beforeFrame(int step, Vector3f frameOrigin) {
-        ApelRenderer.super.beforeFrame(step, frameOrigin);
         this.instructions.add(new Frame(frameOrigin));
     }
 
     @Override
     public void afterFrame(int step, Vector3f frameOrigin) {
         ApelFramePayload payload = new ApelFramePayload(this.instructions);
-        for (ServerPlayerEntity player : PlayerLookup.around(this.getWorld(), new Vec3d(frameOrigin), 32)) {
+        for (ServerPlayerEntity player : PlayerLookup.around(this.getServerWorld(), new Vec3d(frameOrigin), 32)) {
             ServerPlayNetworking.send(player, payload);
         }
         // Recreate, with initial capacity
@@ -139,7 +138,7 @@ public class ApelNetworkRenderer implements ApelRenderer {
     }
 
     @Override
-    public ServerWorld getWorld() {
+    public ServerWorld getServerWorld() {
         return this.world;
     }
 

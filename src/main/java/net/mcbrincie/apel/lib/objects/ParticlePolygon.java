@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -132,8 +132,8 @@ public class ParticlePolygon extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getWorld(), step);
+    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
+        this.doBeforeDraw(renderer.getServerWorld(), step);
 
         Vector3f[] vertices = getRawVertices();
         // Defensive copy
@@ -146,7 +146,7 @@ public class ParticlePolygon extends ParticleObject {
             this.drawLine(renderer, vertices[i], vertices[i + 1], step, particlesPerLine);
         }
 
-        this.doAfterDraw(renderer.getWorld(), step);
+        this.doAfterDraw(renderer.getServerWorld(), step);
         this.endDraw(renderer, step, drawPos);
     }
 
