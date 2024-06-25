@@ -14,6 +14,15 @@ public abstract class BezierCurve {
     protected Vector3f start;
     protected Vector3f end;
 
+    public static BezierCurve of(Vector3f start, Vector3f end, List<Vector3f> controlPoints) {
+        return switch (controlPoints.size()) {
+            case 0 -> new LinearBezierCurve(start, end);
+            case 1 -> new QuadraticBezierCurve(start, end, controlPoints.getFirst());
+            case 2 -> new CubicBezierCurve(start, end, controlPoints.get(0), controlPoints.get(1));
+            default -> new ParameterizedBezierCurve(start, end, controlPoints);
+        };
+    }
+
     /** Constructor for the bézier curve which has a starting position and an ending position.
      * There are no control points involved in the constructor, and it is up to the user to define
      * their own number of control points (except the linear bézier curve which remains the same)

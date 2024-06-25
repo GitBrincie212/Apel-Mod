@@ -4,14 +4,8 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.mcbrincie.apel.lib.renderers.ApelFramePayload;
 import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
-import net.mcbrincie.apel.lib.util.math.bezier.CubicBezierCurve;
-import net.mcbrincie.apel.lib.util.math.bezier.LinearBezierCurve;
-import net.mcbrincie.apel.lib.util.math.bezier.ParameterizedBezierCurve;
-import net.mcbrincie.apel.lib.util.math.bezier.QuadraticBezierCurve;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Vector3f;
-
-import java.util.List;
 
 public class ApelFramePayloadHandler implements ClientPlayNetworking.PlayPayloadHandler<ApelFramePayload> {
 
@@ -51,18 +45,8 @@ public class ApelFramePayloadHandler implements ClientPlayNetworking.PlayPayload
                     ) -> renderer.drawEllipsoid(particleEffect, 0, drawPos, radius, stretch1, stretch2, rotation, amount);
 
                     case ApelRenderer.BezierCurve(
-                            Vector3f drawPos, Vector3f start, List<Vector3f> controlPoints, Vector3f end,
-                            Vector3f rotation, int amount
-                    ) -> {
-                        BezierCurve bezierCurve = switch(controlPoints.size()) {
-                            case 0 -> new LinearBezierCurve(start, end);
-                            case 1 -> new QuadraticBezierCurve(start, end, controlPoints.get(0));
-                            case 2 -> new CubicBezierCurve(start, end, controlPoints.get(0), controlPoints.get(1));
-                            default -> new ParameterizedBezierCurve(start, end, controlPoints);
-                        };
-
-                        renderer.drawBezier(particleEffect, 0, drawPos, bezierCurve, rotation, amount);
-                    }
+                            Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount
+                    ) -> renderer.drawBezier(particleEffect, 0, drawPos, bezierCurve, rotation, amount);
                 }
             }
         });

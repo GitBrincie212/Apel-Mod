@@ -328,7 +328,7 @@ public interface ApelRenderer {
         }
     }
 
-    record BezierCurve(Vector3f drawPos, Vector3f start, List<Vector3f> controlPoints, Vector3f end,
+    record BezierCurve(Vector3f drawPos, net.mcbrincie.apel.lib.util.math.bezier.BezierCurve bezierCurve,
                        Vector3f rotation, int amount) implements Instruction {
 
         static BezierCurve from(RegistryByteBuf buf) {
@@ -340,27 +340,30 @@ public interface ApelRenderer {
                 controlPoints.add(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
             }
             Vector3f end = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            net.mcbrincie.apel.lib.util.math.bezier.BezierCurve bezierCurve = net.mcbrincie.apel.lib.util.math.bezier.BezierCurve.of(start, end, controlPoints);
             Vector3f rotation = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
             int amount = buf.readShort();
 
-            return new BezierCurve(drawPos, start, controlPoints, end, rotation, amount);
+            return new BezierCurve(drawPos, bezierCurve, rotation, amount);
         }
 
         @Override
         public void write(RegistryByteBuf buf) {
             buf.writeByte('B');
-            buf.writeByte(controlPoints.size());
+            buf.writeByte(bezierCurve.getControlPoints().size());
             buf.writeFloat(drawPos.x);
             buf.writeFloat(drawPos.y);
             buf.writeFloat(drawPos.z);
+            Vector3f start = bezierCurve.getStart();
             buf.writeFloat(start.x);
             buf.writeFloat(start.y);
             buf.writeFloat(start.z);
-            for (Vector3f controlPoint : controlPoints) {
+            for (Vector3f controlPoint : bezierCurve.getControlPoints()) {
                 buf.writeFloat(controlPoint.x);
                 buf.writeFloat(controlPoint.y);
                 buf.writeFloat(controlPoint.z);
             }
+            Vector3f end = bezierCurve.getEnd();
             buf.writeFloat(end.x);
             buf.writeFloat(end.y);
             buf.writeFloat(end.z);

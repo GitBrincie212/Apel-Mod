@@ -110,10 +110,7 @@ public class ApelNetworkRenderer implements ApelRenderer {
             net.mcbrincie.apel.lib.util.math.bezier.BezierCurve bezierCurve, Vector3f rotation, int amount
     ) {
         this.detectParticleTypeChange(particleEffect);
-        this.instructions.add(
-                new BezierCurve(drawPos, bezierCurve.getStart(), bezierCurve.getControlPoints(), bezierCurve.getEnd(),
-                                rotation, amount
-                ));
+        this.instructions.add(new BezierCurve(drawPos, bezierCurve, rotation, amount));
     }
 
     @Override
