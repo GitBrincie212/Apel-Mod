@@ -4,10 +4,14 @@ import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.particle.ParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ApelRenderer allows Apel animations to be rendered to multiple "canvases."
@@ -93,7 +97,37 @@ public interface ApelRenderer {
     default void drawSphere(
             ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount
     ) {
+        drawEllipsoid(particleEffect, step, drawPos, radius, radius, radius, rotation, amount);
+    }
+
+    /**
+     * Instructs the renderer to draw an ellipsoid of the given particle effect at {@code drawPos} with the given
+     * {@code radius}, stretch factors, {@code rotation}, and {@code amount} of particles.
+     * <p>
+     * {@code Radius}, {@code stretch1}, and {@code stretch2} are the lengths of the three axes of the ellipsoid.
+     * </p>
+     * <p>
+     * The default implementation is inefficient due to repeated trigonometry calculations, so it is strongly
+     * recommended that implementations needing the list of specific particles override this to provide some amount of
+     * caching.
+     * </p>
+     * Reference: <a href="https://stackoverflow.com/a/44164075">"golden spiral" algorithm</a>
+     *
+     * @param particleEffect The ParticleEffect to use
+     * @param step The current animation step
+     * @param drawPos The center position of the sphere
+     * @param radius The length of the x semi-axis of the ellipsoid
+     * @param stretch1 The length of the y semi-axis of the ellipsoid
+     * @param stretch2 The length of the z semi-axis of the ellipsoid
+     * @param rotation The rotation of the ellipsoid
+     * @param amount The number of particles in the ellipsoid
+     */
+    default void drawEllipsoid(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, float stretch1, float stretch2,
+            Vector3f rotation, int amount
+    ) {
         final double sqrt5Plus1 = 3.23606;
+        Vector3f scale = new Vector3f(radius, stretch1, stretch2);
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (int i = 0; i < amount; i++) {
             // Offset into the real-number distribution
@@ -109,7 +143,6 @@ public interface ApelRenderer {
             Vector3f pos = new Vector3f(x, y, z).mul(radius).rotate(quaternion).add(drawPos);
             drawParticle(particleEffect, step, pos);
         }
-
     }
 
     default Vector3f drawEllipsePoint(ParticleEffect particleEffect, float r, float h, float angle, Vector3f rotation, Vector3f center, int step) {
@@ -136,7 +169,10 @@ public interface ApelRenderer {
      * @param rotation Rotation applied to the ellipse (to change the plane in which it's drawn)
      * @param amount The number of particles to use to draw the ellipse
      */
-    default void drawEllipse(ParticleEffect particleEffect, int step, Vector3f center, float radius, float stretch, Vector3f rotation, int amount) {
+    default void drawEllipse(
+            ParticleEffect particleEffect, int step, Vector3f center, float radius, float stretch, Vector3f rotation,
+            int amount
+    ) {
         float angleInterval = (float) Math.TAU / (float) amount;
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (int i = 0; i < amount; i++) {
@@ -148,7 +184,10 @@ public interface ApelRenderer {
         }
     }
 
-    default void drawBezier(ParticleEffect particleEffect, int step, Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount) {
+    default void drawBezier(
+            ParticleEffect particleEffect, int step, Vector3f drawPos,
+            net.mcbrincie.apel.lib.util.math.bezier.BezierCurve bezierCurve, Vector3f rotation, int amount
+    ) {
         float interval = 1.0f / amount;
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
 
@@ -166,4 +205,247 @@ public interface ApelRenderer {
     }
 
     ServerWorld getWorld();
+
+    sealed interface Instruction {
+        void write(RegistryByteBuf buf);
+
+        Vector3f[] computePoints();
+    }
+
+    record Frame(Vector3f origin) implements Instruction {
+
+        static Frame from(RegistryByteBuf buf) {
+            return new Frame(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('F');
+            buf.writeFloat(origin.x);
+            buf.writeFloat(origin.y);
+            buf.writeFloat(origin.z);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            throw new UnsupportedOperationException("Frames do not have points");
+        }
+    }
+
+    record PType(ParticleEffect particleEffect) implements Instruction {
+
+        static PType from(RegistryByteBuf buf) {
+            return new PType(ParticleTypes.PACKET_CODEC.decode(buf));
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('T');
+            ParticleTypes.PACKET_CODEC.encode(buf, this.particleEffect);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            throw new UnsupportedOperationException("PTypes do not have points");
+        }
+    }
+
+    record Particle(Vector3f pos) implements Instruction {
+
+        static Particle from(RegistryByteBuf buf) {
+            return new Particle(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('P');
+            buf.writeFloat(pos.x);
+            buf.writeFloat(pos.y);
+            buf.writeFloat(pos.z);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            return new Vector3f[] { new Vector3f(pos) };
+        }
+    }
+
+    record Line(Vector3f start, Vector3f end, int amount) implements Instruction {
+
+        static Line from(RegistryByteBuf buf) {
+            return new Line(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                            new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                            buf.readShort());
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('L');
+            buf.writeFloat(start.x);
+            buf.writeFloat(start.y);
+            buf.writeFloat(start.z);
+            buf.writeFloat(end.x);
+            buf.writeFloat(end.y);
+            buf.writeFloat(end.z);
+            buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            int amountSubOne = (amount - 1);
+            // Do not use 'sub', it modifies in-place
+            float stepX = (end.x - start.x) / amountSubOne;
+            float stepY = (end.y - start.y) / amountSubOne;
+            float stepZ = (end.z - start.z) / amountSubOne;
+            Vector3f curr = new Vector3f(start);
+            for (int i = 0; i < amount; i++) {
+                points[i] = new Vector3f(curr);
+                curr.add(stepX, stepY, stepZ);
+            }
+            return points;
+        }
+    }
+
+    record Ellipse(Vector3f center, float radius, float stretch, Vector3f rotation, int amount)
+            implements Instruction {
+
+        static Ellipse from(RegistryByteBuf buf) {
+            return new Ellipse(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                               buf.readFloat(),
+                               buf.readFloat(),
+                               new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                               buf.readShort());
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('E');
+            buf.writeFloat(center.x);
+            buf.writeFloat(center.y);
+            buf.writeFloat(center.z);
+            buf.writeFloat(radius);
+            buf.writeFloat(stretch);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            float angleInterval = (float) Math.TAU / (float) amount;
+            for (int i = 0; i < amount; i++) {
+                float currRot = angleInterval * i;
+                float x = trigTable.getCosine(currRot) * radius;
+                float y = trigTable.getSine(currRot) * stretch;
+                points[i] = new Vector3f(x, y, 0);
+            }
+            return points;
+        }
+    }
+
+    record Ellipsoid(Vector3f drawPos, float radius, float stretch1, float stretch2, Vector3f rotation,
+                     int amount) implements Instruction {
+
+        static Ellipsoid from(RegistryByteBuf buf) {
+            return new Ellipsoid(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                                 buf.readFloat(),
+                                 buf.readFloat(),
+                                 buf.readFloat(),
+                                 new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                                 buf.readShort());
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('S');
+            buf.writeFloat(drawPos.x);
+            buf.writeFloat(drawPos.y);
+            buf.writeFloat(drawPos.z);
+            buf.writeFloat(radius);
+            buf.writeFloat(stretch1);
+            buf.writeFloat(stretch2);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            final double sqrt5Plus1 = 3.23606;
+            for (int i = 0; i < amount; i++) {
+                // Offset into the real-number distribution
+                float k = i + .5f;
+                // Project point on a unit sphere
+                float phi = trigTable.getArcCosine(1f - ((2f * k) / amount));
+                float theta = (float) (Math.PI * k * sqrt5Plus1);
+                float sinPhi = trigTable.getSine(phi);
+                float x = trigTable.getCosine(theta) * sinPhi * radius;
+                float y = trigTable.getSine(theta) * sinPhi * stretch1;
+                float z = trigTable.getCosine(phi) * stretch2;
+                points[i] = new Vector3f(x, y, z);
+            }
+            return points;
+        }
+    }
+
+    record BezierCurve(Vector3f drawPos, net.mcbrincie.apel.lib.util.math.bezier.BezierCurve bezierCurve,
+                       Vector3f rotation, int amount) implements Instruction {
+
+        static BezierCurve from(RegistryByteBuf buf) {
+            int controlPointCount = buf.readByte();
+            Vector3f drawPos = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            Vector3f start = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            List<Vector3f> controlPoints = new ArrayList<>(controlPointCount);
+            for (int i = 0; i < controlPointCount; i++) {
+                controlPoints.add(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
+            }
+            Vector3f end = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            net.mcbrincie.apel.lib.util.math.bezier.BezierCurve bezierCurve = net.mcbrincie.apel.lib.util.math.bezier.BezierCurve.of(start, end, controlPoints);
+            Vector3f rotation = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            int amount = buf.readShort();
+
+            return new BezierCurve(drawPos, bezierCurve, rotation, amount);
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('B');
+            buf.writeByte(bezierCurve.getControlPoints().size());
+            buf.writeFloat(drawPos.x);
+            buf.writeFloat(drawPos.y);
+            buf.writeFloat(drawPos.z);
+            Vector3f start = bezierCurve.getStart();
+            buf.writeFloat(start.x);
+            buf.writeFloat(start.y);
+            buf.writeFloat(start.z);
+            for (Vector3f controlPoint : bezierCurve.getControlPoints()) {
+                buf.writeFloat(controlPoint.x);
+                buf.writeFloat(controlPoint.y);
+                buf.writeFloat(controlPoint.z);
+            }
+            Vector3f end = bezierCurve.getEnd();
+            buf.writeFloat(end.x);
+            buf.writeFloat(end.y);
+            buf.writeFloat(end.z);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            float interval = 1.0f / amount;
+            for (int i = 0; i < amount; i++) {
+                points[i] = bezierCurve.compute(interval * i);
+            }
+            return points;
+        }
+    }
 }
