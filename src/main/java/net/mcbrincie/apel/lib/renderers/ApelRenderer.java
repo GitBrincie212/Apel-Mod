@@ -2,12 +2,16 @@ package net.mcbrincie.apel.lib.renderers;
 
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.util.TrigTable;
-import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
+import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.particle.ParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ApelRenderer allows Apel animations to be rendered to multiple "canvases."
@@ -165,7 +169,10 @@ public interface ApelRenderer {
      * @param rotation Rotation applied to the ellipse (to change the plane in which it's drawn)
      * @param amount The number of particles to use to draw the ellipse
      */
-    default void drawEllipse(ParticleEffect particleEffect, int step, Vector3f center, float radius, float stretch, Vector3f rotation, int amount) {
+    default void drawEllipse(
+            ParticleEffect particleEffect, int step, Vector3f center, float radius, float stretch, Vector3f rotation,
+            int amount
+    ) {
         float angleInterval = (float) Math.TAU / (float) amount;
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (int i = 0; i < amount; i++) {
@@ -177,7 +184,10 @@ public interface ApelRenderer {
         }
     }
 
-    default void drawBezier(ParticleEffect particleEffect, int step, Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount) {
+    default void drawBezier(
+            ParticleEffect particleEffect, int step, Vector3f drawPos,
+            net.mcbrincie.apel.lib.util.math.bezier.BezierCurve bezierCurve, Vector3f rotation, int amount
+    ) {
         float interval = 1.0f / amount;
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
 
@@ -195,4 +205,169 @@ public interface ApelRenderer {
     }
 
     ServerWorld getWorld();
+
+    sealed interface Instruction {
+        void write(RegistryByteBuf buf);
+    }
+
+    record Frame(Vector3f origin) implements Instruction {
+
+        static Frame from(RegistryByteBuf buf) {
+            return new Frame(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('F');
+            buf.writeFloat(origin.x);
+            buf.writeFloat(origin.y);
+            buf.writeFloat(origin.z);
+        }
+    }
+
+    record PType(ParticleEffect particleEffect) implements Instruction {
+
+        static PType from(RegistryByteBuf buf) {
+            return new PType(ParticleTypes.PACKET_CODEC.decode(buf));
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('T');
+            ParticleTypes.PACKET_CODEC.encode(buf, this.particleEffect);
+        }
+    }
+
+    record Particle(Vector3f pos) implements Instruction {
+
+        static Particle from(RegistryByteBuf buf) {
+            return new Particle(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('P');
+            buf.writeFloat(pos.x);
+            buf.writeFloat(pos.y);
+            buf.writeFloat(pos.z);
+        }
+    }
+
+    record Line(Vector3f start, Vector3f end, int amount) implements Instruction {
+
+        static Line from(RegistryByteBuf buf) {
+            return new Line(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                            new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                            buf.readShort());
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('L');
+            buf.writeFloat(start.x);
+            buf.writeFloat(start.y);
+            buf.writeFloat(start.z);
+            buf.writeFloat(end.x);
+            buf.writeFloat(end.y);
+            buf.writeFloat(end.z);
+            buf.writeShort(amount);
+        }
+    }
+
+    record Ellipse(Vector3f center, float radius, float stretch, Vector3f rotation, int amount)
+            implements Instruction {
+
+        static Ellipse from(RegistryByteBuf buf) {
+            return new Ellipse(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                               buf.readFloat(),
+                               buf.readFloat(),
+                               new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                               buf.readShort());
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('E');
+            buf.writeFloat(center.x);
+            buf.writeFloat(center.y);
+            buf.writeFloat(center.z);
+            buf.writeFloat(radius);
+            buf.writeFloat(stretch);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+    }
+
+    record Ellipsoid(Vector3f drawPos, float radius, float stretch1, float stretch2, Vector3f rotation,
+                     int amount) implements Instruction {
+
+        static Ellipsoid from(RegistryByteBuf buf) {
+            return new Ellipsoid(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                                 buf.readFloat(),
+                                 buf.readFloat(),
+                                 buf.readFloat(),
+                                 new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                                 buf.readShort());
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('S');
+            buf.writeFloat(drawPos.x);
+            buf.writeFloat(drawPos.y);
+            buf.writeFloat(drawPos.z);
+            buf.writeFloat(radius);
+            buf.writeFloat(stretch1);
+            buf.writeFloat(stretch2);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+    }
+
+    record BezierCurve(Vector3f drawPos, Vector3f start, List<Vector3f> controlPoints, Vector3f end,
+                       Vector3f rotation, int amount) implements Instruction {
+
+        static BezierCurve from(RegistryByteBuf buf) {
+            int controlPointCount = buf.readByte();
+            Vector3f drawPos = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            Vector3f start = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            List<Vector3f> controlPoints = new ArrayList<>(controlPointCount);
+            for (int i = 0; i < controlPointCount; i++) {
+                controlPoints.add(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()));
+            }
+            Vector3f end = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            Vector3f rotation = new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat());
+            int amount = buf.readShort();
+
+            return new BezierCurve(drawPos, start, controlPoints, end, rotation, amount);
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('B');
+            buf.writeByte(controlPoints.size());
+            buf.writeFloat(drawPos.x);
+            buf.writeFloat(drawPos.y);
+            buf.writeFloat(drawPos.z);
+            buf.writeFloat(start.x);
+            buf.writeFloat(start.y);
+            buf.writeFloat(start.z);
+            for (Vector3f controlPoint : controlPoints) {
+                buf.writeFloat(controlPoint.x);
+                buf.writeFloat(controlPoint.y);
+                buf.writeFloat(controlPoint.z);
+            }
+            buf.writeFloat(end.x);
+            buf.writeFloat(end.y);
+            buf.writeFloat(end.z);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+    }
 }

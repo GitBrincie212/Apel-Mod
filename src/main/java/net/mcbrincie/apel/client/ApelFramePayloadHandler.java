@@ -2,7 +2,7 @@ package net.mcbrincie.apel.client;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.mcbrincie.apel.lib.renderers.ApelFramePayload;
-import net.mcbrincie.apel.lib.renderers.ApelNetworkRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelRenderer;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.mcbrincie.apel.lib.util.math.bezier.CubicBezierCurve;
 import net.mcbrincie.apel.lib.util.math.bezier.LinearBezierCurve;
@@ -30,26 +30,27 @@ public class ApelFramePayloadHandler implements ClientPlayNetworking.PlayPayload
 
             Vector3f frameOrigin = new Vector3f(0);
             ParticleEffect particleEffect = null;
-            for (ApelNetworkRenderer.Instruction ins : payload.instructions()) {
+            for (ApelRenderer.Instruction ins : payload.instructions()) {
                 switch (ins) {
-                    case ApelNetworkRenderer.Frame(Vector3f origin) -> frameOrigin = origin;
+                    case ApelRenderer.Frame(Vector3f origin) -> frameOrigin = origin;
 
-                    case ApelNetworkRenderer.PType(ParticleEffect pe) -> particleEffect = pe;
+                    case ApelRenderer.PType(ParticleEffect pe) -> particleEffect = pe;
 
-                    case ApelNetworkRenderer.Particle(Vector3f pos) -> renderer.drawParticle(particleEffect, 0, pos);
+                    case ApelRenderer.Particle(Vector3f pos) -> renderer.drawParticle(particleEffect, 0, pos);
 
-                    case ApelNetworkRenderer.Line(Vector3f start, Vector3f end, int amount) -> renderer.drawLine(particleEffect, 0, start, end, amount);
+                    case ApelRenderer.Line(Vector3f start, Vector3f end, int amount) ->
+                            renderer.drawLine(particleEffect, 0, start, end, amount);
 
-                    case ApelNetworkRenderer.Ellipse(
+                    case ApelRenderer.Ellipse(
                             Vector3f center, float radius, float stretch, Vector3f rotation, int amount
                     ) -> renderer.drawEllipse(particleEffect, 0, center, radius, stretch, rotation, amount);
 
-                    case ApelNetworkRenderer.Ellipsoid(
+                    case ApelRenderer.Ellipsoid(
                             Vector3f drawPos, float radius, float stretch1, float stretch2, Vector3f rotation,
                             int amount
                     ) -> renderer.drawEllipsoid(particleEffect, 0, drawPos, radius, stretch1, stretch2, rotation, amount);
 
-                    case ApelNetworkRenderer.BezierCurve(
+                    case ApelRenderer.BezierCurve(
                             Vector3f drawPos, Vector3f start, List<Vector3f> controlPoints, Vector3f end,
                             Vector3f rotation, int amount
                     ) -> {
