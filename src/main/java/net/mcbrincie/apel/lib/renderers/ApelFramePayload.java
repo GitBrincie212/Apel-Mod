@@ -25,13 +25,13 @@ public record ApelFramePayload(List<ApelNetworkRenderer.Instruction> instruction
         List<ApelNetworkRenderer.Instruction> instructions = new ArrayList<>();
         while (buf.readableBytes() > 0) {
             switch (buf.readByte()) {
-                case 'F' -> instructions.add(ApelNetworkRenderer.Frame.from(buf));
-                case 'T' -> instructions.add(ApelNetworkRenderer.PType.from(buf));
-                case 'L' -> instructions.add(ApelNetworkRenderer.Line.from(buf));
-                case 'P' -> instructions.add(ApelNetworkRenderer.Particle.from(buf));
-                case 'E' -> instructions.add(ApelNetworkRenderer.Ellipse.from(buf));
-                case 'S' -> instructions.add(ApelNetworkRenderer.Ellipsoid.from(buf));
-                case 'B' -> instructions.add(ApelNetworkRenderer.BezierCurve.from(buf));
+                case 'F' -> instructions.add(ApelRenderer.Frame.from(buf));
+                case 'T' -> instructions.add(ApelRenderer.PType.from(buf));
+                case 'L' -> instructions.add(ApelRenderer.Line.from(buf));
+                case 'P' -> instructions.add(ApelRenderer.Particle.from(buf));
+                case 'E' -> instructions.add(ApelRenderer.Ellipse.from(buf));
+                case 'S' -> instructions.add(ApelRenderer.Ellipsoid.from(buf));
+                case 'B' -> instructions.add(ApelRenderer.BezierCurve.from(buf));
             }
         }
         return instructions;
