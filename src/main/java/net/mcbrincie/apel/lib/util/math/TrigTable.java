@@ -18,12 +18,18 @@ public class TrigTable {
     private final float tableStep;
     private final int size;
 
+    /**
+     * Creates and generates trigonometry tables for <em>sin</em>, <em>cos</em>, and <em>cos<sup>-1</sup></em>.  It is
+     * recommended to have the {@code size} be an even number so the tables are symmetrical about their midpoints.
+     *
+     * @param size number of entries in the tables
+     */
     public TrigTable(int size) {
         this.size = size;
         this.tableStep = size / TAU;
-        this.sinTable = new float[size];
-        this.cosineTable = new float[size];
-        this.arcCosineTable = new float[size];
+        this.sinTable = new float[size + 1];
+        this.cosineTable = new float[size + 1];
+        this.arcCosineTable = new float[size + 1];
         this.generate();
     }
 
@@ -31,8 +37,8 @@ public class TrigTable {
         float angle;
         float interval = TAU / this.size;
         // arccosine domain is [-1, 1], so make "TRIG_TABLE_SIZE" points from -1 to 1
-        float arccosineInterval = 2f / (this.size - 1);
-        for (int i = 0; i < this.size; i++) {
+        float arccosineInterval = 2f / this.size;
+        for (int i = 0; i <= this.size; i++) {
             angle = i * interval;
             this.sinTable[i] = Math.sin(angle);
             this.cosineTable[i] = Math.cos(angle);
@@ -42,11 +48,7 @@ public class TrigTable {
     }
 
     /**
-     * Returns the trigonometric sine of an angle.  Special cases:
-     * <ul>
-     *     <li>If the argument is NaN or an infinity, then the result is NaN.
-     *     <li>If the argument is zero, then the result is a zero with the same sign as the argument.
-     * </ul>
+     * Returns the trigonometric sine of an angle.  If the argument is NaN or an infinity, then the result is NaN.
      *
      * @param angle an angle, in radians.
      * @return the sine of the argument.
@@ -56,11 +58,7 @@ public class TrigTable {
     }
 
     /**
-     * Returns the trigonometric cosine of an angle. Special cases:
-     * <ul>
-     *     <li>If the argument is NaN or an infinity, then the result is NaN.
-     *     <li>If the argument is zero, then the result is {@code 1.0}.
-     * </ul>
+     * Returns the trigonometric cosine of an angle. If the argument is NaN or an infinity, then the result is NaN.
      *
      * @param angle an angle, in radians.
      * @return the cosine of the argument.
@@ -80,7 +78,7 @@ public class TrigTable {
      * @return the arc cosine of the argument.
      */
     public float getArcCosine(float value) {
-        int normalizedIndex = Math.round((value + 1) * (this.size - 1) / 2);
+        int normalizedIndex = Math.round((value + 1) * this.size / 2);
         return this.arcCosineTable[normalizedIndex];
     }
 
