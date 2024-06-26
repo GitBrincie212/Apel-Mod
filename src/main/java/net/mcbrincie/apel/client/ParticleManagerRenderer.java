@@ -117,6 +117,24 @@ public class ParticleManagerRenderer implements ApelRenderer {
     }
 
     @Override
+    public void drawCylinder(
+            ParticleEffect particleEffect, int step, Vector3f center, float radius, float height, Vector3f rotation,
+            int amount
+    ) {
+        // Compute conical points, if necessary
+        Instruction cylinder = new Cylinder(IGNORED_OFFSET, 1f, 1f, IGNORED_ROTATION, amount);
+        Vector3f[] positions = this.positionsCache.computeIfAbsent(cylinder, Instruction::computePoints);
+
+        // Scale, rotate, and translate
+        Vector3f scalar = new Vector3f(radius, height, radius);
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+        for (Vector3f position : positions) {
+            Vector3f pos = new Vector3f(position).mul(scalar).rotate(quaternion).add(center);
+            drawParticle(particleEffect, step, pos);
+        }
+    }
+
+    @Override
     public ServerWorld getWorld() {
         throw new UnsupportedOperationException("Client rendering cannot access the ServerWorld");
     }

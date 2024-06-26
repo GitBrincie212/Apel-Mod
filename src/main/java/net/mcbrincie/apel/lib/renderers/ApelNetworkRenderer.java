@@ -123,6 +123,15 @@ public class ApelNetworkRenderer implements ApelRenderer {
     }
 
     @Override
+    public void drawCylinder(
+            ParticleEffect particleEffect, int step, Vector3f center, float radius, float height, Vector3f rotation,
+            int amount
+    ) {
+        this.detectParticleTypeChange(particleEffect);
+        this.instructions.add(new Cylinder(center, radius, height, rotation, amount));
+    }
+
+    @Override
     public void beforeFrame(int step, Vector3f frameOrigin) {
         ApelRenderer.super.beforeFrame(step, frameOrigin);
         this.instructions.add(new Frame(frameOrigin));

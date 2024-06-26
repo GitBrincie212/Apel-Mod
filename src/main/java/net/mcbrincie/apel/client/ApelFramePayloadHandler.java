@@ -51,6 +51,10 @@ public class ApelFramePayloadHandler implements ClientPlayNetworking.PlayPayload
                     case ApelRenderer.Cone(
                             Vector3f drawPos, float height, float radius, Vector3f rotation, int amount
                     ) -> renderer.drawCone(particleEffect, 0, drawPos, height, radius, rotation, amount);
+
+                    case ApelRenderer.Cylinder(
+                            Vector3f drawPos, float radius, float height, Vector3f rotation, int amount
+                    ) -> renderer.drawCylinder(particleEffect, 0, drawPos, radius, height, rotation, amount);
                 }
             }
         });

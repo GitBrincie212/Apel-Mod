@@ -236,6 +236,35 @@ public interface ApelRenderer {
         }
     }
 
+    /**
+     * Instructs the renderer to draw a cylinder at {@code drawPos} with {@code radius}, {@code height}, and
+     * {@code rotation} applied using {@code amount} particles.  Particles will be spaced evenly around the cylinder.
+     *
+     * @param particleEffect The ParticleEffect to use
+     * @param center The point at the center of the base of the cylinder
+     * @param radius The radius of the cylinder
+     * @param height The height of the cylinder
+     * @param rotation Rotation applied to the cylinder
+     * @param amount The number of particles to use to draw the cylinder
+     */
+    default void drawCylinder(
+            ParticleEffect particleEffect, int step, Vector3f center, float radius, float height, Vector3f rotation,
+            int amount
+    ) {
+        float stepHeight = height / amount;
+        float stepAngle = (float) Math.TAU / 1.618033f;
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+        for (int i = 0; i < amount; i++) {
+            float angle = i * stepAngle;
+            float x = radius * trigTable.getCosine(angle);
+            float y = stepHeight * i;
+            float z = radius * trigTable.getSine(angle);
+            Vector3f pos = new Vector3f(x, y, z).rotate(quaternion).add(center);
+            drawParticle(particleEffect, step, pos);
+        }
+    }
+
+
     default void beforeFrame(int step, Vector3f frameOrigin) {
     }
 
@@ -248,6 +277,11 @@ public interface ApelRenderer {
     sealed interface Instruction {
         void write(RegistryByteBuf buf);
 
+        /**
+         * Computes the points involved in a unit variant of the instructed shape composed of {@code amount} particles.
+         *
+         * @return an array of Vector3f instances representing the unit points
+         */
         Vector3f[] computePoints();
     }
 
@@ -533,6 +567,54 @@ public interface ApelRenderer {
                 float x = (float) (trigTable.getCosine(theta) * sinPhi);
                 float z = (float) (trigTable.getSine(theta) * sinPhi);
                 float y = (x * x + z * z);
+                points[i] = new Vector3f(x, y, z);
+            }
+            return points;
+        }
+    }
+
+    record Cylinder(Vector3f center, float radius, float height, Vector3f rotation, int amount) implements Instruction {
+
+        static final float ANGLE_INCREMENT = (float) (Math.TAU / 1.618033f);
+
+        static Cylinder from(RegistryByteBuf buf) {
+            return new Cylinder(
+                    // center
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // radius
+                    buf.readFloat(),
+                    // height
+                    buf.readFloat(),
+                    // rotation
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // amount
+                    buf.readShort()
+            );
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('Y');
+            buf.writeFloat(center.x);
+            buf.writeFloat(center.y);
+            buf.writeFloat(center.z);
+            buf.writeFloat(radius);
+            buf.writeFloat(height);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            // Unit height/radius
+            for (int i = 0; i < amount; i++) {
+                float angle = i * ANGLE_INCREMENT;
+                float x = trigTable.getCosine(angle);
+                float y = (float) i / amount;
+                float z = trigTable.getSine(angle);
                 points[i] = new Vector3f(x, y, z);
             }
             return points;
