@@ -40,9 +40,11 @@ public class ApelFramePayloadHandler implements ClientPlayNetworking.PlayPayload
                     ) -> renderer.drawEllipse(particleEffect, 0, center, radius, stretch, rotation, amount);
 
                     case ApelRenderer.Ellipsoid(
-                            Vector3f drawPos, float radius, float stretch1, float stretch2, Vector3f rotation,
+                            Vector3f drawPos, float xSemiAxis, float ySemiAxis, float zSemiAxis, Vector3f rotation,
                             int amount
-                    ) -> renderer.drawEllipsoid(particleEffect, 0, drawPos, radius, stretch1, stretch2, rotation, amount);
+                    ) -> renderer.drawEllipsoid(particleEffect, 0, drawPos, xSemiAxis, ySemiAxis, zSemiAxis, rotation,
+                                                amount
+                    );
 
                     case ApelRenderer.BezierCurve(
                             Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount

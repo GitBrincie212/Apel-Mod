@@ -77,57 +77,29 @@ public interface ApelRenderer {
     }
 
     /**
-     * Instructs the renderer to draw a sphere of the given particle effect at {@code drawPos} with the given
-     * {@code radius}, {@code rotation}, and {@code amount} of particles.
-     * <p>
-     * The default implementation is inefficient due to repeated trigonometry calculations, so it is strongly
-     * recommended that implementations needing the list of specific particles override this to provide some amount of
-     * caching.
-     * </p>
-     * Reference: <a href="https://stackoverflow.com/a/44164075">"golden spiral" algorithm</a>
-     *
-     * @param particleEffect The ParticleEffect to use
-     * @param step The current animation step
-     * @param drawPos The center position of the sphere
-     * @param radius The radius of the sphere
-     * @param rotation The rotation of the sphere; this is not terribly useful, but it can be used for
-     *         interesting effect, if the number of particles in the sphere changes over time.
-     * @param amount The number of particles in the sphere
-     */
-    default void drawSphere(
-            ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount
-    ) {
-        drawEllipsoid(particleEffect, step, drawPos, radius, radius, radius, rotation, amount);
-    }
-
-    /**
      * Instructs the renderer to draw an ellipsoid of the given particle effect at {@code drawPos} with the given
-     * {@code radius}, stretch factors, {@code rotation}, and {@code amount} of particles.
+     * {@code xSemiAxis}, {@code ySemiAxis}, {@code zSemiAxis}, {@code rotation}, and {@code amount} of particles.
      * <p>
-     * {@code Radius}, {@code stretch1}, and {@code stretch2} are the lengths of the three axes of the ellipsoid.
-     * </p>
-     * <p>
-     * The default implementation is inefficient due to repeated trigonometry calculations, so it is strongly
-     * recommended that implementations needing the list of specific particles override this to provide some amount of
-     * caching.
+     * The default implementation is inefficient due to repeated calculations, so it is strongly recommended that
+     * implementations needing the list of specific particles override this to provide some amount of caching.
      * </p>
      * Reference: <a href="https://stackoverflow.com/a/44164075">"golden spiral" algorithm</a>
      *
      * @param particleEffect The ParticleEffect to use
      * @param step The current animation step
      * @param drawPos The center position of the sphere
-     * @param radius The length of the x semi-axis of the ellipsoid
-     * @param stretch1 The length of the y semi-axis of the ellipsoid
-     * @param stretch2 The length of the z semi-axis of the ellipsoid
+     * @param xSemiAxis The length of the x semi-axis of the ellipsoid
+     * @param ySemiAxis The length of the y semi-axis of the ellipsoid
+     * @param zSemiAxis The length of the z semi-axis of the ellipsoid
      * @param rotation The rotation of the ellipsoid
      * @param amount The number of particles in the ellipsoid
      */
     default void drawEllipsoid(
-            ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, float stretch1, float stretch2,
-            Vector3f rotation, int amount
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float xSemiAxis, float ySemiAxis,
+            float zSemiAxis, Vector3f rotation, int amount
     ) {
         final double sqrt5Plus1 = 3.23606;
-        Vector3f scale = new Vector3f(radius, stretch1, stretch2);
+        Vector3f scalar = new Vector3f(xSemiAxis, ySemiAxis, zSemiAxis);
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (int i = 0; i < amount; i++) {
             // Offset into the real-number distribution
@@ -140,7 +112,7 @@ public interface ApelRenderer {
             float y = (trigTable.getSine(theta) * sinPhi);
             float z = trigTable.getCosine(phi);
             // Scale, rotate, translate
-            Vector3f pos = new Vector3f(x, y, z).mul(radius).rotate(quaternion).add(drawPos);
+            Vector3f pos = new Vector3f(x, y, z).mul(scalar).rotate(quaternion).add(drawPos);
             drawParticle(particleEffect, step, pos);
         }
     }
@@ -419,16 +391,24 @@ public interface ApelRenderer {
         }
     }
 
-    record Ellipsoid(Vector3f drawPos, float radius, float stretch1, float stretch2, Vector3f rotation,
+    record Ellipsoid(Vector3f drawPos, float xSemiAxis, float ySemiAxis, float zSemiAxis, Vector3f rotation,
                      int amount) implements Instruction {
 
         static Ellipsoid from(RegistryByteBuf buf) {
-            return new Ellipsoid(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
-                                 buf.readFloat(),
-                                 buf.readFloat(),
-                                 buf.readFloat(),
-                                 new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
-                                 buf.readShort());
+            return new Ellipsoid(
+                    // drawPos (center)
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // x semi-axis
+                    buf.readFloat(),
+                    // y semi-axis
+                    buf.readFloat(),
+                    // z semi-axis
+                    buf.readFloat(),
+                    // rotation
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // amount
+                    buf.readShort()
+            );
         }
 
         @Override
@@ -437,9 +417,9 @@ public interface ApelRenderer {
             buf.writeFloat(drawPos.x);
             buf.writeFloat(drawPos.y);
             buf.writeFloat(drawPos.z);
-            buf.writeFloat(radius);
-            buf.writeFloat(stretch1);
-            buf.writeFloat(stretch2);
+            buf.writeFloat(xSemiAxis);
+            buf.writeFloat(ySemiAxis);
+            buf.writeFloat(zSemiAxis);
             buf.writeFloat(rotation.x);
             buf.writeFloat(rotation.y);
             buf.writeFloat(rotation.z);
@@ -457,9 +437,9 @@ public interface ApelRenderer {
                 float phi = trigTable.getArcCosine(1f - ((2f * k) / amount));
                 float theta = (float) (Math.PI * k * sqrt5Plus1);
                 float sinPhi = trigTable.getSine(phi);
-                float x = trigTable.getCosine(theta) * sinPhi * radius;
-                float y = trigTable.getSine(theta) * sinPhi * stretch1;
-                float z = trigTable.getCosine(phi) * stretch2;
+                float x = trigTable.getCosine(theta) * sinPhi;
+                float y = trigTable.getSine(theta) * sinPhi;
+                float z = trigTable.getCosine(phi);
                 points[i] = new Vector3f(x, y, z);
             }
             return points;
