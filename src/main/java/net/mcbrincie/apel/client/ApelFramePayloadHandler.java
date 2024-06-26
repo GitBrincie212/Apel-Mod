@@ -47,6 +47,10 @@ public class ApelFramePayloadHandler implements ClientPlayNetworking.PlayPayload
                     case ApelRenderer.BezierCurve(
                             Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount
                     ) -> renderer.drawBezier(particleEffect, 0, drawPos, bezierCurve, rotation, amount);
+
+                    case ApelRenderer.Cone(
+                            Vector3f drawPos, float height, float radius, Vector3f rotation, int amount
+                    ) -> renderer.drawCone(particleEffect, 0, drawPos, height, radius, rotation, amount);
                 }
             }
         });

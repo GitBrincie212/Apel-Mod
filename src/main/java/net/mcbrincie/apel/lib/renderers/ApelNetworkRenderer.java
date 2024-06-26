@@ -114,6 +114,15 @@ public class ApelNetworkRenderer implements ApelRenderer {
     }
 
     @Override
+    public void drawCone(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float height, float radius, Vector3f rotation,
+            int amount
+    ) {
+        this.detectParticleTypeChange(particleEffect);
+        this.instructions.add(new Cone(drawPos, height, radius, rotation, amount));
+    }
+
+    @Override
     public void beforeFrame(int step, Vector3f frameOrigin) {
         ApelRenderer.super.beforeFrame(step, frameOrigin);
         this.instructions.add(new Frame(frameOrigin));

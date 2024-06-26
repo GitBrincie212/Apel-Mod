@@ -5,8 +5,6 @@ import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import org.joml.Quaternionf;
-import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -121,29 +119,8 @@ public class ParticleCone extends ParticleObject {
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         this.doBeforeDraw(renderer.getWorld(), step);
-
-        final double sqrt5Plus1 = 3.23606;
-        Quaternionfc quaternion = new Quaternionf()
-                .rotateZ(this.rotation.z)
-                .rotateY(this.rotation.y)
-                .rotateX(this.rotation.x);
-        for (int i = 0; i < this.amount; i++) {
-            // Offset into the real-number distribution
-            float k = i + .5f;
-            // Project point on a unit sphere
-            float phi = trigTable.getArcCosine(1f - ((2f * k) / this.amount));
-            float theta = (float) (Math.PI * k * sqrt5Plus1);
-            double sinPhi = trigTable.getSine(phi);
-            float x = (float) (trigTable.getCosine(theta) * sinPhi);
-            float z = (float) (trigTable.getSine(theta) * sinPhi);
-            float y = (x * x + z * z) * this.height;
-            // Scale, rotate, translate
-            Vector3f pos = new Vector3f(x * this.radius, y, z * this.radius)
-                    .rotate(quaternion)
-                    .add(drawPos)
-                    .add(this.offset);
-            renderer.drawParticle(this.particleEffect, step, pos);
-        }
+        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        renderer.drawCone(this.particleEffect, step, objectDrawPos, this.height, this.radius, this.rotation, this.amount);
         this.doAfterDraw(renderer.getWorld(), step);
         this.endDraw(renderer, step, drawPos);
     }

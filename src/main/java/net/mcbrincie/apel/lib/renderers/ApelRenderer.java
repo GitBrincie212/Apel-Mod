@@ -198,6 +198,44 @@ public interface ApelRenderer {
         }
     }
 
+    /**
+     * Instructs the renderer to draw a cone with the tip of the cone at {@code drawPos} using the given {@code height}
+     * and {@code radius}.  The cone is drawn with the {@code rotation} applied and using the provided {@code amount}
+     * of particles.
+     * <p>
+     * Note: This is not a true cone: the tip is rounded.
+     *
+     * @param particleEffect The ParticleEffect to use
+     * @param step The current animation step
+     * @param drawPos The point where the base of the cone is
+     * @param height The height of the cone
+     * @param radius The radius of the cone
+     * @param rotation The rotation of the cone
+     * @param amount The number of particles in the cone
+     */
+    default void drawCone(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float height, float radius, Vector3f rotation,
+            int amount
+    ) {
+        final double sqrt5Plus1 = 3.23606;
+        Vector3f scale = new Vector3f(radius, height, radius);
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+        for (int i = 0; i < amount; i++) {
+            // Offset into the real-number distribution
+            float k = i + .5f;
+            // Project point on a cone
+            float phi = trigTable.getArcCosine(1f - ((2f * k) / amount));
+            float theta = (float) (Math.PI * k * sqrt5Plus1);
+            double sinPhi = trigTable.getSine(phi);
+            float x = (float) (trigTable.getCosine(theta) * sinPhi);
+            float z = (float) (trigTable.getSine(theta) * sinPhi);
+            float y = (x * x + z * z);
+            // Scale, rotate, translate
+            Vector3f pos = new Vector3f(x, y, z).mul(scale).rotate(quaternion).add(drawPos);
+            drawParticle(particleEffect, step, pos);
+        }
+    }
+
     default void beforeFrame(int step, Vector3f frameOrigin) {
     }
 
@@ -205,6 +243,7 @@ public interface ApelRenderer {
     }
 
     ServerWorld getWorld();
+
 
     sealed interface Instruction {
         void write(RegistryByteBuf buf);
@@ -444,6 +483,57 @@ public interface ApelRenderer {
             float interval = 1.0f / amount;
             for (int i = 0; i < amount; i++) {
                 points[i] = bezierCurve.compute(interval * i);
+            }
+            return points;
+        }
+    }
+
+    record Cone(Vector3f drawPos, float height, float radius, Vector3f rotation, int amount) implements Instruction {
+
+        static Cone from(RegistryByteBuf buf) {
+            return new Cone(
+                    // drawPos (at the tip)
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // height
+                    buf.readFloat(),
+                    // radius
+                    buf.readFloat(),
+                    // rotation
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // amount
+                    buf.readShort()
+            );
+        }
+
+        @Override
+        public void write(RegistryByteBuf buf) {
+            buf.writeByte('C');
+            buf.writeFloat(drawPos.x);
+            buf.writeFloat(drawPos.y);
+            buf.writeFloat(drawPos.z);
+            buf.writeFloat(height);
+            buf.writeFloat(radius);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
+            buf.writeShort(amount);
+        }
+
+        @Override
+        public Vector3f[] computePoints() {
+            Vector3f[] points = new Vector3f[amount];
+            final double sqrt5Plus1 = 3.23606;
+            for (int i = 0; i < this.amount; i++) {
+                // Offset into the real-number distribution
+                float k = i + .5f;
+                // Project point on a unit cone
+                float phi = trigTable.getArcCosine(1f - ((2f * k) / this.amount));
+                float theta = (float) (Math.PI * k * sqrt5Plus1);
+                double sinPhi = trigTable.getSine(phi);
+                float x = (float) (trigTable.getCosine(theta) * sinPhi);
+                float z = (float) (trigTable.getSine(theta) * sinPhi);
+                float y = (x * x + z * z);
+                points[i] = new Vector3f(x, y, z);
             }
             return points;
         }
