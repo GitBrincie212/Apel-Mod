@@ -13,6 +13,8 @@ public abstract class BaseApelRenderer implements ApelRenderer {
     // Used in position caches, since they cached the unrotated, non-translated positions of shapes
     private static final Vector3f IGNORED_ROTATION = new Vector3f();
     private static final Vector3f IGNORED_OFFSET = new Vector3f();
+    private static final float UNIT_RADIUS = 1f;
+    private static final float UNIT_HEIGHT = 1f;
 
     // TODO: Consider some sort of cache eviction
     private final Map<Instruction, Vector3f[]> positionsCache;
@@ -80,6 +82,43 @@ public abstract class BaseApelRenderer implements ApelRenderer {
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (Vector3f position : positions) {
             Vector3f pos = new Vector3f(position).rotate(quaternion).add(drawPos);
+            drawParticle(particleEffect, step, pos);
+        }
+    }
+
+
+    @Override
+    public void drawCone(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float height, float radius, Vector3f rotation,
+            int amount
+    ) {
+        // Compute conical points, if necessary
+        Instruction cone = new Cone(IGNORED_OFFSET, UNIT_HEIGHT, UNIT_RADIUS, IGNORED_ROTATION, amount);
+        Vector3f[] positions = this.positionsCache.computeIfAbsent(cone, Instruction::computePoints);
+
+        // Scale, rotate, and translate
+        Vector3f scalar = new Vector3f(radius, height, radius);
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+        for (Vector3f position : positions) {
+            Vector3f pos = new Vector3f(position).mul(scalar).rotate(quaternion).add(drawPos);
+            drawParticle(particleEffect, step, pos);
+        }
+    }
+
+    @Override
+    public void drawCylinder(
+            ParticleEffect particleEffect, int step, Vector3f center, float radius, float height, Vector3f rotation,
+            int amount
+    ) {
+        // Compute conical points, if necessary
+        Instruction cylinder = new Cylinder(IGNORED_OFFSET, UNIT_RADIUS, UNIT_HEIGHT, IGNORED_ROTATION, amount);
+        Vector3f[] positions = this.positionsCache.computeIfAbsent(cylinder, Instruction::computePoints);
+
+        // Scale, rotate, and translate
+        Vector3f scalar = new Vector3f(radius, height, radius);
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+        for (Vector3f position : positions) {
+            Vector3f pos = new Vector3f(position).mul(scalar).rotate(quaternion).add(center);
             drawParticle(particleEffect, step, pos);
         }
     }
