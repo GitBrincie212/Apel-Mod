@@ -372,8 +372,8 @@ public interface ApelRenderer {
             float angleInterval = (float) Math.TAU / (float) amount;
             for (int i = 0; i < amount; i++) {
                 float currRot = angleInterval * i;
-                float x = trigTable.getCosine(currRot) * radius;
-                float y = trigTable.getSine(currRot) * stretch;
+                float x = trigTable.getCosine(currRot);
+                float y = trigTable.getSine(currRot);
                 points[i] = new Vector3f(x, y, 0);
             }
             return points;

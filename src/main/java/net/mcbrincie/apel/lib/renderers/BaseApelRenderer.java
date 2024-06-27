@@ -10,10 +10,11 @@ import java.util.Map;
 
 public abstract class BaseApelRenderer implements ApelRenderer {
 
-    // Used in position caches, since they cached the unrotated, non-translated positions of shapes
+    // Used in position caches, since they cached the non-rotated, non-translated positions of shapes
     private static final Vector3f IGNORED_ROTATION = new Vector3f();
     private static final Vector3f IGNORED_OFFSET = new Vector3f();
     private static final float UNIT_RADIUS = 1f;
+    private static final float UNIT_AXIS = 1f;
     private static final float UNIT_HEIGHT = 1f;
 
     // TODO: Consider some sort of cache eviction
@@ -36,17 +37,19 @@ public abstract class BaseApelRenderer implements ApelRenderer {
 
     @Override
     public void drawEllipsoid(
-            ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, float stretch1, float stretch2,
-            Vector3f rotation, int amount
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float xSemiAxis, float ySemiAxis,
+            float zSemiAxis, Vector3f rotation, int amount
     ) {
         // Compute ellipsoid points, if necessary
-        Instruction ellipsoid = new Ellipsoid(IGNORED_OFFSET, radius, stretch1, stretch2, IGNORED_ROTATION, amount);
+        Instruction ellipsoid =
+                new Ellipsoid(IGNORED_OFFSET, UNIT_AXIS, UNIT_AXIS, UNIT_AXIS, IGNORED_ROTATION, amount);
         Vector3f[] positions = this.positionsCache.computeIfAbsent(ellipsoid, Instruction::computePoints);
 
-        // Rotate and translate
+        // Scale, rotate and translate
+        Vector3f scalar = new Vector3f(xSemiAxis, ySemiAxis, zSemiAxis);
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (Vector3f position : positions) {
-            Vector3f pos = new Vector3f(position).rotate(quaternion).add(drawPos);
+            Vector3f pos = new Vector3f(position).mul(scalar).rotate(quaternion).add(drawPos);
             drawParticle(particleEffect, step, pos);
         }
 
@@ -58,13 +61,14 @@ public abstract class BaseApelRenderer implements ApelRenderer {
             int amount
     ) {
         // Compute ellipse points, if necessary
-        Instruction ellipse = new Ellipse(IGNORED_OFFSET, radius, stretch, IGNORED_ROTATION, amount);
+        Instruction ellipse = new Ellipse(IGNORED_OFFSET, UNIT_RADIUS, UNIT_AXIS, IGNORED_ROTATION, amount);
         Vector3f[] positions = this.positionsCache.computeIfAbsent(ellipse, Instruction::computePoints);
 
-        // Rotate and translate
+        // Scale, rotate and translate
+        Vector3f scalar = new Vector3f(radius, stretch, 0);
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (Vector3f position : positions) {
-            Vector3f pos = new Vector3f(position).rotate(quaternion).add(center);
+            Vector3f pos = new Vector3f(position).mul(scalar).rotate(quaternion).add(center);
             drawParticle(particleEffect, step, pos);
         }
     }
