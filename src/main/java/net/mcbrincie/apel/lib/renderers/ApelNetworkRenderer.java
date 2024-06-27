@@ -62,24 +62,13 @@ public class ApelNetworkRenderer implements ApelRenderer {
         this.instructions.add(new Line(start, end, count));
     }
 
-    /** Creates an instruction in the packet to draw a particle sphere with the drawPos as the center of the sphere,
-     * the radius for the sphere, the rotation of the sphere and the number of particles to use.
-     * This instruction is then sent to the client which renders the shape itself
-     *
-     * @param particleEffect The ParticleEffect to use
-     * @param step The current rendering step
-     * @param drawPos The center position of the sphere
-     * @param radius The radius of the sphere
-     * @param rotation The rotation of the sphere; this is not terribly useful, but it can be used for
-     *         interesting effect, if the number of particles in the sphere changes over time.
-     * @param amount The number of particles in the sphere
-     */
     @Override
-    public void drawSphere(
-            ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount
+    public void drawEllipsoid(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float xSemiAxis, float ySemiAxis,
+            float zSemiAxis, Vector3f rotation, int amount
     ) {
         this.detectParticleTypeChange(particleEffect);
-        this.instructions.add(new Ellipsoid(drawPos, radius, radius, radius, rotation, amount));
+        this.instructions.add(new Ellipsoid(drawPos, xSemiAxis, ySemiAxis, zSemiAxis, rotation, amount));
     }
 
     /** Creates an instruction in the packet to draw a particle ellipse with "center" as the center of
@@ -111,6 +100,24 @@ public class ApelNetworkRenderer implements ApelRenderer {
     ) {
         this.detectParticleTypeChange(particleEffect);
         this.instructions.add(new BezierCurve(drawPos, bezierCurve, rotation, amount));
+    }
+
+    @Override
+    public void drawCone(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float height, float radius, Vector3f rotation,
+            int amount
+    ) {
+        this.detectParticleTypeChange(particleEffect);
+        this.instructions.add(new Cone(drawPos, height, radius, rotation, amount));
+    }
+
+    @Override
+    public void drawCylinder(
+            ParticleEffect particleEffect, int step, Vector3f center, float radius, float height, Vector3f rotation,
+            int amount
+    ) {
+        this.detectParticleTypeChange(particleEffect);
+        this.instructions.add(new Cylinder(center, radius, height, rotation, amount));
     }
 
     @Override

@@ -126,19 +126,9 @@ public class ParticleCylinder extends ParticleObject {
 
     @Override
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
-        float stepHeight = this.height / this.amount;
-        float stepAngle = (float) Math.TAU / 1.618033f;
         this.doBeforeDraw(renderer.getWorld(), step, drawPos);
-        for (int i = 0; i < this.amount; i++) {
-            float angle = i * stepAngle;
-            float x = this.radius * trigTable.getCosine(angle);
-            float y = stepHeight * i;
-            float z = this.radius * trigTable.getSine(angle);
-            Vector3f finalPosVec = this.rigidTransformation(
-                    renderer, this.rotation, new Vector3f(drawPos).add(this.offset), x, y, z
-            );
-            this.drawParticle(renderer, step, finalPosVec);
-        }
+        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        renderer.drawCylinder(this.particleEffect, step, objectDrawPos, this.radius, this.height, this.rotation, this.amount);
         this.doAfterDraw(renderer.getWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
     }

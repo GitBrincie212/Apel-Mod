@@ -13,7 +13,7 @@ import java.util.Map;
 
 public class ParticleManagerRenderer implements ApelRenderer {
 
-    // Used in position caches, since they cached the unrotated, non-translated positions of shapes
+    // Used in position caches, since they cached the non-rotated, non-translated positions of shapes
     private static final Vector3f IGNORED_ROTATION = new Vector3f();
     private static final Vector3f IGNORED_OFFSET = new Vector3f();
 
@@ -48,17 +48,18 @@ public class ParticleManagerRenderer implements ApelRenderer {
 
     @Override
     public void drawEllipsoid(
-            ParticleEffect particleEffect, int step, Vector3f drawPos, float radius, float stretch1, float stretch2,
-            Vector3f rotation, int amount
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float xSemiAxis, float ySemiAxis,
+            float zSemiAxis, Vector3f rotation, int amount
     ) {
         // Compute ellipsoid points, if necessary
-        Instruction ellipsoid = new Ellipsoid(IGNORED_OFFSET, radius, stretch1, stretch2, IGNORED_ROTATION, amount);
+        Instruction ellipsoid = new Ellipsoid(IGNORED_OFFSET, 1f, 1f, 1f, IGNORED_ROTATION, amount);
         Vector3f[] positions = this.positionsCache.computeIfAbsent(ellipsoid, Instruction::computePoints);
 
         // Rotate and translate
+        Vector3f scalar = new Vector3f(xSemiAxis, ySemiAxis, zSemiAxis);
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (Vector3f position : positions) {
-            Vector3f pos = new Vector3f(position).rotate(quaternion).add(drawPos);
+            Vector3f pos = new Vector3f(position).mul(scalar).rotate(quaternion).add(drawPos);
             drawParticle(particleEffect, step, pos);
         }
 
@@ -94,6 +95,42 @@ public class ParticleManagerRenderer implements ApelRenderer {
         Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (Vector3f position : positions) {
             Vector3f pos = new Vector3f(position).rotate(quaternion).add(drawPos);
+            drawParticle(particleEffect, step, pos);
+        }
+    }
+
+    @Override
+    public void drawCone(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, float height, float radius, Vector3f rotation,
+            int amount
+    ) {
+        // Compute conical points, if necessary
+        Instruction cone = new Cone(IGNORED_OFFSET, 1f, 1f, IGNORED_ROTATION, amount);
+        Vector3f[] positions = this.positionsCache.computeIfAbsent(cone, Instruction::computePoints);
+
+        // Scale, rotate, and translate
+        Vector3f scalar = new Vector3f(radius, height, radius);
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+        for (Vector3f position : positions) {
+            Vector3f pos = new Vector3f(position).mul(scalar).rotate(quaternion).add(drawPos);
+            drawParticle(particleEffect, step, pos);
+        }
+    }
+
+    @Override
+    public void drawCylinder(
+            ParticleEffect particleEffect, int step, Vector3f center, float radius, float height, Vector3f rotation,
+            int amount
+    ) {
+        // Compute conical points, if necessary
+        Instruction cylinder = new Cylinder(IGNORED_OFFSET, 1f, 1f, IGNORED_ROTATION, amount);
+        Vector3f[] positions = this.positionsCache.computeIfAbsent(cylinder, Instruction::computePoints);
+
+        // Scale, rotate, and translate
+        Vector3f scalar = new Vector3f(radius, height, radius);
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+        for (Vector3f position : positions) {
+            Vector3f pos = new Vector3f(position).mul(scalar).rotate(quaternion).add(center);
             drawParticle(particleEffect, step, pos);
         }
     }

@@ -8,7 +8,6 @@ import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
-import java.util.List;
 import java.util.Optional;
 
 /** The particle object class that represents a sphere(3D shape) and not a 2D circle.
@@ -29,8 +28,6 @@ public class ParticleSphere extends ParticleObject {
 
     /** This data is used after calculations (it contains the drawing position & the number of particles) */
     public enum AfterDrawData {}
-
-    private List<Vector3f> cachedCoordinates;
 
     /**
      * Constructor for the particle sphere which is a 3D shape. It accepts as parameters
@@ -75,7 +72,6 @@ public class ParticleSphere extends ParticleObject {
         this.amount = sphere.amount;
         this.afterDraw = sphere.afterDraw;
         this.beforeDraw = sphere.beforeDraw;
-        this.cachedCoordinates = sphere.cachedCoordinates;
     }
 
     /** Sets the radius of the sphere
@@ -104,7 +100,10 @@ public class ParticleSphere extends ParticleObject {
     public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
         this.doBeforeDraw(renderer.getWorld(), step, drawPos);
         Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
-        this.drawSphere(renderer, step, objectDrawPos, this.radius, this.rotation, this.amount);
+        renderer.drawEllipsoid(
+                this.particleEffect, step, objectDrawPos, this.radius, this.radius, this.radius, this.rotation,
+                this.amount
+        );
         this.doAfterDraw(renderer.getWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
     }

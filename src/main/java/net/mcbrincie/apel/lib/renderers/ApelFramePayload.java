@@ -32,6 +32,8 @@ public record ApelFramePayload(List<ApelNetworkRenderer.Instruction> instruction
                 case 'E' -> instructions.add(ApelRenderer.Ellipse.from(buf));
                 case 'S' -> instructions.add(ApelRenderer.Ellipsoid.from(buf));
                 case 'B' -> instructions.add(ApelRenderer.BezierCurve.from(buf));
+                case 'C' -> instructions.add(ApelRenderer.Cone.from(buf));
+                case 'Y' -> instructions.add(ApelRenderer.Cylinder.from(buf));
             }
         }
         return instructions;
