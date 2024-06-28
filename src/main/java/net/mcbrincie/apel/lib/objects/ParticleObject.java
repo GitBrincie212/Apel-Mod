@@ -7,6 +7,23 @@ import net.minecraft.particle.ParticleEffect;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
+/**
+ * ParticleObject is the base class for all particle-based constructions that are animated by APEL.  Particle objects
+ * are rendered in the client using particles registered with the particle registry.  APEL provides several common
+ * 2D and 3D shapes that are ready for immediate use.
+ *
+ * <p>All particle objects share some common properties, and those are provided on the base class.  The
+ * {@link #particleEffect} is used to render all particles in the object.  All objects allow for specifying a
+ * {@link #rotation} and {@link #offset}.  These will be applied prior to translating the object to the {@code drawPos}
+ * passed to {@link #draw(ApelServerRenderer, int, Vector3f)}.  Objects also have an {@link #amount} that indicates
+ * the number of particles to render.  APEL native objects will spread these particles evenly throughout the shape
+ * unless otherwise indicated on specific shapes.
+ *
+ * <h2>Subclassing</h2>
+ * <p>Custom shapes only need to implement the {@code draw} method, and it should call methods on the
+ * {@link ApelServerRenderer renderer} to cause particles to be rendered.  The renderer supports several basic
+ * geometries which are documented there.
+ */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class ParticleObject {
     protected ParticleEffect particleEffect;
@@ -86,7 +103,10 @@ public abstract class ParticleObject {
 
     /** Sets the rotation to a new value. The rotation is calculated in radians and
      * when setting it rounds the rotation to match in the range of (-2π, 2π). It returns
-     * the previous rotation used
+     * the previous rotation used.
+     *
+     * <p>This implementation uses {@link #normalizeRotation(Vector3f)} to do the rounding which uses
+     * the modulo operator on each member of the {@code Vector3f} to produce a result in (-2π, 2π).
      *
      * @param rotation The new rotation (IN RADIANS)
      * @return the previously used rotation
@@ -97,6 +117,16 @@ public abstract class ParticleObject {
         return prevRotation;
     }
 
+    /**
+     * Removes full rotations from each component of the provided {@code rotation} vector such that each component
+     * maintains its direction but has a magnitude in the range {@code (-2π, 0]} or {@code [0, 2π)}.  Returns a new
+     * vector containing the resulting partial rotation components.
+     *
+     * <p><b>Note:</b> This is called by {@link #setRotation(Vector3f)}, so overrides must maintain this behavior.
+     *
+     * @param rotation The existing rotation vector
+     * @return A new vector with partial rotation components
+     */
     protected Vector3f normalizeRotation(Vector3f rotation) {
         float x = (float) (rotation.x % Math.TAU);
         float y = (float) (rotation.y % Math.TAU);
@@ -150,15 +180,26 @@ public abstract class ParticleObject {
     }
 
     /**
-     * This method allows for drawing a particle object given the world, the current step and the drawing position.
-     * <b>The method is used for internal workings, its not meant to be used for outside use</b>. Path animators
-     * are the ones who calculate the position, the step & give the server world instance
+     * This method allows for drawing a particle object using the provided {@link ApelServerRenderer}, the current
+     * step, and the drawing position.
+     *
+     * <p><b>The method should not be called directly.</b>  It will be called by {@code PathAnimatorBase} subclasses
+     * to draw objects along the animation path or at an animation point.  These animators will provide the renderer
+     * and calculate the current {@code step} and the {@code drawPos}.  The renderer will have access to the
+     * {@code ServerWorld}.  Implementations should call methods on the {@code renderer} that cause drawing to occur.
+     *
+     * <p><b>Important:</b> Implementations must also take care <em>not</em> to modify the {@code drawPos}, as many
+     * operations on {@link Vector3f} instances are in-place.
+     *
+     * <p>The provided subclasses include interceptors that allow developers to perform actions both before and after
+     * drawing the object.
      *
      * @param renderer The server world instance
      * @param step     The current rendering step at
      * @param drawPos  The position to draw at
      */
     public abstract void draw(ApelServerRenderer renderer, int step, Vector3f drawPos);
+
     public void endDraw(ApelServerRenderer renderer, int step, Vector3f drawPos) {}
 
     /**
@@ -179,6 +220,8 @@ public abstract class ParticleObject {
 
     /**
      * Transforms a copy of the point at {@code position} according to the {@code quaternion} and {@code translation}.
+     *
+     * <p>Does not modify the {@code quaternion} or {@code translation}.
      *
      * @param position The x-coordinate of the point to transform.
      * @param quaternion The rotation to apply
