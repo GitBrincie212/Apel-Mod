@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Objects;
 
 /** The Bézier curve which is a family of curves that are defined by control points.
- * The first control point is the starting position, the last one is the ending position,
- * and all the rest are the control points that bend the curve(not connect it) towards that
+ * The first point is the starting position, the last one is the ending position,
+ * and all the rest are the control points that bend the curve (not connect it) towards that
  * control point's position
  */
 @SuppressWarnings("unused")
@@ -15,6 +15,13 @@ public abstract class BezierCurve {
     protected Vector3f start;
     protected Vector3f end;
 
+    /**
+     * Factory method to simplify construction of a BezierCurve implementation based on the number of control points.
+     * @param start The start point of the Bézier curve
+     * @param end The end point of the Bézier curve
+     * @param controlPoints A list (can be empty) of control points
+     * @return A BezierCurve implementation
+     */
     public static BezierCurve of(Vector3f start, Vector3f end, List<Vector3f> controlPoints) {
         return switch (controlPoints.size()) {
             case 0 -> new LinearBezierCurve(start, end);
@@ -44,6 +51,17 @@ public abstract class BezierCurve {
         return this.start;
     }
 
+    /** Sets the starting position to a new value and returns the previous start value used
+     *
+     * @param start The new starting position
+     * @return The previous starting position
+     */
+    public Vector3f setStart(Vector3f start) {
+        Vector3f prev = this.start;
+        this.start = start;
+        return prev;
+    }
+
     /** Gets the ending position and returns it
      *
      * @return The ending position
@@ -63,36 +81,37 @@ public abstract class BezierCurve {
         return prev;
     }
 
-    /** Sets the starting position to a new value and returns the previous start value used
+    /**
+     * Gets the list of control points, if any, and returns it.
      *
-     * @param start The new starting position
-     * @return The previous starting position
-    */
-    public Vector3f getStart(Vector3f start) {
-        Vector3f prev = this.start;
-        this.start = start;
-        return prev;
-    }
-
+     * @return The list of control points
+     */
     public abstract List<Vector3f> getControlPoints();
 
-    /** Returns the length of the bézier curve (how long is it, not the distance).
-     * The length calculations are different for each bézier curve (since they are composed differently).
-     * The "amount" param dictates the number of points in the curve (used to calculate the distance)
+    /** Returns the length of the Bézier curve (how long is it, not the distance between control points).
+     * The length calculations are different for each Bézier curve (since they are composed differently).
+     * The {@code amount} dictates the number of points along the curve used to calculate the distance; a higher
+     * value will be more accurate, but will take correspondingly longer to calculate.
      *
      * @param amount The number of points
      * @return The length of the curve
     */
     public abstract float length(int amount);
 
-    /** This is the compute method where given a number t that ranges from 0 to 1, the method returns
-     *  the 3D coordinates of the point that lives within the bézier curve.
+    /** Compute the point along the curve at {@code t}, with {@code t} in the range {@code [0, 1]}.
      *
-     * @param t The interpolation value(0 -> 1)
+     * @param t The interpolation value, between 0 and 1, inclusive
      * @return The 3D coordinates of the point
      */
     public abstract Vector3f compute(float t);
 
+    /**
+     * Two Bézier curves are equal if they are the same degree and have the same start, end, and control points (if
+     * any).
+     *
+     * @param o The other Bézier curve
+     * @return Boolean indicating equality
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) {

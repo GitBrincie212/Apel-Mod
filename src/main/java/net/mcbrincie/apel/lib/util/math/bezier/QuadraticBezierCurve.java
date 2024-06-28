@@ -7,7 +7,7 @@ import java.util.List;
 /** The quadratic bézier curve which is a bit more advanced curve that has only one control point
  * and allows for control over how the curve bends, although not as much control as the cubic one.
  * It still allows for flexible behavior, and is one of the most popular choices among graphics
- * enthusiasts
+ * enthusiasts.
  */
 @SuppressWarnings("unused")
 public class QuadraticBezierCurve extends BezierCurve {
@@ -15,7 +15,7 @@ public class QuadraticBezierCurve extends BezierCurve {
 
     /** The constructor for the quadratic bézier curve, which is a curve that consists of
      * a starting and an ending point and one control point defining the curvature.
-     * It is a bit more advanced than the linear bézier curve but has more capabilities
+     * It is a bit more advanced than the linear bézier curve but has more capabilities.
      *
      * @param start The starting position
      * @param end The ending position

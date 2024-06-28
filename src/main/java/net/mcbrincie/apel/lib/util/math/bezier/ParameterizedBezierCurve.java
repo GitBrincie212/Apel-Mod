@@ -6,20 +6,20 @@ import java.util.LinkedList;
 import java.util.List;
 
 
-/** The parametrized bézier curve, which is a custom curve that is defined by an (n) number
+/** The parametrized Bézier curve, which is a custom curve that is defined by an (n) number
  * of control points, it is best to use this type of curve when no there are no already predefined.
- * If you have 1 control point, then it is best to use a linear bézier curve for 2 it is best to use
- * the quadratic bézier curve, and for 3 control points it is best to use the cubic bézier curve. For
- * any other non-predefined bézier curve, use this
+ * If you have 1 control point, then it is best to use a linear Bézier curve. For 2, it is best to use
+ * the quadratic Bézier curve, and for 3 control points it is best to use the cubic Bézier curve. For
+ * any higher order Bézier curve, use this implementation.
  */
 @SuppressWarnings("unused")
 public class ParameterizedBezierCurve extends BezierCurve {
-    List<Vector3f> controlPoints;
+    private final List<Vector3f> controlPoints;
 
-    /** The constructor for the parametrized bézier curve, which is a curve that consists of
+    /** The constructor for the parametrized Bézier curve, which is a curve that consists of
      * a starting and an ending point and (n) number of control points defining the curvature.
-     * It is one of the most advanced ones to use, but it should only be used when needing higher
-     * than 3 control points for the curve control of the shape since it can cause performance issues.
+     * It is one of the most advanced ones to use, but it should only be used when needing 3 or
+     * more control points for the curve control of the shape since it can cause performance issues.
      *
      * @param start The starting position
      * @param end The ending position
@@ -28,15 +28,13 @@ public class ParameterizedBezierCurve extends BezierCurve {
      * @see ParameterizedBezierCurve#ParameterizedBezierCurve(Vector3f, Vector3f, List)
     */
     public ParameterizedBezierCurve(Vector3f start, Vector3f end, Vector3f... controlPoints) {
-        super(start, end);
-        this.controlPoints = List.of(controlPoints);
+        this(start, end, List.of(controlPoints));
     }
 
-    /** The constructor for the parametrized bézier curve, which is a curve that consists of
+    /** The constructor for the parametrized Bézier curve, which is a curve that consists of
      * a starting and an ending point and (n) number of control points defining the curvature.
-     * It is one of the most advanced ones to use, but it should only be used when needing higher
-     * than 3 control points for the curve control of the shape since it can cause performance issues.
-     * The constructor should be used if you have a list of control points
+     * It is one of the most advanced ones to use, but it should only be used when needing 3 or
+     * more control points for the curve control of the shape since it can cause performance issues.
      *
      * @param start The starting position
      * @param end The ending position
@@ -46,7 +44,7 @@ public class ParameterizedBezierCurve extends BezierCurve {
     */
     public ParameterizedBezierCurve(Vector3f start, Vector3f end, List<Vector3f> controlPoints) {
         super(start, end);
-        this.controlPoints = controlPoints;
+        this.controlPoints = List.copyOf(controlPoints);
     }
 
     @Override

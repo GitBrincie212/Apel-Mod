@@ -4,19 +4,19 @@ import org.joml.Vector3f;
 
 import java.util.List;
 
-/** The cubic bézier curve is another popular choice of use. It has 2 control points
- * which define how the curve should bend, which means the user has more control on how
- * the curve's shape. It is a second popular choice to use along the quadratic bézier curve.
- * Note that it is best to use the method instead of the parameterized bézier curve.
+/** The cubic Bézier curve is another popular choice of use. It has 2 control points
+ * which define how the curve should bend, which means the user has more control of
+ * the curve's shape. It is a second popular choice to use alongside the quadratic Bézier curve.
+ * Note that it is best to use the method instead of the parameterized Bézier curve.
  */
 @SuppressWarnings("unused")
 public class CubicBezierCurve extends QuadraticBezierCurve {
     protected final Vector3f controlPoint2;
 
-    /** The constructor for the cubic bézier curve, which is a curve that consists of
+    /** The constructor for the cubic Bézier curve, which is a curve that consists of
      * a starting and an ending point and two control point defining the curvature.
-     * It is more advanced than the linear & a bit more than the quadratic bézier curve
-     * but has more capabilities
+     * It is more advanced than the linear & a bit more than the quadratic Bézier curve
+     * but has more capabilities.
      *
      * @param start The starting position
      * @param end The ending position
