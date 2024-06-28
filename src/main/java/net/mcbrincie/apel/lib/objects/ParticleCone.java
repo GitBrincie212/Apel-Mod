@@ -26,8 +26,12 @@ public class ParticleCone extends ParticleObject {
 
     /** Constructor for the particle cone which is a 3D shape. It accepts as parameters
      * the particle effect to use, the height of the cone, the maximum radius,
-     * the rotation to apply and the number of particles.
-     * There is also a simplified constructor for no rotation
+     * the rotation to apply, and the number of particles.
+     * There is also a simplified constructor for no rotation.
+     *
+     * <p>This implementation calls setters for rotation, amount, height, and radius so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle effect to use
      * @param height The height of the cone
@@ -38,9 +42,8 @@ public class ParticleCone extends ParticleObject {
      * @see ParticleCone#ParticleCone(ParticleEffect, float, float, int)
     */
     public ParticleCone(ParticleEffect particleEffect, float height, float radius, Vector3f rotation, int amount) {
-        super(particleEffect);
+        super(particleEffect, rotation);
         this.setAmount(amount);
-        this.setRotation(rotation);
         this.setHeight(height);
         this.setRadius(radius);
     }
@@ -49,6 +52,10 @@ public class ParticleCone extends ParticleObject {
      * the particle effect to use, the height of the cone, the maximum radius,
      * the rotation to apply and the number of particles.
      * There is also a more complex version for rotation
+     *
+     * <p>This implementation calls setters for rotation, amount, height, and radius so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle effect to use
      * @param height The height of the cone
@@ -74,6 +81,14 @@ public class ParticleCone extends ParticleObject {
         this.afterDraw = cone.afterDraw;
     }
 
+    /** Gets the height of the cone
+     *
+     * @return The height of the cone
+     */
+    public float getHeight() {
+        return this.height;
+    }
+
     /** Sets the height of the cone
      *
      * @param height The new height
@@ -87,12 +102,6 @@ public class ParticleCone extends ParticleObject {
         this.height = height;
         return prevHeight;
     }
-
-    /** Gets the height of the cone
-     *
-     * @return The height of the cone
-     */
-    public float getHeight() {return this.height;}
 
     /** Gets the maximum radius of the cone and returns it.
      *

@@ -10,14 +10,19 @@ import org.joml.Vector3f;
 
 import java.util.Optional;
 
-/** The particle object class that represents a 3D cylinder.
+/** The particle object class that represents a cylinder.
  * It has a radius which dictates how large or small the cylinder is depending on the
- * radius value supplied and a height value for how tall it is
+ * radius value supplied and a height value for how tall it is.  The cylinder is drawn
+ * with particles evenly dispersed around its sides, but has no particles filling in
+ * the bases.  One base is in the xz-plane by default, and the other base is in the positive-y
+ * direction.  If the cylinder should be in the negative-y direction, a rotation about the
+ * x-axis will achieve that.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCylinder extends ParticleObject {
     protected float radius;
     protected float height;
+
     private DrawInterceptor<ParticleCylinder, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleCylinder, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
@@ -27,10 +32,12 @@ public class ParticleCylinder extends ParticleObject {
     /** This data is used after calculations (it contains the drawing position) */
     public enum AfterDrawData {}
 
-    /** Constructor for the particle cylinder which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the cylinder, the height of the cylinder,
-     * the rotation to apply & the number of particles. There is also a simplified version
-     * for no rotation.
+    /** Constructor for the particle cylinder. It accepts as parameters the particle effect to use, the radius of the
+     * cylinder, the height of the cylinder, the rotation to apply, and the number of particles.
+     *
+     * <p>This implementation calls setters for amount, rotation, height, and radius so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
@@ -41,8 +48,7 @@ public class ParticleCylinder extends ParticleObject {
      * @see ParticleCylinder#ParticleCylinder(ParticleEffect, float, float, int)
     */
     public ParticleCylinder(
-            @NotNull ParticleEffect particleEffect, float radius,
-            float height, Vector3f rotation, int amount
+            @NotNull ParticleEffect particleEffect, float radius, float height, Vector3f rotation, int amount
     ) {
         super(particleEffect, rotation);
         this.setRadius(radius);
@@ -50,9 +56,12 @@ public class ParticleCylinder extends ParticleObject {
         this.setHeight(height);
     }
 
-    /** Constructor for the particle cylinder which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the cylinder, the height of the cylinder
-     * & the number of particles. There is also a version that allows for rotation.
+    /** Constructor for the particle cylinder. It accepts as parameters the particle effect to use, the radius of the
+     * cylinder, the height of the cylinder, and the number of particles.
+     *
+     * <p>This implementation calls setters for amount, rotation, height, and radius so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
@@ -76,10 +85,10 @@ public class ParticleCylinder extends ParticleObject {
     public ParticleCylinder(ParticleCylinder cylinder) {
         super(cylinder);
         this.radius = cylinder.radius;
+        this.height = cylinder.height;
         this.amount = cylinder.amount;
         this.afterDraw = cylinder.afterDraw;
         this.beforeDraw = cylinder.beforeDraw;
-        this.height = cylinder.height;
     }
 
     /** Gets the radius of the ParticleCylinder and returns it.
@@ -90,34 +99,36 @@ public class ParticleCylinder extends ParticleObject {
         return radius;
     }
 
-    /** Set the radius of this ParticleCylinder and returns the previous radius that was used.
+    /** Set the radius of this ParticleCylinder and returns the previous radius that was used.  Radius must be positive.
      *
      * @param radius the new radius
      * @return the previously used radius
      */
     public float setRadius(float radius) {
         if (radius < 0) {
-            throw new IllegalArgumentException("Height cannot be negative");
+            throw new IllegalArgumentException("Radius must be positive");
         }
         float prevRadius = this.radius;
         this.radius = radius;
         return prevRadius;
     }
 
-    /** Gets the height of the ParticleCylinder and returns it
+    /** Gets the height of the ParticleCylinder and returns it.
      *
      * @return the height of the ParticleCylinder
     */
-    public float getHeight() {return height;}
+    public float getHeight() {
+        return height;
+    }
 
-    /** Sets the height of the ParticleCylinder and returns the previous height that was used
+    /** Sets the height of the ParticleCylinder and returns the previous height that was used.  Height must be positive.
      *
      * @param height The new height
      * @return The previous used height
      */
     public float setHeight(float height) {
         if (height < 0) {
-            throw new IllegalArgumentException("Height cannot be negative");
+            throw new IllegalArgumentException("Height must be positive");
         }
         float prevHeight = this.height;
         this.height = height;
@@ -135,8 +146,7 @@ public class ParticleCylinder extends ParticleObject {
 
     /** Set the interceptor to run after drawing the cylinder. The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the cylinder is rendered.  It will also have the position around the cylinder
-     * at which the current particle was drawn.
+     * position where the cylinder is rendered.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
@@ -151,8 +161,7 @@ public class ParticleCylinder extends ParticleObject {
 
     /** Set the interceptor to run prior to drawing the cylinder. The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the cylinder is rendered.  It will also have the angle around the cylinder at
-     * which the current particle is.
+     * position where the cylinder is rendered.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing each particle
      */

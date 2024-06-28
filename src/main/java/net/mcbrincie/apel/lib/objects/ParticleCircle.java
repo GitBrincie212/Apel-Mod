@@ -33,6 +33,10 @@ public class ParticleCircle extends ParticleObject {
      * the particle effect to use, the radius of the circle, the rotation to apply, and the number of particles.
      * There is also a simplified version for no rotation.
      *
+     * <p>This implementation calls setters for amount, rotation, and radius so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
+     *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
      * @param radius The radius of the circle (how big it is)
@@ -49,6 +53,10 @@ public class ParticleCircle extends ParticleObject {
     /** Constructor for the particle circle which is a 2D shape. It accepts as parameters
      * the particle effect to use, the radius of the circle, & the number of particles.
      * There is also a version that allows for rotation.
+     *
+     * <p>This implementation calls setters for amount, rotation, and radius so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
