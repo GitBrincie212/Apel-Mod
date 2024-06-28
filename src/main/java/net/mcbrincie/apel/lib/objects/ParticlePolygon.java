@@ -143,7 +143,7 @@ public class ParticlePolygon extends ParticleObject {
         // Divide the particles evenly among sides
         int particlesPerLine = this.amount / this.sides;
         for (int i = 0; i < vertices.length - 1; i++) {
-            this.drawLine(renderer, vertices[i], vertices[i + 1], step, particlesPerLine);
+            renderer.drawLine(this.particleEffect, step, vertices[i], vertices[i + 1], particlesPerLine);
         }
 
         this.doAfterDraw(renderer.getServerWorld(), step);

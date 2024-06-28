@@ -249,25 +249,25 @@ public class ParticleCuboid extends ParticleObject {
 
         // Bottom Face
         if (bottomFaceAmount != 0) {
-            this.drawLine(renderer, vertex2, vertex4, step, bottomFaceAmount);
-            this.drawLine(renderer, vertex4, vertex3, step, bottomFaceAmount);
-            this.drawLine(renderer, vertex3, vertex8, step, bottomFaceAmount);
-            this.drawLine(renderer, vertex8, vertex2, step, bottomFaceAmount);
+            renderer.drawLine(this.particleEffect, step, vertex2, vertex4, bottomFaceAmount);
+            renderer.drawLine(this.particleEffect, step, vertex4, vertex3, bottomFaceAmount);
+            renderer.drawLine(this.particleEffect, step, vertex3, vertex8, bottomFaceAmount);
+            renderer.drawLine(this.particleEffect, step, vertex8, vertex2, bottomFaceAmount);
         }
 
         // Top Face
         if (topFaceAmount != 0) {
-            this.drawLine(renderer, vertex1, vertex7, step, topFaceAmount);
-            this.drawLine(renderer, vertex7, vertex5, step, topFaceAmount);
-            this.drawLine(renderer, vertex5, vertex6, step, topFaceAmount);
-            this.drawLine(renderer, vertex6, vertex1, step, topFaceAmount);
+            renderer.drawLine(this.particleEffect, step, vertex1, vertex7, topFaceAmount);
+            renderer.drawLine(this.particleEffect, step, vertex7, vertex5, topFaceAmount);
+            renderer.drawLine(this.particleEffect, step, vertex5, vertex6, topFaceAmount);
+            renderer.drawLine(this.particleEffect, step, vertex6, vertex1, topFaceAmount);
         }
         // Vertical
         if (verticalBarsAmount != 0) {
-            this.drawLine(renderer, vertex5, vertex8, step, verticalBarsAmount);
-            this.drawLine(renderer, vertex2, vertex6, step, verticalBarsAmount);
-            this.drawLine(renderer, vertex3, vertex7, step, verticalBarsAmount);
-            this.drawLine(renderer, vertex1, vertex4, step, verticalBarsAmount);
+            renderer.drawLine(this.particleEffect, step, vertex5, vertex8, verticalBarsAmount);
+            renderer.drawLine(this.particleEffect, step, vertex2, vertex6, verticalBarsAmount);
+            renderer.drawLine(this.particleEffect, step, vertex3, vertex7, verticalBarsAmount);
+            renderer.drawLine(this.particleEffect, step, vertex1, vertex4, verticalBarsAmount);
         }
         this.doAfterDraw(renderer.getServerWorld(), step);
         this.endDraw(renderer, step, drawPos);

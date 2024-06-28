@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
-import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
@@ -188,76 +187,5 @@ public abstract class ParticleObject {
      */
     protected final Vector3f rigidTransformation(Vector3f position, Quaternionfc quaternion, Vector3f translation) {
         return new Vector3f(position).rotate(quaternion).add(translation);
-    }
-
-    /**
-     * Draws a particle at {@code drawPos} using the object's existing {@code particleEffect}.
-     *
-     * @param renderer The server world instance
-     * @param step     The step being rendered
-     * @param drawPos  The position at which to draw the particle
-     */
-    protected void drawParticle(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.drawParticle(this.particleEffect, renderer, step, drawPos);
-    }
-
-    /**
-     * Draws a particle at {@code drawPos} using the given {@code particleEffect}.
-     *
-     * @param particleEffect The particle effect to use
-     * @param renderer       The server world instance
-     * @param step           The step being rendered
-     * @param drawPos        The position at which to draw the particle
-     */
-    protected void drawParticle(ParticleEffect particleEffect, ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        renderer.drawParticle(particleEffect, step, drawPos);
-    }
-
-    /**
-     * Draws a line of particles from {@code start} to {@code end}.  The line will have {@code amount}
-     * particles in it, inclusive of particles at both {@code start} and {@code end}.
-     *
-     * @param renderer The server world instance
-     * @param start    The start point of the line
-     * @param end      The end point of the line
-     * @param step     The step being rendered
-     * @param amount   The number of particles in the line must be greater than 1.
-     *
-     * @throws ArithmeticException if amount == 1
-     */
-    protected void drawLine(ApelServerRenderer renderer, Vector3f start, Vector3f end, int step, int amount) {
-        renderer.drawLine(this.particleEffect, step, start, end, amount);
-    }
-
-    /**
-     * Draws a circle of {@code amount} particles at {@code drawPos} with {@code radius} and {@code rotation} applied.
-     *
-     * @param renderer The renderer to use
-     * @param step     The step being rendered
-     * @param drawPos  The point at the center of the circle
-     * @param radius   The radius of the circle
-     * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
-     * @param amount   The number of particles to use to draw the circle
-     */
-    protected void drawCircle(ApelServerRenderer renderer, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount) {
-        renderer.drawEllipse(this.particleEffect, step, drawPos, radius, radius, rotation, amount);
-    }
-
-    /**
-     * Draws a circle of {@code amount} particles at {@code drawPos} with {@code radius} and {@code rotation} applied.
-     *
-     * @param renderer The renderer to use
-     * @param step     The step being rendered
-     * @param drawPos  The point at the center of the circle
-     * @param radius   The radius of the circle
-     * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
-     * @param amount   The number of particles to use to draw the circle
-     */
-    protected void drawEllipse(ApelServerRenderer renderer, int step, Vector3f drawPos, float radius, float stretch, Vector3f rotation, int amount) {
-        renderer.drawEllipse(this.particleEffect, step, drawPos, radius, stretch, rotation, amount);
-    }
-
-    protected void drawBezierCurve(ApelServerRenderer renderer, int step, Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount) {
-        renderer.drawBezier(this.particleEffect, step, drawPos, bezierCurve, rotation, amount);
     }
 }

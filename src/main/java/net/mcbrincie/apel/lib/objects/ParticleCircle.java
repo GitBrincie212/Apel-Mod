@@ -103,7 +103,8 @@ public class ParticleCircle extends ParticleObject {
     public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
         this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
         Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
-        this.drawCircle(renderer, step, objectDrawPos, this.radius, this.rotation, this.amount);
+        renderer.drawEllipse(
+                this.particleEffect, step, objectDrawPos, this.radius, this.radius, this.rotation, this.amount);
         this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
     }

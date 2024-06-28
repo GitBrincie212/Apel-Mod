@@ -199,9 +199,9 @@ public class ParticleTriangle extends ParticleObject {
         Vector3f v2 = this.rigidTransformation(this.vertex2, quaternion, totalOffset);
         Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
 
-        this.drawLine(renderer, v1, v2, step, this.amount);
-        this.drawLine(renderer, v2, v3, step, this.amount);
-        this.drawLine(renderer, v3, v1, step, this.amount);
+        renderer.drawLine(this.particleEffect, step, v1, v2, this.amount);
+        renderer.drawLine(this.particleEffect, step, v2, v3, this.amount);
+        renderer.drawLine(this.particleEffect, step, v3, v1, this.amount);
 
         this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
