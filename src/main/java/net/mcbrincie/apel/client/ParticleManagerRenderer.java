@@ -6,11 +6,11 @@ import net.minecraft.client.particle.ParticleManager;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Vector3f;
 
-public class ParticleManagerRenderer extends BaseApelRenderer implements ApelRenderer {
+final class ParticleManagerRenderer extends BaseApelRenderer implements ApelRenderer {
 
     private ParticleManager particleManager;
 
-    public ParticleManagerRenderer() {}
+    ParticleManagerRenderer() {}
 
     // Set the ParticleManager via this setter because it isn't available when ApelClient initializes
     /* package-private */ void setParticleManager(ParticleManager particleManager) {

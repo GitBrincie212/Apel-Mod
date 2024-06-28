@@ -7,11 +7,14 @@ import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Vector3f;
 
-public class ApelFramePayloadHandler implements ClientPlayNetworking.PlayPayloadHandler<ApelFramePayload> {
+/**
+ * Handles {@link ApelFramePayload}s from the server.
+ */
+final class ApelFramePayloadHandler implements ClientPlayNetworking.PlayPayloadHandler<ApelFramePayload> {
 
     private final ParticleManagerRenderer renderer;
 
-    public ApelFramePayloadHandler(ParticleManagerRenderer renderer) {
+    ApelFramePayloadHandler(ParticleManagerRenderer renderer) {
         this.renderer = renderer;
     }
 
