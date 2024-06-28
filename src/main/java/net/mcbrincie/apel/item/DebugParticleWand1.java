@@ -17,10 +17,10 @@ public class DebugParticleWand1 extends Item {
     public TypedActionResult<ItemStack> use(World world, PlayerEntity user, Hand hand) {
         if (world.isClient) return TypedActionResult.pass(user.getMainHandStack());
         animators((ServerWorld) world, user);
-        // combineAnimator.beginAnimation((ServerWorld) world);
         return TypedActionResult.pass(user.getMainHandStack());
     }
 
+    // When a user right-clicks the wand, this gets triggered
     private void animators(ServerWorld world, PlayerEntity user) {
     }
 }
