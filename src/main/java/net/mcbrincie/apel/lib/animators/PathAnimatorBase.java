@@ -31,7 +31,7 @@ public abstract class PathAnimatorBase {
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
 
-    protected static TrigTable trigTable = Apel.trigonometryTable;
+    protected static TrigTable trigTable = Apel.TRIG_TABLE;
 
     protected Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onEnd;
     protected Function5<Integer, Integer, Vector3f, Integer, Float, Void> onStart;
@@ -100,7 +100,7 @@ public abstract class PathAnimatorBase {
     public void allocateToScheduler() {
         if (this.delay == 0) return;
         int steps = this.renderingSteps != 0 ? this.scheduleGetAmount() : this.convertToSteps();
-        Apel.apelScheduler.allocateNewSequence(this, steps);
+        Apel.SCHEDULER.allocateNewSequence(this, steps);
     }
 
     protected int scheduleGetAmount() {
@@ -326,11 +326,11 @@ public abstract class PathAnimatorBase {
             renderer.afterFrame(step, drawPosition);
         };
         if (this.delay == 0) {
-            Apel.drawThread.submit(func);
+            Apel.DRAW_EXECUTOR.submit(func);
             return;
         }
         if (this.processSpeed <= 1) {
-            Apel.apelScheduler.allocateNewStep(
+            Apel.SCHEDULER.allocateNewStep(
                     this, new ScheduledStep(this.delay, new Runnable[]{func})
             );
             return;
@@ -338,7 +338,7 @@ public abstract class PathAnimatorBase {
             this.storedFuncsBuffer.add(func);
             return;
         }
-        Apel.apelScheduler.allocateNewStep(
+        Apel.SCHEDULER.allocateNewStep(
                 this, new ScheduledStep(this.delay, this.storedFuncsBuffer.toArray(Runnable[]::new))
         );
         this.storedFuncsBuffer.clear();

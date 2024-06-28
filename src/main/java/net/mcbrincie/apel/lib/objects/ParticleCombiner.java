@@ -140,8 +140,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** The copy constructor for the particle combiner. Which
-     * copies all the objects and the interceptors into a brand-new
-     * instance of the particle combiner
+     * copies all the object, offset, and interceptor references into a brand-new
+     * instance of the particle combiner.
      *
      * @param combiner The particle combiner to copy from
      */
@@ -156,7 +156,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** Sets the rotation for all the particle objects. There is
      * another method that allows for offsetting the rotation per particle
-     * object, it is the same as using this one with the offset params
+     * object, it is the same as using this one with the offset params.
      *
      * @param rotation The new rotation (IN RADIANS)
      * @return The previous rotation used
@@ -176,7 +176,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** Sets the rotation for all the particle objects, there
      * is an offset of XYZ per object. There is also a simplified
-     * method that doesn't use offsets
+     * method that doesn't use offsets.
      *
      * @param rotation The new rotation (IN RADIANS)
      * @param offsetX the offset x
@@ -185,6 +185,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @return The previous rotation
      *
      * @see ParticleCombiner#setRotation(Vector3f)
+     * @see ParticleCombiner#setRotation(Vector3f, Vector3f)
      */
     public Vector3f setRotation(Vector3f rotation, float offsetX, float offsetY, float offsetZ) {
         if (offsetX == 0 && offsetY == 0 && offsetZ == 0) {
@@ -202,13 +203,14 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** Sets the rotation for all the particle objects, there
      * is an offset of XYZ per object. There is also a simplified
-     * method that doesn't use offsets
+     * method that doesn't use offsets.
      *
      * @param rotation The new rotation (IN RADIANS)
      * @param offset the offset x
      * @return The previous rotation
      *
      * @see ParticleCombiner#setRotation(Vector3f)
+     * @see ParticleCombiner#setRotation(Vector3f, float, float, float)
      */
     public Vector3f setRotation(Vector3f rotation, Vector3f offset) {
         if (offset.equals(new Vector3f())) {
@@ -223,15 +225,14 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         return prevRotation;
     }
 
-    /** Sets the rotation for all the particle objects (this includes objects
-     * that are way below the hierarchy). There is another method that allows
+    /** Sets the rotation for all {@code ParticleObject}s in the hierarchy, which can nest additional
+     * {@code ParticleCombiner}s. There is another method that allows
      * for offsetting the rotation per particle object, it is the same
-     * as using this one with the offset params
+     * as using this one with the offset params.
      *
      * @param rotation The new rotation (IN RADIANS)
      *
-     * @see ParticleCombiner#setRotation(Vector3f, float, float, float)
-     * @see ParticleCombiner#setRotation(Vector3f, Vector3f)
+     * @see ParticleCombiner#setRotationRecursively(Vector3f)
      */
     public void setRotationRecursively(Vector3f rotation) {
         for (T object : this.objects) {
@@ -242,9 +243,9 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         }
     }
 
-    /** Sets the rotation for all the particle objects (including the objects that are
-     * below the hierarchy), there is an offset of XYZ per object. There is as well a
-     * simplified method that doesn't use offsets
+    /** Sets the rotation for all {@code ParticleObject}s in the hierarchy, which can nest additional
+     * {@code ParticleCombiner}s. There is an offset of XYZ per object. There is as well a
+     * simplified method that doesn't use offsets.
      *
      * @param rotation The new rotation (IN RADIANS)
      * @param offset the offset rotation
@@ -267,7 +268,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         }
     }
 
-    /** Gets the offsets per object and returns a list
+    /** Gets the offsets per object and returns a list.
      *
      * @return The list of offsets per object
      */
@@ -277,8 +278,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** Sets the offset position per object. The offset positions have to be the same
      * amount as the objects. New objects added will have their offset to (0,0,0). There
-     * is a helper method to allow setting for all objects the same offset
-     *
+     * is a helper method to allow setting for all objects the same offset.
      *
      * @param offset The offsets for each object (corresponding on each index)
      * @return The previous offsets
@@ -291,8 +291,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** Sets the offset position to all objects. The offset applies to all objects and overwrites
      * the values. New objects added will have their offset to (0,0,0). There is a
-     * helper method to allow setting different offsets to different objects
-     *
+     * helper method to allow setting different offsets to different objects.
      *
      * @param offset The offsets for all the objects
      * @return The previous offsets
@@ -306,8 +305,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the offset position for the individual object. By supplying an index and the
-     * new offset for that object
-     *
+     * new offset for that object.
      *
      * @param offset The offsets for the indexed object
      * @return The previous offset
@@ -319,8 +317,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the offset position for the individual object. By supplying the object and the
-     * new offset for that object. If the object is not found, it will return null
-     *
+     * new offset for that object. If the object is not found, it will return null.
      *
      * @param offset The offsets for the individual object
      * @return The previous offset
@@ -335,7 +332,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** Sets the particle to use to a new value and returns the previous particle that was used.
      * This applies to all the object the value can also be null, meaning that there are different
-     * particle effects at play in the object
+     * particle effects at play in the object.
      *
      * @param particle The new particle
      * @return The previous particle
@@ -351,11 +348,12 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
 
     /** Sets the particle to use to a new value and returns the previous particle that was used.
      * This applies to all the objects (including objects that are way below the hierarchy). The value
-     * can also be null, meaning that there are different particle effects at play in the object
-     * <br><br>
+     * can also be null, meaning that there are different particle effects at play in the object.
      *
      * @param particle The new particle
      * @return The previous particle
+     *
+     * @see ParticleCombiner#setParticleEffectRecursively(ParticleEffect[])
      */
     public ParticleEffect setParticleEffectRecursively(ParticleEffect particle) {
         ParticleEffect prevParticle = super.setParticleEffect(particle);
@@ -372,38 +370,37 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * This applies to all the objects (including objects that are way below the hierarchy). The value
      * can also be null, meaning that there are different particle effects at play in the object.
      * However unlike the {@code setParticleEffectRecursively(ParticleEffect)} which is a list of
-     * the particles to use per depth level<br><br>
+     * the particles to use per depth level.
      *
-     * <b>Note:</b> If there are no more particles to supply in the current depth level the system is,
-     * it will resort not going deeper, keep that in mind
+     * <p><b>Note:</b> If there are no more particles to supply in the current depth level the system is,
+     * it will not go deeper.
      *
-     * @param particle The particles per level
+     * @param particleEffects The particle effects for each level
      *
      * @see ParticleCombiner#setParticleEffectRecursively(ParticleEffect)
      */
-    public void setParticleEffectRecursively(ParticleEffect[] particle) {
+    public void setParticleEffectRecursively(ParticleEffect[] particleEffects) {
         this.particleEffect = null;
-        this.particleEffectRecursiveLogic(particle, 0);
+        this.particleEffectRecursiveLogic(particleEffects, 0);
     }
 
-    private void particleEffectRecursiveLogic(ParticleEffect[] particle, int depth) {
+    private void particleEffectRecursiveLogic(ParticleEffect[] particleEffects, int depth) {
         for (T object : this.objects) {
-            if (depth >= particle.length) break;
+            if (depth >= particleEffects.length) break;
             if (object instanceof ParticleCombiner<?> combiner) {
                 object.particleEffect = null;
-                combiner.particleEffectRecursiveLogic(particle, depth + 1);
+                combiner.particleEffectRecursiveLogic(particleEffects, depth + 1);
             }
-            object.setParticleEffect(particle[depth]);
+            object.setParticleEffect(particleEffects[depth]);
         }
     }
 
     /** Sets the amount to use to a new value and returns the previous amount that was used.
      * This applies to all the objects. The value can also be -1 meaning that there are different
      * particle effects at play in the object. There is a method that allows for offsets per
-     * particle objects
+     * particle objects.
      *
      * @param amount The new particle
-     *
      * @return The previous particle
      *
      * @see ParticleCombiner#setAmount(int, int)
@@ -420,7 +417,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     /** Sets the amount to use to a new value and returns the previous amount that was used.
      * This applies to all the objects. The value can also be -1 meaning that there are different
      * particle effects at play in the object. The offset param changes the amount per object by
-     * a specified amount. There is also a simplified version that doesn't use offsets
+     * a specified amount. There is also a simplified version that doesn't use offsets.
      *
      * @param amount The new particle
      * @param offset The offset of the amount (can be positive or negative)
@@ -445,9 +442,9 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * This applies to all the objects (including objects that are way below the hierarchy). The returned
      * value can also be -1 meaning that there are different particle effects at play in the object.
      * The offset param changes the amount per object by a specified amount. There is also a simplified version
-     * that doesn't recursively scale down the tree & another that allows specifying the recursion offset<br><br>
+     * that doesn't recursively scale down the tree & another that allows specifying the recursion offset.
      *
-     * <b>Note:</b> when the program encounters another combiner. It calls the same method, but
+     * <p><b>Note:</b> When the program encounters another combiner, it calls the same method, but
      * the amount is added with the iterated offset and the offset remains unchanged
      *
      * @param amount The new particle
@@ -455,6 +452,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      *
      * @see ParticleCombiner#setAmount(int)
      * @see ParticleCombiner#setAmount(int, int)
+     * @see ParticleCombiner#setAmountRecursively(int, int, int)
      */
     public void setAmountRecursively(int amount, int offset) {
         if (offset == 0) {
@@ -475,9 +473,9 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * This applies to all the objects (including objects that are way below the hierarchy). The returned
      * value can also be -1 meaning that there are different particle effects at play in the object.
      * The offset param changes the amount per object by a specified amount. There is also a simplified version
-     * that doesn't recursively scale down the tree & another that doesn't accept the recursion offset<br><br>
+     * that doesn't recursively scale down the tree & another that doesn't accept the recursion offset.
      *
-     * <b>Note:</b> when the program encounters another combiner. It calls the same method, but
+     * <p><b>Note:</b> when the program encounters another combiner. It calls the same method, but
      * the amount is added with the recursive offset and the recursive offset remains unchanged
      *
      * @param amount The new particle
@@ -505,7 +503,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         this.amount = -1;
     }
 
-    /** Gets the list of particle objects and returns them
+    /** Gets the list of particle objects and returns them.
      *
      * @return The list of particle objects
      */
@@ -513,7 +511,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         return this.objects;
     }
 
-    /** Gets the particle objects at that index & returns it
+    /** Gets the particle objects at that index & returns it.
      *
      * @param index the index of the particle object
      * @return The list of particle objects
@@ -571,7 +569,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         return prevObjects;
     }
 
-    /** Sets the individual object at that index to a different object
+    /** Sets the individual object at that index to a different object.
      *
      * @param index The index of the particle object to replace at
      * @param newObject The new particle object
@@ -610,7 +608,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     /** Appends a new particle object to the combiner. This is at the back
      *  of the list. Meaning that this object is the last one in the list.
      *  The offset position is (0,0,0) when appending, although you can use
-     *  the same method by just supplying the offset
+     *  the same method by just supplying the offset.
      *
      * @param object The object to add to the list
      *
@@ -626,7 +624,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     /** Appends a new particle object to the combiner. This is at the back
      *  of the list. Meaning that this object is the last one in the list.
      *  The offset position is (0,0,0) when appending, although you can use
-     *  the same method by just supplying the offset
+     *  the same method by just supplying the offset.
      *
      * @param object The object to add to the list
      *
@@ -640,7 +638,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Removes an object from the combiner including its offset. Returns
-     * the object that was removed as well as the offset position
+     * the object that was removed as well as the offset position.
      *
      * @param index The index to remove at
      * @return The pair of the object & offset
@@ -650,7 +648,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Removes an object from the combiner including its offset. Returns
-     * the object that was removed as well as the offset position
+     * the object that was removed as well as the offset position.
      *
      * @param object The index to remove at
      * @return The pair of the object & offset
@@ -679,7 +677,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     }
 
     /** Sets the offset to a new value. The offset position is added with the drawing position.
-     * Returns the previous offset that was used
+     * Returns the previous offset that was used.
      *
      * @param offset The new offset value
      * @return The previous offset
@@ -690,13 +688,31 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         return prevOffset.toArray(Vector3f[]::new);
     }
 
+    /**
+     * Gets the offset for the given child object.
+     *
+     * @param index Index of the child object
+     * @return Offset of the child object
+     */
     public Vector3f getOffset(int index) {return this.offset.get(index);}
 
-
+    /**
+     * Set the interceptor to run before drawing each child object.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the step number of the animation, the child object
+     * to be rendered, and a boolean describing whether it should be rendered.
+     *
+     * @param beforeChildDrawIntercept The interceptor to execute before drawing each child object
+     */
     public void setBeforeChildDrawIntercept(DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDrawIntercept) {
         this.beforeChildDrawIntercept = Optional.ofNullable(beforeChildDrawIntercept).orElse(DrawInterceptor.identity());
     }
 
+    /**
+     * Set the interceptor to run after drawing each child object.  The interceptor will be provided
+     * with references to the {@link ServerWorld} and the step number of the animation.
+     *
+     * @param afterChildDrawIntercept The interceptor to execute after drawing each child object
+     */
     public void setAfterChildDrawIntercept(DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDrawIntercept) {
         this.afterChildDrawIntercept = Optional.ofNullable(afterChildDrawIntercept).orElse(DrawInterceptor.identity());
     }
@@ -706,9 +722,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         this.afterChildDrawIntercept.apply(interceptData, this);
     }
 
-    private InterceptData<BeforeChildDrawData> doBeforeChildDraw(
-            ServerWorld world, int step, T objectInUse
-    ) {
+    private InterceptData<BeforeChildDrawData> doBeforeChildDraw(ServerWorld world, int step, T objectInUse) {
         InterceptData<BeforeChildDrawData> interceptData = new InterceptData<>(world, null, step, BeforeChildDrawData.class);
         interceptData.addMetadata(BeforeChildDrawData.OBJECT_IN_USE, objectInUse);
         interceptData.addMetadata(BeforeChildDrawData.CAN_DRAW_OBJECT, true);

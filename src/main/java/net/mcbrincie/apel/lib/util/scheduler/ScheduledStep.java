@@ -15,7 +15,7 @@ public class ScheduledStep {
         this.delay--;
         if (this.delay == 0) {
             for (Runnable action : this.actions) {
-                Apel.drawThread.submit(action);
+                Apel.DRAW_EXECUTOR.submit(action);
             }
             return true;
         }

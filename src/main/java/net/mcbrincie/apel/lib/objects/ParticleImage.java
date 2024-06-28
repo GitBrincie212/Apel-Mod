@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.image.DustPalateGenerator;
 import net.mcbrincie.apel.lib.util.image.PalateGenerator;
@@ -60,8 +61,7 @@ public class ParticleImage extends ParticleObject {
             int height = this.image.getHeight();
             this.rgbArray = this.image.getRGB(0, 0, width, height, null, 0, width);
         } catch (IOException e) {
-            System.out.println("There was a problem loading the image " + filename);
-            e.printStackTrace();
+            Apel.LOGGER.error("There was a problem loading the image {}", filename);
         }
         return prevFilename;
     }

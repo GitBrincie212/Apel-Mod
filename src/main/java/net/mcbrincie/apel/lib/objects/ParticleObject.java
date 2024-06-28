@@ -1,20 +1,33 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.math.TrigTable;
-import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.particle.ParticleEffect;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
+/**
+ * ParticleObject is the base class for all particle-based constructions that are animated by APEL.  Particle objects
+ * are rendered in the client using particles registered with the particle registry.  APEL provides several common
+ * 2D and 3D shapes that are ready for immediate use.
+ *
+ * <p>All particle objects share some common properties, and those are provided on the base class.  The
+ * {@link #particleEffect} is used to render all particles in the object.  All objects allow for specifying a
+ * {@link #rotation} and {@link #offset}.  These will be applied prior to translating the object to the {@code drawPos}
+ * passed to {@link #draw(ApelServerRenderer, int, Vector3f)}.  Objects also have an {@link #amount} that indicates
+ * the number of particles to render.  APEL native objects will spread these particles evenly throughout the shape
+ * unless otherwise indicated on specific shapes.
+ *
+ * <h2>Subclassing</h2>
+ * <p>Custom shapes only need to implement the {@code draw} method, and it should call methods on the
+ * {@link ApelServerRenderer renderer} to cause particles to be rendered.  The renderer supports several basic
+ * geometries which are documented there.
+ */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class ParticleObject {
     protected ParticleEffect particleEffect;
     protected Vector3f rotation;
     protected Vector3f offset = new Vector3f(0, 0, 0);
     protected int amount = 1;
-
-    protected static TrigTable trigTable = Apel.trigonometryTable;
 
     /** Constructor for the particle object which is a point. It accepts as parameters
      * the particle to use and the rotation to apply (which has no effect. Only on the
@@ -86,7 +99,10 @@ public abstract class ParticleObject {
 
     /** Sets the rotation to a new value. The rotation is calculated in radians and
      * when setting it rounds the rotation to match in the range of (-2π, 2π). It returns
-     * the previous rotation used
+     * the previous rotation used.
+     *
+     * <p>This implementation uses {@link #normalizeRotation(Vector3f)} to do the rounding which uses
+     * the modulo operator on each member of the {@code Vector3f} to produce a result in (-2π, 2π).
      *
      * @param rotation The new rotation (IN RADIANS)
      * @return the previously used rotation
@@ -97,6 +113,16 @@ public abstract class ParticleObject {
         return prevRotation;
     }
 
+    /**
+     * Removes full rotations from each component of the provided {@code rotation} vector such that each component
+     * maintains its direction but has a magnitude in the range {@code (-2π, 0]} or {@code [0, 2π)}.  Returns a new
+     * vector containing the resulting partial rotation components.
+     *
+     * <p><b>Note:</b> This is called by {@link #setRotation(Vector3f)}, so overrides must maintain this behavior.
+     *
+     * @param rotation The existing rotation vector
+     * @return A new vector with partial rotation components
+     */
     protected Vector3f normalizeRotation(Vector3f rotation) {
         float x = (float) (rotation.x % Math.TAU);
         float y = (float) (rotation.y % Math.TAU);
@@ -150,101 +176,55 @@ public abstract class ParticleObject {
     }
 
     /**
-     * This method allows for drawing a particle object given the world, the current step and the drawing position.
-     * <b>The method is used for internal workings, its not meant to be used for outside use</b>. Path animators
-     * are the ones who calculate the position, the step & give the server world instance
+     * This method allows for drawing a particle object using the provided {@link ApelServerRenderer}, the current
+     * step, and the drawing position.
+     *
+     * <p><b>The method should not be called directly.</b>  It will be called by {@code PathAnimatorBase} subclasses
+     * to draw objects along the animation path or at an animation point.  These animators will provide the renderer
+     * and calculate the current {@code step} and the {@code drawPos}.  The renderer will have access to the
+     * {@code ServerWorld}.  Implementations should call methods on the {@code renderer} that cause drawing to occur.
+     *
+     * <p><b>Important:</b> Implementations must also take care <em>not</em> to modify the {@code drawPos}, as many
+     * operations on {@link Vector3f} instances are in-place.
+     *
+     * <p>The provided subclasses include interceptors that allow developers to perform actions both before and after
+     * drawing the object.
      *
      * @param renderer The server world instance
      * @param step     The current rendering step at
      * @param drawPos  The position to draw at
      */
     public abstract void draw(ApelServerRenderer renderer, int step, Vector3f drawPos);
+
     public void endDraw(ApelServerRenderer renderer, int step, Vector3f drawPos) {}
 
-    protected Vector3f rigidTransformation(Vector3f rotation, Vector3f offset, float x, float y, float z) {
-        return new Vector3f(x, y, z)
-                .rotateZ(rotation.z)
-                .rotateY(rotation.y)
-                .rotateX(rotation.x)
-                .add(offset);
-    }
-
-    protected Vector3f rigidTransformation(Vector3f rotation, Vector3f offset, Vector3f position) {
-        return new Vector3f(position)
-                .rotateZ(rotation.z)
-                .rotateY(rotation.y)
-                .rotateX(rotation.x)
-                .add(offset);
+    /**
+     * Transforms the point at {@code (x, y, z)} according to the {@code quaternion} and {@code translation}.
+     *
+     * <p>Does not modify the {@code quaternion} or {@code translation}.
+     *
+     * @param x The x-coordinate of the point to transform
+     * @param y The y-coordinate of the point to transform
+     * @param z The z-coordinate of the point to transform
+     * @param quaternion The rotation to apply
+     * @param translation The translation to apply
+     * @return The transformed point
+     */
+    protected final Vector3f rigidTransformation(float x, float y, float z, Quaternionfc quaternion, Vector3f translation) {
+        return new Vector3f(x, y, z).rotate(quaternion).add(translation);
     }
 
     /**
-     * Draws a particle at {@code drawPos} using the object's existing {@code particleEffect}.
+     * Transforms a copy of the point at {@code position} according to the {@code quaternion} and {@code translation}.
      *
-     * @param renderer The server world instance
-     * @param step     The step being rendered
-     * @param drawPos  The position at which to draw the particle
+     * <p>Does not modify the {@code quaternion} or {@code translation}.
+     *
+     * @param position The x-coordinate of the point to transform.
+     * @param quaternion The rotation to apply
+     * @param translation The translation to apply
+     * @return The transformed point in a new Vector3f
      */
-    protected void drawParticle(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.drawParticle(this.particleEffect, renderer, step, drawPos);
-    }
-
-    /**
-     * Draws a particle at {@code drawPos} using the given {@code particleEffect}.
-     *
-     * @param particleEffect The particle effect to use
-     * @param renderer       The server world instance
-     * @param step           The step being rendered
-     * @param drawPos        The position at which to draw the particle
-     */
-    protected void drawParticle(ParticleEffect particleEffect, ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        renderer.drawParticle(particleEffect, step, drawPos);
-    }
-
-    /**
-     * Draws a line of particles from {@code start} to {@code end}.  The line will have {@code amount}
-     * particles in it, inclusive of particles at both {@code start} and {@code end}.
-     *
-     * @param renderer The server world instance
-     * @param start    The start point of the line
-     * @param end      The end point of the line
-     * @param step     The step being rendered
-     * @param amount   The number of particles in the line must be greater than 1.
-     *
-     * @throws ArithmeticException if amount == 1
-     */
-    protected void drawLine(ApelServerRenderer renderer, Vector3f start, Vector3f end, int step, int amount) {
-        renderer.drawLine(this.particleEffect, step, start, end, amount);
-    }
-
-    /**
-     * Draws a circle of {@code amount} particles at {@code drawPos} with {@code radius} and {@code rotation} applied.
-     *
-     * @param renderer The renderer to use
-     * @param step     The step being rendered
-     * @param drawPos  The point at the center of the circle
-     * @param radius   The radius of the circle
-     * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
-     * @param amount   The number of particles to use to draw the circle
-     */
-    protected void drawCircle(ApelServerRenderer renderer, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount) {
-        renderer.drawEllipse(this.particleEffect, step, drawPos, radius, radius, rotation, amount);
-    }
-
-    /**
-     * Draws a circle of {@code amount} particles at {@code drawPos} with {@code radius} and {@code rotation} applied.
-     *
-     * @param renderer The renderer to use
-     * @param step     The step being rendered
-     * @param drawPos  The point at the center of the circle
-     * @param radius   The radius of the circle
-     * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
-     * @param amount   The number of particles to use to draw the circle
-     */
-    protected void drawEllipse(ApelServerRenderer renderer, int step, Vector3f drawPos, float radius, float stretch, Vector3f rotation, int amount) {
-        renderer.drawEllipse(this.particleEffect, step, drawPos, radius, stretch, rotation, amount);
-    }
-
-    protected void drawBezierCurve(ApelServerRenderer renderer, int step, Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount) {
-        renderer.drawBezier(this.particleEffect, step, drawPos, bezierCurve, rotation, amount);
+    protected final Vector3f rigidTransformation(Vector3f position, Quaternionfc quaternion, Vector3f translation) {
+        return new Vector3f(position).rotate(quaternion).add(translation);
     }
 }

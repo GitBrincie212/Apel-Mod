@@ -12,6 +12,6 @@ public abstract class ServerWorldMixin {
 
 	@Inject(at = @At("HEAD"), method = "tick")
 	private void tickInject(CallbackInfo info) {
-		Apel.apelScheduler.runTick();
+		Apel.SCHEDULER.runTick();
 	}
 }

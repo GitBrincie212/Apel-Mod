@@ -7,6 +7,8 @@ import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -249,20 +251,23 @@ public class ParticleQuad extends ParticleObject {
 
     @Override
     public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        float rotX = this.rotation.x;
-        float rotY = this.rotation.y;
-        float rotZ = this.rotation.z;
         this.beforeDraw(renderer.getServerWorld(), step);
 
-        Vector3f v1 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex1);
-        Vector3f v2 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex2);
-        Vector3f v3 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex3);
-        Vector3f v4 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex4);
+        // Rotation
+        Quaternionfc quaternion =
+                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
+        // Defensive copy of `drawPos`
+        Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
 
-        this.drawLine(renderer, v1, v2, step, this.amount);
-        this.drawLine(renderer, v2, v3, step, this.amount);
-        this.drawLine(renderer, v3, v4, step, this.amount);
-        this.drawLine(renderer, v4, v1, step, this.amount);
+        Vector3f v1 = this.rigidTransformation(this.vertex1, quaternion, totalOffset);
+        Vector3f v2 = this.rigidTransformation(this.vertex2, quaternion, totalOffset);
+        Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
+        Vector3f v4 = this.rigidTransformation(this.vertex4, quaternion, totalOffset);
+
+        renderer.drawLine(this.particleEffect, step, v1, v2, this.amount);
+        renderer.drawLine(this.particleEffect, step, v2, v3, this.amount);
+        renderer.drawLine(this.particleEffect, step, v3, v4, this.amount);
+        renderer.drawLine(this.particleEffect, step, v4, v1, this.amount);
 
         this.doAfterDraw(renderer.getServerWorld(), step, v1, v2, v3, v4);
         this.endDraw(renderer, step, drawPos);

@@ -185,7 +185,7 @@ public class ParticleBezierCurve extends ParticleObject {
             bezierCurve = interceptData.getMetadata(CommonDrawData.BEZIER_CURVE, bezierCurve);
             amountForCurve = interceptData.getMetadata(CommonDrawData.AMOUNT, amountForCurve);
 
-            this.drawBezierCurve(renderer, step, drawPos, bezierCurve, this.rotation, amountForCurve);
+            renderer.drawBezier(this.particleEffect, step, drawPos, bezierCurve, this.rotation, amountForCurve);
             this.doAfterDraw(renderer.getServerWorld(), bezierCurve, amountForCurve, step);
         }
         this.endDraw(renderer, step, drawPos);

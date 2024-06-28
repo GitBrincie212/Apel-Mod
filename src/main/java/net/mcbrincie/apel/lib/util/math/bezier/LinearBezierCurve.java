@@ -4,10 +4,13 @@ import org.joml.Vector3f;
 
 import java.util.List;
 
-/** The linear bézier curve is the simplest of all bézier curves since it is a line.
- * It has no control points and is fast to compute (if you plan to use a lot of linear
- * bézier curves for the bézier path animator, then it is best to use the linear animator
- * instead)
+/**
+ * The linear Bézier curve is the simplest of all Bézier curves since it is a line.
+ * It has no control points and is efficient to compute.
+ *
+ * <p>If you plan to use a lot of linear Bézier curves for the Bézier path animator, then it is better to use the
+ * linear animator instead.  Similarly, if you intend to draw linear Bézier curves with particles, you should use
+ * {@code ParticleLine} instead.
  */
 @SuppressWarnings("unused")
 public class LinearBezierCurve extends BezierCurve {
