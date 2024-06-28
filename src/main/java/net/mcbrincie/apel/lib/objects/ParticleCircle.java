@@ -10,10 +10,10 @@ import org.joml.Vector3f;
 
 import java.util.Optional;
 
-/** The particle object class that represents a circle(2D shape) and not a 3D sphere.
+/** The particle object class that represents a circle (2D shape) and not a 3D sphere.
  * It has a radius which dictates how large or small the circle is depending on the
  * radius value supplied.
- * The circle is drawn on the XY-plane by default, but can
+ * The circle is drawn on the XY-plane (east/west and up/down) by default, but can
  * be drawn on any plane by using {@link #setRotation(Vector3f)} to provide Euler
  * angles for rotation.
  */
@@ -30,7 +30,7 @@ public class ParticleCircle extends ParticleObject {
     public enum AfterDrawData {}
 
     /** Constructor for the particle circle which is a 2D shape. It accepts as parameters
-     * the particle effect to use, the radius of the circle, the rotation to apply & the number of particles.
+     * the particle effect to use, the radius of the circle, the rotation to apply, and the number of particles.
      * There is also a simplified version for no rotation.
      *
      * @param particleEffect The particle to use
@@ -40,9 +40,7 @@ public class ParticleCircle extends ParticleObject {
      *
      * @see ParticleCircle#ParticleCircle(ParticleEffect, float, int)
     */
-    public ParticleCircle(
-            @NotNull ParticleEffect particleEffect, float radius, Vector3f rotation, int amount
-    ) {
+    public ParticleCircle(@NotNull ParticleEffect particleEffect, float radius, Vector3f rotation, int amount) {
         super(particleEffect, rotation);
         this.setRadius(radius);
         this.setAmount(amount);
@@ -58,9 +56,7 @@ public class ParticleCircle extends ParticleObject {
      *
      * @see ParticleCircle#ParticleCircle(ParticleEffect, float, Vector3f, int)
     */
-    public ParticleCircle(
-            @NotNull ParticleEffect particleEffect, float radius, int amount
-    ) {
+    public ParticleCircle(@NotNull ParticleEffect particleEffect, float radius, int amount) {
         this(particleEffect, radius, new Vector3f(0), amount);
     }
 
@@ -111,8 +107,7 @@ public class ParticleCircle extends ParticleObject {
 
     /** Set the interceptor to run after drawing the circle.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the circle is rendered.  It will also have the position around the circle
-     * at which the current particle was drawn.
+     * position of the center of the circle.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
@@ -127,8 +122,7 @@ public class ParticleCircle extends ParticleObject {
 
     /** Set the interceptor to run prior to drawing the circle.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the circle is rendered.  It will also have the angle around the circle at
-     * which the current particle is.
+     * position of the center of the circle.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing each particle
      */
