@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
@@ -161,8 +162,8 @@ public class ParticlePolygon extends ParticleObject {
             Vector3f[] newVertices = new Vector3f[this.sides + 1];
             for (int i = 0; i < this.sides; i++) {
                 float currAngle = (angleInterval * i) + offset;
-                float x = this.size * trigTable.getCosine(currAngle);
-                float y = this.size * trigTable.getSine(currAngle);
+                float x = this.size * Apel.TRIG_TABLE.getCosine(currAngle);
+                float y = this.size * Apel.TRIG_TABLE.getSine(currAngle);
                 newVertices[i] = new Vector3f(x, y, 0);
             }
             // Ensure the last particle is exactly the same as the first
