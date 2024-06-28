@@ -14,6 +14,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 
+
+/** Particle Image is a Work In Progress(WIP) stage.
+ * Feel free to use it, but it is not complete and there are
+ * some known issues as well as being unoptimized
+ */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleImage extends ParticleObject {
     private String filename;
