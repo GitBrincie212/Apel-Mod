@@ -8,8 +8,8 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.World;
 
-public class DebugParticleAnim1 extends Item {
-    public DebugParticleAnim1(Settings settings) {
+public class DebugParticleWand1 extends Item {
+    public DebugParticleWand1(Settings settings) {
         super(settings);
     }
 
@@ -22,7 +22,5 @@ public class DebugParticleAnim1 extends Item {
     }
 
     private void animators(ServerWorld world, PlayerEntity user) {
-        // ...
-
     }
 }
