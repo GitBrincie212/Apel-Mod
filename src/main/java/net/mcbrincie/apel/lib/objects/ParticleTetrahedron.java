@@ -5,6 +5,8 @@ import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
+import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -216,14 +218,17 @@ public class ParticleTetrahedron extends ParticleObject {
     public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
         this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
 
+        // Rotation
+        Quaternionfc quaternion =
+                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         // Defensive copy of `drawPos`
         Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
 
         // Defensive copies of internal vertices
-        Vector3f v1 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex1);
-        Vector3f v2 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex2);
-        Vector3f v3 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex3);
-        Vector3f v4 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex4);
+        Vector3f v1 = this.rigidTransformation(this.vertex1, quaternion, totalOffset);
+        Vector3f v2 = this.rigidTransformation(this.vertex2, quaternion, totalOffset);
+        Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
+        Vector3f v4 = this.rigidTransformation(this.vertex4, quaternion, totalOffset);
 
         this.drawLine(renderer, v1, v2, step, this.amount);
         this.drawLine(renderer, v1, v3, step, this.amount);

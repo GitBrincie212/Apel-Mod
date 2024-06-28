@@ -5,6 +5,7 @@ import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.particle.ParticleEffect;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
@@ -161,20 +162,32 @@ public abstract class ParticleObject {
     public abstract void draw(ApelServerRenderer renderer, int step, Vector3f drawPos);
     public void endDraw(ApelServerRenderer renderer, int step, Vector3f drawPos) {}
 
-    protected Vector3f rigidTransformation(Vector3f rotation, Vector3f offset, float x, float y, float z) {
-        return new Vector3f(x, y, z)
-                .rotateZ(rotation.z)
-                .rotateY(rotation.y)
-                .rotateX(rotation.x)
-                .add(offset);
+    /**
+     * Transforms the point at {@code (x, y, z)} according to the {@code quaternion} and {@code translation}.
+     *
+     * <p>Does not modify the {@code quaternion} or {@code translation}.
+     *
+     * @param x The x-coordinate of the point to transform
+     * @param y The y-coordinate of the point to transform
+     * @param z The z-coordinate of the point to transform
+     * @param quaternion The rotation to apply
+     * @param translation The translation to apply
+     * @return The transformed point
+     */
+    protected final Vector3f rigidTransformation(float x, float y, float z, Quaternionfc quaternion, Vector3f translation) {
+        return new Vector3f(x, y, z).rotate(quaternion).add(translation);
     }
 
-    protected Vector3f rigidTransformation(Vector3f rotation, Vector3f offset, Vector3f position) {
-        return new Vector3f(position)
-                .rotateZ(rotation.z)
-                .rotateY(rotation.y)
-                .rotateX(rotation.x)
-                .add(offset);
+    /**
+     * Transforms a copy of the point at {@code position} according to the {@code quaternion} and {@code translation}.
+     *
+     * @param position The x-coordinate of the point to transform.
+     * @param quaternion The rotation to apply
+     * @param translation The translation to apply
+     * @return The transformed point in a new Vector3f
+     */
+    protected final Vector3f rigidTransformation(Vector3f position, Quaternionfc quaternion, Vector3f translation) {
+        return new Vector3f(position).rotate(quaternion).add(translation);
     }
 
     /**

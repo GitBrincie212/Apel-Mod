@@ -6,6 +6,8 @@ import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -207,32 +209,26 @@ public class ParticleCuboid extends ParticleObject {
                                 new Vector3i(-1, -1, this.amount.z);
     }
 
-    /** Gets the vertex given the size and the center position
-     *
-     * @param width The width
-     * @param height The height
-     * @param depth The depth
-     * @param translation The center position relative to the origin
-     * @return The vertex's coordinates
-     */
-    public Vector3f getVertex(ApelServerRenderer renderer, float width, float height, float depth, Vector3f translation) {
-        return this.rigidTransformation(this.rotation, new Vector3f(translation).add(this.offset), width, height, depth
-        );
-    }
-
     @Override
     public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
+        // Scale
         float width = size.x;
         float height = size.y;
         float depth = size.z;
-        Vector3f vertex1 = this.getVertex(renderer, width, height, depth, drawPos);
-        Vector3f vertex2 = this.getVertex(renderer, width, -height, -depth, drawPos);
-        Vector3f vertex3 = this.getVertex(renderer, -width, height, -depth, drawPos);
-        Vector3f vertex4 = this.getVertex(renderer, width, height, -depth, drawPos);
-        Vector3f vertex5 = this.getVertex(renderer, -width, -height, depth, drawPos);
-        Vector3f vertex6 = this.getVertex(renderer, width, -height, depth, drawPos);
-        Vector3f vertex7 = this.getVertex(renderer, -width, height, depth, drawPos);
-        Vector3f vertex8 = this.getVertex(renderer, -width, -height, -depth, drawPos);
+        // Rotation
+        Quaternionfc quaternion =
+                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
+        // Translation
+        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        // Compute the cuboid vertices
+        Vector3f vertex1 = this.rigidTransformation(width, height, depth, quaternion, objectDrawPos);
+        Vector3f vertex2 = this.rigidTransformation(width, -height, -depth, quaternion, objectDrawPos);
+        Vector3f vertex3 = this.rigidTransformation(-width, height, -depth, quaternion, objectDrawPos);
+        Vector3f vertex4 = this.rigidTransformation(width, height, -depth, quaternion, objectDrawPos);
+        Vector3f vertex5 = this.rigidTransformation(-width, -height, depth, quaternion, objectDrawPos);
+        Vector3f vertex6 = this.rigidTransformation(width, -height, depth, quaternion, objectDrawPos);
+        Vector3f vertex7 = this.rigidTransformation(-width, height, depth, quaternion, objectDrawPos);
+        Vector3f vertex8 = this.rigidTransformation(-width, -height, -depth, quaternion, objectDrawPos);
 
         int bottomFaceAmount = this.amount.x;
         int topFaceAmount = this.amount.y;
