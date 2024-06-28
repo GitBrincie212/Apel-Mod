@@ -137,15 +137,15 @@ public interface ApelRenderer {
     }
 
     /**
-     * Instructs the renderer to draw a Bezier curve at {@code drawPos} described by {@code bezierCurve} with the given
+     * Instructs the renderer to draw a Bézier curve at {@code drawPos} described by {@code bezierCurve} with the given
      * {@code rotation} using {@code amount} of particles.
      *
      * @param particleEffect The ParticleEffect to use
      * @param step The current animation step
      * @param drawPos The point used as the origin for the defined curve
-     * @param bezierCurve The Bezier curve to draw
-     * @param rotation Rotation applied to the Bezier curve
-     * @param amount The number of particles to use to draw the Bezier curve
+     * @param bezierCurve The Bézier curve to draw
+     * @param rotation Rotation applied to the Bézier curve
+     * @param amount The number of particles to use to draw the Bézier curve
      */
     default void drawBezier(
             ParticleEffect particleEffect, int step, Vector3f drawPos,
