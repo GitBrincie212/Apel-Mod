@@ -13,17 +13,18 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Apel implements ModInitializer {
-	public static final String mod_id = "apel";
-    public static final Logger LOGGER = LoggerFactory.getLogger(mod_id);
-	public static ApelScheduler apelScheduler = new ApelScheduler();
-	public static ExecutorService drawThread = Executors.newSingleThreadExecutor();
-	public static TrigTable trigonometryTable = new TrigTable(700);
+    public static final String MOD_ID = "apel";
+    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-	@Override
-	public void onInitialize() {
-		LOGGER.info("Library Mod Initializing");
-		ModItems.initItems();
-		// TODO: This uses Fabric's networking wrappers, which I'm not convinced are necessary.
-		PayloadTypeRegistry.playS2C().register(ApelFramePayload.ID, ApelFramePayload.PACKET_CODEC);
-	}
+    public static final ApelScheduler SCHEDULER = new ApelScheduler();
+    public static final ExecutorService DRAW_EXECUTOR = Executors.newSingleThreadExecutor();
+    public static final TrigTable TRIG_TABLE = new TrigTable(700);
+
+    @Override
+    public void onInitialize() {
+        LOGGER.info("Library Mod Initializing");
+        ModItems.initItems();
+        // TODO: This uses Fabric's networking wrappers, which I'm not convinced are necessary.
+        PayloadTypeRegistry.playS2C().register(ApelFramePayload.ID, ApelFramePayload.PACKET_CODEC);
+    }
 }

@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public record ApelFramePayload(List<ApelNetworkRenderer.Instruction> instructions) implements CustomPayload {
-    public static final CustomPayload.Id<ApelFramePayload> ID = new CustomPayload.Id<>(Identifier.of(Apel.mod_id,
+    public static final CustomPayload.Id<ApelFramePayload> ID = new CustomPayload.Id<>(Identifier.of(Apel.MOD_ID,
                                                                                                      "frame"));
     public static final PacketCodec<RegistryByteBuf, ApelFramePayload> PACKET_CODEC = PacketCodec.of(ApelFramePayload::write,
                                                                                                      ApelFramePayload::new);

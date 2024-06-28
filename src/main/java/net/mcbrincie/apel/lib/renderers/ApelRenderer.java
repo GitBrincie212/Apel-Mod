@@ -35,7 +35,7 @@ import java.util.List;
  * </pre>
  */
 public interface ApelRenderer {
-    TrigTable trigTable = Apel.trigonometryTable;
+    TrigTable trigTable = Apel.TRIG_TABLE;
 
     /**
      * Instructs the renderer to draw the given particle effect at the given position.

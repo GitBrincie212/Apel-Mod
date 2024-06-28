@@ -187,11 +187,11 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
         if (prev != null) childDelay = prev.calculateDuration();
         int delayUsed = childDelay + ((this.delay == -1) ? this.delays.get(step - 1) : this.delay);
         if (delayUsed == 0) {
-            Apel.drawThread.submit(func);
+            Apel.DRAW_EXECUTOR.submit(func);
             return;
         }
         if (this.processSpeed <= 1) {
-            Apel.apelScheduler.allocateNewStep(
+            Apel.SCHEDULER.allocateNewStep(
                     this, new ScheduledStep(delayUsed, new Runnable[]{func})
             );
             return;
@@ -199,7 +199,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
             this.storedFuncsBuffer.add(func);
             return;
         }
-        Apel.apelScheduler.allocateNewStep(
+        Apel.SCHEDULER.allocateNewStep(
                 this, new ScheduledStep(delayUsed, this.storedFuncsBuffer.toArray(Runnable[]::new))
         );
         this.storedFuncsBuffer.clear();

@@ -21,7 +21,7 @@ public class ModItems {
     }
 
     private static Item registerItem(String name, Item item) {
-        Identifier id = new Identifier(Apel.mod_id, name);
+        Identifier id = new Identifier(Apel.MOD_ID, name);
         return Registry.register(Registries.ITEM, id, item);
     }
 

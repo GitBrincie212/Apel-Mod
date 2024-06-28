@@ -31,7 +31,7 @@ public abstract class ParticleObject {
     protected Vector3f offset = new Vector3f(0, 0, 0);
     protected int amount = 1;
 
-    protected static TrigTable trigTable = Apel.trigonometryTable;
+    protected static TrigTable trigTable = Apel.TRIG_TABLE;
 
     /** Constructor for the particle object which is a point. It accepts as parameters
      * the particle to use and the rotation to apply (which has no effect. Only on the
