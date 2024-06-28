@@ -1,7 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.Apel;
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.particle.ParticleEffect;
@@ -158,10 +158,10 @@ public abstract class ParticleObject {
      * @param step     The current rendering step at
      * @param drawPos  The position to draw at
      */
-    public abstract void draw(ApelRenderer renderer, int step, Vector3f drawPos);
-    public void endDraw(ApelRenderer renderer, int step, Vector3f drawPos) {}
+    public abstract void draw(ApelServerRenderer renderer, int step, Vector3f drawPos);
+    public void endDraw(ApelServerRenderer renderer, int step, Vector3f drawPos) {}
 
-    protected Vector3f rigidTransformation(ApelRenderer renderer, Vector3f rotation, Vector3f offset, float x, float y, float z) {
+    protected Vector3f rigidTransformation(Vector3f rotation, Vector3f offset, float x, float y, float z) {
         return new Vector3f(x, y, z)
                 .rotateZ(rotation.z)
                 .rotateY(rotation.y)
@@ -169,7 +169,7 @@ public abstract class ParticleObject {
                 .add(offset);
     }
 
-    protected Vector3f rigidTransformation(ApelRenderer renderer, Vector3f rotation, Vector3f offset, Vector3f position) {
+    protected Vector3f rigidTransformation(Vector3f rotation, Vector3f offset, Vector3f position) {
         return new Vector3f(position)
                 .rotateZ(rotation.z)
                 .rotateY(rotation.y)
@@ -184,7 +184,7 @@ public abstract class ParticleObject {
      * @param step     The step being rendered
      * @param drawPos  The position at which to draw the particle
      */
-    protected void drawParticle(ApelRenderer renderer, int step, Vector3f drawPos) {
+    protected void drawParticle(ApelServerRenderer renderer, int step, Vector3f drawPos) {
         this.drawParticle(this.particleEffect, renderer, step, drawPos);
     }
 
@@ -196,7 +196,7 @@ public abstract class ParticleObject {
      * @param step           The step being rendered
      * @param drawPos        The position at which to draw the particle
      */
-    protected void drawParticle(ParticleEffect particleEffect, ApelRenderer renderer, int step, Vector3f drawPos) {
+    protected void drawParticle(ParticleEffect particleEffect, ApelServerRenderer renderer, int step, Vector3f drawPos) {
         renderer.drawParticle(particleEffect, step, drawPos);
     }
 
@@ -212,25 +212,8 @@ public abstract class ParticleObject {
      *
      * @throws ArithmeticException if amount == 1
      */
-    protected void drawLine(ApelRenderer renderer, Vector3f start, Vector3f end, int step, int amount) {
+    protected void drawLine(ApelServerRenderer renderer, Vector3f start, Vector3f end, int step, int amount) {
         renderer.drawLine(this.particleEffect, step, start, end, amount);
-    }
-
-    /**
-     * Draws a point along an ellipse shape that has a center {@code center}.
-     *
-     * @param renderer The renderer to use
-     * @param r The radius
-     * @param h The stretch / height
-     * @param angle The angle value
-     * @param center The center position
-     * @param step The step
-     * @return The coordinates of the point in the ellipse
-     */
-    protected Vector3f drawEllipsePoint(ApelRenderer renderer, float r, float h, float angle, Vector3f center, int step) {
-        return renderer.drawEllipsePoint(
-                this.particleEffect, r, h, angle, this.rotation, new Vector3f(center).add(this.offset), step
-        );
     }
 
     /**
@@ -243,7 +226,7 @@ public abstract class ParticleObject {
      * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
      * @param amount   The number of particles to use to draw the circle
      */
-    protected void drawCircle(ApelRenderer renderer, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount) {
+    protected void drawCircle(ApelServerRenderer renderer, int step, Vector3f drawPos, float radius, Vector3f rotation, int amount) {
         renderer.drawEllipse(this.particleEffect, step, drawPos, radius, radius, rotation, amount);
     }
 
@@ -257,11 +240,11 @@ public abstract class ParticleObject {
      * @param rotation Rotation applied to the circle (to change the plane in which it's drawn)
      * @param amount   The number of particles to use to draw the circle
      */
-    protected void drawEllipse(ApelRenderer renderer, int step, Vector3f drawPos, float radius, float stretch, Vector3f rotation, int amount) {
+    protected void drawEllipse(ApelServerRenderer renderer, int step, Vector3f drawPos, float radius, float stretch, Vector3f rotation, int amount) {
         renderer.drawEllipse(this.particleEffect, step, drawPos, radius, stretch, rotation, amount);
     }
 
-    protected void drawBezierCurve(ApelRenderer renderer, int step, Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount) {
+    protected void drawBezierCurve(ApelServerRenderer renderer, int step, Vector3f drawPos, BezierCurve bezierCurve, Vector3f rotation, int amount) {
         renderer.drawBezier(this.particleEffect, step, drawPos, bezierCurve, rotation, amount);
     }
 }

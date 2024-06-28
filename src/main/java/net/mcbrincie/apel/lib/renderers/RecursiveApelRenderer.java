@@ -14,7 +14,7 @@ import java.util.Stack;
  * when the stack is empty, it is refilled back with the same content and draws the particle point
  */
 @SuppressWarnings("unused")
-public class RecursiveApelRenderer implements ApelRenderer {
+public class RecursiveApelRenderer implements ApelServerRenderer {
     protected final ServerWorld world;
     protected ParticleObject[] particleObjects;
     protected Stack<ParticleObject> stack;
@@ -40,7 +40,7 @@ public class RecursiveApelRenderer implements ApelRenderer {
     }
 
     @Override
-    public ServerWorld getWorld() {
+    public ServerWorld getServerWorld() {
         return this.world;
     }
 }

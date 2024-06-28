@@ -34,16 +34,8 @@ import java.util.List;
  * }
  * </pre>
  */
-@SuppressWarnings("unused")
 public interface ApelRenderer {
     TrigTable trigTable = Apel.trigonometryTable;
-
-    static ApelRenderer create(ServerWorld world) {
-        return new DefaultApelRenderer(world);
-    }
-    static ApelRenderer client(ServerWorld world) {
-        return new ApelNetworkRenderer(world);
-    }
 
     /**
      * Instructs the renderer to draw the given particle effect at the given position.
@@ -117,18 +109,6 @@ public interface ApelRenderer {
         }
     }
 
-    default Vector3f drawEllipsePoint(ParticleEffect particleEffect, float r, float h, float angle, Vector3f rotation, Vector3f center, int step) {
-        float x = (r * trigTable.getCosine(angle));
-        float y = (h * trigTable.getSine(angle));
-        Vector3f finalPosVec = new Vector3f(x, y, 0)
-                .rotateZ(rotation.z)
-                .rotateY(rotation.y)
-                .rotateX(rotation.x)
-                .add(center);
-        this.drawParticle(particleEffect, step, finalPosVec);
-        return finalPosVec;
-    }
-
     /**
      * Instructs the renderer to draw an ellipse at {@code drawPos} with {@code radius} and {@code rotation} applied
      * using {@code amount} particles.  The ellipse will be stretched by {@code stretch}.  Particles will be spaced
@@ -156,6 +136,17 @@ public interface ApelRenderer {
         }
     }
 
+    /**
+     * Instructs the renderer to draw a Bezier curve at {@code drawPos} described by {@code bezierCurve} with the given
+     * {@code rotation} using {@code amount} of particles.
+     *
+     * @param particleEffect The ParticleEffect to use
+     * @param step The current animation step
+     * @param drawPos The point used as the origin for the defined curve
+     * @param bezierCurve The Bezier curve to draw
+     * @param rotation Rotation applied to the Bezier curve
+     * @param amount The number of particles to use to draw the Bezier curve
+     */
     default void drawBezier(
             ParticleEffect particleEffect, int step, Vector3f drawPos,
             net.mcbrincie.apel.lib.util.math.bezier.BezierCurve bezierCurve, Vector3f rotation, int amount
@@ -242,9 +233,6 @@ public interface ApelRenderer {
 
     default void afterFrame(int step, Vector3f frameOrigin) {
     }
-
-    ServerWorld getWorld();
-
 
     sealed interface Instruction {
         void write(RegistryByteBuf buf);
@@ -383,8 +371,8 @@ public interface ApelRenderer {
             float angleInterval = (float) Math.TAU / (float) amount;
             for (int i = 0; i < amount; i++) {
                 float currRot = angleInterval * i;
-                float x = trigTable.getCosine(currRot) * radius;
-                float y = trigTable.getSine(currRot) * stretch;
+                float x = trigTable.getCosine(currRot);
+                float y = trigTable.getSine(currRot);
                 points[i] = new Vector3f(x, y, 0);
             }
             return points;

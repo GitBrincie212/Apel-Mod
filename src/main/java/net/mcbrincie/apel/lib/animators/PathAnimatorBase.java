@@ -6,7 +6,7 @@ import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import org.jetbrains.annotations.NotNull;
@@ -299,7 +299,7 @@ public abstract class PathAnimatorBase {
      * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
      * @throws SeqMissingException   When it finds, there is no sequence yet allocated
      */
-    public abstract void beginAnimation(ApelRenderer renderer) throws SeqDuplicateException, SeqMissingException;
+    public abstract void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException;
 
     /** Calculates the total delay for the path animator
      *
@@ -319,7 +319,7 @@ public abstract class PathAnimatorBase {
      * @param drawPosition The planned drawing position
      * @throws SeqMissingException When it finds that there is no sequence yet allocated
      */
-    public void handleDrawingStep(ApelRenderer renderer, int step, Vector3f drawPosition) throws SeqMissingException {
+    public void handleDrawingStep(ApelServerRenderer renderer, int step, Vector3f drawPosition) throws SeqMissingException {
         Runnable func = () -> {
             renderer.beforeFrame(step, drawPosition);
             this.particleObject.draw(renderer, step, drawPosition);

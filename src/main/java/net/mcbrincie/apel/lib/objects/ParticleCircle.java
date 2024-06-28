@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -100,11 +100,11 @@ public class ParticleCircle extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getWorld(), step, drawPos);
+    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
+        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
         Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
         this.drawCircle(renderer, step, objectDrawPos, this.radius, this.rotation, this.amount);
-        this.doAfterDraw(renderer.getWorld(), step, drawPos);
+        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
         this.endDraw(renderer, step, drawPos);
     }
 

@@ -8,7 +8,7 @@ import org.joml.Vector3f;
  * for most animations it is best to use this compared to the other apel renderers (since the
  * others are used for specific niche cases)
  */
-public class DefaultApelRenderer implements ApelRenderer {
+public class DefaultApelRenderer extends BaseApelRenderer implements ApelServerRenderer {
     protected final ServerWorld world;
 
     public DefaultApelRenderer(ServerWorld world) {
@@ -21,7 +21,7 @@ public class DefaultApelRenderer implements ApelRenderer {
     }
 
     @Override
-    public ServerWorld getWorld() {
+    public ServerWorld getServerWorld() {
         return world;
     }
 }

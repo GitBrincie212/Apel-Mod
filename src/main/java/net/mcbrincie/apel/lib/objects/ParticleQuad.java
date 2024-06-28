@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.renderers.ApelRenderer;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
@@ -248,23 +248,23 @@ public class ParticleQuad extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelRenderer renderer, int step, Vector3f drawPos) {
+    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
         float rotX = this.rotation.x;
         float rotY = this.rotation.y;
         float rotZ = this.rotation.z;
-        this.beforeDraw(renderer.getWorld(), step);
+        this.beforeDraw(renderer.getServerWorld(), step);
 
-        Vector3f v1 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex1);
-        Vector3f v2 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex2);
-        Vector3f v3 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex3);
-        Vector3f v4 = this.rigidTransformation(renderer, this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex4);
+        Vector3f v1 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex1);
+        Vector3f v2 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex2);
+        Vector3f v3 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex3);
+        Vector3f v4 = this.rigidTransformation(this.rotation, new Vector3f(drawPos).add(this.offset), this.vertex4);
 
         this.drawLine(renderer, v1, v2, step, this.amount);
         this.drawLine(renderer, v2, v3, step, this.amount);
         this.drawLine(renderer, v3, v4, step, this.amount);
         this.drawLine(renderer, v4, v1, step, this.amount);
 
-        this.doAfterDraw(renderer.getWorld(), step, v1, v2, v3, v4);
+        this.doAfterDraw(renderer.getServerWorld(), step, v1, v2, v3, v4);
         this.endDraw(renderer, step, drawPos);
     }
 
