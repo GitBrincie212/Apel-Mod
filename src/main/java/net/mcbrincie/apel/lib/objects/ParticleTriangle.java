@@ -13,7 +13,7 @@ import java.util.Optional;
 
 /** The particle object class that represents a 2D triangle.
  * It has three vertices that make it up, all of them must be coplanar with each other.
- * The vertices can be set individually or by supplying a list of four vertices
+ * The vertices can be set individually or by supplying a list of three vertices.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleTriangle extends ParticleObject {
@@ -32,9 +32,13 @@ public class ParticleTriangle extends ParticleObject {
             "Unbalanced vertices, there must be only 3 vertices"
     );
 
-    /** Constructor for the particle triangle which is a 2D shape. It accepts as parameters
-     * the particle effect to use, the vertices that connect the triangle, the number of particles & the
-     * rotation to apply There is also a simplified version for no rotation.
+    /** Constructor for the particle triangle. It accepts as parameters
+     * the particle effect to use, the vertices that compose the triangle, the number of particles, and the
+     * rotation to apply.
+     *
+     * <p>This implementation calls setters for rotation and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
@@ -52,13 +56,15 @@ public class ParticleTriangle extends ParticleObject {
         this.vertex1 = vertices[0];
         this.vertex2 = vertices[1];
         this.vertex3 = vertices[2];
-        this.amount = amount;
+        this.setAmount(amount);
     }
 
-    /** Constructor for the particle triangle which is a 2D shape. It accepts as parameters
-     * the particle to use, the vertices that connect the triangle & the number of particles.
-     * It is a simplified version for the case when no rotation is meant to be applied.
-     * For rotation offset, you can use another constructor
+    /** Constructor for the particle triangle. It accepts as parameters
+     * the particle to use, the vertices that compose the triangle, and the number of particles.
+     *
+     * <p>This implementation calls setters for rotation and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param vertices The vertices that make up the triangle
@@ -71,15 +77,15 @@ public class ParticleTriangle extends ParticleObject {
     }
 
     /** The copy constructor for a specific particle object. It copies all
-     * the params, including the interceptors the particle object has
+     * the params, including the interceptors the particle object has.  Vertices are copied to new vectors.
      *
      * @param triangle The particle triangle object to copy from
     */
     public ParticleTriangle(ParticleTriangle triangle) {
         super(triangle);
-        this.vertex1 = triangle.vertex1;
-        this.vertex2 = triangle.vertex2;
-        this.vertex3 = triangle.vertex3;
+        this.vertex1 = new Vector3f(triangle.vertex1);
+        this.vertex2 = new Vector3f(triangle.vertex2);
+        this.vertex3 = new Vector3f(triangle.vertex3);
         this.beforeDraw = triangle.beforeDraw;
         this.afterDraw = triangle.afterDraw;
     }
@@ -101,7 +107,7 @@ public class ParticleTriangle extends ParticleObject {
 
     /** Sets the first individual vertex, it returns the previous
      * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}
+     * vertices at once then use {@code setVertices}.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
@@ -117,7 +123,7 @@ public class ParticleTriangle extends ParticleObject {
 
     /** Sets the second individual vertex, it returns the previous
      * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}
+     * vertices at once then use {@code setVertices}.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
@@ -133,7 +139,7 @@ public class ParticleTriangle extends ParticleObject {
 
     /** Sets the third individual vertex, it returns the previous
      * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}
+     * vertices at once then use {@code setVertices}.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
@@ -147,14 +153,12 @@ public class ParticleTriangle extends ParticleObject {
         return prevVertex3;
     }
 
-    /** Sets the individual vertices all at once given a list of the vertices.
-     * If you want to set one vertex at a time, then its recommend to use the methods ``setVertex1``,
-     * ``setVertex2``... etc. The vertices have to be 4 to modify the values.
-     * It returns nothing
+    /** Sets all vertices at once.  If you want to set one vertex at a time, then it's recommended to use
+     * {@link #setVertex1(Vector3f)}, etc.  Returns nothing.
      *
      * @param vertices The vertices to modify
      *
-     * @throws IllegalArgumentException if the number of vertices supplied isn't equal to 4
+     * @throws IllegalArgumentException if the number of vertices supplied isn't equal to 3
     */
     public void setVertices(Vector3f... vertices) {
         if (vertices.length != 3) {
@@ -166,23 +170,29 @@ public class ParticleTriangle extends ParticleObject {
         this.vertex3 = vertices[2];
     }
 
-    /** Gets the first individual vertex
+    /** Gets the first individual vertex.
      *
      * @return The first individual vertex
     */
-    public Vector3f getVertex1() {return this.vertex1;}
+    public Vector3f getVertex1() {
+        return this.vertex1;
+    }
 
-    /** Gets the second individual vertex
+    /** Gets the second individual vertex.
      *
      * @return The second individual vertex
     */
-    public Vector3f getVertex2() {return this.vertex2;}
+    public Vector3f getVertex2() {
+        return this.vertex2;
+    }
 
-    /** Gets the third individual vertex
+    /** Gets the third individual vertex.
      *
      * @return The third individual vertex
     */
-    public Vector3f getVertex3() {return this.vertex3;}
+    public Vector3f getVertex3() {
+        return this.vertex3;
+    }
 
     @Override
     public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
@@ -208,8 +218,8 @@ public class ParticleTriangle extends ParticleObject {
     }
 
     /** Set the interceptor to run after drawing the triangle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the triangle is rendered, and the
-     * step number of the animation.  There is no other data attached.
+     * with references to the {@link ServerWorld}, the position where the triangle is rendered, the
+     * step number of the animation, and the ParticleTriangle instance.
      *
      * @param afterDraw the new interceptor to execute prior to drawing the triangle
      */
@@ -223,8 +233,8 @@ public class ParticleTriangle extends ParticleObject {
     }
 
     /** Set the interceptor to run prior to drawing the triangle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the triangle is rendered, and the
-     * step number of the animation.  There is no other data attached.
+     * with references to the {@link ServerWorld}, the position where the triangle is rendered, the
+     * step number of the animation, and the ParticleTriangle instance.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing the triangle
      */

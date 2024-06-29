@@ -38,7 +38,11 @@ public class ParticleEllipsoid extends ParticleObject {
     /**
      * Constructor for the particle ellipsoid which is a 3D shape. It accepts as parameters
      * the particle effect to use, the semi-axes of the ellipsoid, the number of particles,
-     * and the rotation to apply. There is also a simplified version for no rotation.
+     * and the rotation to apply.
+     *
+     * <p>This implementation calls setters for rotation, semi-axes, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param xSemiAxis The length of the X semi-axis
@@ -46,6 +50,7 @@ public class ParticleEllipsoid extends ParticleObject {
      * @param zSemiAxis The length of the Z semi-axis
      * @param amount The number of particles for the object
      * @param rotation The rotation to apply
+     *
      * @see ParticleEllipsoid#ParticleEllipsoid(ParticleEffect, float, float, float, int)
      */
     public ParticleEllipsoid(
@@ -62,13 +67,17 @@ public class ParticleEllipsoid extends ParticleObject {
     /**
      * Constructor for the particle cuboid which is a 3D shape. It accepts as parameters
      * the particle effect to use, the semi-axes of the ellipsoid, and the number of particles.
-     * It is a simplified version for the case when no rotation is meant to be applied.
+     *
+     * <p>This implementation calls setters for rotation, semi-axes, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param xSemiAxis The length of the X semi-axis
      * @param ySemiAxis The length of the Y semi-axis
      * @param zSemiAxis The length of the Z semi-axis
      * @param amount The number of particles for the object
+     *
      * @see ParticleEllipsoid#ParticleEllipsoid(ParticleEffect, float, float, float, int, Vector3f)
      */
     public ParticleEllipsoid(
@@ -79,7 +88,7 @@ public class ParticleEllipsoid extends ParticleObject {
 
     /**
      * The copy constructor for a specific particle object. It copies all
-     * the params, including the interceptors the particle object has
+     * the params, including the interceptors the particle object has.
      *
      * @param particleEllipsoid The particle ellipsoid object to copy from
      */
@@ -89,12 +98,12 @@ public class ParticleEllipsoid extends ParticleObject {
         this.ySemiAxis = particleEllipsoid.ySemiAxis;
         this.zSemiAxis = particleEllipsoid.zSemiAxis;
         this.amount = particleEllipsoid.amount;
-        this.afterDraw = particleEllipsoid.afterDraw;
         this.beforeDraw = particleEllipsoid.beforeDraw;
+        this.afterDraw = particleEllipsoid.afterDraw;
     }
 
     /**
-     * Gets length of the X semi-axis
+     * Gets length of the X semi-axis.
      *
      * @return the length of the X semi-axis
      */
@@ -103,7 +112,7 @@ public class ParticleEllipsoid extends ParticleObject {
     }
 
     /**
-     * Sets length of the X semi-axis
+     * Sets length of the X semi-axis.
      *
      * @param xSemiAxis The length of the X semi-axis
      * @return The previous length of the X semi-axis
@@ -118,7 +127,7 @@ public class ParticleEllipsoid extends ParticleObject {
     }
 
     /**
-     * Gets length of the Y semi-axis
+     * Gets length of the Y semi-axis.
      *
      * @return the length of the Y semi-axis
      */
@@ -127,7 +136,7 @@ public class ParticleEllipsoid extends ParticleObject {
     }
 
     /**
-     * Sets length of the Y semi-axis
+     * Sets length of the Y semi-axis.
      *
      * @param ySemiAxis The length of the Y semi-axis
      * @return The previous length of the Y semi-axis
@@ -142,7 +151,7 @@ public class ParticleEllipsoid extends ParticleObject {
     }
 
     /**
-     * Gets length of the Z semi-axis
+     * Gets length of the Z semi-axis.
      *
      * @return the length of the Z semi-axis
      */
@@ -151,7 +160,7 @@ public class ParticleEllipsoid extends ParticleObject {
     }
 
     /**
-     * Sets length of the Z semi-axis
+     * Sets length of the Z semi-axis.
      *
      * @param zSemiAxis The length of the Z semi-axis
      * @return The previous length of the Z semi-axis
@@ -178,8 +187,8 @@ public class ParticleEllipsoid extends ParticleObject {
 
     /**
      * Set the interceptor to run after drawing the ellipsoid.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the position
-     * where the ellipsoid is rendered.
+     * with references to the {@link ServerWorld}, the step number of the animation, and the center
+     * of the ellipsoid.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
@@ -194,8 +203,8 @@ public class ParticleEllipsoid extends ParticleObject {
 
     /**
      * Set the interceptor to run prior to drawing the ellipsoid.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the position
-     * where the ellipsoid is rendered.
+     * with references to the {@link ServerWorld}, the step number of the animation, and the center
+     * of the ellipsoid.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing the ellipsoid
      */

@@ -14,13 +14,13 @@ import org.joml.Vector3i;
 import java.util.Optional;
 
 /** The particle object class that represents a cuboid which is a rectangle
- * living in 3D, it can also be a cube if all the values of the size vector
+ * living in 3D. It is a cube if all the values of the size vector
  * are supplied with the same value.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCuboid extends ParticleObject {
     protected Vector3f size = new Vector3f();
-    protected Vector3i amount;
+    protected Vector3i amount = new Vector3i();
 
     private DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
@@ -30,6 +30,31 @@ public class ParticleCuboid extends ParticleObject {
 
     /** This data is used before calculations (it contains the vertices)*/
     public enum BeforeDrawData {
+        /**
+         * The vertices provided follow this indexing scheme (using Minecraft's axes where +x is east, +y is up, and
+         * +z is south), but will be rotated and translated prior to the interceptor:
+         *
+         * <pre>
+         *               y         z
+         *               ^        ↗
+         *               |       /
+         *          5----|--------6
+         *         /|    |     / /|
+         *        / |    |    / / |
+         *       /  |    |   / /  |
+         *      4-------------7   +
+         *      |   |    | /  |   |
+         *      |   |    |/   |   |
+         * x <--|--------+    |   |
+         *      |   |         |   |
+         *      |   |         |   |
+         *      |   1---------|---2
+         *      |  /          |  /
+         *      | /           | /
+         *      |/            |/
+         *      0-------------3
+         * </pre>
+         */
         VERTICES,
     }
 
@@ -39,9 +64,12 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle effect to use, the number of particles per face section (bottom is X, top is Y and the bars are Z)
-     * the size of the cuboid (width, height, depth) & the rotation to apply. There is also a simplified version
-     * for no rotation
+     * the particle effect to use, the number of particles per line in each face section (bottom is X, top is Y and
+     * the bars are Z), the size of the cuboid (width, height, depth), and the rotation to apply.
+     *
+     * <p>This implementation calls setters for rotation, size, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
@@ -49,41 +77,50 @@ public class ParticleCuboid extends ParticleObject {
      * @param rotation The rotation to apply
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f)
+     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f, Vector3f)
+     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f)
     */
     public ParticleCuboid(ParticleEffect particleEffect, Vector3i amount, @NotNull Vector3f size, Vector3f rotation) {
         super(particleEffect, rotation);
-        // Defensive copy to protect against Vector3f's preference to modify in-place
-        this.setSize(new Vector3f(size));
-        this.amount = amount;
+        // Defensive copies are made in setters to protect against in-place modification of vectors
+        this.setSize(size);
+        this.setAmount(amount);
     }
 
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle to use, the number of particles per face section (bottom is X, top is Y and the bars are Z)
-     * the size of the cuboid (width, height, depth). It is a simplified version for the case when
-     * no rotation is meant to be applied. For rotation offset, you can use another constructor
+     * the particle effect to use, the number of particles per line in each face section (bottom is X, top is Y and
+     * the bars are Z), and the size of the cuboid (width, height, depth).
+     *
+     * <p>This implementation calls setters for rotation, size, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
      * @param size The size in regard to width, height, depth
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
+     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f, Vector3f)
+     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f)
      */
     public ParticleCuboid(ParticleEffect particleEffect, Vector3i amount, @NotNull Vector3f size) {
         this(particleEffect, amount, size, new Vector3f(0));
     }
 
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle to use, the number of particles per face section (bottom is X, top is Y and the bars are Z)
-     * the size of the cuboid (width, height, depth). It is a simplified version for the case when
-     * no rotation is meant to be applied. This constructor is meant when you want a constant number of
-     * particles per face section. There is a constructor that allows to handle different amounts per face
-     * and another that is meant to be used when no rotation is meant to be applied
+     * the particle effect to use, the number of particles per line in all face sections, the size of the cuboid
+     * (width, height, depth), and the rotation to apply.
+     *
+     * <p>This implementation calls setters for rotation, size, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
      * @param size The size in regard to width, height, depth
      *
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
+     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f)
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f)
      */
     public ParticleCuboid(ParticleEffect particleEffect, int amount, @NotNull Vector3f size, Vector3f rotation) {
@@ -91,16 +128,18 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle to use, the amount of particles per face section(bottom is X, top is Y and the bars are Z)
-     * the size of the cuboid(width, height, depth) It is a simplified version for the case when
-     * no rotation is meant to be applied. This constructor is meant when you want a constant number of
-     * particles per face section. There is a constructor that allows to handle different amounts per face
-     * and another that is meant to be used when no rotation is meant to be applied
+     * the particle effect to use, the number of particles per line in all face sections, and the size of the cuboid
+     * (width, height, depth).
+     *
+     * <p>This implementation calls setters for rotation, size, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
      * @param size The size in regard to width, height, depth
      *
+     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f)
      * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f, Vector3f)
      */
@@ -109,56 +148,53 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     /** The copy constructor for a specific particle object. It copies all
-     * the params, including the interceptors the particle object has
+     * the params, including the interceptors the particle object has.  Size and amount are copied to new vectors.
      *
      * @param cuboid The particle circle object to copy from
     */
     public ParticleCuboid(ParticleCuboid cuboid) {
         super(cuboid);
-        this.size = cuboid.size;
+        this.size = new Vector3f(cuboid.size);
+        this.amount = new Vector3i(cuboid.amount);
         this.beforeDraw = cuboid.beforeDraw;
         this.afterDraw = cuboid.afterDraw;
-        this.amount = cuboid.amount;
     }
 
     public Vector3f getSize() {
         // Defensive copy to prevent a caller from messing with this class' data.
-        return new Vector3f(this.size).mul(2);
+        return new Vector3f(this.size);
     }
 
-    /** Sets the size of the cuboid object. The X axis corresponds to width,
-     * Y axis corresponds to height, and Z axis corresponds to depth. There is
-     * an additional way to set size via providing a float (which makes a cube).
+    /** Sets the size of the cuboid object. The X axis corresponds to width, Y axis corresponds to height, and Z axis
+     * corresponds to depth.  All dimensions must be positive.
      *
-     * @param size The size
+     * @param size The size, a vector of positive numbers
      * @return The previous size
+     *
      * @see ParticleCuboid#setSize(float)
      */
     public Vector3f setSize(Vector3f size) {
         if (size.x <= 0 || size.y <= 0 || size.z <= 0) {
-            throw new IndexOutOfBoundsException("One of the size axis is below or equal to zero");
+            throw new IllegalArgumentException("One of the size axis is below or equal to zero");
         }
-        Vector3f prevSize = this.getSize();
-        this.size = size.mul(0.5f);
+        Vector3f prevSize = new Vector3f(this.size);
+        // Defensive copy to prevent unintended modification
+        this.size = new Vector3f(size);
         return prevSize;
     }
 
-    /** Sets the size of the cuboid object. The width, height & depth is a constant amount
-     *  that makes a cube (and not a cuboid). There is an additional way to set size via
-     *  providing a Vector3f (which can make a cuboid and not just a cube)
+    /** Sets the size of the cuboid object. The width, height, and depth will be equal, making a cube.
+     *
+     * <p>This implementation delegates to {@link #setSize(Vector3f)} so subclasses should take care not to violate
+     * its contract.
      *
      * @param size The size of the cube
      * @return The previous size
+     *
      * @see ParticleCuboid#setSize(Vector3f)
      */
     public Vector3f setSize(float size) {
-        if (size <= 0) {
-            throw new IndexOutOfBoundsException("Size cannot be below or equal to zero");
-        }
-        Vector3f prevSize = this.getSize();
-        size /= 2;
-        this.size = new Vector3f(size, size, size);
-        return prevSize;
+        return this.setSize(new Vector3f(size, size, size));
     }
 
     /** THIS METHOD SHOULD NOT BE USED */
@@ -168,11 +204,9 @@ public class ParticleCuboid extends ParticleObject {
         throw new UnsupportedOperationException("The method used is deprecated. It is not meant to be used");
     }
 
-    /** Sets the amount per area. The amount differs from the normal int amount.
-     *  The X coordinate dictates the bottom face, the Y coordinate dictates the
-     *  top face & the Z coordinate dictates the vertical bars of the cuboid
-     *  <br><br>
-     *  <b>Note:</b> It is not recommended to use {@link ParticleCuboid#setAmount(int)} as its deprecated
+    /** Sets the amount per area.  The X coordinate dictates the particles per line on the bottom face, the Y
+     * coordinate dictates the particles per line on the top face, and the Z coordinate dictates the particles per
+     * vertical bar of the cuboid.
      *
      * @param amount The amount per area
      * @return The previous amount to use
@@ -181,9 +215,10 @@ public class ParticleCuboid extends ParticleObject {
         if (amount.x <= 0 || amount.y <= 0 || amount.z <= 0) {
             throw new IllegalArgumentException("One of the amount of particles axis is below or equal to 0");
         }
-       Vector3i prevAmount = new Vector3i(this.amount);
-       this.amount = amount;
-       return prevAmount;
+        Vector3i prevAmount = new Vector3i(this.amount);
+        // Defensive copy to prevent unintended modification
+        this.amount = new Vector3i(amount);
+        return prevAmount;
     }
 
     /** THIS METHOD SHOULD NOT BE USED */
@@ -193,82 +228,78 @@ public class ParticleCuboid extends ParticleObject {
         throw new UnsupportedOperationException("The method used is deprecated. It is not meant to be used");
     }
 
-    /** Gets the number of particles where each coordinate corresponds to an area.
-     *  You can get it via using the area enum
+    /** Gets the number of particles where each coordinate corresponds to an area.  If the {@code ALL_FACES} enum
+     * value is provided, the vector will have all three amounts in it.  If not, the vector will have only the value
+     * requested in its corresponding vector entry, and the other values will be -1.
      *
-     * @return The amount of that face
+     * @return The amount of particles per line on the face requested
     */
     public Vector3i getAmount(AreaLabel faceIndex) {
-        /*
-        Quite junk code, but I don't care, I know that I need to favor composition over inheritance.
-        But this is just one exception that doesn't make sense to develop a whole composition system
-        */
-        return (faceIndex == AreaLabel.ALL_FACES) ? this.amount :
-                (faceIndex == AreaLabel.BOTTOM_FACE) ? new Vector3i(this.amount.x, -1, -1) :
-                        (faceIndex == AreaLabel.TOP_FACE) ? new Vector3i(-1, this.amount.y, -1) :
-                                new Vector3i(-1, -1, this.amount.z);
+        return switch(faceIndex) {
+            // Defensive copies are return to prevent unintended modification
+            case ALL_FACES -> new Vector3i(this.amount);
+            case BOTTOM_FACE -> new Vector3i(this.amount.x, -1, -1);
+            case TOP_FACE -> new Vector3i(-1, this.amount.y, -1);
+            case VERTICAL_BARS -> new Vector3i(-1, -1, this.amount.z);
+        };
     }
 
     @Override
     public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
         // Scale
-        float width = size.x;
-        float height = size.y;
-        float depth = size.z;
+        float width = size.x / 2f;
+        float height = size.y / 2f;
+        float depth = size.z / 2f;
         // Rotation
         Quaternionfc quaternion =
                 new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         // Translation
         Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
         // Compute the cuboid vertices
-        Vector3f vertex1 = this.rigidTransformation(width, height, depth, quaternion, objectDrawPos);
-        Vector3f vertex2 = this.rigidTransformation(width, -height, -depth, quaternion, objectDrawPos);
-        Vector3f vertex3 = this.rigidTransformation(-width, height, -depth, quaternion, objectDrawPos);
+        Vector3f vertex0 = this.rigidTransformation(width, -height, -depth, quaternion, objectDrawPos);
+        Vector3f vertex1 = this.rigidTransformation(width, -height, depth, quaternion, objectDrawPos);
+        Vector3f vertex2 = this.rigidTransformation(-width, -height, depth, quaternion, objectDrawPos);
+        Vector3f vertex3 = this.rigidTransformation(-width, -height, -depth, quaternion, objectDrawPos);
         Vector3f vertex4 = this.rigidTransformation(width, height, -depth, quaternion, objectDrawPos);
-        Vector3f vertex5 = this.rigidTransformation(-width, -height, depth, quaternion, objectDrawPos);
-        Vector3f vertex6 = this.rigidTransformation(width, -height, depth, quaternion, objectDrawPos);
-        Vector3f vertex7 = this.rigidTransformation(-width, height, depth, quaternion, objectDrawPos);
-        Vector3f vertex8 = this.rigidTransformation(-width, -height, -depth, quaternion, objectDrawPos);
+        Vector3f vertex5 = this.rigidTransformation(width, height, depth, quaternion, objectDrawPos);
+        Vector3f vertex6 = this.rigidTransformation(-width, height, depth, quaternion, objectDrawPos);
+        Vector3f vertex7 = this.rigidTransformation(-width, height, -depth, quaternion, objectDrawPos);
+
+        Vector3f[] vertices = {vertex0, vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7};
+        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getServerWorld(), step, vertices);
+        vertices = interceptData.getMetadata(BeforeDrawData.VERTICES, vertices);
+
+        vertex0 = vertices[0];
+        vertex1 = vertices[1];
+        vertex2 = vertices[2];
+        vertex3 = vertices[3];
+        vertex4 = vertices[4];
+        vertex5 = vertices[5];
+        vertex6 = vertices[6];
+        vertex7 = vertices[7];
 
         int bottomFaceAmount = this.amount.x;
         int topFaceAmount = this.amount.y;
         int verticalBarsAmount = this.amount.z;
 
-        Vector3f[] vertices = {vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7, vertex8};
-        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getServerWorld(), step, vertices);
-        vertices = interceptData.getMetadata(BeforeDrawData.VERTICES, vertices);
-
-        vertex1 = vertices[0];
-        vertex2 = vertices[1];
-        vertex3 = vertices[2];
-        vertex4 = vertices[3];
-        vertex5 = vertices[4];
-        vertex6 = vertices[5];
-        vertex7 = vertices[6];
-        vertex8 = vertices[7];
-
         // Bottom Face
-        if (bottomFaceAmount != 0) {
-            renderer.drawLine(this.particleEffect, step, vertex2, vertex4, bottomFaceAmount);
-            renderer.drawLine(this.particleEffect, step, vertex4, vertex3, bottomFaceAmount);
-            renderer.drawLine(this.particleEffect, step, vertex3, vertex8, bottomFaceAmount);
-            renderer.drawLine(this.particleEffect, step, vertex8, vertex2, bottomFaceAmount);
-        }
+        renderer.drawLine(this.particleEffect, step, vertex0, vertex1, bottomFaceAmount);
+        renderer.drawLine(this.particleEffect, step, vertex1, vertex2, bottomFaceAmount);
+        renderer.drawLine(this.particleEffect, step, vertex2, vertex3, bottomFaceAmount);
+        renderer.drawLine(this.particleEffect, step, vertex3, vertex0, bottomFaceAmount);
 
         // Top Face
-        if (topFaceAmount != 0) {
-            renderer.drawLine(this.particleEffect, step, vertex1, vertex7, topFaceAmount);
-            renderer.drawLine(this.particleEffect, step, vertex7, vertex5, topFaceAmount);
-            renderer.drawLine(this.particleEffect, step, vertex5, vertex6, topFaceAmount);
-            renderer.drawLine(this.particleEffect, step, vertex6, vertex1, topFaceAmount);
-        }
+        renderer.drawLine(this.particleEffect, step, vertex4, vertex5, topFaceAmount);
+        renderer.drawLine(this.particleEffect, step, vertex5, vertex6, topFaceAmount);
+        renderer.drawLine(this.particleEffect, step, vertex6, vertex7, topFaceAmount);
+        renderer.drawLine(this.particleEffect, step, vertex7, vertex4, topFaceAmount);
+
         // Vertical
-        if (verticalBarsAmount != 0) {
-            renderer.drawLine(this.particleEffect, step, vertex5, vertex8, verticalBarsAmount);
-            renderer.drawLine(this.particleEffect, step, vertex2, vertex6, verticalBarsAmount);
-            renderer.drawLine(this.particleEffect, step, vertex3, vertex7, verticalBarsAmount);
-            renderer.drawLine(this.particleEffect, step, vertex1, vertex4, verticalBarsAmount);
-        }
+        renderer.drawLine(this.particleEffect, step, vertex0, vertex4, verticalBarsAmount);
+        renderer.drawLine(this.particleEffect, step, vertex1, vertex5, verticalBarsAmount);
+        renderer.drawLine(this.particleEffect, step, vertex2, vertex6, verticalBarsAmount);
+        renderer.drawLine(this.particleEffect, step, vertex3, vertex7, verticalBarsAmount);
+
         this.doAfterDraw(renderer.getServerWorld(), step);
         this.endDraw(renderer, step, drawPos);
     }

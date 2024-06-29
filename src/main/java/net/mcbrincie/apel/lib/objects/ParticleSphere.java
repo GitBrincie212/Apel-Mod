@@ -10,10 +10,9 @@ import org.joml.Vector3f;
 
 import java.util.Optional;
 
-/** The particle object class that represents a sphere(3D shape) and not a 2D circle.
- * It has a radius which dictates how large or small the sphere is depending on the
- * radius value supplied. And it uses the Fibonacci point distribution algorithm
- * to place the particles around the sphere (which makes it convincing)
+/** The particle object class that represents a sphere.
+ * It has a radius which dictates how large or small the sphere is.  It projects the <em>golden spiral</em>
+ * on to the sphere to distribute particles evenly across the surface.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleSphere extends ParticleObject {
@@ -23,16 +22,20 @@ public class ParticleSphere extends ParticleObject {
     private DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
-    /** This data is used before calculations (it contains the number of particles) */
+    /** This data is used before calculations */
     public enum BeforeDrawData {}
 
-    /** This data is used after calculations (it contains the drawing position & the number of particles) */
+    /** This data is used after calculations */
     public enum AfterDrawData {}
 
     /**
      * Constructor for the particle sphere which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the sphere, the number of particles.
-     * And the rotation to apply. There is also a simplified version for no rotation.
+     * the particle effect to use, the radius of the sphere, the number of particles,
+     * and the rotation to apply.
+     *
+     * <p>This implementation calls setters for rotation, radius, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param radius   The radius of the sphere
@@ -47,9 +50,11 @@ public class ParticleSphere extends ParticleObject {
     }
 
     /** Constructor for the particle cuboid which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the sphere & the number of particles.
-     * It is a simplified version for the case when no rotation is meant to be applied.
-     * For rotation offset, you can use another constructor
+     * the particle effect to use, the radius of the sphere, the number of particles.
+     *
+     * <p>This implementation calls setters for rotation, radius, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
@@ -62,7 +67,7 @@ public class ParticleSphere extends ParticleObject {
     }
 
     /** The copy constructor for a specific particle object. It copies all
-     * the params, including the interceptors the particle object has
+     * the params, including the interceptors the particle object has.
      *
      * @param sphere The particle sphere object to copy from
     */
@@ -74,21 +79,21 @@ public class ParticleSphere extends ParticleObject {
         this.beforeDraw = sphere.beforeDraw;
     }
 
-    /** Sets the radius of the sphere
+    /** Sets the radius of the sphere.  The radius must be positive.
      *
      * @param radius The radius of the sphere
      * @return The previous radius used
     */
     public float setRadius(float radius) {
         if (radius <= 0) {
-            throw new IllegalArgumentException("Radius cannot be below or equal to 0");
+            throw new IllegalArgumentException("Radius must be positive");
         }
         float prevRadius = this.radius;
         this.radius = radius;
         return prevRadius;
     }
 
-    /** Gets the radius of the sphere
+    /** Gets the radius of the sphere.
      *
      * @return the radius of the sphere
      */
@@ -109,9 +114,8 @@ public class ParticleSphere extends ParticleObject {
     }
 
     /** Set the interceptor to run after drawing the sphere.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the position
-     * where the sphere is rendered.  It will also have the surface point and
-     * number of the individual particle that was just drawn.
+     * with references to the {@link ServerWorld}, the step number of the animation, the center
+     * of the sphere, and the ParticleSphere instance.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
@@ -124,10 +128,9 @@ public class ParticleSphere extends ParticleObject {
         this.afterDraw.apply(interceptData, this);
     }
 
-    /** Set the interceptor to run prior to drawing the sphere.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the position
-     * where the sphere is rendered.  It will also have the number of the individual particle effect
-     * about to be drawn.
+    /** Set the interceptor to run before drawing the sphere.  The interceptor will be provided
+     * with references to the {@link ServerWorld}, the step number of the animation, the center
+     * of the sphere, and the ParticleSphere instance.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing the sphere
      */

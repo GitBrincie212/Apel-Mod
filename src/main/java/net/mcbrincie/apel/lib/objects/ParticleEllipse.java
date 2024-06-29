@@ -10,65 +10,69 @@ import org.joml.Vector3f;
 
 import java.util.Optional;
 
-/** The particle object class that represents a 2D ellipse.
+/** The particle object class that represents an ellipse.
  * It has a radius which dictates how large or small the ellipse is depending on the
- * radius value supplied and a stretch value for how stretched is the ellipse. A value of
- * stretch that equals the radius means it is a circle
+ * radius value supplied and a stretch value for how stretched is the ellipse.  The radius
+ * value is used as the X semi-axis, and the stretch value is used as the Y semi-axis.
+ * Setting radius and stretch equal to one another means it is a circle.  The ellipse is
+ * drawn in the xy-plane by default, though rotations can move it around.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleEllipse extends ParticleObject {
     protected float radius;
     protected float stretch;
+
     private DrawInterceptor<ParticleEllipse, AfterDrawData> afterDraw = DrawInterceptor.identity();
     private DrawInterceptor<ParticleEllipse, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
 
-    /** This data is used before calculations (it contains the iterated rotation) */
-    public enum BeforeDrawData {
-        ITERATED_ROTATION
-    }
+    /** This data is used before calculations */
+    public enum BeforeDrawData {}
 
-    /** This data is used after calculations (it contains the drawing position) */
-    public enum AfterDrawData {
-        DRAW_POSITION
-    }
+    /** This data is used after calculations */
+    public enum AfterDrawData {}
 
     /** Constructor for the particle ellipse which is a 3D shape. It accepts as parameters
      * the particle effect to use, the radius of the ellipse, the stretch of the ellipse,
-     * the rotation to apply & the number of particles. There is also a simplified version
-     * for no rotation.
+     * the rotation to apply, and the number of particles.
+     *
+     * <p>This implementation calls setters for rotation, radius, stretch, and so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
-     * @param radius The radius of the ellipse (how big it is)
-     * @param stretch The stretch of the ellipse (how stretched it is)
+     * @param radius The radius of the ellipse
+     * @param stretch The stretch of the ellipse
      * @param rotation The rotation to apply
      *
      * @see ParticleEllipse#ParticleEllipse(ParticleEffect, float, float, int)
      */
     public ParticleEllipse(
-            @NotNull ParticleEffect particleEffect, float radius,
-            float stretch, Vector3f rotation, int amount
+            @NotNull ParticleEffect particleEffect, float radius, float stretch, Vector3f rotation, int amount
     ) {
         super(particleEffect, rotation);
         this.setRadius(radius);
-        this.setAmount(amount);
         this.setStretch(stretch);
+        this.setAmount(amount);
     }
 
     /** Constructor for the particle ellipse which is a 3D shape. It accepts as parameters
      * the particle effect to use, the radius of the ellipse, the stretch of the ellipse
      * & the number of particles. There is also a version that allows for rotation.
      *
+     * <p>This implementation calls setters for rotation, radius, stretch, and so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
+     *
      * @param particleEffect The particle to use
      * @param amount The number of particles for the object
-     * @param stretch The stretch of the ellipse (how stretched it is)
-     * @param radius The radius of the ellipse (how big it is)
+     * @param radius The radius of the ellipse
+     * @param stretch The stretch of the ellipse
      *
      * @see ParticleEllipse#ParticleEllipse(ParticleEffect, float, float, Vector3f, int)
      */
     public ParticleEllipse(
-            @NotNull ParticleEffect particleEffect,
-            float radius, float stretch, int amount
+            @NotNull ParticleEffect particleEffect, float radius, float stretch, int amount
     ) {
         this(particleEffect, radius, stretch, new Vector3f(0,0,0), amount);
     }
@@ -81,10 +85,10 @@ public class ParticleEllipse extends ParticleObject {
     public ParticleEllipse(ParticleEllipse ellipse) {
         super(ellipse);
         this.radius = ellipse.radius;
-        this.amount = ellipse.amount;
-        this.afterDraw = ellipse.afterDraw;
-        this.beforeDraw = ellipse.beforeDraw;
         this.stretch = ellipse.stretch;
+        this.amount = ellipse.amount;
+        this.beforeDraw = ellipse.beforeDraw;
+        this.afterDraw = ellipse.afterDraw;
     }
 
     /** Gets the radius of the ParticleEllipse and returns it.
@@ -109,13 +113,15 @@ public class ParticleEllipse extends ParticleObject {
         return prevRadius;
     }
 
-    /** Gets the stretch of the ParticleEllipse and returns it
+    /** Gets the stretch of the ParticleEllipse and returns it.
      *
      * @return the stretch of the ParticleEllipse
      */
-    public float getStretch() {return stretch;}
+    public float getStretch() {
+        return stretch;
+    }
 
-    /** Sets the stretch of the ParticleEllipse and returns the previous stretch that was used
+    /** Sets the stretch of the ParticleEllipse and returns the previous stretch that was used.
      *
      * @param stretch The new stretch
      * @return The previous used stretch
@@ -141,7 +147,7 @@ public class ParticleEllipse extends ParticleObject {
 
     /** Set the interceptor to run after drawing the ellipse. The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the ellipse is rendered.
+     * position of the center of the ellipse.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
@@ -156,7 +162,7 @@ public class ParticleEllipse extends ParticleObject {
 
     /** Set the interceptor to run prior to drawing the ellipse. The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the ellipse is rendered.
+     * position of the center of the ellipse.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing each particle
      */

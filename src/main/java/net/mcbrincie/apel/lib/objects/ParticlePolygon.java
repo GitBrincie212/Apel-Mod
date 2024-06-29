@@ -6,8 +6,6 @@ import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
@@ -18,13 +16,11 @@ import java.util.Optional;
 
 /** The particle object class that represents a 2D regular polygon. Regular polygons contain the
  * same angles as well as the same edges; Examples include but are not limited to a square, a pentagon,
- * an isosceles triangle... etc. The polygon takes a variable "sides" that dictates which shape to use and
- * calculates the vertices of that shape and connects them
+ * an equilateral triangle, etc. The polygon takes a variable "sides" that dictates how many sides the polygon
+ * will have.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticlePolygon extends ParticleObject {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     protected int sides;
     protected float size;
 
@@ -36,10 +32,15 @@ public class ParticlePolygon extends ParticleObject {
     /** There is no data being transmitted */
     public enum CommonData {}
 
-    /** Constructor for the particle polygon which is a 2D regular polygon(shape).
+    /** Constructor for the particle polygon which is a 2D regular polygon.
      * It accepts as parameters the particle effect to use, the sides of the polygon,
      * the size of the polygon, the number of particles, and the rotation to apply.
-     * There is also a simplified version for no rotation.
+     *
+     * <p>The size of the polygon is the distance from the center of the polygon to any of its vertices.
+     *
+     * <p>This implementation calls setters for rotation, sides, size, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param sides The of the regular polygon
@@ -56,10 +57,15 @@ public class ParticlePolygon extends ParticleObject {
         this.setAmount(amount);
     }
 
-    /** Constructor for the particle polygon which is a 2D regular polygon(shape).
+    /** Constructor for the particle polygon which is a 2D regular polygon.
      * It accepts as parameters the particle effect to use, the sides of the polygon,
      * the size of the polygon, and the number of particles.
-     * There is also a more complex version for supplying rotation.
+     *
+     * <p>The size of the polygon is the distance from the center of the polygon to any of its vertices.
+     *
+     * <p>This implementation calls setters for rotation, sides, size, and amount so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle to use
      * @param size The size of the regular polygon
@@ -73,7 +79,7 @@ public class ParticlePolygon extends ParticleObject {
     }
 
     /** The copy constructor for a specific particle object. It copies all
-     * the params, including the interceptors the particle object has
+     * the params, including the interceptors the particle object has.
      *
      * @param polygon The particle polygon object to copy from
     */
@@ -86,7 +92,7 @@ public class ParticlePolygon extends ParticleObject {
         this.afterDraw = polygon.afterDraw;
     }
 
-    /** Sets the sides to a new value and returns the previous sides used
+    /** Sets the sides to a new value and returns the previous sides used.
      *
      * @param sides The new sides
      * @throws IllegalArgumentException If the sides are less than 3
@@ -101,7 +107,7 @@ public class ParticlePolygon extends ParticleObject {
         return prevSides;
     }
 
-    /** Gets the sides of the regular polygon
+    /** Gets the sides of the regular polygon.
      *
      * @return The sides of the regular polygon
      */
@@ -109,7 +115,7 @@ public class ParticlePolygon extends ParticleObject {
         return this.sides;
     }
 
-    /** Sets the size of the polygon to a new value and returns the previous size used
+    /** Sets the size of the polygon to a new value and returns the previous size used.
      *
      * @param size The new size
      * @throws IllegalArgumentException If the size is negative or 0
@@ -187,8 +193,8 @@ public class ParticlePolygon extends ParticleObject {
         }
     }
 
-    /** Sets the after draw interceptor, the method executes right after the particle polygon
-     * is drawn onto the screen, it has nothing attached.
+     /** Sets the interceptor to run after drawing the polygon. The interceptor will be provided with references to
+      * the {@link ServerWorld}, the animation step number, and the ParticlePolygon instance.
      *
      * @param afterDraw The new interceptor to use
      */
@@ -201,8 +207,8 @@ public class ParticlePolygon extends ParticleObject {
         this.afterDraw.apply(interceptData, this);
     }
 
-    /** Sets the before draw interceptor, the method executes right before the particle polygon
-     * is drawn onto the screen, it has nothing attached.
+    /** Sets the interceptor to run before drawing the polygon. The interceptor will be provided with references to
+     * the {@link ServerWorld}, the animation step number, and the ParticlePolygon instance.
      *
      * @param beforeDraw The new interceptor to use
      */
