@@ -34,11 +34,6 @@ public class CubicBezierCurve extends QuadraticBezierCurve {
     }
 
     @Override
-    public float length(int amount) {
-        return super.length(amount);
-    }
-
-    @Override
     public Vector3f compute(float t) {
         // Basic formula for cubic curve is this:
         // (1-t)^3 * x0 + t(1-t)^2 * x1 + (t^2)(1-t) * x2 + t^3 * x3

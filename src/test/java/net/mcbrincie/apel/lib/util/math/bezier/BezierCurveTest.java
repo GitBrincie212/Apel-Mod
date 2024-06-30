@@ -9,6 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BezierCurveTest {
 
+    private static final float EPSILON = 1e-5f;
+
     @Test
     void testHashCode_withEmptyVectors() {
         BezierCurve linear1 = BezierCurve.of(new Vector3f(), new Vector3f(), List.of());
@@ -56,5 +58,25 @@ class BezierCurveTest {
         assertTrue(new Vector3f(-0.864f, 3.904f, 6.440f).equals(bc.compute(0.8f), 0.001f));
         assertTrue(new Vector3f(-0.648f, 4.428f, 5.810f).equals(bc.compute(0.9f), 0.001f));
         assertTrue(new Vector3f(0.0f, 5.0f, 5.0f).equals(bc.compute(1.0f), 0.001f));
+    }
+
+    @Test
+    void testQuadraticLength() {
+        // Given a quadratic Bézier curve (that happens to be a straight line along the x-axis)
+        BezierCurve bc = BezierCurve.of(new Vector3f(-2, 0, 0), new Vector3f(2, 0, 0), List.of(new Vector3f(0, 0, 0)));
+
+        // Then the length is simple to calculate
+        assertEquals(4f, bc.length(10), EPSILON);
+    }
+
+    @Test
+    void testCubicLength() {
+        // Given a cubic Bézier curve (that happens to be a straight line along the x-axis)
+        BezierCurve bc = BezierCurve.of(new Vector3f(-2, 0, 0), new Vector3f(2, 0, 0),
+                                        List.of(new Vector3f(0, 0, 0), new Vector3f(1, 0, 0))
+        );
+
+        // Then the length is simple to calculate
+        assertEquals(4f, bc.length(10), EPSILON);
     }
 }
