@@ -10,8 +10,6 @@ import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
-import java.util.Arrays;
-
 /** The linear animator. Which is used for linear paths(a.k.a. paths that are drawn as a line). It
  * accepts 2 or multiple points which draw the line and are called endpoints, they draw lines from the
  * previous endpoint to the next (the first to the second then second to third...). One semi-versatile
@@ -28,10 +26,6 @@ public class LinearAnimator extends PathAnimatorBase {
     protected Function4<AnimationTrimming<Integer>, Vector3f, Integer, Float, Void> onStart;
     protected Function5<AnimationTrimming<Integer>, Vector3f, Vector3f, Integer, Float, Void> onProcess;
 
-    private final IllegalArgumentException EQUAL_POSITIONS = new IllegalArgumentException("Starting & Ending Position cannot be equal");
-    private final IllegalArgumentException BELOW_2_ENDPOINTS = new IllegalArgumentException("Endpoints should be above 2");
-    private final IllegalArgumentException INVALID_TRIM_RANGE = new IllegalArgumentException("Invalid animation trimming range");
-
     /** Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want a constant number
      * of particles. It doesn't look pretty at large distances tho
@@ -43,144 +37,10 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f start, @NotNull Vector3f end,
-            @NotNull ParticleObject particle, int renderingSteps
+            int delay, @NotNull Vector3f start, @NotNull Vector3f end, @NotNull ParticleObject particle,
+            int renderingSteps
     ) {
-        super(delay, particle, renderingSteps);
-        if (start.equals(end)) throw EQUAL_POSITIONS;
-        this.endpoints = new Vector3f[]{start, end};
-        this.renderingSteps = new int[]{renderingSteps};
-        this.renderingInterval = new float[]{0.0f};
-    }
-
-    /**
-     * Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle line & also want to create multiple endpoints.
-     * Because of the interval, the amount is dynamic that can cause
-     * performance issues for larger distances (The higher the interval
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param endpoints The endpoint positions
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints,
-            ParticleObject particle, float renderingInterval
-    ) {
-        super(delay, particle, renderingInterval);
-        if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
-        int index = -1;
-        Vector3f curr = endpoints[0];
-        for (Vector3f endpoint : endpoints) {
-            index++;
-            if (index == 0) continue;
-            if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
-        }
-        this.endpoints = endpoints;
-        this.renderingInterval = new float[]{renderingInterval};
-        this.renderingSteps = new int[]{0};
-    }
-
-    /**
-     * Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a constant amount &
-     * of particles also multiple endpoints. It doesn't look pretty at
-     * large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param endpoints The endpoint positions
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps for the animation
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints,
-            @NotNull ParticleObject particle, int renderingSteps
-    ) {
-        super(delay, particle, renderingSteps);
-        if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
-        int index = -1;
-        Vector3f curr = endpoints[0];
-        for (Vector3f endpoint : endpoints) {
-            index++;
-            if (index == 0) continue;
-            if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
-        }
-        this.endpoints = endpoints;
-        this.renderingSteps = new int[]{renderingSteps};
-        this.renderingInterval = new float[]{0.0f};
-    }
-
-    /**
-     * Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle line as well as better control on their interval
-     * Because of the interval, the amount is dynamic which can cause
-     * performance issues for larger distances(The higher the interval
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param endpoints The endpoint positions
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints,
-            ParticleObject particle, float[] renderingInterval
-    ) {
-        super(delay, particle, renderingInterval[0]);
-        if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
-        if ((renderingInterval.length - 1) == endpoints.length) {
-            throw new IllegalArgumentException("Intervals do not match the endpoints");
-        }
-        int index = -1;
-        Vector3f curr = endpoints[0];
-        for (Vector3f endpoint : endpoints) {
-            index++;
-            if (index == 0) continue;
-            if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
-        }
-        this.endpoints = endpoints;
-        this.renderingInterval = renderingInterval;
-        int[] renderingSteps = new int[this.renderingInterval.length];
-        Arrays.fill(renderingSteps, 0);
-        this.renderingSteps = renderingSteps;
-    }
-
-    /**
-     * Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a constant amount &
-     * of particles also multiple endpoints. It doesn't look pretty at
-     * large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param endpoints The endpoint positions
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps for the animation
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints,
-            @NotNull ParticleObject particle, int[] renderingSteps
-    ) {
-        super(delay, particle, renderingSteps[0]);
-        if (endpoints.length <= 2) throw BELOW_2_ENDPOINTS;
-        if ((renderingSteps.length - 1) == endpoints.length) {
-            throw new IllegalArgumentException("Steps do not match the endpoints");
-        }
-        int index = -1;
-        Vector3f curr = endpoints[0];
-        for (Vector3f endpoint : endpoints) {
-            index++;
-            if (index == 0) continue;
-            if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
-        }
-        this.endpoints = endpoints;
-        this.renderingSteps = renderingSteps;
-        float[] renderInterval = new float[this.renderingSteps.length];
-        Arrays.fill(renderInterval, 0.0f);
-        this.renderingInterval = renderInterval;
+        this(delay, new Vector3f[]{start, end}, particle, new int[]{renderingSteps});
     }
 
     /**
@@ -197,14 +57,96 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public LinearAnimator(
-            int delay, Vector3f start, Vector3f end,
-            ParticleObject particle, float renderingInterval
+            int delay, @NotNull Vector3f start, @NotNull Vector3f end, @NotNull ParticleObject particle,
+            float renderingInterval
     ) {
-        super(delay, particle, renderingInterval);
-        if (start.equals(end)) throw EQUAL_POSITIONS;
-        this.endpoints = new Vector3f[]{start, end};
-        this.renderingInterval = new float[]{renderingInterval};
-        this.renderingSteps = new int[]{0};
+        this(delay, new Vector3f[]{start, end}, particle, new float[]{renderingInterval});
+    }
+
+    /**
+     * Constructor for the linear animation. This constructor is
+     * meant to be used in the case that you want a good consistent
+     * looking particle line & also want to create multiple endpoints.
+     * Because of the interval, the amount is dynamic that can cause
+     * performance issues for larger distances (The higher the interval
+     * the fewer particles are rendered, and it is also applied vice versa)
+     *
+     * @param delay The delay between each particle object render
+     * @param endpoints The endpoint positions
+     * @param particle The particle to use
+     * @param renderingInterval The distance, in blocks, between rendering steps
+     */
+    public LinearAnimator(
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, float renderingInterval
+    ) {
+        // There should be one fewer interval entries than endpoints, since each pair needs an interval
+        this(delay, endpoints, particle, defaultedArray(new float[endpoints.length - 1], renderingInterval));
+    }
+
+    /**
+     * Constructor for the linear animation. This constructor is
+     * meant to be used in the case that you want a constant amount &
+     * of particles also multiple endpoints. It doesn't look pretty at
+     * large distances tho
+     *
+     * @param delay The delay between each particle object render
+     * @param endpoints The endpoint positions
+     * @param particle The particle to use
+     * @param renderingSteps The amount of rendering steps between each pair of endpoints
+     */
+    public LinearAnimator(
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, int renderingSteps
+    ) {
+        // There should be one fewer step entries than endpoints since each segment needs steps
+        this(delay, endpoints, particle, defaultedArray(new int[endpoints.length - 1], renderingSteps));
+    }
+
+    /**
+     * Constructor for the linear animation. This constructor is
+     * meant to be used in the case that you want a good consistent
+     * looking particle line as well as better control on their interval
+     * Because of the interval, the amount is dynamic which can cause
+     * performance issues for larger distances(The higher the interval
+     * the fewer particles are rendered, and it is also applied vice versa)
+     *
+     * @param delay The delay between each particle object render
+     * @param endpoints The endpoint positions
+     * @param particle The particle to use
+     * @param renderingInterval The number of blocks before placing a new render step
+     */
+    public LinearAnimator(
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, float[] renderingInterval
+    ) {
+        super(delay, particle, renderingInterval[0]);
+        if ((renderingInterval.length - 1) == endpoints.length) {
+            throw new IllegalArgumentException("Intervals do not match the endpoints");
+        }
+        this.endpoints = endpoints;
+        this.renderingInterval = renderingInterval;
+        this.renderingSteps = new int[this.renderingInterval.length];
+    }
+
+    /**
+     * Constructor for the linear animation. This constructor is
+     * meant to be used in the case that you want a constant amount &
+     * of particles also multiple endpoints. It doesn't look pretty at
+     * large distances tho
+     *
+     * @param delay The delay between each particle object render
+     * @param endpoints The endpoint positions
+     * @param particle The particle to use
+     * @param renderingSteps The amount of rendering steps for the animation
+     */
+    public LinearAnimator(
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, int[] renderingSteps
+    ) {
+        super(delay, particle, renderingSteps[0]);
+        if ((renderingSteps.length - 1) == endpoints.length) {
+            throw new IllegalArgumentException("Steps do not match the endpoints");
+        }
+        this.endpoints = endpoints;
+        this.renderingSteps = renderingSteps;
+        this.renderingInterval = new float[this.renderingSteps.length];
     }
 
     /**
@@ -246,9 +188,9 @@ public class LinearAnimator extends PathAnimatorBase {
     public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
         int startStep = trimming.getStart();
         int endStep = trimming.getEnd();
-        if (startStep <= 0) {throw INVALID_TRIM_RANGE;}
-        if (endStep >= this.getRenderSteps()) {throw INVALID_TRIM_RANGE;}
-        if (startStep >= endStep) {throw INVALID_TRIM_RANGE;}
+        if (startStep <= 0 || endStep >= this.getRenderSteps() || startStep >= endStep) {
+            throw new IllegalArgumentException("Invalid animation trimming range");
+        }
         AnimationTrimming<Integer> prevTrimming = this.trimming;
         this.trimming = trimming;
         return prevTrimming;
@@ -265,11 +207,13 @@ public class LinearAnimator extends PathAnimatorBase {
 
     @Override
     public int convertToSteps() {
-        float sumInterval = 0;
-        for (float i : this.renderingInterval) {
-            sumInterval += i;
+        int steps = 0;
+        for (int i = 0; i < this.endpoints.length - 1; i++) {
+            float distance = this.endpoints[i].distance(this.endpoints[i + 1]);
+            int segmentSteps = (int) Math.ceil(distance / this.renderingInterval[i]);
+            steps += segmentSteps;
         }
-        return (int) Math.ceil(this.getDistance() / sumInterval);
+        return steps;
     }
 
     @Override
@@ -278,7 +222,7 @@ public class LinearAnimator extends PathAnimatorBase {
         for (int i : this.renderingSteps) {
             sumSteps += i;
         }
-        return sumSteps * (this.endpoints.length - 1);
+        return sumSteps;
     }
 
     @Override
