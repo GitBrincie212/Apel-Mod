@@ -232,12 +232,8 @@ public class LinearAnimator extends PathAnimatorBase {
      */
     public float getDistance() {
         float sumDistance = 0;
-        int index = -1;
-        Vector3f currVec = this.endpoints[0];
-        for (Vector3f endpoint : this.endpoints) {
-            index++;
-            if (index == 0) continue;
-            sumDistance += endpoint.distance(currVec);
+        for (int i = 0; i < this.endpoints.length - 1; i++) {
+            sumDistance += this.endpoints[i].distance(this.endpoints[i + 1]);
         }
         return sumDistance;
     }
