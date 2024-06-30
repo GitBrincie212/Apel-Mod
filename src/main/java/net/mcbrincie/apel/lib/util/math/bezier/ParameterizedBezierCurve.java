@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.util.math.bezier;
 
+import com.google.common.collect.ImmutableList;
 import org.joml.Vector3f;
 
 import java.util.LinkedList;
@@ -15,6 +16,7 @@ import java.util.List;
 @SuppressWarnings("unused")
 public class ParameterizedBezierCurve extends BezierCurve {
     private final List<Vector3f> controlPoints;
+    private final List<Vector3f> deCasteljauPoints;
 
     /** The constructor for the parametrized Bézier curve, which is a curve that consists of
      * a starting and an ending point and (n) number of control points defining the curvature.
@@ -45,6 +47,7 @@ public class ParameterizedBezierCurve extends BezierCurve {
     public ParameterizedBezierCurve(Vector3f start, Vector3f end, List<Vector3f> controlPoints) {
         super(start, end);
         this.controlPoints = List.copyOf(controlPoints);
+        this.deCasteljauPoints = ImmutableList.<Vector3f>builder().add(start).addAll(controlPoints).add(end).build();
     }
 
     @Override
@@ -57,7 +60,8 @@ public class ParameterizedBezierCurve extends BezierCurve {
         float sumDistance = 0;
         Vector3f prevPoint = this.start;
         float interval = (float) 1 / amount;
-        for (int i = 0; i < amount; i++) {
+        // Start adding from the first non-starting point, since prevPoint == start
+        for (int i = 1; i <= amount; i++) {
             Vector3f point = compute(interval * i);
             sumDistance += point.distance(prevPoint);
             prevPoint = point;
@@ -67,10 +71,10 @@ public class ParameterizedBezierCurve extends BezierCurve {
 
     @Override
     public Vector3f compute(float t) {
-        return this.de_casteljau(t, this.controlPoints);
+        return this.deCasteljau(t, this.deCasteljauPoints);
     }
 
-    public Vector3f de_casteljau(float t, List<Vector3f> controls) {
+    private Vector3f deCasteljau(float t, List<Vector3f> controls) {
         if (controls.size() == 1) return controls.getFirst();
         LinkedList<Vector3f> new_points = new LinkedList<>();
         for (int i = 0; i < controls.size() - 1; i++) {
@@ -81,6 +85,6 @@ public class ParameterizedBezierCurve extends BezierCurve {
             float z = (1 - t) * curr.z + t * next.z;
             new_points.add(new Vector3f(x, y, z));
         }
-        return this.de_casteljau(t, new_points);
+        return this.deCasteljau(t, new_points);
     }
 }

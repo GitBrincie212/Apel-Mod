@@ -79,4 +79,39 @@ class BezierCurveTest {
         // Then the length is simple to calculate
         assertEquals(4f, bc.length(10), EPSILON);
     }
+
+    @Test
+    void testParametricBezierPoints() {
+        // Given a 4th-order Bézier curve (that happens to be a straight line from (-2, -2, -2) to (2, 2, 2))
+        BezierCurve bc = BezierCurve.of(new Vector3f(-2), new Vector3f(2),
+                                        List.of(new Vector3f(-1), new Vector3f(0), new Vector3f(1))
+        );
+
+        // Verify points are within one-thousandth along the line
+        assertTrue(new Vector3f(-2.0f).equals(bc.compute(0.0f), 0.001f));
+        assertTrue(new Vector3f(-1.6f).equals(bc.compute(0.1f), 0.001f));
+        assertTrue(new Vector3f(-1.2f).equals(bc.compute(0.2f), 0.001f));
+        assertTrue(new Vector3f(-0.8f).equals(bc.compute(0.3f), 0.001f));
+        assertTrue(new Vector3f(-0.4f).equals(bc.compute(0.4f), 0.001f));
+        assertTrue(new Vector3f(0.0f).equals(bc.compute(0.5f), 0.001f));
+        assertTrue(new Vector3f(0.4f).equals(bc.compute(0.6f), 0.001f));
+        assertTrue(new Vector3f(0.8f).equals(bc.compute(0.7f), 0.001f));
+        assertTrue(new Vector3f(1.2f).equals(bc.compute(0.8f), 0.001f));
+        assertTrue(new Vector3f(1.6f).equals(bc.compute(0.9f), 0.001f));
+        assertTrue(new Vector3f(2.0f).equals(bc.compute(1.0f), 0.001f));
+    }
+
+    @Test
+    void testParametricLength() {
+        // Given a 4th-order Bézier curve (that happens to be a straight line from (-2, -2, -2) to (2, 2, 2))
+        BezierCurve bc = BezierCurve.of(new Vector3f(-2), new Vector3f(2),
+                                        List.of(new Vector3f(-1), new Vector3f(0), new Vector3f(1))
+        );
+
+        // When the length is calculated
+        float length = bc.length(10);
+
+        // Then it is 4√3 (-2, -2, -2) to (2, 2, 2)
+        assertEquals(4f * Math.sqrt(3), length, EPSILON);
+    }
 }
