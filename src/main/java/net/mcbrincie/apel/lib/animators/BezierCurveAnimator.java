@@ -10,7 +10,6 @@ import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
-import java.util.Arrays;
 import java.util.function.BiFunction;
 
 /** The Bézier curve animator which is used for curved paths, it accepts two or multiple different bézier curves,
@@ -21,7 +20,7 @@ import java.util.function.BiFunction;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class BezierCurveAnimator extends PathAnimatorBase {
-    protected BezierCurve[] endpoints;
+    protected BezierCurve[] bezierCurves;
     protected int[] renderingSteps;
     protected float[] renderingInterval;
     protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
@@ -30,9 +29,23 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     protected BiFunction<AnimationTrimming<Integer>, BezierCurve[], Void> onStart;
     protected Function3<AnimationTrimming<Integer>, BezierCurve, BezierCurve[], Void> onProcess;
 
-    private final IllegalArgumentException EQUAL_POSITIONS = new IllegalArgumentException("Starting & Ending Position cannot be equal");
-    private final IllegalArgumentException EMPTY_ENDPOINTS = new IllegalArgumentException("Endpoints should not be empty");
-    private final IllegalArgumentException INVALID_TRIM_RANGE = new IllegalArgumentException("Invalid animation trimming range");
+    /**
+     * Constructor for the bézier animation. This constructor is
+     * meant to be used in the case that you want a good consistent
+     * looking particle curve. The amount is dynamic that can cause
+     * performance issues for larger distances (The higher the interval,
+     * the fewer particles are rendered, and it is also applied vice versa)
+     *
+     * @param delay The delay between each particle object render
+     * @param curve The bézier curve
+     * @param particle The particle to use
+     * @param renderingInterval The number of blocks before placing a new render step
+     */
+    public BezierCurveAnimator(
+            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject particle, float renderingInterval
+    ) {
+        this(delay, new BezierCurve[]{curve}, particle, new float[]{renderingInterval});
+    }
 
     /** Constructor for the bézier curve animation. This constructor is
      * meant to be used in the case that you want a constant number
@@ -46,10 +59,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     public BezierCurveAnimator(
             int delay, @NotNull BezierCurve curve, @NotNull ParticleObject particle, int renderingSteps
     ) {
-        super(delay, particle, renderingSteps);
-        this.endpoints = new BezierCurve[]{curve};
-        this.renderingSteps = new int[]{renderingSteps};
-        this.renderingInterval = new float[]{0.0f};
+        this(delay, new BezierCurve[]{curve}, particle, new int[]{renderingSteps});
     }
 
     /**
@@ -61,26 +71,14 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * the fewer particles are rendered, and it is also applied vice versa)
      *
      * @param delay The delay between each particle object render
-     * @param endpoints The bézier curves
+     * @param bezierCurves The bézier curves
      * @param particle The particle to use
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] endpoints,
-            ParticleObject particle, float renderingInterval
+            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, float renderingInterval
     ) {
-        super(delay, particle, renderingInterval);
-        if (endpoints.length == 0) throw EMPTY_ENDPOINTS;
-        int index = -1;
-        BezierCurve curr = endpoints[0];
-        for (BezierCurve endpoint : endpoints) {
-            index++;
-            if (index == 0) continue;
-            if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
-        }
-        this.endpoints = endpoints;
-        this.renderingInterval = new float[]{renderingInterval};
-        this.renderingSteps = new int[]{0};
+        this(delay, bezierCurves, particle, defaultedArray(new float[bezierCurves.length], renderingInterval));
     }
 
     /**
@@ -90,26 +88,14 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * large distances tho
      *
      * @param delay The delay between each particle object render
-     * @param endpoints The bézier curves
+     * @param bezierCurves The bézier curves
      * @param particle The particle to use
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] endpoints,
-            @NotNull ParticleObject particle, int renderingSteps
+            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, int renderingSteps
     ) {
-        super(delay, particle, renderingSteps);
-        if (endpoints.length == 0) throw EMPTY_ENDPOINTS;
-        int index = -1;
-        BezierCurve curr = endpoints[0];
-        for (BezierCurve endpoint : endpoints) {
-            index++;
-            if (index == 0) continue;
-            if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
-        }
-        this.endpoints = endpoints;
-        this.renderingSteps = new int[]{renderingSteps};
-        this.renderingInterval = new float[]{0.0f};
+        this(delay, bezierCurves, particle, defaultedArray(new int[bezierCurves.length], renderingSteps));
     }
 
     /**
@@ -121,31 +107,23 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * the fewer particles are rendered, and it is also applied vice versa)
      *
      * @param delay The delay between each particle object render
-     * @param endpoints The bézier curves
+     * @param bezierCurves The bézier curves
      * @param particle The particle to use
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] endpoints,
-            ParticleObject particle, float[] renderingInterval
+            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, float[] renderingInterval
     ) {
         super(delay, particle, renderingInterval[0]);
-        if (endpoints.length == 0) throw EMPTY_ENDPOINTS;
-        if ((renderingInterval.length - 1) == endpoints.length) {
-            throw new IllegalArgumentException("Intervals do not match the endpoints");
+        if (bezierCurves.length == 0) {
+            throw new IllegalArgumentException("Must provide at least one Bézier curve");
         }
-        int index = -1;
-        BezierCurve curr = endpoints[0];
-        for (BezierCurve endpoint : endpoints) {
-            index++;
-            if (index == 0) continue;
-            if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
+        if (bezierCurves.length != renderingInterval.length) {
+            throw new IllegalArgumentException("Length of curve and interval arrays do not match");
         }
-        this.endpoints = endpoints;
+        this.bezierCurves = bezierCurves;
         this.renderingInterval = renderingInterval;
-        int[] renderingSteps = new int[this.renderingInterval.length];
-        Arrays.fill(renderingSteps, 0);
-        this.renderingSteps = renderingSteps;
+        this.renderingSteps = new int[this.bezierCurves.length];
     }
 
     /**
@@ -155,55 +133,23 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * large distances tho
      *
      * @param delay The delay between each particle object render
-     * @param endpoints The bézier curves
+     * @param bezierCurves The bézier curves
      * @param particle The particle to use
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] endpoints,
-            @NotNull ParticleObject particle, int[] renderingSteps
+            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, int[] renderingSteps
     ) {
         super(delay, particle, renderingSteps[0]);
-        if (endpoints.length == 0) throw EMPTY_ENDPOINTS;
-        if ((renderingSteps.length - 1) == endpoints.length) {
-            throw new IllegalArgumentException("Steps do not match the endpoints");
+        if (bezierCurves.length == 0) {
+            throw new IllegalArgumentException("Must provide at least one Bézier curve");
         }
-        int index = -1;
-        BezierCurve curr = endpoints[0];
-        for (BezierCurve endpoint : endpoints) {
-            index++;
-            if (index == 0) continue;
-            if (curr.equals(endpoint)) throw EQUAL_POSITIONS;
+        if (bezierCurves.length != renderingSteps.length) {
+            throw new IllegalArgumentException("Length of curve and step arrays do not match");
         }
-        this.endpoints = endpoints;
+        this.bezierCurves = bezierCurves;
         this.renderingSteps = renderingSteps;
-        float[] renderInterval = new float[this.renderingSteps.length];
-        Arrays.fill(renderInterval, 0.0f);
-        this.renderingInterval = renderInterval;
-    }
-
-    /**
-     * Constructor for the bézier animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle curve. The amount is dynamic that can cause
-     * performance issues for larger distances (The higher the interval,
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param start The starting bézier curve
-     * @param end The ending bézier curve
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public BezierCurveAnimator(
-            int delay, BezierCurve start, BezierCurve end,
-            ParticleObject particle, float renderingInterval
-    ) {
-        super(delay, particle, renderingInterval);
-        if (start.equals(end)) throw EQUAL_POSITIONS;
-        this.endpoints = new BezierCurve[]{start, end};
-        this.renderingInterval = new float[]{renderingInterval};
-        this.renderingSteps = new int[]{0};
+        this.renderingInterval = new float[this.renderingSteps.length];
     }
 
     /**
@@ -216,7 +162,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     */
     public BezierCurveAnimator(BezierCurveAnimator animator) {
         super(animator);
-        this.endpoints = animator.endpoints;
+        this.bezierCurves = animator.bezierCurves;
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
         this.trimming = animator.trimming;
@@ -231,8 +177,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      */
     public float getDistance() {
         float sumDistance = 0;
-        for (BezierCurve endpoint : this.endpoints) {
-            sumDistance += endpoint.length(this.convertToSteps());
+        for (BezierCurve bezierCurve : this.bezierCurves) {
+            sumDistance += bezierCurve.length(this.convertToSteps());
         }
         return sumDistance;
     }
@@ -245,9 +191,9 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
         int startStep = trimming.getStart();
         int endStep = trimming.getEnd();
-        if (startStep <= 0) {throw INVALID_TRIM_RANGE;}
-        if (endStep >= this.getRenderSteps()) {throw INVALID_TRIM_RANGE;}
-        if (startStep >= endStep) {throw INVALID_TRIM_RANGE;}
+        if (startStep <= 0 || endStep >= this.getRenderSteps() || startStep >= endStep) {
+            throw new IllegalArgumentException("Invalid animation trimming range");
+        }
         AnimationTrimming<Integer> prevTrimming = this.trimming;
         this.trimming = trimming;
         return prevTrimming;
@@ -277,7 +223,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         for (int i : this.renderingSteps) {
             sumSteps += i;
         }
-        return sumSteps * (this.endpoints.length - 1);
+        return sumSteps * (this.bezierCurves.length - 1);
     }
 
     @Override
@@ -287,10 +233,10 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         int particleAmount;
         float particleInterval;
         if (this.onStart != null) {
-            this.onStart.apply(this.trimming, this.endpoints);
+            this.onStart.apply(this.trimming, this.bezierCurves);
         }
         this.allocateToScheduler();
-        for (BezierCurve endpoint : this.endpoints) {
+        for (BezierCurve bezierCurve : this.bezierCurves) {
             index++;
             particleAmount = this.renderingSteps[index];
             particleInterval = this.renderingInterval[index];
@@ -301,14 +247,14 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             }
             for (int i = 0; i < particleAmount; i++) {
                 step++;
-                Vector3f pos = endpoint.compute(particleInterval * i);
+                Vector3f pos = bezierCurve.compute(particleInterval * i);
                 this.handleDrawingStep(renderer, step, pos);
                 if (this.onProcess != null) {
-                    this.onProcess.apply(this.trimming, endpoint, this.endpoints);
+                    this.onProcess.apply(this.trimming, bezierCurve, this.bezierCurves);
                 }
             }
             if (this.onEnd != null) {
-                this.onEnd.apply(this.trimming, this.endpoints);
+                this.onEnd.apply(this.trimming, this.bezierCurves);
             }
         }
     }
