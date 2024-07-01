@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -342,5 +343,27 @@ public abstract class PathAnimatorBase {
                 this, new ScheduledStep(this.delay, this.storedFuncsBuffer.toArray(Runnable[]::new))
         );
         this.storedFuncsBuffer.clear();
+    }
+
+    /**
+     * Provides a way to construct an int array with a default value in all elements in a single line.
+     * @param array an array to receive the default values
+     * @param defaultValue the default value to put in every element
+     * @return the provided array with all elements defaulted as specified
+     */
+    protected static int[] defaultedArray(int[] array, int defaultValue) {
+        Arrays.fill(array, defaultValue);
+        return array;
+    }
+
+    /**
+     * Provides a way to construct a float array with a default value in all elements in a single line.
+     * @param array an array to receive the default values
+     * @param defaultValue the default value to put in every element
+     * @return the provided array with all elements defaulted as specified
+     */
+    protected static float[] defaultedArray(float[] array, float defaultValue) {
+        Arrays.fill(array, defaultValue);
+        return array;
     }
 }
