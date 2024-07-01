@@ -207,14 +207,20 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         return this.trimming;
     }
 
-
     @Override
     public int convertToSteps() {
-        float sumInterval = 0;
-        for (float i : this.renderingInterval) {
-            sumInterval += i;
+        int steps = 0;
+        for (int i = 0; i < this.bezierCurves.length; i++) {
+            int curveSteps = getCurveSteps(this.bezierCurves[i], this.renderingInterval[i]);
+            steps += curveSteps;
         }
-        return (int) Math.ceil(this.getDistance() / sumInterval);
+        return steps;
+    }
+
+    private int getCurveSteps(BezierCurve bezierCurve, float interval) {
+        // TODO: choose this value better, perhaps based on distance between start/end or start/controls/end?
+        float distance = bezierCurve.length(100);
+        return (int) Math.ceil(distance / interval);
     }
 
     @Override
@@ -223,31 +229,30 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         for (int i : this.renderingSteps) {
             sumSteps += i;
         }
-        return sumSteps * (this.bezierCurves.length - 1);
+        return sumSteps;
     }
 
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         int index = -1;
         int step = -1;
-        int particleAmount;
-        float particleInterval;
         if (this.onStart != null) {
             this.onStart.apply(this.trimming, this.bezierCurves);
         }
         this.allocateToScheduler();
         for (BezierCurve bezierCurve : this.bezierCurves) {
             index++;
-            particleAmount = this.renderingSteps[index];
-            particleInterval = this.renderingInterval[index];
-            if (particleInterval == 0.0f) {
-                particleInterval = 1.0f / particleAmount;
-            } else {
-                particleAmount = this.convertToSteps();
+            int curveSteps = this.renderingSteps[index];
+            float renderInterval = this.renderingInterval[index];
+            if (renderInterval != 0.0f) {
+                // Compute steps base on length of curve
+                curveSteps = this.getCurveSteps(bezierCurve, renderInterval);
             }
-            for (int i = 0; i < particleAmount; i++) {
+            // Interval MUST be the reciprocal of steps so t is in [0, 1].
+            float tStep = 1.0f / curveSteps;
+            for (float t = 0; t < 1.0f; t += tStep) {
                 step++;
-                Vector3f pos = bezierCurve.compute(particleInterval * i);
+                Vector3f pos = bezierCurve.compute(t);
                 this.handleDrawingStep(renderer, step, pos);
                 if (this.onProcess != null) {
                     this.onProcess.apply(this.trimming, bezierCurve, this.bezierCurves);
