@@ -12,9 +12,9 @@ import oshi.util.tuples.Pair;
 import java.util.Arrays;
 import java.util.Optional;
 
-/** The particle object class that represents a 2D bézier curve. It is a bit more
- * advanced than the ParticleLine due to its curvature and flexibility in terms of
- * its shape. The bézier curve can also be linear
+/** The particle object class that represents a series of 3D Bézier curves. It is a bit more
+ * advanced than the {@code ParticleLine} due to its curvature and flexibility in terms of
+ * its shape. Bézier curves can be linear, but it is recommended to use {@code ParticleLine} if a line is desired.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleBezierCurve extends ParticleObject {
@@ -26,26 +26,34 @@ public class ParticleBezierCurve extends ParticleObject {
 
     public enum CommonDrawData {BEZIER_CURVE, AMOUNT}
 
-    /** Constructor for the particle bézier curve which is a curve. It accepts as parameters
-     * the particle effect to use, the bézier curves, the amount per bézier curve and the rotation.
-     * Although the pivot is the starting position of the bézier curves and not the center, there is
-     * also a simplified constructor for no rotation
+    /** Constructor for the particle Bézier curve. It accepts as parameters
+     * the particle effect to use, the Bézier curves, the amount of particles per Bézier curve, and the rotation.
+     * The pivot point for rotation is the {@code drawPos} parameter of
+     * {@link #draw(ApelServerRenderer, int, Vector3f)}, and the points in the Bézier curves are relative to that
+     * point.  There is also a simplified constructor for no rotation.
+     *
+     * <p>This implementation calls setters for rotation and pairs of curves/amounts so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle effect to use
      * @param curves The Bézier curves to use
-     * @param amounts The number of particles
+     * @param amounts The number of particles for each Bézier curve
      *
      * @see ParticleBezierCurve#ParticleBezierCurve(ParticleEffect, BezierCurve[], int[])
     */
     public ParticleBezierCurve(ParticleEffect particleEffect, BezierCurve[] curves, int[] amounts, Vector3f rotation) {
-        super(particleEffect);
+        super(particleEffect, rotation);
         this.setPairs(curves, amounts);
-        this.setRotation(rotation);
     }
 
     /** Constructor for the particle bézier curve which is a bézier curve. It accepts as parameters
      * the particle effect to use, the bézier curves and the amount per bézier curves. There is a more
-     * complex constructor for rotation
+     * complex constructor for rotation.
+     *
+     * <p>This implementation calls setters for rotation and pairs of curves/amounts so checks are performed to
+     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
+     * they risk undefined behavior.
      *
      * @param particleEffect The particle effect to use
      * @param curves The Bézier curves to use
@@ -57,17 +65,25 @@ public class ParticleBezierCurve extends ParticleObject {
         this(particleEffect, curves, amounts, new Vector3f());
     }
 
-    /** The copy constructor for a specific particle object. It copies all
-     * the params, including the interceptors the particle object has
+    /** The copy constructor for a specific particle object. It makes shallow copies of all
+     * properties, including the interceptors the particle object has.
      *
      * @param curve The particle object to copy from
     */
     public ParticleBezierCurve(ParticleBezierCurve curve) {
         super(curve);
-        this.bezierCurves = curve.bezierCurves;
+        this.bezierCurves = curve.bezierCurves.clone();
+        this.amounts = curve.amounts.clone();
         this.beforeDraw = curve.beforeDraw;
-        this.amounts = curve.amounts;
         this.afterDraw = curve.afterDraw;
+    }
+
+    /** Gets the bézier curves and returns them
+     *
+     * @return The bézier curves
+     */
+    public BezierCurve[] getBezierCurves() {
+        return this.bezierCurves;
     }
 
     /** Sets the bézier curves to iterate over
@@ -75,7 +91,7 @@ public class ParticleBezierCurve extends ParticleObject {
      * @param newEndpoints The new bézier curves
      * @return The previous starting point
     */
-    public BezierCurve[] setBezierEndpoints(BezierCurve[] newEndpoints) {
+    public BezierCurve[] setBezierCurves(BezierCurve[] newEndpoints) {
         if (newEndpoints.length != this.amounts.length) {
             throw new IllegalArgumentException("The endpoint's length has to match with the amount's length");
         }
@@ -84,10 +100,31 @@ public class ParticleBezierCurve extends ParticleObject {
         return prevEndpoints;
     }
 
-    /** Sets the amount to a specific value. Returns -1 if there are different values otherwise
-     * it returns the value that is present on the integer list(a.k.a. the constant)
+    /** Gets the amount of particles that make up each curve.  If all curves have the same number of particles, it
+     * returns that number.  If any curve has a different number of particles, then it returns -1.
      *
-     * @param amount The new particle
+     * @return The common value or -1 if any curve has a distinct number of particles
+     */
+    @Override
+    public int getAmount() {
+        int[] dummyArray = new int[this.bezierCurves.length];
+        int firstElement = this.amounts[0];
+        Arrays.fill(dummyArray, firstElement);
+        return Arrays.equals(dummyArray, this.amounts) ? firstElement : -1;
+    }
+
+    /** Gets the array of particle amounts and returns it
+     *
+     * @return the amount array
+     */
+    public int[] getAmounts() {
+        return this.amounts;
+    }
+
+    /** Sets the particle amount for every curve to the given value. Returns -1 if there are different values otherwise
+     * it returns the value shared by all curves.
+     *
+     * @param amount The new particle count to be applied to every curve
      * @return The constant amount (if there isn't any return -1)
      */
     @Override
@@ -105,10 +142,11 @@ public class ParticleBezierCurve extends ParticleObject {
         return Arrays.equals(dummyArray, prevAmount) ? firstElement : -1;
     }
 
-    /** Sets the amounts to a new value and returns the previous one
+    /** Sets the amounts to a new value and returns the previous one.  The array length must match the number of
+     * Bézier curves, and each entry in the array must be positive.
      *
-     * @param amount The new amounts value
-     * @return The previous amounts value
+     * @param amount The new amounts
+     * @return The previous amounts
      */
     public int[] setAmount(int[] amount) {
         if (amount.length != this.bezierCurves.length) {
@@ -123,7 +161,8 @@ public class ParticleBezierCurve extends ParticleObject {
     }
 
     /**
-     * Sets both the Bézier curves and the amounts to new arrays and returns them
+     * Sets both the Bézier curves and the amounts to new arrays and returns them.  The arrays must be of equal length,
+     * and the amounts must be positive.
      *
      * @param curves The curves
      * @param amounts The amounts
@@ -141,35 +180,6 @@ public class ParticleBezierCurve extends ParticleObject {
         BezierCurve[] prevEndpoints = this.bezierCurves;
         this.bezierCurves = curves;
         return new Pair<>(prevAmount, prevEndpoints);
-    }
-
-    /** Gets the CONSTANT amount present in the array and returns it. If the
-     *  array has different values, then it returns -1
-     *
-     * @return The constant value
-     */
-    @Override
-    public int getAmount() {
-        int[] dummyArray = new int[this.bezierCurves.length];
-        int firstElement = this.amounts[0];
-        Arrays.fill(dummyArray, firstElement);
-        return Arrays.equals(dummyArray, this.amounts) ? firstElement : -1;
-    }
-
-    /** Gets the ENTIRE amount array and returns it
-     *
-     * @return the amount array
-     */
-    public int[] getAmounts() {
-        return this.amounts;
-    }
-
-    /** Gets the bézier curves and returns them
-     *
-     * @return The bézier curves
-     */
-    public BezierCurve[] getBezierCurves() {
-        return this.bezierCurves;
     }
 
     @Override
@@ -192,8 +202,8 @@ public class ParticleBezierCurve extends ParticleObject {
     }
 
     /** Sets the interceptor to run after drawing the bézier curve.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the animation step number, and the ParticleLine
-     * instance.
+     * with references to the {@link ServerWorld}, the animation step number, and the ParticleBezierCurve
+     * instance.  Metadata will include the individual Bézier curve object and its amount of particles.
      *
      * @param afterDraw the new interceptor to execute after drawing the bézier curve
      */
@@ -209,8 +219,8 @@ public class ParticleBezierCurve extends ParticleObject {
     }
 
     /** Set the interceptor to run before drawing the bézier curve.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the animation step number, and the ParticleLine
-     * instance.
+     * with references to the {@link ServerWorld}, the animation step number, and the ParticleBezierCurve
+     * instance.  Metadata will include the individual Bézier curve object and its amount of particles.
      *
      * @param beforeDraw the new interceptor to execute before drawing the bézier curve
      */

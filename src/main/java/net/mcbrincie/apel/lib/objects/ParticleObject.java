@@ -17,10 +17,21 @@ import org.joml.Vector3f;
  * the number of particles to render.  APEL native objects will spread these particles evenly throughout the shape
  * unless otherwise indicated on specific shapes.
  *
+ * <p>The provided subclasses include interceptors that allow for modification before and after each call to
+ * {@code draw}.
+ *
+ * <p><strong>Note:</strong> Rotation calculations are in radians and not in degrees.  When rotation values exceed the
+ * (-2π, 2π), they are wrapped using modulo to remain in the range (-2π, 2π).
+ *
  * <h2>Subclassing</h2>
- * <p>Custom shapes only need to implement the {@code draw} method, and it should call methods on the
+ * <p>Custom shapes only need to implement the {@code draw} method, and it should perform the necessary transformations
+ * (scaling, rotation, translation) on the object before calling methods on the
  * {@link ApelServerRenderer renderer} to cause particles to be rendered.  The renderer supports several basic
  * geometries which are documented there.
+ *
+ * <p>Subclasses should consider mimicking the interceptor behavior so developers using the subclasses have the
+ * opportunity to modify the object between each rendering.  These modifications may change rotation, translation,
+ * scaling, vertex positions, particle amounts, or any other property of the subclass.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class ParticleObject {
@@ -29,47 +40,41 @@ public abstract class ParticleObject {
     protected Vector3f offset = new Vector3f(0, 0, 0);
     protected int amount = 1;
 
-    /** Constructor for the particle object which is a point. It accepts as parameters
-     * the particle to use and the rotation to apply (which has no effect. Only on the
-     * path animators that extend this class). There is also a simplified version
-     * for no rotation.
-     *
-     * @see ParticleObject#ParticleObject(ParticleObject)
+    /** Constructor for the particle object. It accepts as parameters the particle to use and the rotation to apply.
      *
      * @param particleEffect The particle effect to use
-     * @param rotation The rotation (IN RADIANS)
+     * @param rotation The rotation in radians
+     *
+     * @see ParticleObject#ParticleObject(ParticleObject)
      */
     public ParticleObject(ParticleEffect particleEffect, Vector3f rotation) {
         this.particleEffect = particleEffect;
         this.rotation = this.normalizeRotation(rotation);
     }
 
-    /** Constructor for the particle object which is a point. It accepts as parameters
-     * the particle effect to use. It is a simplified version of the previous constructor
-     * and is meant to be used when you want the object to not have a rotation offset.
-     * In the case you do want, there is a constructor for that (won't apply to this class)
-     *
-     * @see ParticleObject#ParticleObject(ParticleEffect, Vector3f)
+    /** Constructor for the particle object. It accepts as a parameter the particle effect to use.
      *
      * @param particleEffect The particle effect to use
+     *
+     * @see ParticleObject#ParticleObject(ParticleEffect, Vector3f)
     */
     public ParticleObject(ParticleEffect particleEffect) {
         this(particleEffect, new Vector3f(0, 0, 0));
     }
 
-    /** The copy constructor for a specific particle object. It copies all
-     * the params, including the interceptors the particle object has
+    /** The copy constructor for a specific particle object. It copies all the params, including the interceptors the
+     * particle object has.  Rotation and offset are copied to new vectors.
      *
      * @param object The particle object to copy from
      */
     public ParticleObject(ParticleObject object) {
         this.particleEffect = object.particleEffect;
-        this.rotation = object.rotation;
+        this.rotation = new Vector3f(object.rotation);
+        this.offset = new Vector3f(object.offset);
         this.amount = object.amount;
-        this.offset = object.offset;
     }
 
-    /** Gets the particle which is currently in use and returns it
+    /** Gets the particle which is currently in use and returns it.
      *
      * @return The currently used particle
      */
@@ -77,8 +82,7 @@ public abstract class ParticleObject {
         return this.particleEffect;
     }
 
-    /** Sets the particle to use to a new value and returns the previous
-     *  particle that was used
+    /** Sets the particle to use to a new value and returns the previous particle that was used.
      *
      * @param particle The new particle
      * @return The previously used particle
@@ -89,7 +93,7 @@ public abstract class ParticleObject {
         return prevParticle;
     }
 
-    /** Gets the rotation which is currently in use and returns it
+    /** Gets the rotation which is currently in use and returns it.
      *
      * @return The currently used rotation
      */
@@ -98,8 +102,8 @@ public abstract class ParticleObject {
     }
 
     /** Sets the rotation to a new value. The rotation is calculated in radians and
-     * when setting it rounds the rotation to match in the range of (-2π, 2π). It returns
-     * the previous rotation used.
+     * when setting it wraps the rotation to be in the range of (-2π, 2π).  The rotation components will have the same
+     * signs as they do in the parameter.  It returns the previous rotation used.
      *
      * <p>This implementation uses {@link #normalizeRotation(Vector3f)} to do the rounding which uses
      * the modulo operator on each member of the {@code Vector3f} to produce a result in (-2π, 2π).
@@ -116,7 +120,7 @@ public abstract class ParticleObject {
     /**
      * Removes full rotations from each component of the provided {@code rotation} vector such that each component
      * maintains its direction but has a magnitude in the range {@code (-2π, 0]} or {@code [0, 2π)}.  Returns a new
-     * vector containing the resulting partial rotation components.
+     * vector containing the resulting partial rotation components with the same signs as the parameter's components.
      *
      * <p><b>Note:</b> This is called by {@link #setRotation(Vector3f)}, so overrides must maintain this behavior.
      *
@@ -130,8 +134,7 @@ public abstract class ParticleObject {
         return new Vector3f(x, y, z);
     }
 
-    /** Gets the current offset value used. The offset position is added
-     * with the drawing position.
+    /** Gets the current offset value used. The offset position is added with the drawing position.
      *
      * @return The offset
      */
@@ -140,7 +143,7 @@ public abstract class ParticleObject {
     }
 
     /** Sets the offset to a new value. The offset position is added with the drawing position.
-     * Returns the previous offset that was used
+     * Returns the previous offset that was used.
      *
      * @param offset The new offset value
      * @return The previous offset
@@ -151,7 +154,7 @@ public abstract class ParticleObject {
         return prevOffset;
     }
 
-    /** Gets the number of particles that are currently in use and returns it
+    /** Gets the number of particles that are currently in use and returns it.
      *
      * @return The currently used number of particles
      */
@@ -161,7 +164,7 @@ public abstract class ParticleObject {
 
     /** Sets the number of particles to use for rendering the object.
      * This has no effect on this class, but on shapes it does have an effect.
-     * It returns the previously used number of particles
+     * It returns the previously used number of particles.
      *
      * @param amount The new particle
      * @return The previously used amount

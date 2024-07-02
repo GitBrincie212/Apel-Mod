@@ -36,7 +36,8 @@ public class QuadraticBezierCurve extends BezierCurve {
         float sumDistance = 0;
         Vector3f prevPoint = this.start;
         float interval = (float) 1 / amount;
-        for (int i = 0; i < amount; i++) {
+        // Start adding from the first non-starting point, since prevPoint == start
+        for (int i = 1; i <= amount; i++) {
             Vector3f point = compute(interval * i);
             sumDistance += point.distance(prevPoint);
             prevPoint = point;

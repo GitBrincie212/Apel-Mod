@@ -12,8 +12,8 @@ import java.util.Optional;
 /** The particle object class that represents a 2D line. It is one of the
  * most simple objects to use as it needs only a start & an ending position
  * to draw that line. The line cannot be curved and is only linear.
- * <br><br>
- * <b>Note:</b> rotation won't be applied to the calculations, as such it doesn't make
+ *
+ * <p><b>Note:</b> Rotation is not applied to the calculations, as such it doesn't make
  * any difference.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
@@ -31,6 +31,10 @@ public class ParticleLine extends ParticleObject {
      * the particle effect to use, the starting endpoint & the ending endpoint. Rotation
      * doesn't matter in this context.
      *
+     * <p>This implementation calls a setter for amount so checks are performed to
+     * ensure valid values are accepted.  Subclasses should take care not to violate this lest
+     * they risk undefined behavior.
+     *
      * @param particleEffect The particle effect to use
      * @param start The starting endpoint
      * @param end The ending endpoint
@@ -47,19 +51,28 @@ public class ParticleLine extends ParticleObject {
     }
 
     /** The copy constructor for a specific particle object. It copies all
-     * the params, including the interceptors the particle object has
+     * the params, including the interceptors the particle object has.  The start and end points are copied to new
+     * vectors.
      *
      * @param line The particle object to copy from
     */
     public ParticleLine(ParticleLine line) {
         super(line);
-        this.end = line.end;
-        this.start = line.start;
+        this.start = new Vector3f(line.start);
+        this.end = new Vector3f(line.end);
         this.beforeDraw = line.beforeDraw;
         this.afterDraw = line.afterDraw;
     }
 
-    /** Sets the starting point of the line
+    /** Gets the starting endpoint
+     *
+     * @return The starting endpoint
+     */
+    public Vector3f getStart() {
+        return this.start;
+    }
+
+    /** Sets the starting point of the line.
      *
      * @param start The new starting point of the line
      * @return The previous starting point
@@ -73,7 +86,15 @@ public class ParticleLine extends ParticleObject {
         return prevStart;
     }
 
-    /** Sets the ending point of the line
+    /** Gets the ending endpoint
+     *
+     * @return The ending endpoint
+     */
+    public Vector3f getEnd() {
+        return this.end;
+    }
+
+    /** Sets the ending point of the line.
      *
      * @param end The new ending point of the line
      * @return The previous ending point
@@ -90,29 +111,15 @@ public class ParticleLine extends ParticleObject {
     @Override
     @Deprecated
     public Vector3f getRotation() {
+        // Do not throw UnsupportedOperationException in case this is called in a series of ParticleObjects
         return null;
     }
 
     @Override
     @Deprecated
     public Vector3f setRotation(Vector3f rotation) {
+        // Do not throw UnsupportedOperationException in case this is called in a series of ParticleObjects
         return null;
-    }
-
-    /** Gets the starting endpoint
-     *
-     * @return The starting endpoint
-     */
-    public Vector3f getStart() {
-        return this.start;
-    }
-
-    /** Gets the ending endpoint
-     *
-     * @return The ending endpoint
-     */
-    public Vector3f getEnd() {
-        return this.end;
     }
 
     @Override

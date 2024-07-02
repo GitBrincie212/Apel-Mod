@@ -34,23 +34,20 @@ public class CubicBezierCurve extends QuadraticBezierCurve {
     }
 
     @Override
-    public float length(int amount) {
-        return super.length(amount);
-    }
-
-    @Override
     public Vector3f compute(float t) {
-        float tMinusOne = 1 - t;
-        float tMinusOneCubed = tMinusOne * tMinusOne * tMinusOne;
-        float tMinusOneSquared = tMinusOne * tMinusOne;
+        // Basic formula for cubic curve is this:
+        // (1-t)^3 * x0 + t(1-t)^2 * x1 + (t^2)(1-t) * x2 + t^3 * x3
+        float oneMinusT = 1 - t;
+        float oneMinusTSquared = oneMinusT * oneMinusT;
+        float oneMinusTCubed = oneMinusTSquared * oneMinusT;
         float tSquared = t * t;
         float tCubed = tSquared * t;
-        float x = tMinusOneCubed * this.start.x + 3 * tMinusOneSquared * t * this.controlPoint.x + 3
-                * tMinusOneSquared * tSquared * this.controlPoint2.x + tCubed * this.end.x;
-        float y = tMinusOneCubed * this.start.y + 3 * tMinusOneSquared * t * this.controlPoint.y + 3
-                * tMinusOneSquared * tSquared * this.controlPoint2.y + tCubed * this.end.y;
-        float z = tMinusOneCubed * this.start.z + 3 * tMinusOneSquared * t * this.controlPoint.z + 3
-                * tMinusOneSquared * tSquared * this.controlPoint2.z + tCubed * this.end.z;
+        float x = oneMinusTCubed * this.start.x + 3 * oneMinusTSquared * t * this.controlPoint.x + 3
+                * oneMinusT * tSquared * this.controlPoint2.x + tCubed * this.end.x;
+        float y = oneMinusTCubed * this.start.y + 3 * oneMinusTSquared * t * this.controlPoint.y + 3
+                * oneMinusT * tSquared * this.controlPoint2.y + tCubed * this.end.y;
+        float z = oneMinusTCubed * this.start.z + 3 * oneMinusTSquared * t * this.controlPoint.z + 3
+                * oneMinusT * tSquared * this.controlPoint2.z + tCubed * this.end.z;
         return new Vector3f(x, y, z);
     }
 }

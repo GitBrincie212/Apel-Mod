@@ -14,11 +14,10 @@ import org.joml.Vector3f;
 import java.util.Optional;
 
 
-/** The particle object class that represents a 2D quad. It is a little
- * more complex than a line, since the user has to care about four endpoints
- * (if they don't want a square, otherwise they can supply a width & height).
- * <br>
- * The quadrilateral is drawn in order of the vertices provided (presume the line
+/** The particle object class that represents a quadrilateral.  This can be a rectangle, a square, a trapezoid,
+ * or any irregular shape with four sides.  There is no restriction on the vertices being co-planar.
+ *
+ * <p>The quadrilateral is drawn in order of the vertices provided (presume the line
  * from vertex2 to vertex3 is straight, ignoring the limitations of ASCII art):
  * <pre>
  *     vertex1 ------------------ vertex2
@@ -26,8 +25,7 @@ import java.util.Optional;
  *         \                         |
  *          \                        |
  *        vertex4 --------------- vertex3
- * </pre><br>
-*  Of course, a quad can also be a rectangle, a trapezoid and anything else in between
+ * </pre>
  */
 @SuppressWarnings("unused")
 public class ParticleQuad extends ParticleObject {
@@ -138,10 +136,9 @@ public class ParticleQuad extends ParticleObject {
         this.afterDraw = quad.afterDraw;
     }
 
-    /** Sets the individual vertices all at once instead of one at a time.
+    /** Sets all vertices at once instead of one at a time.
      * If you want to set one vertex at a time, then its recommend to use
-     * the methods ``setVertex1``, ``setVertex2``... etc. The vertices have to
-     * be 4 to modify the values, it returns nothing
+     * the methods {@link #setVertex1(Vector3f)}, etc.
      *
      * @param vertices The vertices to modify
      *
@@ -159,7 +156,7 @@ public class ParticleQuad extends ParticleObject {
 
     /** Sets the first individual vertex, it returns the previous
      * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}
+     * vertices at once then use {@code setVertices}.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
@@ -174,7 +171,7 @@ public class ParticleQuad extends ParticleObject {
 
     /** Sets the second individual vertex, it returns the previous
      * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}
+     * vertices at once then use {@code setVertices}.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
@@ -189,7 +186,7 @@ public class ParticleQuad extends ParticleObject {
 
     /** Sets the third individual vertex, it returns the previous
      * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}
+     * vertices at once then use {@code setVertices}.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
@@ -204,7 +201,7 @@ public class ParticleQuad extends ParticleObject {
 
     /** Sets the fourth individual vertex, it returns the previous
      * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}
+     * vertices at once then use {@code setVertices}.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
@@ -217,7 +214,7 @@ public class ParticleQuad extends ParticleObject {
         return prevVertex;
     }
 
-    /** Gets the first individual vertex
+    /** Gets the first individual vertex.
      *
      * @return The first individual vertex
     */
@@ -225,7 +222,7 @@ public class ParticleQuad extends ParticleObject {
         return this.vertex1;
     }
 
-    /** Gets the second individual vertex
+    /** Gets the second individual vertex.
      *
      * @return The second individual vertex
     */
@@ -233,7 +230,7 @@ public class ParticleQuad extends ParticleObject {
         return this.vertex2;
     }
 
-    /** Gets the third individual vertex
+    /** Gets the third individual vertex.
      *
      * @return The third individual vertex
     */
@@ -241,7 +238,7 @@ public class ParticleQuad extends ParticleObject {
         return this.vertex3;
     }
 
-    /** Gets the fourth individual vertex
+    /** Gets the fourth individual vertex.
      *
      * @return The fourth individual vertex
     */
@@ -273,8 +270,9 @@ public class ParticleQuad extends ParticleObject {
         this.endDraw(renderer, step, drawPos);
     }
 
-    /** Sets the after draw interceptor, the method executes right after the particle quad
-     * is drawn onto the screen. It has the four modified vertices to attach.
+    /** Sets the interceptor to run after drawing the quadrilateral. The interceptor will be provided with references
+     * to the {@link ServerWorld}, the animation step number, and the ParticleQuad instance.  The metadata has the four
+     * modified vertices.
      *
      * @param afterDraw The new interceptor to use
      */
@@ -293,8 +291,8 @@ public class ParticleQuad extends ParticleObject {
         this.afterDraw.apply(interceptData, this);
     }
 
-    /** Sets the before draw interceptor, the method executes right before the particle quad
-     * is drawn onto the screen. It has no data attached.
+    /** Set the interceptor to run before drawing the quadrilateral. The interceptor will be provided with references
+     * to the {@link ServerWorld}, the animation step number, and the ParticleQuad instance.
      *
      * @param beforeDraw The new interceptor to use
      */
