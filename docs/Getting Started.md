@@ -5,8 +5,8 @@ scenes. The systems are **Particle Objects** and **Path Animators**
 
 # What Are Particle Objects?
 A Particle Object is a desired shape that is rendered as particles and projected into the minecraft world. A particle
-object has parameters that control how it is rendered in the world. A particle object**does not have a predefined center
-position**, the center position is given out by a different system which are called [path animators](#what-are-path-animators),
+object has parameters that control how it is rendered in the world. A particle object **does not have a predefined center
+position**, but rather the center position is given out by a different system which are called [path animators](#what-are-path-animators),
 the position that is given is called the **rendering position**. A Particle Object has by default as parameters:
 
 - **Amount:** The number of particles to use to draw the final result
