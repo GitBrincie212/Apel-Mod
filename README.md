@@ -13,6 +13,32 @@ All without the need of knowing complex mathematics (such as linear algebra, alt
     <img alt="cone 2" src="./README_media/2.webp">
 </p>
 
+## Installion
+This section is for the developers, for any normal people. Its as simple as downloading the mod and adding the jar file(not the sources) to your mods folder. For developers it has a bit more steps but its generally easy as well
+
+1. Under the ``gradle.properties`` file. Add this line:
+   ```java
+   apel_version=0.1.0+1.20.6
+   ```
+2. On ``build.gradle`` file, under the **repositery**. Add these lines if you haven't installed any other dependency mods from modrinth:
+   ```java
+   repositories {
+    // ...
+      maven {
+          url = "https://api.modrinth.com/maven"
+      }
+    }
+   ```
+3. On the same ``build.gradle`` file, finally we add these lines under the **dependencies**:
+   ```java
+   dependencies {
+      // ...
+      modImplementation "maven.modrinth:apel:${project.apel_version}"
+      // ...
+   }
+4. Refresh gradle(in Intelleji IDEA, its pressing the gradle icon with a rotate sub-icon)
+5. Try to either type ``Apel`` and let your IDE autocomplete it, or import ``net.mcbrincie.apel.Apel``. If all steps are done everything should work as expected
+
 ## Key Features
 - **Particle Objects:** These are objects which render, they can be 2D, 3D shapes (such as a cube, circle, triangle) or 
 even more complex ones like a cat or a dog (these aren't implemented to the library), they are classes that inherit 
