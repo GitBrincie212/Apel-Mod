@@ -116,13 +116,6 @@ public class ParticleLine extends ParticleObject {
     }
 
     @Override
-    @Deprecated
-    public Vector3f setRotation(Vector3f rotation) {
-        // Do not throw UnsupportedOperationException in case this is called in a series of ParticleObjects
-        return null;
-    }
-
-    @Override
     public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
         this.doBeforeDraw(renderer.getServerWorld(), step);
 

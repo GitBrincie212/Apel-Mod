@@ -197,13 +197,6 @@ public class ParticleCuboid extends ParticleObject {
         return this.setSize(new Vector3f(size, size, size));
     }
 
-    /** THIS METHOD SHOULD NOT BE USED */
-    @Override
-    @Deprecated
-    public int setAmount(int amount) {
-        throw new UnsupportedOperationException("The method used is deprecated. It is not meant to be used");
-    }
-
     /** Sets the amount per area.  The X coordinate dictates the particles per line on the bottom face, the Y
      * coordinate dictates the particles per line on the top face, and the Z coordinate dictates the particles per
      * vertical bar of the cuboid.

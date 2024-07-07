@@ -23,6 +23,13 @@ import org.joml.Vector3f;
  * <p><strong>Note:</strong> Rotation calculations are in radians and not in degrees.  When rotation values exceed the
  * (-2π, 2π), they are wrapped using modulo to remain in the range (-2π, 2π).
  *
+ * <h2>Builders</h2>
+ * <p>ParticleObject and its subclasses use a parallel hierarchy of nested classes to provide a fluent approach to
+ * constructing instances of ParticleObject subclasses.  The builders are typed to allow specifying properties in any
+ * order, regardless of whether they are on a superclass or subclass.  Each builder is templated with a builder that
+ * extends itself, using the <a href="https://nuah.livejournal.com/328187.html">Curiously Recurring Template Pattern
+ * (CRTP)</a>, and extends the Builder class from the outer class' parent.
+ *
  * <h2>Subclassing</h2>
  * <p>Custom shapes only need to implement the {@code draw} method, and it should perform the necessary transformations
  * (scaling, rotation, translation) on the object before calling methods on the
@@ -32,6 +39,8 @@ import org.joml.Vector3f;
  * <p>Subclasses should consider mimicking the interceptor behavior so developers using the subclasses have the
  * opportunity to modify the object between each rendering.  These modifications may change rotation, translation,
  * scaling, vertex positions, particle amounts, or any other property of the subclass.
+ *
+ * <p>Subclasses should also provide a builder that mimics those provided by APEL-native ParticleObject subclasses.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class ParticleObject {
@@ -40,34 +49,28 @@ public abstract class ParticleObject {
     protected Vector3f offset = new Vector3f(0, 0, 0);
     protected int amount = 1;
 
-    /** Constructor for the particle object. It accepts as parameters the particle to use and the rotation to apply.
+    /**
+     * Used by subclasses to when constructing themselves to set the properties shared by all ParticleObjects.
      *
      * @param particleEffect The particle effect to use
-     * @param rotation The rotation in radians
-     *
-     * @see ParticleObject#ParticleObject(ParticleObject)
+     * @param rotation The rotation to apply
+     * @param offset The offset to apply
+     * @param amount The amount of particles to use when rendering the object (subject to specific subclass usage)
      */
-    public ParticleObject(ParticleEffect particleEffect, Vector3f rotation) {
-        this.particleEffect = particleEffect;
-        this.rotation = this.normalizeRotation(rotation);
+    protected ParticleObject(ParticleEffect particleEffect, Vector3f rotation, Vector3f offset, int amount) {
+        this.setParticleEffect(particleEffect);
+        this.setRotation(rotation);
+        this.setOffset(offset);
+        this.setAmount(amount);
     }
 
-    /** Constructor for the particle object. It accepts as a parameter the particle effect to use.
-     *
-     * @param particleEffect The particle effect to use
-     *
-     * @see ParticleObject#ParticleObject(ParticleEffect, Vector3f)
-    */
-    public ParticleObject(ParticleEffect particleEffect) {
-        this(particleEffect, new Vector3f(0, 0, 0));
-    }
-
-    /** The copy constructor for a specific particle object. It copies all the params, including the interceptors the
-     * particle object has.  Rotation and offset are copied to new vectors.
+    /**
+     * Used by subclasses when their copy constructors are invoked.  Rotation and offset are copied to new vectors to
+     * prevent inadvertent modification impacting multiple objects.
      *
      * @param object The particle object to copy from
      */
-    public ParticleObject(ParticleObject object) {
+    protected ParticleObject(ParticleObject object) {
         this.particleEffect = object.particleEffect;
         this.rotation = new Vector3f(object.rotation);
         this.offset = new Vector3f(object.offset);
@@ -87,7 +90,7 @@ public abstract class ParticleObject {
      * @param particle The new particle
      * @return The previously used particle
      */
-    public ParticleEffect setParticleEffect(ParticleEffect particle) {
+    public final ParticleEffect setParticleEffect(ParticleEffect particle) {
         ParticleEffect prevParticle = this.particleEffect;
         this.particleEffect = particle;
         return prevParticle;
@@ -105,13 +108,10 @@ public abstract class ParticleObject {
      * when setting it wraps the rotation to be in the range of (-2π, 2π).  The rotation components will have the same
      * signs as they do in the parameter.  It returns the previous rotation used.
      *
-     * <p>This implementation uses {@link #normalizeRotation(Vector3f)} to do the rounding which uses
-     * the modulo operator on each member of the {@code Vector3f} to produce a result in (-2π, 2π).
-     *
      * @param rotation The new rotation (IN RADIANS)
      * @return the previously used rotation
      */
-    public Vector3f setRotation(Vector3f rotation) {
+    public final Vector3f setRotation(Vector3f rotation) {
         Vector3f prevRotation = this.rotation;
         this.rotation = this.normalizeRotation(rotation);
         return prevRotation;
@@ -122,12 +122,10 @@ public abstract class ParticleObject {
      * maintains its direction but has a magnitude in the range {@code (-2π, 0]} or {@code [0, 2π)}.  Returns a new
      * vector containing the resulting partial rotation components with the same signs as the parameter's components.
      *
-     * <p><b>Note:</b> This is called by {@link #setRotation(Vector3f)}, so overrides must maintain this behavior.
-     *
      * @param rotation The existing rotation vector
      * @return A new vector with partial rotation components
      */
-    protected Vector3f normalizeRotation(Vector3f rotation) {
+    protected final Vector3f normalizeRotation(Vector3f rotation) {
         float x = (float) (rotation.x % Math.TAU);
         float y = (float) (rotation.y % Math.TAU);
         float z = (float) (rotation.z % Math.TAU);
@@ -148,7 +146,7 @@ public abstract class ParticleObject {
      * @param offset The new offset value
      * @return The previous offset
      */
-    public Vector3f setOffset(Vector3f offset) {
+    public final Vector3f setOffset(Vector3f offset) {
         Vector3f prevOffset = this.offset;
         this.offset = offset;
         return prevOffset;
@@ -169,7 +167,7 @@ public abstract class ParticleObject {
      * @param amount The new particle
      * @return The previously used amount
      */
-    public int setAmount(int amount) {
+    public final int setAmount(int amount) {
         if (amount <= 0) {
             throw new IllegalArgumentException("Amount of particles has to be above 0");
         }
@@ -229,5 +227,64 @@ public abstract class ParticleObject {
      */
     protected final Vector3f rigidTransformation(Vector3f position, Quaternionfc quaternion, Vector3f translation) {
         return new Vector3f(position).rotate(quaternion).add(translation);
+    }
+
+    /**
+     * Provides a base for ParticleObject subclasses to extend when creating their builders.
+     * <p>
+     * Properties in this class are protected: this allows easy access from subclasses, but subclasses should take care
+     * not to hide these fields by reusing fields of the same name.
+     * <p>
+     * Methods in this class are final: these are specifically setting properties for the ParticleObject class, so
+     * they must maintain the invariants of ParticleObject.
+     *
+     * @param <B> the type being built, uses the curiously recurring type pattern
+     */
+    public static abstract class Builder<B extends Builder<B>> {
+        protected ParticleEffect particleEffect;
+        protected Vector3f rotation = new Vector3f(0);
+        protected Vector3f offset = new Vector3f(0);
+        protected int amount = 1;
+
+        @SuppressWarnings({"unchecked"})
+        public final B self() {
+            return (B) this;
+        }
+
+        /**
+         * Set the particle effect on the builder.  This method is not cumulative; repeated calls will overwrite the
+         * value.
+         */
+        public final B particleEffect(ParticleEffect particleEffect) {
+            this.particleEffect = particleEffect;
+            return self();
+        }
+
+        /**
+         * Set the rotation on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B rotation(Vector3f rotation) {
+            this.rotation = rotation;
+            return self();
+        }
+
+        /**
+         * Set the offset on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B offset(Vector3f offset) {
+            this.offset = offset;
+            return self();
+        }
+
+        /**
+         * Set the particle amount on the builder.  This method is not cumulative; repeated calls will overwrite the
+         * value.
+         */
+        public final B amount(int amount) {
+            this.amount = amount;
+            return self();
+        }
+
+        public abstract ParticleObject build();
     }
 }
