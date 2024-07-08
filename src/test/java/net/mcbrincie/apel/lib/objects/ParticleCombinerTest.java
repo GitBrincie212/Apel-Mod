@@ -1,29 +1,27 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.minecraft.particle.ParticleEffect;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
 
 class ParticleCombinerTest {
     // Use this to prevent having to initialize all the Minecraft Server logic
-    private static final ParticleEffect NULL_PARTICLE = null;
+    private static final ParticlePoint.Builder<?> NULL_POINT_BUILDER = ParticlePoint.builder().particleEffect(null);
 
     @Test
     void setObjectsViaList() {
         // Given a couple ParticlePoints
-        ParticlePoint p1 = new ParticlePoint(NULL_PARTICLE);
-        ParticlePoint p2 = new ParticlePoint(NULL_PARTICLE);
+        ParticlePoint p1 = NULL_POINT_BUILDER.build();
+        ParticlePoint p2 = NULL_POINT_BUILDER.build();
 
         // Given a ParticleCombiner
         ParticleCombiner<ParticlePoint> combiner = new ParticleCombiner<>(p1, p2);
 
         // Given points to append
-        ParticlePoint p3 = new ParticlePoint(NULL_PARTICLE);
-        ParticlePoint p4 = new ParticlePoint(NULL_PARTICLE);
+        ParticlePoint p3 = NULL_POINT_BUILDER.build();
+        ParticlePoint p4 = NULL_POINT_BUILDER.build();
 
         // When the points are set
         combiner.setObjects(List.of(p3, p4));
@@ -34,14 +32,14 @@ class ParticleCombinerTest {
     @Test
     void setObjectsLeavesAppendFunctional() {
         // Given a couple ParticlePoints
-        ParticlePoint p1 = new ParticlePoint(NULL_PARTICLE);
-        ParticlePoint p2 = new ParticlePoint(NULL_PARTICLE);
+        ParticlePoint p1 = NULL_POINT_BUILDER.build();
+        ParticlePoint p2 = NULL_POINT_BUILDER.build();
 
         // Given a ParticleCombiner
         ParticleCombiner<ParticlePoint> combiner = new ParticleCombiner<>(p1, p2);
 
         // Given a point to append
-        ParticlePoint p3 = new ParticlePoint(NULL_PARTICLE);
+        ParticlePoint p3 = NULL_POINT_BUILDER.build();
 
         // When the points are set
         combiner.setObjects(List.of(p1, p2));
@@ -54,15 +52,15 @@ class ParticleCombinerTest {
     @Test
     void appendObjects() {
         // Given a couple ParticlePoints
-        ParticlePoint p1 = new ParticlePoint(NULL_PARTICLE);
-        ParticlePoint p2 = new ParticlePoint(NULL_PARTICLE);
+        ParticlePoint p1 = NULL_POINT_BUILDER.build();
+        ParticlePoint p2 = NULL_POINT_BUILDER.build();
 
         // Given a ParticleCombiner
         ParticleCombiner<ParticlePoint> combiner = new ParticleCombiner<>(p1, p2);
 
         // Given points to append
-        ParticlePoint p3 = new ParticlePoint(NULL_PARTICLE);
-        ParticlePoint p4 = new ParticlePoint(NULL_PARTICLE);
+        ParticlePoint p3 = NULL_POINT_BUILDER.build();
+        ParticlePoint p4 = NULL_POINT_BUILDER.build();
 
         // When the points are appended
         combiner.appendObjects(p3, p4);

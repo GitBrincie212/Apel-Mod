@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
@@ -19,23 +18,22 @@ import java.util.Optional;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticlePoint extends ParticleObject {
-    private DrawInterceptor<ParticlePoint, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticlePoint, AfterDrawData> afterDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticlePoint, AfterDrawData> afterDraw;
+    private DrawInterceptor<ParticlePoint, BeforeDrawData> beforeDraw;
 
     public enum BeforeDrawData {
         DRAW_POSITION
     }
     public enum AfterDrawData {}
 
-    /** Constructor for the particle object which is a point. It accepts as parameters
-     * the particle effect to use. It is a simplified version of the previous constructor
-     * and is meant to be used when you want the object to not have a rotation offset.
-     * In the case you do want, there is a constructor for that (won't apply to this class)
-     *
-     * @param particleEffect The particle effect to use
-    */
-    public ParticlePoint(ParticleEffect particleEffect) {
-        super(particleEffect);
+    public static Builder<?> builder() {
+        return new Builder<>();
+    }
+
+    private ParticlePoint(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        this.setAfterDraw(builder.afterDraw);
+        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -57,24 +55,35 @@ public class ParticlePoint extends ParticleObject {
         this.endDraw(renderer, step, objectDrawPosition);
     }
 
-    /** Set the interceptor to run before drawing the cone. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the animation step number, and the ParticlePoint
-     * instance.  The metadata will include the drawing position.
-     *
-     * @param beforeDraw The new interceptor to use
-     */
-    public void setBeforeDraw(DrawInterceptor<ParticlePoint, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    /** Set the interceptor to run before drawing the cone. The interceptor will be provided
+    /**
+     * Set the interceptor to run before drawing the cone. The interceptor will be provided
      * with references to the {@link ServerWorld}, the animation step number, and the ParticlePoint
      * instance.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param afterDraw The new interceptor to use
     */
-    public void setAfterDraw(DrawInterceptor<ParticlePoint, AfterDrawData> afterDraw) {
+    public final void setAfterDraw(DrawInterceptor<ParticlePoint, AfterDrawData> afterDraw) {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
+    }
+
+    private void doAfterDraw(ServerWorld world, Vector3f drawPos, int step) {
+        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
+        this.afterDraw.apply(interceptData, this);
+    }
+
+    /**
+     * Set the interceptor to run before drawing the cone. The interceptor will be provided
+     * with references to the {@link ServerWorld}, the animation step number, and the ParticlePoint
+     * instance.  The metadata will include the drawing position.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param beforeDraw The new interceptor to use
+     */
+    public final void setBeforeDraw(DrawInterceptor<ParticlePoint, BeforeDrawData> beforeDraw) {
+        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
     private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, Vector3f drawPos, int step) {
@@ -84,8 +93,37 @@ public class ParticlePoint extends ParticleObject {
         return interceptData;
     }
 
-    private void doAfterDraw(ServerWorld world, Vector3f drawPos, int step) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+        protected DrawInterceptor<ParticlePoint, AfterDrawData> afterDraw;
+        protected DrawInterceptor<ParticlePoint, BeforeDrawData> beforeDraw;
+
+        private Builder() {}
+
+        /**
+         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticlePoint#setAfterDraw(DrawInterceptor)
+         */
+        public B afterDraw(DrawInterceptor<ParticlePoint, AfterDrawData> afterDraw) {
+            this.afterDraw = afterDraw;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticlePoint#setBeforeDraw(DrawInterceptor)
+         */
+        public B beforeDraw(DrawInterceptor<ParticlePoint, BeforeDrawData> beforeDraw) {
+            this.beforeDraw = beforeDraw;
+            return self();
+        }
+
+        @Override
+        public ParticlePoint build() {
+            return new ParticlePoint(this);
+        }
     }
 }
