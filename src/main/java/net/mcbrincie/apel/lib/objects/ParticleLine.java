@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
@@ -21,33 +20,22 @@ public class ParticleLine extends ParticleObject {
     protected Vector3f start;
     protected Vector3f end;
 
-    private DrawInterceptor<ParticleLine, AfterDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleLine, AfterDrawData> afterDraw;
+    private DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw;
 
     public enum BeforeDrawData {}
     public enum AfterDrawData {}
 
-    /** Constructor for the particle line which is a line. It accepts as parameters
-     * the particle effect to use, the starting endpoint & the ending endpoint. Rotation
-     * doesn't matter in this context.
-     *
-     * <p>This implementation calls a setter for amount so checks are performed to
-     * ensure valid values are accepted.  Subclasses should take care not to violate this lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle effect to use
-     * @param start The starting endpoint
-     * @param end The ending endpoint
-     * @param amount The number of particles
-    */
-    public ParticleLine(ParticleEffect particleEffect, Vector3f start, Vector3f end, int amount) {
-        super(particleEffect);
-        this.setAmount(amount);
-        if (start.equals(end)) {
-            throw new IllegalArgumentException("Endpoints must not be equal");
-        }
-        this.start = start;
-        this.end = end;
+    public static Builder<?> builder() {
+        return new Builder<>();
+    }
+
+    private ParticleLine(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        this.setStart(builder.start);
+        this.setEnd(builder.end);
+        this.setAfterDraw(builder.afterDraw);
+        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -60,8 +48,8 @@ public class ParticleLine extends ParticleObject {
         super(line);
         this.start = new Vector3f(line.start);
         this.end = new Vector3f(line.end);
-        this.beforeDraw = line.beforeDraw;
         this.afterDraw = line.afterDraw;
+        this.beforeDraw = line.beforeDraw;
     }
 
     /** Gets the starting endpoint
@@ -72,16 +60,19 @@ public class ParticleLine extends ParticleObject {
         return this.start;
     }
 
-    /** Sets the starting point of the line.
+    /**
+     * Sets the starting point of the line.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param start The new starting point of the line
      * @return The previous starting point
     */
-    public Vector3f setStart(Vector3f start) {
+    public final Vector3f setStart(Vector3f start) {
         if (start.equals(this.end)) {
             throw new IllegalArgumentException("Endpoints must not be equal");
         }
-        Vector3f prevStart = new Vector3f(this.start);
+        Vector3f prevStart = this.start;
         this.start = start;
         return prevStart;
     }
@@ -94,17 +85,20 @@ public class ParticleLine extends ParticleObject {
         return this.end;
     }
 
-    /** Sets the ending point of the line.
+    /**
+     * Sets the ending point of the line.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param end The new ending point of the line
      * @return The previous ending point
     */
-    public Vector3f setEnd(Vector3f end) {
+    public final Vector3f setEnd(Vector3f end) {
         if (end.equals(this.start)) {
             throw new IllegalArgumentException("Endpoints must not be equal");
         }
-        Vector3f prevEnd = new Vector3f(this.end);
-        this.end = start;
+        Vector3f prevEnd = this.end;
+        this.end = end;
         return prevEnd;
     }
 
@@ -128,13 +122,16 @@ public class ParticleLine extends ParticleObject {
         this.endDraw(renderer, step, drawPos);
     }
 
-    /** Sets the interceptor to run after drawing the line.  The interceptor will be provided
+    /**
+     * Set the interceptor to run after drawing the line.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the animation step number, and the ParticleLine
      * instance.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param afterDraw the new interceptor to execute after drawing the line
      */
-    public void setAfterDraw(DrawInterceptor<ParticleLine, AfterDrawData> afterDraw) {
+    public final void setAfterDraw(DrawInterceptor<ParticleLine, AfterDrawData> afterDraw) {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
@@ -143,18 +140,73 @@ public class ParticleLine extends ParticleObject {
         this.afterDraw.apply(interceptData, this);
     }
 
-    /** Set the interceptor to run before drawing the line.  The interceptor will be provided
+    /**
+     * Set the interceptor to run before drawing the line.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the animation step number, and the ParticleLine
      * instance.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param beforeDraw the new interceptor to execute before drawing the line
      */
-    public void setBeforeDraw(DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw) {
+    public final void setBeforeDraw(DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
     private void doBeforeDraw(ServerWorld world, int step) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
         this.beforeDraw.apply(interceptData, this);
+    }
+
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+        protected Vector3f start = new Vector3f();
+        protected Vector3f end = new Vector3f();
+        protected DrawInterceptor<ParticleLine, AfterDrawData> afterDraw;
+        protected DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw;
+
+        private Builder() {}
+
+        /**
+         * Set the start point on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B start(Vector3f start) {
+            this.start = start;
+            return self();
+        }
+
+        /**
+         * Set the end point on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B end(Vector3f end) {
+            this.end = end;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleLine#setAfterDraw(DrawInterceptor)
+         */
+        public B afterDraw(DrawInterceptor<ParticleLine, AfterDrawData> afterDraw) {
+            this.afterDraw = afterDraw;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleLine#setBeforeDraw(DrawInterceptor)
+         */
+        public B beforeDraw(DrawInterceptor<ParticleLine, BeforeDrawData> beforeDraw) {
+            this.beforeDraw = beforeDraw;
+            return self();
+        }
+
+        @Override
+        public ParticleLine build() {
+            return new ParticleLine(this);
+        }
     }
 }
