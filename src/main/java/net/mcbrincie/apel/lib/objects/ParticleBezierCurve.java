@@ -22,8 +22,8 @@ public class ParticleBezierCurve extends ParticleObject {
     protected List<BezierCurve> bezierCurves;
     protected List<Integer> amounts;
 
-    private DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw;
+    private DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw;
 
     public enum CommonDrawData {BEZIER_CURVE, AMOUNT}
 
@@ -37,34 +37,6 @@ public class ParticleBezierCurve extends ParticleObject {
         this.setBeforeDraw(builder.beforeDraw);
         this.setAfterDraw(builder.afterDraw);
     }
-
-    /** Constructor for the particle Bézier curve. It accepts as parameters
-     * the particle effect to use, the Bézier curves, the amount of particles per Bézier curve, and the rotation.
-     * The pivot point for rotation is the {@code drawPos} parameter of
-     * {@link #draw(ApelServerRenderer, int, Vector3f)}, and the points in the Bézier curves are relative to that
-     * point.  There is also a simplified constructor for no rotation.
-     *
-     * <p>This implementation calls setters for rotation and pairs of curves/amounts so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle effect to use
-     * @param curves The Bézier curves to use
-     * @param amounts The number of particles for each Bézier curve
-    */
-
-    /** Constructor for the particle bézier curve which is a bézier curve. It accepts as parameters
-     * the particle effect to use, the bézier curves and the amount per bézier curves. There is a more
-     * complex constructor for rotation.
-     *
-     * <p>This implementation calls setters for rotation and pairs of curves/amounts so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle effect to use
-     * @param curves The Bézier curves to use
-     * @param amounts The number of particles
-     */
 
     /** The copy constructor for a specific particle object. It makes shallow copies of all
      * properties, including the interceptors the particle object has.
@@ -107,12 +79,12 @@ public class ParticleBezierCurve extends ParticleObject {
     }
 
     /**
-     * Sets both the Bézier curves and the amounts.  This is expected to be used after construction, and is the
-     * proper method to change the number of curves, since the individual setters for curves and amounts require a
-     * List with the same number of elements as the other field currently has.  In this method, the arrays must be of
-     * equal size, and the amounts must be positive.
+     * Sets both the Bézier curves and the amounts.  This may be used after construction, and is the proper method to
+     * change the number of curves, since the individual setters for curves and amounts require a List with the same
+     * number of elements as the other field currently has.  In this method, the lists must be of equal size, and all
+     * amounts must be positive.
      * <p>
-     * This implementation is also used by the constructor, so subclasses must not change the requirements described.
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param curves The curves
      * @param amounts The amounts
@@ -120,9 +92,13 @@ public class ParticleBezierCurve extends ParticleObject {
      *
      * @see #setBezierCurves(List)
      */
-    public Pair<List<Integer>, List<BezierCurve>> setBezierCurves(List<BezierCurve> curves, List<Integer> amounts) {
-        if (amounts.size() != curves.size()) {
-            throw new IllegalArgumentException("The number of curves and number of amounts must be equal");
+    public final Pair<List<Integer>, List<BezierCurve>> setBezierCurves(
+            List<BezierCurve> curves, List<Integer> amounts
+    ) {
+        if (curves.size() != amounts.size()) {
+            throw new IllegalArgumentException(
+                    "The number of curves and number of amounts must be equal, but there are " + curves.size()
+                    + " curves and " + amounts.size() + " amounts.");
         }
         for (int i : amounts) {
             if (i <= 0) throw new IllegalArgumentException("One of the amounts is set below or equal to 0");
@@ -136,11 +112,13 @@ public class ParticleBezierCurve extends ParticleObject {
 
     /**
      * Unsupported in this class, as each curve may have a different number of particles.
+     *
+     * @see #getAmounts()
      */
     @Override
     @Deprecated
     public int getAmount() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("Each curve may have a different amount; use getAmounts()");
     }
 
     /** Gets the array of particle amounts and returns it
@@ -152,10 +130,11 @@ public class ParticleBezierCurve extends ParticleObject {
     }
 
     /**
-     * Sets the particle amount for every curve to the given value. Returns -1.
+     * Sets the particle amount for every curve to the given value. Returns a list containing the previous amounts for
+     * each curve.
      *
      * @param amount The new particle count to be applied to every curve
-     * @return The constant amount (if there isn't any return -1)
+     * @return The previous amounts for each curve
      */
     public List<Integer> setAmounts(int amount) {
         List<Integer> prevAmounts = this.amounts;
@@ -167,22 +146,26 @@ public class ParticleBezierCurve extends ParticleObject {
         return prevAmounts;
     }
 
-    /** Sets the amounts to a new value and returns the previous one.  The array.size() must match the number of
-     * Bézier curves, and each entry in the array must be positive.
+    /**
+     * Sets the particle amount for every curve based on the given list. The list's size must match the number of
+     * Bézier curves, and each entry in the array must be positive. Returns a list containing the previous amounts for
+     * each curve.
      *
      * @param amounts The new amounts
      * @return The previous amounts
      */
     public List<Integer> setAmounts(List<Integer> amounts) {
         if (amounts.size() != this.bezierCurves.size()) {
-            throw new IllegalArgumentException("The amount.size() has to match with the endpoint's.size()");
+            throw new IllegalArgumentException(
+                    "The list must contain " + this.bezierCurves.size() + " values; has " + amounts.size()
+                    + " values.");
         }
         for (int i : amounts) {
-            if (i <= 0) throw new IllegalArgumentException("One of the amounts is set below or equal to 0");
+            if (i <= 0) throw new IllegalArgumentException("All amounts must be positive");
         }
-        List<Integer> prevAmounts = this.amounts;
+        List<Integer> prevAmount = this.amounts;
         this.amounts = amounts;
-        return prevAmounts;
+        return prevAmount;
     }
 
     @Override
@@ -204,13 +187,16 @@ public class ParticleBezierCurve extends ParticleObject {
         this.endDraw(renderer, step, drawPos);
     }
 
-    /** Sets the interceptor to run after drawing the bézier curve.  The interceptor will be provided
+    /**
+     * Set the interceptor to run after drawing the Bézier curve.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the animation step number, and the ParticleBezierCurve
      * instance.  Metadata will include the individual Bézier curve object and its amount of particles.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
-     * @param afterDraw the new interceptor to execute after drawing the bézier curve
+     * @param afterDraw the new interceptor to execute after drawing the Bézier curve
      */
-    public void setAfterDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw) {
+    public final void setAfterDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw) {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
@@ -221,13 +207,16 @@ public class ParticleBezierCurve extends ParticleObject {
         this.afterDraw.apply(interceptData, this);
     }
 
-    /** Set the interceptor to run before drawing the bézier curve.  The interceptor will be provided
+    /**
+     * Set the interceptor to run before drawing the Bézier curve.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the animation step number, and the ParticleBezierCurve
      * instance.  Metadata will include the individual Bézier curve object and its amount of particles.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
-     * @param beforeDraw the new interceptor to execute before drawing the bézier curve
+     * @param beforeDraw the new interceptor to execute before drawing the Bézier curve
      */
-    public void setBeforeDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw) {
+    public final void setBeforeDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
@@ -239,44 +228,69 @@ public class ParticleBezierCurve extends ParticleObject {
         return interceptData;
     }
 
-    public static class Builder<B extends ParticleBezierCurve.Builder<B>> extends ParticleObject.Builder<B> {
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
         protected List<BezierCurve> bezierCurves = new ArrayList<>();
         protected List<Integer> amounts = new ArrayList<>();
-        protected DrawInterceptor<ParticleBezierCurve, ParticleBezierCurve.CommonDrawData> afterDraw;
-        protected DrawInterceptor<ParticleBezierCurve, ParticleBezierCurve.CommonDrawData> beforeDraw;
+        protected DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw;
+        protected DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw;
 
         private Builder() {}
 
         /**
-         * Curves will be added in order, blah blah blah
+         * Adds a single Bézier curve to the particle object.  This method is cumulative, so it may be called
+         * repeatedly to add multiple curves.
          */
         public B bezierCurve(BezierCurve bezierCurve) {
             this.bezierCurves.add(bezierCurve);
             return self();
         }
 
+        /**
+         * Adds multiple Bézier curves to the particle object.  This method is cumulative, so it may be called
+         * repeatedly to add multiple lists of curves.
+         */
         public B bezierCurves(List<BezierCurve> bezierCurves) {
             this.bezierCurves.addAll(bezierCurves);
             return self();
         }
 
+        /**
+         * Adds a single amount to the particle object.  This method is cumulative, so it may be called
+         * repeatedly to add multiple amounts.
+         */
         public B amounts(int amount) {
             this.amounts.add(amount);
             return self();
         }
 
+        /**
+         * Adds multiple amounts to the particle object.  This method is cumulative, so it may be called
+         * repeatedly to add multiple lists of amounts.
+         */
         public B amounts(List<Integer> amounts) {
             this.amounts.addAll(amounts);
             return self();
         }
 
-        public B beforeDraw(DrawInterceptor<ParticleBezierCurve, ParticleBezierCurve.CommonDrawData> beforeDraw) {
-            this.beforeDraw = beforeDraw;
+        /**
+         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleBezierCurve#setAfterDraw(DrawInterceptor)
+         */
+        public B afterDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw) {
+            this.afterDraw = afterDraw;
             return self();
         }
 
-        public B afterDraw(DrawInterceptor<ParticleBezierCurve, ParticleBezierCurve.CommonDrawData> afterDraw) {
-            this.afterDraw = afterDraw;
+        /**
+         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleBezierCurve#setBeforeDraw(DrawInterceptor)
+         */
+        public B beforeDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw) {
+            this.beforeDraw = beforeDraw;
             return self();
         }
 
