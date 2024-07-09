@@ -52,7 +52,8 @@ Unlike path animators they only use an "amount" of particles for the shape
 (Since the shape is not a complete but rather a dotted one, where each dot is a particle). 
 When using the Interceptors API, you are in control of what data you want to give the user & what data can be modified. 
 Interceptors are expressed as function that know have the data the object gave them and know which object they modify 
-which means they themselves can tweak public params.
+which means they themselves can tweak public params. Particle objects describe things in a high-level, since they are
+shapes and have specific properties to them.
 
 
 - **Path Animators:** These define the trajectory a particle object should follow. They are used to create detailed
@@ -71,11 +72,9 @@ using ``allocateToScheduler`` and to then draw, the method ``handleDrawingStep``
 come in a bundle with listeners which listen to three specific events which happen when the animator starts 
 when it processes (each step it is called) and when the animator ends (either normally or abruptly)<br><br>
 
-- **Renderers:** These are objects that define how the rendering should be done, the basic default renderer allows for
-drawing individual particle effects onto the world, other renderers allow for more complex rendering methods.
-Although this system is a bit more niche than the other systems, still this system is useful in certain problems 
-where it cannot be done with particle objects, interceptors or any other form of drawing.
-Particle objects are aware of the renderer during a draw call and can use them to do their own things<br>
+- **Renderers:** Renderers draw stuff in the world. They don't know which particle object calls the method but they know what to do
+with the properties that the particle object gives them. They are described as a low-level system due to their simple nature of knowing
+where and what to draw in the world. They have some methods for how to draw primitive shapes(defined by the library)<br>
 
 ## Getting Started
 The first obvious thing is to create an ``ParticleObject``, pick your desired object to create and supply the params,
