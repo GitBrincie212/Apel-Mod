@@ -15,5 +15,9 @@ public interface ApelServerRenderer extends ApelRenderer {
         return new ApelNetworkRenderer(world);
     }
 
+    static ApelBakingRenderer baking(ServerWorld world, String animationName) {
+        return new ApelBakingRenderer(world, animationName);
+    }
+
     ServerWorld getServerWorld();
 }

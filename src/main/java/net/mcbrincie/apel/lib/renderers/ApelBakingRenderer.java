@@ -1,36 +1,62 @@
 package net.mcbrincie.apel.lib.renderers;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joml.Vector3f;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Clock;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
-/** The apel network renderer is used for client-side rendering.
- * It sends off a packet to the client that contains instructions
- * on what shape to render along with the parameters to render it
- */
-public class ApelNetworkRenderer implements ApelServerRenderer {
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
+
+public class ApelBakingRenderer implements ApelServerRenderer {
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final DateTimeFormatter INSTANT_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
 
     private final ServerWorld world;
+    private final String animationName;
+    private final DataOutputStream dataOutputStream;
     private List<Instruction> instructions;
+
+    // Put a Clock in so testing is flexible
+    private final Clock clock;
 
     private ParticleEffect prevParticleEffect;
 
-    /** The default constructor for the client-side rendering.
-     * Just like the {@code DefaultApelRenderer}, the ApelNetworkRenderer
-     * needs to have a server world instance at its disposal
+    /**
+     * Constructs an {@link ApelServerRenderer} that emits instructions to an output location.
      *
      * @param world The server world instance
      */
-    public ApelNetworkRenderer(ServerWorld world) {
+    ApelBakingRenderer(ServerWorld world, String animationName) {
         this.world = world;
+        this.animationName = animationName;
+        this.clock = Clock.systemUTC();
+        this.dataOutputStream = createDataOutputStream();
+
         this.instructions = new ArrayList<>();
+    }
+
+    private DataOutputStream createDataOutputStream() {
+        try {
+            String suffix = ZonedDateTime.now(this.clock).format(INSTANT_FORMATTER);
+            Path path = Path.of(String.format("%s-%s", this.animationName, suffix));
+            return new DataOutputStream(Files.newOutputStream(path, CREATE_NEW));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -40,12 +66,9 @@ public class ApelNetworkRenderer implements ApelServerRenderer {
     }
 
     @Override
-    public void drawLine(
-            ParticleEffect particleEffect, int step, Vector3f drawPos, Vector3f start, Vector3f end, Vector3f rotation,
-            int amount
-    ) {
+    public void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int count) {
         this.detectParticleTypeChange(particleEffect);
-        this.instructions.add(new Line(drawPos, start, end, rotation, amount));
+        this.instructions.add(new Line(start, end, count));
     }
 
     @Override
@@ -100,14 +123,42 @@ public class ApelNetworkRenderer implements ApelServerRenderer {
 
     @Override
     public void afterFrame(int step, Vector3f frameOrigin) {
-        ApelFramePayload payload = new ApelFramePayload(this.instructions);
-        for (ServerPlayerEntity player : PlayerLookup.around(this.getServerWorld(), new Vec3d(frameOrigin), 32)) {
-            ServerPlayNetworking.send(player, payload);
+        // ParticleTypes.PACKET_CODEC needs a RegistryByteBuf, can't be cast from ByteBuf
+        RegistryByteBuf buffer = new RegistryByteBuf(Unpooled.buffer(4096), world.getRegistryManager());
+        for (Instruction ins : this.instructions) {
+            ins.write(buffer);
+            // Flush periodically
+            if (buffer.readableBytes() > 1024) {
+                writeBytes(buffer);
+            }
+        }
+        // Flush any remaining bytes
+        writeBytes(buffer);
+        try {
+            this.dataOutputStream.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
         // Recreate, with initial capacity
         this.instructions = new ArrayList<>(this.instructions.size());
         // Clear the particle type, so the next frame will send it, too
         this.prevParticleEffect = null;
+    }
+
+    private void writeBytes(ByteBuf buffer) {
+        try {
+            buffer.readBytes(this.dataOutputStream, buffer.readableBytes());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void finish() {
+        try {
+            this.dataOutputStream.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
