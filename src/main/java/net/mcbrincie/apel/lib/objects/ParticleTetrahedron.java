@@ -85,8 +85,8 @@ public class ParticleTetrahedron extends ParticleObject {
      * @see ParticleTetrahedron#setVertices(Vector3f...)
      */
     public Vector3f setVertex1(Vector3f newVertex) {
+        this.checkValidTetrahedron(newVertex, this.vertex2, this.vertex3, this.vertex4);
         Vector3f prevVertex1 = this.vertex1;
-        this.checkValidTetrahedron(vertex1, this.vertex2, this.vertex3, this.vertex4);
         this.vertex1 = newVertex;
         return prevVertex1;
     }
@@ -101,8 +101,8 @@ public class ParticleTetrahedron extends ParticleObject {
      * @see ParticleTetrahedron#setVertices(Vector3f...)
      */
     public Vector3f setVertex2(Vector3f newVertex) {
+        this.checkValidTetrahedron(this.vertex1, newVertex, this.vertex3, this.vertex4);
         Vector3f prevVertex2 = this.vertex2;
-        this.checkValidTetrahedron(this.vertex1, vertex2, this.vertex3, this.vertex4);
         this.vertex2 = newVertex;
         return prevVertex2;
     }
@@ -117,8 +117,8 @@ public class ParticleTetrahedron extends ParticleObject {
      * @see ParticleTetrahedron#setVertices(Vector3f...)
      */
     public Vector3f setVertex3(Vector3f newVertex) {
+        this.checkValidTetrahedron(this.vertex1, this.vertex2, newVertex, this.vertex4);
         Vector3f prevVertex3 = this.vertex3;
-        this.checkValidTetrahedron(this.vertex1, this.vertex2, vertex3, this.vertex4);
         this.vertex3 = newVertex;
         return prevVertex3;
     }
@@ -133,8 +133,8 @@ public class ParticleTetrahedron extends ParticleObject {
      * @see ParticleTetrahedron#setVertices(Vector3f...)
     */
     public Vector3f setVertex4(Vector3f newVertex) {
+        this.checkValidTetrahedron(this.vertex1, this.vertex2, this.vertex3, newVertex);
         Vector3f prevVertex4 = this.vertex4;
-        this.checkValidTetrahedron(this.vertex1, this.vertex2, this.vertex3, vertex4);
         this.vertex4 = newVertex;
         return prevVertex4;
     }
