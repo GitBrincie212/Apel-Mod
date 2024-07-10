@@ -5,7 +5,6 @@ import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -19,8 +18,8 @@ public class ParticleSphere extends ParticleObject {
     public static final double SQRT_5_PLUS_1 = 3.23606;
     protected float radius;
 
-    private DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw;
+    private DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw;
 
     /** This data is used before calculations */
     public enum BeforeDrawData {}
@@ -28,42 +27,15 @@ public class ParticleSphere extends ParticleObject {
     /** This data is used after calculations */
     public enum AfterDrawData {}
 
-    /**
-     * Constructor for the particle sphere which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the sphere, the number of particles,
-     * and the rotation to apply.
-     *
-     * <p>This implementation calls setters for rotation, radius, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param radius   The radius of the sphere
-     * @param amount   The number of particles for the object
-     * @param rotation The rotation to apply
-     * @see ParticleSphere#ParticleSphere(ParticleEffect, float, int)
-     */
-    public ParticleSphere(@NotNull ParticleEffect particleEffect, float radius, int amount, Vector3f rotation) {
-        super(particleEffect, rotation);
-        this.setRadius(radius);
-        this.setAmount(amount);
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the particle cuboid which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the sphere, the number of particles.
-     *
-     * <p>This implementation calls setters for rotation, radius, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param radius The radius of the sphere
-     *
-     * @see ParticleSphere#ParticleSphere(ParticleEffect, float, int, Vector3f)
-    */
-    public ParticleSphere(@NotNull ParticleEffect particleEffect, float radius, int amount) {
-        this(particleEffect, radius, amount, new Vector3f(0));
+    private ParticleSphere(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        this.setRadius(builder.radius);
+        this.setAfterDraw(builder.afterDraw);
+        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -74,17 +46,19 @@ public class ParticleSphere extends ParticleObject {
     public ParticleSphere(ParticleSphere sphere) {
         super(sphere);
         this.radius = sphere.radius;
-        this.amount = sphere.amount;
         this.afterDraw = sphere.afterDraw;
         this.beforeDraw = sphere.beforeDraw;
     }
 
-    /** Sets the radius of the sphere.  The radius must be positive.
+    /**
+     * Sets the radius of the sphere.  The radius must be positive.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param radius The radius of the sphere
      * @return The previous radius used
     */
-    public float setRadius(float radius) {
+    public final float setRadius(float radius) {
         if (radius <= 0) {
             throw new IllegalArgumentException("Radius must be positive");
         }
@@ -113,13 +87,16 @@ public class ParticleSphere extends ParticleObject {
         this.endDraw(renderer, step, drawPos);
     }
 
-    /** Set the interceptor to run after drawing the sphere.  The interceptor will be provided
+    /**
+     * Set the interceptor to run after drawing the sphere.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, the center
      * of the sphere, and the ParticleSphere instance.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
-    public void setAfterDraw(DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw) {
+    public final void setAfterDraw(DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw) {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
@@ -128,18 +105,64 @@ public class ParticleSphere extends ParticleObject {
         this.afterDraw.apply(interceptData, this);
     }
 
-    /** Set the interceptor to run before drawing the sphere.  The interceptor will be provided
+    /**
+     * Set the interceptor to run before drawing the sphere.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, the center
      * of the sphere, and the ParticleSphere instance.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing the sphere
      */
-    public void setBeforeDraw(DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw) {
+    public final void setBeforeDraw(DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
     private void doBeforeDraw(ServerWorld world, int step, Vector3f drawPos) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, drawPos, step, BeforeDrawData.class);
         this.beforeDraw.apply(interceptData, this);
+    }
+
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+        protected float radius;
+        protected DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw;
+        protected DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw;
+
+        private Builder() {}
+
+        /**
+         * Set the radius on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B radius(float radius) {
+            this.radius = radius;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleSphere#setAfterDraw(DrawInterceptor)
+         */
+        public B afterDraw(DrawInterceptor<ParticleSphere, AfterDrawData> afterDraw) {
+            this.afterDraw = afterDraw;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleSphere#setBeforeDraw(DrawInterceptor)
+         */
+        public B beforeDraw(DrawInterceptor<ParticleSphere, BeforeDrawData> beforeDraw) {
+            this.beforeDraw = beforeDraw;
+            return self();
+        }
+
+        @Override
+        public ParticleSphere build() {
+            return new ParticleSphere(this);
+        }
     }
 }

@@ -55,10 +55,9 @@ import java.util.Optional;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
     protected List<T> objects = new ArrayList<>();
-    protected int amount = -1;
 
-    public DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDraw = DrawInterceptor.identity();
-    public DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDraw;
+    private DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDraw;
 
     /** There is no data being transmitted */
     public enum AfterChildDrawData {}
@@ -68,77 +67,15 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         OBJECT_IN_USE, CAN_DRAW_OBJECT
     }
 
-    /** The constructor for the particle combiner. Which is a utility class that
-     * helps in grouping particle objects together as one single particle object.
-     * Which, of course, has many benefits, such as being able to directly modify
-     * the objects themselves without needing to set one after the other to a
-     * specific value. There is a simpler constructor for no rotation
-     * <br><br>
-     * <b>Note:</b> it uses the {@code setRotation} which sets all the
-     * particle object's rotation values to the provided rotation value
-     *
-     * @param rotation The rotation to apply
-     * @param objects The objects to group together
-     *
-     * @see ParticleCombiner#ParticleCombiner(Vector3f, ParticleObject[])
-     * @see ParticleCombiner#ParticleCombiner(List)
-     */
-    public ParticleCombiner(Vector3f rotation, List<T> objects) {
-        super((ParticleEffect) null); // We do not care about the particle
-        this.setObjects(objects);
-        this.setRotation(rotation);
+    public static <T extends ParticleObject> Builder<?, T> builder() {
+        return new Builder<>();
     }
 
-    /** The constructor for the particle combiner. Which is a utility class that
-     * helps in grouping particle objects together as one single particle object.
-     * Which, of course, has many benefits, such as being able to directly modify
-     * the objects themselves without needing to set one after the other to a
-     * specific value. There is a simpler constructor for no rotation
-     * <br><br>
-     * <b>Note:</b> it uses the {@code setRotation} which sets all the
-     * particle object's rotation values to the provided rotation value
-     *
-     * @param rotation The rotation to apply
-     * @param objects The objects to group together
-     *
-     * @see ParticleCombiner#ParticleCombiner(ParticleObject[])
-     * @see ParticleCombiner#ParticleCombiner(Vector3f, List)
-     */
-    @SafeVarargs
-    public ParticleCombiner(Vector3f rotation, T... objects) {
-        this(rotation, Arrays.asList(objects));
-    }
-
-    /** The constructor for the particle combiner. Which is a utility class that
-     * helps in grouping particle objects together as one single particle object.
-     * Which, of course, has many benefits, such as being able to directly modify
-     * the objects themselves without needing to set one after the other to a
-     * specific value. There is a simpler constructor for no rotation
-     * <br><br>
-     * <b>Note:</b> it uses the {@code setRotation} which sets all the
-     * particle object's rotation values to the provided rotation value
-     *
-     * @param objects The objects to group together
-     *
-     * @see ParticleCombiner#ParticleCombiner(ParticleObject[])
-     */
-    public ParticleCombiner(List<T> objects) {
-        this(new Vector3f(0), objects);
-    }
-
-    /** The constructor for the particle combiner. Which is a utility class that
-     * helps in grouping particle objects together as one single particle object.
-     * Which, of course, has many benefits, such as being able to directly modify
-     * the objects themselves without needing to set one after the other to a
-     * specific value. There is a more complex constructor for rotation
-     *
-     * @param objects The objects to group together
-     *
-     * @see ParticleCombiner#ParticleCombiner(Vector3f, ParticleObject[])
-    */
-    @SafeVarargs
-    public ParticleCombiner(T... objects) {
-        this(new Vector3f(0), objects);
+    private ParticleCombiner(Builder<?, T> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        this.setObjects(builder.objects);
+        this.setAfterChildDraw(builder.afterChildDraw);
+        this.setBeforeChildDraw(builder.beforeChildDraw);
     }
 
     /** The copy constructor for the particle combiner. Which
@@ -155,69 +92,73 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         this.beforeChildDraw = combiner.beforeChildDraw;
     }
 
-    /** Sets the rotation for all the particle objects. There is
-     * another method that allows for offsetting the rotation per particle
-     * object, it is the same as using this one with the offset params.
+    /**
+     * Sets the rotation for all child particle objects. This does not recurse if any child is a ParticleCombiner.
      *
      * @param rotation The new rotation (IN RADIANS)
-     * @return The previous rotation used
+     * @return The previous rotations
      *
-     * @see ParticleCombiner#setRotation(Vector3f, float, float, float)
-     * @see ParticleCombiner#setRotation(Vector3f, Vector3f)
-    */
-    @Override
-    public Vector3f setRotation(Vector3f rotation) {
-        Vector3f prevRotation = new Vector3f(this.rotation);
-        // Defensive copy happens in superclass method
-        super.setRotation(rotation);
+     * @see ParticleCombiner#setRotations(Vector3f, float, float, float)
+     * @see ParticleCombiner#setRotations(Vector3f, Vector3f)
+     */
+    public List<Vector3f> setRotations(Vector3f rotation) {
+        List<Vector3f> prevRotations = new ArrayList<>(this.objects.size());
         for (T object : this.objects) {
             // Defensive copy happens in superclass method
-            object.setRotation(rotation);
+            prevRotations.add(object.setRotation(rotation));
         }
-        return prevRotation;
+        return prevRotations;
     }
 
-    /** Sets the rotation for all the particle objects, there
-     * is an offset of XYZ per object. There is also a simplified
-     * method that doesn't use offsets.
+    /**
+     * Sets the rotation for all child particle objects with an incremental offset for each subsequent object. This
+     * does not recurse if any child is a ParticleCombiner.
+     * <p>
+     * For example, if {@code offsetX} is {@code 0.1f}, the first object's X rotation will be whatever is specified
+     * by {@code rotation.x()}, the second object will be {@code rotation.x() + offsetX}, the third will be {@code
+     * rotation.x() + 2 * offsetX}, and so on.  The same is done for the Y and Z axes.
      *
      * @param rotation The new rotation (IN RADIANS)
-     * @param offsetX the offset x
-     * @param offsetY the offset y
-     * @param offsetZ the offset z
-     * @return The previous rotation
+     * @param offsetX the incremental X-offset to apply to every object beyond the first
+     * @param offsetY the incremental Y-offset to apply to every object beyond the first
+     * @param offsetZ the incremental Z-offset to apply to every object beyond the first
+     * @return The previous rotations
      *
-     * @see ParticleCombiner#setRotation(Vector3f)
-     * @see ParticleCombiner#setRotation(Vector3f, Vector3f)
+     * @see ParticleCombiner#setRotations(Vector3f)
+     * @see ParticleCombiner#setRotations(Vector3f, Vector3f)
      */
-    public Vector3f setRotation(Vector3f rotation, float offsetX, float offsetY, float offsetZ) {
-        if (offsetX == 0 && offsetY == 0 && offsetZ == 0) {
-            throw new IllegalArgumentException("offset rotation must not equal (0, 0, 0)");
-        }
-        Vector3f prevRotation = new Vector3f(this.rotation);
-        // Defensive copy happens in superclass method
-        super.setRotation(rotation);
-        Vector3f rotationToOffset = new Vector3f(rotation);
-        for (T object : this.objects) {
+    public List<Vector3f> setRotations(Vector3f rotation, float offsetX, float offsetY, float offsetZ) {
+        List<Vector3f> prevRotations = new ArrayList<>(this.objects.size());
+        Vector3f baseRotation = new Vector3f(rotation);
+        if (!this.objects.isEmpty()) {
             // Defensive copy happens in ParticleObject#setRotation
-            object.setRotation(rotationToOffset.add(offsetX, offsetY, offsetZ));
+            prevRotations.add(this.objects.getFirst().setRotation(rotation));
         }
-        return prevRotation;
+        for (int i = 1; i < this.objects.size(); i++) {
+            baseRotation.add(offsetX, offsetY, offsetZ);
+            // Defensive copy happens in ParticleObject#setRotation
+            prevRotations.add(this.objects.get(i).setRotation(baseRotation));
+        }
+        return prevRotations;
     }
 
-    /** Sets the rotation for all the particle objects, there
-     * is an offset of XYZ per object. There is also a simplified
-     * method that doesn't use offsets.
+    /**
+     * Sets the rotation for all child particle objects with an incremental offset for each subsequent object. This
+     * does not recurse if any child is a ParticleCombiner.
+     * <p>
+     * For example, if {@code offsetX} is {@code 0.1f}, the first object's X rotation will be whatever is specified
+     * by {@code rotation}, the second object will be {@code rotation.add(offset)}, the third will be {@code
+     * rotation.add(offset.mul(2))}, and so on.
      *
      * @param rotation The new rotation (IN RADIANS)
      * @param offset the offset x
-     * @return The previous rotation
+     * @return The previous rotations
      *
-     * @see ParticleCombiner#setRotation(Vector3f)
-     * @see ParticleCombiner#setRotation(Vector3f, float, float, float)
+     * @see ParticleCombiner#setRotations(Vector3f)
+     * @see ParticleCombiner#setRotations(Vector3f, float, float, float)
      */
-    public Vector3f setRotation(Vector3f rotation, Vector3f offset) {
-        return this.setRotation(rotation, offset.x, offset.y, offset.z);
+    public List<Vector3f> setRotations(Vector3f rotation, Vector3f offset) {
+        return this.setRotations(rotation, offset.x, offset.y, offset.z);
     }
 
     /** Sets the rotation for all {@code ParticleObject}s in the hierarchy, which can nest additional
@@ -227,12 +168,12 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      *
      * @param rotation The new rotation (IN RADIANS)
      *
-     * @see ParticleCombiner#setRotationRecursively(Vector3f)
+     * @see ParticleCombiner#setRotationsRecursively(Vector3f)
      */
-    public void setRotationRecursively(Vector3f rotation) {
+    public void setRotationsRecursively(Vector3f rotation) {
         for (T object : this.objects) {
             if (object instanceof ParticleCombiner<?> combiner) {
-                combiner.setRotationRecursively(rotation);
+                combiner.setRotationsRecursively(rotation);
             }
             // Defensive copy happens in ParticleObject#setRotation
             object.setRotation(rotation);
@@ -246,16 +187,16 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @param rotation The new rotation (IN RADIANS)
      * @param offset the offset rotation
      *
-     * @see ParticleCombiner#setRotationRecursively(Vector3f)
+     * @see ParticleCombiner#setRotationsRecursively(Vector3f)
      */
-    public void setRotationRecursively(Vector3f rotation, Vector3f offset) {
+    public void setRotationsRecursively(Vector3f rotation, Vector3f offset) {
         if (offset.equals(new Vector3f())) {
             throw new IllegalArgumentException("offset rotation must not equal (0, 0, 0)");
         }
         Vector3f rotationToOffset = new Vector3f(rotation);
         for (T object : this.objects) {
             if (object instanceof ParticleCombiner<?> combiner) {
-                combiner.setRotationRecursively(rotationToOffset.add(offset), offset);
+                combiner.setRotationsRecursively(rotationToOffset.add(offset), offset);
             }
             // Defensive copy happens in ParticleObject#setRotation
             object.setRotation(rotationToOffset.add(offset));
@@ -294,9 +235,10 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         if (offsets.length != this.objects.size()) {
             throw new IllegalArgumentException("Must provide an offset for every object");
         }
-        List<Vector3f> prevOffsets = this.getOffsets();
+        List<Vector3f> prevOffsets = new ArrayList<>(this.objects.size());
         for (int i = 0; i < this.objects.size(); i++) {
-            this.objects.get(i).setOffset(Optional.ofNullable(offsets[i]).orElse(new Vector3f()));
+            Vector3f newOffset = Optional.ofNullable(offsets[i]).orElse(new Vector3f());
+            prevOffsets.add(this.setOffset(i, newOffset));
         }
         return prevOffsets;
     }
@@ -310,11 +252,11 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @return The previous offsets
      */
     public List<Vector3f> setOffsets(Vector3f offset) {
-        List<Vector3f> prevOffsets = this.getOffsets();
+        List<Vector3f> prevOffsets = new ArrayList<>(this.objects.size());
         Vector3f newOffset = Optional.ofNullable(offset).orElse(new Vector3f());
         for (T object : this.objects) {
             // Ensure every offset has a unique reference, so a future modification doesn't impact all of them
-            object.setOffset(new Vector3f(newOffset));
+            prevOffsets.add(object.setOffset(new Vector3f(newOffset)));
         }
         return prevOffsets;
     }
@@ -343,117 +285,130 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         return this.setOffset(index, offset);
     }
 
-    /** Sets the particle to use to a new value and returns the previous particle that was used.
-     * This applies to all the object the value can also be null, meaning that there are different
-     * particle effects at play in the object.
+    /**
+     * Sets all child objects to use the same {@code particleEffect} and returns the previous particle effects that
+     * were used.
+     * <p>
+     * The {@code particleEffect} may be null, but note that it will cause problems when rendering leaf-level objects
+     * as the particle effect must be encoded to traverse the server to client network channel.  Setting a particle
+     * effect on a ParticleCombiner does not have an effect on rendering.
      *
-     * @param particle The new particle
-     * @return The previous particle
-    */
-    @Override
-    public ParticleEffect setParticleEffect(ParticleEffect particle) {
-        ParticleEffect prevParticle = super.setParticleEffect(particle);
+     * @param particleEffect The new particle
+     * @return The previous particle effects
+     */
+    public List<ParticleEffect> setParticleEffects(ParticleEffect particleEffect) {
+        List<ParticleEffect> prevParticleEffects = new ArrayList<>(this.objects.size());
         for (T object : this.objects) {
-            object.setParticleEffect(particle);
+            prevParticleEffects.add(object.setParticleEffect(particleEffect));
         }
-        return prevParticle;
+        return prevParticleEffects;
     }
 
-    /** Sets the particle to use to a new value and returns the previous particle that was used.
-     * This applies to all the objects (including objects that are way below the hierarchy). The value
-     * can also be null, meaning that there are different particle effects at play in the object.
+    /**
+     * Sets the particle effect for this combiner and all child objects, recursively.  It returns the previous
+     * particle effect used by this object. If any child objects are also ParticleCombiners, it will recurse and set
+     * their child objects to use the provided {@code particleEffect}.
+     * <p>
+     * The {@code particleEffect} may be null, but note that it will cause problems when rendering leaf-level objects
+     * as the particle effect must be encoded to traverse the server to client network channel.  Setting a particle
+     * effect on a ParticleCombiner does not have an effect on rendering.
      *
      * @param particle The new particle
-     * @return The previous particle
      *
-     * @see ParticleCombiner#setParticleEffectRecursively(ParticleEffect[])
+     * @see ParticleCombiner#setParticleEffectsRecursively(ParticleEffect[])
      */
-    public ParticleEffect setParticleEffectRecursively(ParticleEffect particle) {
+    public void setParticleEffectsRecursively(ParticleEffect particle) {
         ParticleEffect prevParticle = super.setParticleEffect(particle);
         for (T object : this.objects) {
             if (object instanceof ParticleCombiner<?> combiner) {
-                combiner.setParticleEffectRecursively(particle);
+                combiner.setParticleEffect(null);
+                combiner.setParticleEffectsRecursively(particle);
             } else {
                 object.setParticleEffect(particle);
             }
         }
-        return prevParticle;
     }
 
-    /** Sets the particle to use to a new value and returns the previous particle that was used.
-     * This applies to all the objects (including objects that are way below the hierarchy). The value
-     * can also be null, meaning that there are different particle effects at play in the object.
-     * However unlike the {@code setParticleEffectRecursively(ParticleEffect)} which is a list of
-     * the particles to use per depth level.
-     *
-     * <p><b>Note:</b> If there are no more particles to supply in the current depth level the system is,
-     * it will not go deeper.
+    /**
+     * Sets the particle effects for the hierarchy of particle objects beneath this combiner.  The first element of
+     * the array will be used for this combiner's child objects.  Each recursive level will progress through the
+     * array until the array is exhausted, at which point the recursion will end, regardless of how many more layers
+     * of particle objects may exist.
+     * <p>
+     * The {@code particleEffect} may be null, but note that it will cause problems when rendering leaf-level objects
+     * as the particle effect must be encoded to traverse the server to client network channel.  Setting a particle
+     * effect on a ParticleCombiner does not have an effect on rendering.
      *
      * @param particleEffects The particle effects for each level
      *
-     * @see ParticleCombiner#setParticleEffectRecursively(ParticleEffect)
+     * @see ParticleCombiner#setParticleEffectsRecursively(ParticleEffect)
      */
-    public void setParticleEffectRecursively(ParticleEffect[] particleEffects) {
-        this.particleEffect = null;
+    public void setParticleEffectsRecursively(ParticleEffect[] particleEffects) {
+        this.setParticleEffect(null);
         this.particleEffectRecursiveLogic(particleEffects, 0);
     }
 
     private void particleEffectRecursiveLogic(ParticleEffect[] particleEffects, int depth) {
         for (T object : this.objects) {
-            if (depth >= particleEffects.length) break;
-            if (object instanceof ParticleCombiner<?> combiner) {
-                object.particleEffect = null;
-                combiner.particleEffectRecursiveLogic(particleEffects, depth + 1);
+            if (depth >= particleEffects.length) {
+                break;
             }
-            object.setParticleEffect(particleEffects[depth]);
+            if (object instanceof ParticleCombiner<?> combiner) {
+                object.setParticleEffect(null);
+                combiner.particleEffectRecursiveLogic(particleEffects, depth + 1);
+            } else {
+                object.setParticleEffect(particleEffects[depth]);
+            }
         }
     }
 
-    /** Sets the amount to use to a new value and returns the previous amount that was used.
-     * This applies to all the objects. The value can also be -1 meaning that there are different
-     * particle effects at play in the object. There is a method that allows for offsets per
-     * particle objects.
+    /**
+     * Sets the amount of particles to use for each child object and returns the previous amounts that were used.
      *
      * @param amount The new particle
      * @return The previous particle
      *
-     * @see ParticleCombiner#setAmount(int, int)
-     * @see ParticleCombiner#setAmountRecursively(int, int)
-     * @see ParticleCombiner#setAmountRecursively(int, int, int)
-    */
-    @Override
-    public int setAmount(int amount) {
-        int prevAmount = super.setAmount(amount);
-        for (T object : this.objects) {
-            object.setAmount(amount);
-        }
-        return prevAmount;
-    }
-
-    /** Sets the amount to use to a new value and returns the previous amount that was used.
-     * This applies to all the objects. The value can also be -1 meaning that there are different
-     * particle effects at play in the object. The offset param changes the amount per object by
-     * a specified amount. There is also a simplified version that doesn't use offsets.
-     *
-     * @param amount The new particle
-     * @param offset The offset of the amount (can be positive or negative)
-     * @return The previous particle
-     *
+     * @see ParticleCombiner#setAmounts(int, int)
+     * @see ParticleCombiner#setAmountsRecursively(int, int)
+     * @see ParticleCombiner#setAmountsRecursively(int, int, int)
      * @see ParticleCombiner#setAmount(int)
-     * @see ParticleCombiner#setAmountRecursively(int, int)
-     * @see ParticleCombiner#setAmountRecursively(int, int, int)
      */
-    public int setAmount(int amount, int offset) {
-        if (offset == 0) {
-            throw new IllegalArgumentException("offset must not equal to 0");
-        }
-        int prevAmount = super.setAmount(amount);
-        int i = 0;
+    public List<Integer> setAmounts(int amount) {
+        List<Integer> prevAmounts = new ArrayList<>(this.objects.size());
         for (T object : this.objects) {
-            object.setAmount(amount + (offset * i));
-            i++;
+            prevAmounts.add(object.setAmount(amount));
         }
-        return prevAmount;
+        return prevAmounts;
+    }
+
+    /**
+     * Sets the amount of particles to use for each child object with an incremental offset for each subsequent object,
+     * then returns the previous amounts that were used.  This does not recurse if any child is a ParticleCombiner.
+     * <p>
+     * For example, if {@code offset} is {@code 1}, the first object's amount will be set to {@code amount}, the second
+     * to {@code amount + 1}, the third to {@code amount + 2}, and so on.  The {@code offset} may be negative, but take
+     * care not to reach negative amounts: they are not allowed.
+     *
+     * @param amount The new amount of particles
+     * @param offset The incremental amount to apply to every object beyond the first (positive or negative)
+     * @return The previous particle
+     *
+     * @see ParticleCombiner#setAmounts(int)
+     * @see ParticleCombiner#setAmountsRecursively(int, int)
+     * @see ParticleCombiner#setAmountsRecursively(int, int, int)
+     * @see ParticleCombiner#setAmount(int)
+     */
+    public List<Integer> setAmounts(int amount, int offset) {
+        List<Integer> prevAmounts = new ArrayList<>(this.objects.size());
+        int baseOffset = 0;
+        if (!this.objects.isEmpty()) {
+            prevAmounts.add(this.objects.getFirst().setAmount(amount));
+        }
+        for (int i = 1; i < this.objects.size(); i++) {
+            baseOffset += offset;
+            prevAmounts.add(this.objects.get(i).setAmount(amount + baseOffset));
+        }
+        return prevAmounts;
     }
 
     /** Sets the amount to use to a new value and returns the previous amount that was used.
@@ -468,11 +423,12 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @param amount The new particle
      * @param offset The offset of the amount (can be positive or negative)
      *
-     * @see ParticleCombiner#setAmountRecursively(int, int, int)
+     * @see ParticleCombiner#setAmountsRecursively(int, int, int)
+     * @see ParticleCombiner#setAmounts(int)
+     * @see ParticleCombiner#setAmounts(int, int)
      * @see ParticleCombiner#setAmount(int)
-     * @see ParticleCombiner#setAmount(int, int)
      */
-    public void setAmountRecursively(int amount, int offset) {
+    public void setAmountsRecursively(int amount, int offset) {
         if (offset == 0) {
             throw new IllegalArgumentException("offset must not equal to 0");
         }
@@ -480,7 +436,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         for (T object : this.objects) {
             i++;
             if (object instanceof ParticleCombiner<?> combiner) {
-                combiner.setAmountRecursively(amount + (offset * i), offset);
+                combiner.setAmountsRecursively(amount + (offset * i), offset);
             }
             object.setAmount(amount + (offset * i));
         }
@@ -500,11 +456,11 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @param offset The offset of the amount (can be positive or negative)
      * @param recursiveOffset The offset of the amount once the program encounters another combiner
      *
-     * @see ParticleCombiner#setAmountRecursively(int, int)
+     * @see ParticleCombiner#setAmountsRecursively(int, int)
      * @see ParticleCombiner#setAmount(int)
-     * @see ParticleCombiner#setAmount(int, int)
+     * @see ParticleCombiner#setAmounts(int, int)
      */
-    public void setAmountRecursively(int amount, int offset, int recursiveOffset) {
+    public void setAmountsRecursively(int amount, int offset, int recursiveOffset) {
         if (offset == 0) {
             throw new IllegalArgumentException("Normal Offset must not equal to 0");
         }
@@ -515,7 +471,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         for (T object : this.objects) {
             i++;
             if (object instanceof ParticleCombiner<?> combiner) {
-                combiner.setAmountRecursively(amount + (recursiveOffset * i), recursiveOffset);
+                combiner.setAmountsRecursively(amount + (recursiveOffset * i), recursiveOffset);
             }
             object.setAmount(amount + (offset * i));
         }
@@ -559,15 +515,8 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
             throw new IllegalArgumentException("There has to be at least one object supplied");
         }
         List<T> prevObjects = this.objects;
-
         // Defensive copy (and to guarantee internal mutability)
         this.objects = new ArrayList<>(objects);
-
-        for (T object : this.objects) {
-            if (this.amount == -1 && this.particleEffect == null) break;
-            this.amount = (object.amount != this.amount) ? -1 : this.amount;
-            this.particleEffect = (object.particleEffect != this.particleEffect) ? null : this.particleEffect;
-        }
         return prevObjects;
     }
 
@@ -578,14 +527,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @return The previous particle object
      */
     public T setObject(int index, T newObject) {
-        T prevObject = this.objects.set(index, newObject);
-        if (this.particleEffect != newObject.particleEffect) {
-            this.particleEffect = null;
-        }
-        if (this.amount != newObject.amount) {
-            this.amount = -1;
-        }
-        return prevObject;
+        return this.objects.set(index, newObject);
     }
 
     /** Adds all the objects at the back of the list.
@@ -594,12 +536,7 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      */
     @SafeVarargs
     public final void appendObjects(T... objects) {
-        List<T> objectList = Arrays.stream(objects).toList();
-        this.objects.addAll(objectList);
-        for (T object : objects) {
-            if (object.amount != this.amount) this.amount = -1;
-            if (object.particleEffect != this.particleEffect) this.particleEffect = null;
-        }
+        this.objects.addAll(Arrays.asList(objects));
     }
 
     /** Appends a new particle object to the combiner. This is at the back
@@ -610,8 +547,6 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
      * @param object The object to add to the list
      */
     public void appendObject(T object) {
-        if (object.amount != this.amount) this.amount = -1;
-        if (object.particleEffect != this.particleEffect) this.particleEffect = null;
         this.objects.add(object);
     }
 
@@ -684,5 +619,58 @@ public class ParticleCombiner<T extends ParticleObject> extends ParticleObject {
         interceptData.addMetadata(BeforeChildDrawData.CAN_DRAW_OBJECT, true);
         this.beforeChildDraw.apply(interceptData, this);
         return interceptData;
+    }
+
+    public static class Builder<B extends Builder<B, T>, T extends ParticleObject> extends ParticleObject.Builder<B> {
+        protected List<T> objects = new ArrayList<>();
+        protected DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDraw;
+        protected DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDraw;
+
+        private Builder() {}
+
+        /**
+         * Adds a single object to the particle combiner.  This method is cumulative, so it may be called
+         * repeatedly to add multiple objects.
+         */
+        public B object(T object) {
+            this.objects.add(object);
+            return self();
+        }
+
+        /**
+         * Adds multiple objects to the particle combiner.  This method is cumulative, so it may be called
+         * repeatedly to add multiple lists of objects.
+         */
+        public B objects(List<? extends T> objects) {
+            this.objects.addAll(objects);
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleCombiner#setAfterChildDraw(DrawInterceptor)
+         */
+        public B afterChildDraw(DrawInterceptor<ParticleCombiner<T>, AfterChildDrawData> afterChildDraw) {
+            this.afterChildDraw = afterChildDraw;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleCombiner#setBeforeChildDraw(DrawInterceptor)
+         */
+        public B beforeChildDraw(DrawInterceptor<ParticleCombiner<T>, BeforeChildDrawData> beforeChildDraw) {
+            this.beforeChildDraw = beforeChildDraw;
+            return self();
+        }
+
+        @Override
+        public ParticleCombiner<T> build() {
+            return new ParticleCombiner<>(this);
+        }
     }
 }

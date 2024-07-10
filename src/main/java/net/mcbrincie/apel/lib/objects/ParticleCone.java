@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
@@ -18,54 +17,26 @@ public class ParticleCone extends ParticleObject {
     protected float height;
     protected float radius;
 
-    private DrawInterceptor<ParticleCone, AfterDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleCone, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleCone, AfterDrawData> afterDraw;
+    private DrawInterceptor<ParticleCone, BeforeDrawData> beforeDraw;
 
     public enum BeforeDrawData {}
     public enum AfterDrawData {}
 
-    /** Constructor for the particle cone which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the height of the cone, the maximum radius,
-     * the rotation to apply, and the number of particles.
-     * There is also a simplified constructor for no rotation.
-     *
-     * <p>This implementation calls setters for rotation, amount, height, and radius so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle effect to use
-     * @param height The height of the cone
-     * @param radius The radius of the cone
-     * @param rotation The rotation to apply
-     * @param amount The number of particles
-     *
-     * @see ParticleCone#ParticleCone(ParticleEffect, float, float, int)
-    */
-    public ParticleCone(ParticleEffect particleEffect, float height, float radius, Vector3f rotation, int amount) {
-        super(particleEffect, rotation);
-        this.setAmount(amount);
-        this.setHeight(height);
-        this.setRadius(radius);
+    /**
+     * Provide a builder instance.
+     * @return A builder instance
+     */
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the particle cone which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the height of the cone, the maximum radius,
-     * the rotation to apply and the number of particles.
-     * There is also a more complex version for rotation
-     *
-     * <p>This implementation calls setters for rotation, amount, height, and radius so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle effect to use
-     * @param height The height of the cone
-     * @param radius The radius of the cone
-     * @param amount The number of particles
-     *
-     * @see ParticleCone#ParticleCone(ParticleEffect, float, float, Vector3f, int)
-     */
-    public ParticleCone(ParticleEffect particleEffect, float height, float radius, int amount) {
-        this(particleEffect, height, radius, new Vector3f(), amount);
+    private ParticleCone(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        this.setHeight(builder.height);
+        this.setRadius(builder.radius);
+        this.setAfterDraw(builder.afterDraw);
+        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -162,5 +133,57 @@ public class ParticleCone extends ParticleObject {
     private void doBeforeDraw(ServerWorld world, int step) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
         this.beforeDraw.apply(interceptData, this);
+    }
+
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+        protected float height;
+        protected float radius;
+        protected DrawInterceptor<ParticleCone, AfterDrawData> afterDraw;
+        protected DrawInterceptor<ParticleCone, BeforeDrawData> beforeDraw;
+
+        private Builder() {}
+
+        /**
+         * Set the height on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B height(float height) {
+            this.height = height;
+            return self();
+        }
+
+        /**
+         * Set the radius on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B radius(float radius) {
+            this.radius = radius;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleCone#setAfterDraw(DrawInterceptor)
+         */
+        public B afterDraw(DrawInterceptor<ParticleCone, AfterDrawData> afterDraw) {
+            this.afterDraw = afterDraw;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleCone#setBeforeDraw(DrawInterceptor)
+         */
+        public B beforeDraw(DrawInterceptor<ParticleCone, BeforeDrawData> beforeDraw) {
+            this.beforeDraw = beforeDraw;
+            return self();
+        }
+
+        @Override
+        public ParticleCone build() {
+            return new ParticleCone(this);
+        }
     }
 }

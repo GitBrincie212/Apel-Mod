@@ -1,15 +1,14 @@
 package net.mcbrincie.apel.lib.animators;
 
 import net.mcbrincie.apel.lib.objects.ParticlePoint;
-import net.minecraft.particle.ParticleEffect;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class LinearAnimatorTest {
     // null particle to avoid needing to load Minecraft
-    private static final ParticlePoint POINT_WITH_NULL_PARTICLE = new ParticlePoint((ParticleEffect) null);
+    private static final ParticlePoint POINT_WITH_NULL_PARTICLE = ParticlePoint.builder().particleEffect(null).build();
 
     @Test
     void testGetDistance() {

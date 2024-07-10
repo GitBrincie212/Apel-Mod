@@ -4,7 +4,6 @@ import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
@@ -26,56 +25,22 @@ public class ParticlePolygon extends ParticleObject {
 
     protected HashMap<Integer, Vector3f[]> cachedShapes = new HashMap<>();
 
-    private DrawInterceptor<ParticlePolygon, CommonData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticlePolygon, CommonData> beforeDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticlePolygon, CommonData> afterDraw;
+    private DrawInterceptor<ParticlePolygon, CommonData> beforeDraw;
 
     /** There is no data being transmitted */
     public enum CommonData {}
 
-    /** Constructor for the particle polygon which is a 2D regular polygon.
-     * It accepts as parameters the particle effect to use, the sides of the polygon,
-     * the size of the polygon, the number of particles, and the rotation to apply.
-     *
-     * <p>The size of the polygon is the distance from the center of the polygon to any of its vertices.
-     *
-     * <p>This implementation calls setters for rotation, sides, size, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param sides The of the regular polygon
-     * @param size The size of the regular polygon
-     * @param amount The number of particles for the object
-     * @param rotation The rotation to apply
-     *
-     * @see ParticlePolygon#ParticlePolygon(ParticleEffect, int, float, int)
-     */
-    public ParticlePolygon(ParticleEffect particleEffect, int sides, float size, int amount, Vector3f rotation) {
-        super(particleEffect, rotation);
-        this.setSides(sides);
-        this.setSize(size);
-        this.setAmount(amount);
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the particle polygon which is a 2D regular polygon.
-     * It accepts as parameters the particle effect to use, the sides of the polygon,
-     * the size of the polygon, and the number of particles.
-     *
-     * <p>The size of the polygon is the distance from the center of the polygon to any of its vertices.
-     *
-     * <p>This implementation calls setters for rotation, sides, size, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param size The size of the regular polygon
-     * @param sides The sides of the regular polygon
-     * @param amount The number of particles for the object
-     *
-     * @see ParticlePolygon#ParticlePolygon(ParticleEffect, int, float, int, Vector3f)
-     */
-    public ParticlePolygon(ParticleEffect particleEffect, int sides, float size, int amount) {
-        this(particleEffect, sides, size, amount, new Vector3f(0));
+    private ParticlePolygon(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        this.setSides(builder.sides);
+        this.setSize(builder.size);
+        this.setAfterDraw(builder.afterDraw);
+        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -92,15 +57,18 @@ public class ParticlePolygon extends ParticleObject {
         this.afterDraw = polygon.afterDraw;
     }
 
-    /** Sets the sides to a new value and returns the previous sides used.
+    /**
+     * Sets the sides to a new value and returns the previous sides used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param sides The new sides
      * @throws IllegalArgumentException If the sides are less than 3
      * @return The previous sides used
      */
-    public int setSides(int sides) throws IllegalArgumentException {
+    public final int setSides(int sides) throws IllegalArgumentException {
         if (sides < 3) {
-            throw new IllegalArgumentException("Cannot produce a polygon with sides below 3");
+            throw new IllegalArgumentException("Polygon must have at least 3 sides");
         }
         int prevSides = this.sides;
         this.sides = sides;
@@ -115,15 +83,19 @@ public class ParticlePolygon extends ParticleObject {
         return this.sides;
     }
 
-    /** Sets the size of the polygon to a new value and returns the previous size used.
+    /**
+     * Sets the size of the polygon to a new value and returns the previous size used.  The size is the distance from
+     * the centroid to any vertex.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param size The new size
      * @throws IllegalArgumentException If the size is negative or 0
      * @return The previous size used
      */
-    public float setSize(float size) throws IllegalArgumentException {
+    public final float setSize(float size) throws IllegalArgumentException {
         if (size <= 0) {
-            throw new IllegalArgumentException("Size must be non-negative and above 0");
+            throw new IllegalArgumentException("Size must be positive");
         }
         float prevSize = this.size;
         this.size = size;
@@ -193,12 +165,15 @@ public class ParticlePolygon extends ParticleObject {
         }
     }
 
-     /** Sets the interceptor to run after drawing the polygon. The interceptor will be provided with references to
-      * the {@link ServerWorld}, the animation step number, and the ParticlePolygon instance.
+    /**
+     * Sets the interceptor to run after drawing the polygon. The interceptor will be provided with references to
+     * the {@link ServerWorld}, the animation step number, and the ParticlePolygon instance.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param afterDraw The new interceptor to use
      */
-    public void setAfterDraw(DrawInterceptor<ParticlePolygon, CommonData> afterDraw) {
+    public final void setAfterDraw(DrawInterceptor<ParticlePolygon, CommonData> afterDraw) {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
@@ -207,17 +182,75 @@ public class ParticlePolygon extends ParticleObject {
         this.afterDraw.apply(interceptData, this);
     }
 
-    /** Sets the interceptor to run before drawing the polygon. The interceptor will be provided with references to
+    /**
+     * Sets the interceptor to run before drawing the polygon. The interceptor will be provided with references to
      * the {@link ServerWorld}, the animation step number, and the ParticlePolygon instance.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param beforeDraw The new interceptor to use
      */
-    public void setBeforeDraw(DrawInterceptor<ParticlePolygon, CommonData> beforeDraw) {
+    public final void setBeforeDraw(DrawInterceptor<ParticlePolygon, CommonData> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
     private void doBeforeDraw(ServerWorld world, int step) {
         InterceptData<CommonData> interceptData = new InterceptData<>(world, null, step, CommonData.class);
         this.beforeDraw.apply(interceptData, this);
+    }
+
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+        protected int sides;
+        protected float size;
+        protected DrawInterceptor<ParticlePolygon, CommonData> afterDraw;
+        protected DrawInterceptor<ParticlePolygon, CommonData> beforeDraw;
+
+        private Builder() {}
+
+        /**
+         * Set the number of sides on the builder.  This method is not cumulative; repeated calls will overwrite the
+         * value.
+         */
+        public B sides(int sides) {
+            this.sides = sides;
+            return self();
+        }
+
+        /**
+         * Set the size on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         *
+         * @see ParticlePolygon#setSize(float)
+         */
+        public B size(float size) {
+            this.size = size;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticlePolygon#setAfterDraw(DrawInterceptor)
+         */
+        public B afterDraw(DrawInterceptor<ParticlePolygon, CommonData> afterDraw) {
+            this.afterDraw = afterDraw;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticlePolygon#setBeforeDraw(DrawInterceptor)
+         */
+        public B beforeDraw(DrawInterceptor<ParticlePolygon, CommonData> beforeDraw) {
+            this.beforeDraw = beforeDraw;
+            return self();
+        }
+
+        @Override
+        public ParticlePolygon build() {
+            return new ParticlePolygon(this);
+        }
     }
 }
