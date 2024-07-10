@@ -1,14 +1,17 @@
 package net.mcbrincie.apel.lib.animators;
 
-import com.mojang.datafixers.util.Function4;
-import com.mojang.datafixers.util.Function5;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
+import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
+import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
+
+import java.util.Optional;
 
 /** The linear animator. Which is used for linear paths(a.k.a. paths that are drawn as a line). It
  * accepts 2 or multiple points which draw the line and are called endpoints, they draw lines from the
@@ -22,9 +25,9 @@ public class LinearAnimator extends PathAnimatorBase {
     protected float[] renderingInterval;
     protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
 
-    protected Function5<AnimationTrimming<Integer>, Vector3f, Vector3f, Integer, Float, Void> onEnd;
-    protected Function4<AnimationTrimming<Integer>, Vector3f, Integer, Float, Void> onStart;
-    protected Function5<AnimationTrimming<Integer>, Vector3f, Vector3f, Integer, Float, Void> onProcess;
+    protected DrawInterceptor<LinearAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
+
+    public enum onRenderingStep {SHOULD_DRAW_STEP, CURRENT_ENDPOINT, RENDERING_POSITION}
 
     /** Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want a constant number
@@ -163,9 +166,7 @@ public class LinearAnimator extends PathAnimatorBase {
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
         this.trimming = animator.trimming;
-        this.onEnd = animator.onEnd;
-        this.onStart = animator.onStart;
-        this.onProcess = animator.onProcess;
+        this.duringRenderingSteps = animator.duringRenderingSteps;
     }
 
     /** Gets the distance between the start & end position
@@ -232,11 +233,8 @@ public class LinearAnimator extends PathAnimatorBase {
         int startStep = this.trimming.getStart();
         int endStep = this.trimming.getEnd();
         Vector3f curr = new Vector3f(this.endpoints[0].x, this.endpoints[0].y, this.endpoints[0].z);
-        if (this.onStart != null) {
-            this.onStart.apply(this.trimming, curr, this.renderingSteps[0], this.renderingInterval[0]);
-        }
         this.allocateToScheduler();
-        int lastStep = 0;
+        int currStep = -1;
         int endpointIndex = -1;
         for (Vector3f endPos : this.endpoints) {
             endpointIndex++;
@@ -251,6 +249,7 @@ public class LinearAnimator extends PathAnimatorBase {
             Vector3f startPos = this.endpoints[endpointIndex - 1];
             float dist = this.getDistance();
             for (int i = 0; i < particleAmount; i++) {
+                currStep++;
                 double currDist = curr.distance(endPos);
                 float dirX = (endPos.x - startPos.x) / dist;
                 float dirY = (endPos.y - startPos.y) / dist;
@@ -260,29 +259,42 @@ public class LinearAnimator extends PathAnimatorBase {
                 int currDirZ = (int) Math.round((endPos.z - curr.z) / currDist);
                 double dotProduct = (currDirX * dirX) + (currDirY * dirY) + (currDirZ * dirZ);
                 boolean isGoingSameDir = dotProduct > 0;
-                if (curr.equals(endPos) || !isGoingSameDir || (i >= endStep && endStep != -1)) {
-                    lastStep = i;
-                    if (i == 0) break;
-                }
+                if (i == 0 && (curr.equals(endPos) || !isGoingSameDir || (i >= endStep && endStep != -1))) break;
                 float newX = curr.x + (dirX * particleInterval);
                 float newY = curr.y + (dirY * particleInterval);
                 float newZ = curr.z + (dirZ * particleInterval);
                 curr = new Vector3f(newX, newY, newZ);
                 if (i < startStep) continue;
+                InterceptData<onRenderingStep> interceptData =
+                        this.doBeforeStep(renderer.getServerWorld(), endpointIndex, curr, currStep);
+                if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
+                curr = (Vector3f) interceptData.getMetadata(onRenderingStep.RENDERING_POSITION);
                 this.handleDrawingStep(renderer, i, curr);
-                if (this.onProcess != null) {
-                    this.onProcess.apply(this.trimming, curr, endPos, particleAmount, particleInterval);
-                }
-                lastStep++;
             }
         }
-        if (this.onEnd != null) {
-            this.onEnd.apply(
-                    this.trimming, curr,
-                    this.endpoints[this.endpoints.length - 1],
-                    this.renderingSteps[this.renderingSteps.length - 1],
-                    this.renderingInterval[this.renderingInterval.length - 1]
-            );
-        }
+    }
+
+    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
+     * with references to the {@link ServerWorld}, the current step number. As far as it goes for metadata,
+     * there will be a boolean value that dictates if it should draw on this step, the rendering position of the
+     * point that lives in the line and the endpoint index (UNMODIFIABLE)
+     *
+     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
+     */
+    public void setDuringRenderingSteps(DrawInterceptor<LinearAnimator, onRenderingStep> duringRenderingSteps) {
+        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    }
+
+    protected InterceptData<onRenderingStep> doBeforeStep(
+            ServerWorld world, int currEndpointIndex, Vector3f position, int currStep
+    ) {
+        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
+                world, null, currStep, onRenderingStep.class
+        );
+        interceptData.addMetadata(onRenderingStep.RENDERING_POSITION, position);
+        interceptData.addMetadata(onRenderingStep.CURRENT_ENDPOINT, currEndpointIndex);
+        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        this.duringRenderingSteps.apply(interceptData, this);
+        return interceptData;
     }
 }

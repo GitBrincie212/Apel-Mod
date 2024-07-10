@@ -6,10 +6,14 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
+import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
+import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 /** The Bézier curve animator which is used for curved paths, it accepts two or multiple different bézier curves,
@@ -25,10 +29,9 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     protected float[] renderingInterval;
     protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
 
-    protected BiFunction<AnimationTrimming<Integer>, BezierCurve[], Void> onEnd;
-    protected BiFunction<AnimationTrimming<Integer>, BezierCurve[], Void> onStart;
-    protected Function3<AnimationTrimming<Integer>, BezierCurve, BezierCurve[], Void> onProcess;
+    protected DrawInterceptor<BezierCurveAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
 
+    public enum onRenderingStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
     /**
      * Constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want a good consistent
@@ -166,9 +169,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
         this.trimming = animator.trimming;
-        this.onEnd = animator.onEnd;
-        this.onStart = animator.onStart;
-        this.onProcess = animator.onProcess;
+        this.duringRenderingSteps = animator.duringRenderingSteps;
     }
 
     /** Gets the distance needed to travel from the starting bézier curve to the ending bézier curve
@@ -236,9 +237,6 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         int index = -1;
         int step = -1;
-        if (this.onStart != null) {
-            this.onStart.apply(this.trimming, this.bezierCurves);
-        }
         this.allocateToScheduler();
         for (BezierCurve bezierCurve : this.bezierCurves) {
             index++;
@@ -253,14 +251,35 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             for (float t = 0; t < 1.0f; t += tStep) {
                 step++;
                 Vector3f pos = bezierCurve.compute(t);
+                InterceptData<onRenderingStep> interceptData =
+                        this.doBeforeStep(renderer.getServerWorld(), pos, step);
+                if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
+                pos = (Vector3f) interceptData.getMetadata(onRenderingStep.RENDERING_POSITION);
                 this.handleDrawingStep(renderer, step, pos);
-                if (this.onProcess != null) {
-                    this.onProcess.apply(this.trimming, bezierCurve, this.bezierCurves);
-                }
-            }
-            if (this.onEnd != null) {
-                this.onEnd.apply(this.trimming, this.bezierCurves);
             }
         }
+    }
+
+    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
+     * with references to the {@link ServerWorld}, the current step number. As far as it goes for metadata,
+     * there will be a boolean value that dictates if it should draw on this step and the rendering position of the
+     * point that lives in the Bézier curve
+     *
+     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
+     */
+    public void setDuringRenderingSteps(DrawInterceptor<BezierCurveAnimator, onRenderingStep> duringRenderingSteps) {
+        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    }
+
+    protected InterceptData<onRenderingStep> doBeforeStep(
+            ServerWorld world, Vector3f position, int currStep
+    ) {
+        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
+                world, null, currStep, onRenderingStep.class
+        );
+        interceptData.addMetadata(onRenderingStep.RENDERING_POSITION, position);
+        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        this.duringRenderingSteps.apply(interceptData, this);
+        return interceptData;
     }
 }

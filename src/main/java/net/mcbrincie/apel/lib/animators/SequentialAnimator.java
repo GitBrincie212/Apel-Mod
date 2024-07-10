@@ -5,11 +5,15 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
+import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 
 /** The parallel path animator. Which provides an interface for controlling multiple
@@ -22,6 +26,10 @@ import java.util.List;
 public class SequentialAnimator extends PathAnimatorBase implements TreePathAnimator<PathAnimatorBase> {
     protected List<PathAnimatorBase> animators = new ArrayList<>();
     protected List<Integer> delays = new ArrayList<>();
+
+    protected DrawInterceptor<SequentialAnimator, onPathAnimatorRendering> onAnimatorRendering = DrawInterceptor.identity();
+
+    public enum onPathAnimatorRendering {PATH_ANIMATOR, SHOULD_RENDER_ANIMATOR, DELAY}
 
     /** Constructor for the parallel animation. This constructor is
      * meant to be used in the case that you want to supply a specific
@@ -163,9 +171,28 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
         PathAnimatorBase prev = null;
         for (PathAnimatorBase animator : this.animators) {
             step++;
+            InterceptData<onPathAnimatorRendering> interceptData =
+                    this.doBeforeStep(renderer.getServerWorld(), animator, getDelayOfAnimator(step), step);
+            if (!((boolean) interceptData.getMetadata(onPathAnimatorRendering.SHOULD_RENDER_ANIMATOR))) continue;
+            animator = (PathAnimatorBase) interceptData.getMetadata(onPathAnimatorRendering.PATH_ANIMATOR);
+            int delayForAnimator = (int) interceptData.getMetadata(onPathAnimatorRendering.DELAY);
+            int delayForAnimatorInUse = this.delays.get(step - 1);
+            if (delayForAnimator != delayForAnimatorInUse) {
+                this.delays.set(step - 1, delayForAnimator);
+                if (delayForAnimator != this.delay) this.delay = -1;
+                for (int delayPerAnimator : this.delays) {
+                    if (delayPerAnimator != delayForAnimator) continue;
+                    this.delay = -1;
+                    break;
+                }
+            }
             this.allocateNewAnimator(renderer, step, animator, prev);
             prev = animator;
         }
+    }
+
+    private int getDelayOfAnimator(int step) {
+        return (this.delay == -1) ? this.delays.get(step - 1) : this.delay;
     }
 
     @Override
@@ -173,9 +200,8 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
         int index = 0;
         int delaySum = 0;
         for (PathAnimatorBase animatorChild : this.animators) {
-            int seqDelay = ((this.delay == -1) ? this.delays.get(index) : this.delay);
+            int seqDelay = getDelayOfAnimator(index);
             delaySum += seqDelay + animatorChild.calculateDuration();
-            System.out.println(delaySum);
             index++;
         }
         return delaySum;
@@ -185,7 +211,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
         Runnable func = () -> animator.beginAnimation(renderer);
         int childDelay = 0;
         if (prev != null) childDelay = prev.calculateDuration();
-        int delayUsed = childDelay + ((this.delay == -1) ? this.delays.get(step - 1) : this.delay);
+        int delayUsed = childDelay + getDelayOfAnimator(step);
         if (delayUsed == 0) {
             Apel.DRAW_EXECUTOR.submit(func);
             return;
@@ -203,5 +229,29 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
                 this, new ScheduledStep(delayUsed, this.storedFuncsBuffer.toArray(Runnable[]::new))
         );
         this.storedFuncsBuffer.clear();
+    }
+
+    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
+     * with references to the {@link ServerWorld}, the current step number. As far as it goes for the metadata, you
+     * have access to the path animator that will be drawn, the delay of the path animator before rendering and a
+     * boolean value dictating if the path animator should render at all
+     *
+     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
+     */
+    public void setOnAnimatorRendering(DrawInterceptor<SequentialAnimator, onPathAnimatorRendering> duringRenderingSteps) {
+        this.onAnimatorRendering = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    }
+
+    protected InterceptData<onPathAnimatorRendering> doBeforeStep(
+            ServerWorld world, PathAnimatorBase pathAnimatorBase, int delay, int currStep
+    ) {
+        InterceptData<onPathAnimatorRendering> interceptData = new InterceptData<>(
+                world, null, currStep, onPathAnimatorRendering.class
+        );
+        interceptData.addMetadata(onPathAnimatorRendering.PATH_ANIMATOR, pathAnimatorBase);
+        interceptData.addMetadata(onPathAnimatorRendering.DELAY, delay);
+        interceptData.addMetadata(onPathAnimatorRendering.SHOULD_RENDER_ANIMATOR, true);
+        this.onAnimatorRendering.apply(interceptData, this);
+        return interceptData;
     }
 }

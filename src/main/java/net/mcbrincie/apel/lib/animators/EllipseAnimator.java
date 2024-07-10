@@ -1,11 +1,11 @@
 package net.mcbrincie.apel.lib.animators;
 
-import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
+import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
@@ -19,10 +19,6 @@ import org.joml.Vector3f;
 public class EllipseAnimator extends CircularAnimator {
     protected float stretch;
     protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, (float) (Math.TAU - 0.0001f));
-
-    protected Function6<AnimationTrimming<Float>, Vector3f, Float, Vector3f, Integer, Float, Void> onEnd;
-    protected Function6<AnimationTrimming<Float>, Vector3f, Float, Vector3f, Integer, Float, Void> onStart;
-    protected Function6<Integer, AnimationTrimming<Float>, Float, Vector3f, Integer, Float, Void> onProcess;
 
     /**
      * Constructor for the ellipse animation. This constructor is
@@ -83,9 +79,7 @@ public class EllipseAnimator extends CircularAnimator {
         this.radius = animator.radius;
         this.stretch = animator.stretch;
         this.revolutions = animator.revolutions;
-        this.onStart = animator.onStart;
-        this.onEnd = animator.onEnd;
-        this.onProcess = animator.onProcess;
+        this.duringRenderingSteps = animator.duringRenderingSteps;
         this.clockwise = animator.clockwise;
         this.trimming = animator.trimming;
     }
@@ -126,29 +120,15 @@ public class EllipseAnimator extends CircularAnimator {
 
         float currAngle = startAngle;
         Vector3f pos = calculatePoint(currAngle);
-        if (this.onStart != null) {
-            this.onStart.apply(
-                    this.trimming, pos, this.radius,
-                    this.center, this.renderingSteps, this.renderingInterval
-            );
-        }
         this.allocateToScheduler();
         for (int i = 0; i < particleAmount ; i++) {
+            InterceptData<onRenderingStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
+            if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
+            pos = (Vector3f) interceptData.getMetadata(onRenderingStep.RENDERING_POSITION);
             this.handleDrawingStep(renderer, i, pos);
-            if (this.onProcess != null) {
-                this.onProcess.apply(
-                        i, this.trimming, this.radius, this.center, this.renderingSteps, this.renderingInterval
-                );
-            }
             currAngle += this.clockwise ? angleInterval : -angleInterval;
             currAngle = (float) ((currAngle + Math.TAU) % Math.TAU);
             pos = this.calculatePoint(currAngle);
-        }
-
-        if (this.onEnd != null) {
-            this.onEnd.apply(
-                    this.trimming, pos, this.radius, this.center, this.renderingSteps, this.renderingInterval
-            );
         }
     }
 

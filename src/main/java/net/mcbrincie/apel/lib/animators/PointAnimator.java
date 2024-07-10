@@ -2,10 +2,17 @@ package net.mcbrincie.apel.lib.animators;
 
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
+import net.mcbrincie.apel.lib.objects.ParticleBezierCurve;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
+import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
+import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
+
+import java.util.Optional;
 
 
 /** The most simple path animator out of all. It is used to animate the object in one certain place
@@ -15,6 +22,9 @@ import org.joml.Vector3f;
 @SuppressWarnings("unused")
 public class PointAnimator extends PathAnimatorBase {
     protected Vector3f origin;
+    protected DrawInterceptor<PointAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
+
+    public enum onRenderingStep {SHOULD_DRAW_STEP}
 
     /** Constructor for the point animator. It basically animates the object in a certain place.
      * The place is called the origin, which is only a point (hence the point animator)
@@ -58,6 +68,7 @@ public class PointAnimator extends PathAnimatorBase {
     public PointAnimator(PointAnimator animator) {
         super(animator);
         this.origin = animator.origin;
+        this.duringRenderingSteps = animator.duringRenderingSteps;
     }
 
     @Override
@@ -69,7 +80,28 @@ public class PointAnimator extends PathAnimatorBase {
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         this.allocateToScheduler();
         for (int i = 0; i < this.renderingSteps; i++) {
+            InterceptData<onRenderingStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), i);
+            if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
             this.handleDrawingStep(renderer, i, this.origin);
         }
+    }
+
+    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
+     * with references to the {@link ServerWorld}, the current step number. As far as it goes for metadata,
+     * there will only be a boolean value that dictates if it should draw on this step
+     *
+     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
+     */
+    public void setDuringRenderingSteps(DrawInterceptor<PointAnimator, onRenderingStep> duringRenderingSteps) {
+        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    }
+
+    protected InterceptData<onRenderingStep> doBeforeStep(ServerWorld world, int currStep) {
+        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
+                world, null, currStep, onRenderingStep.class
+        );
+        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        this.duringRenderingSteps.apply(interceptData, this);
+        return interceptData;
     }
 }

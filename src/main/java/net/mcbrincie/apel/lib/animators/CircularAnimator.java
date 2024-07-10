@@ -6,8 +6,13 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
+import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
+import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
+
+import java.util.Optional;
 
 /** A slightly more complex animator than linear animator or point animator because it deals with a circle.
  * The animator basically creates a circle, and when animating on it, you specify which angle (IN RADIANS) should
@@ -26,9 +31,9 @@ public class CircularAnimator extends PathAnimatorBase {
 
     private float tempDiffStore;
 
-    protected Function6<AnimationTrimming<Float>, Vector3f, Float, Vector3f, Integer, Float, Void> onEnd;
-    protected Function6<AnimationTrimming<Float>, Vector3f, Float, Vector3f, Integer, Float, Void> onStart;
-    protected Function6<Integer, AnimationTrimming<Float>, Float, Vector3f, Integer, Float, Void> onProcess;
+    protected DrawInterceptor<CircularAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
+
+    public enum onRenderingStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
 
     /**
      * Constructor for the circular animation. This constructor is
@@ -91,9 +96,7 @@ public class CircularAnimator extends PathAnimatorBase {
         this.radius = animator.radius;
         this.revolutions = animator.revolutions;
         this.tempDiffStore = -1.0f;
-        this.onStart = animator.onStart;
-        this.onEnd = animator.onEnd;
-        this.onProcess = animator.onProcess;
+        this.duringRenderingSteps = animator.duringRenderingSteps;
         this.clockwise = animator.clockwise;
         this.trimming = animator.trimming;
     }
@@ -223,29 +226,15 @@ public class CircularAnimator extends PathAnimatorBase {
 
         float currAngle = startAngle;
         Vector3f pos = calculatePoint(currAngle);
-        if (this.onStart != null) {
-            this.onStart.apply(
-                    this.trimming, pos, this.radius,
-                    this.center, this.renderingSteps, this.renderingInterval
-            );
-        }
         this.allocateToScheduler();
         for (int i = 0; i < particleAmount ; i++) {
+            InterceptData<onRenderingStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
+            if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
+            pos = (Vector3f) interceptData.getMetadata(onRenderingStep.RENDERING_POSITION);
             this.handleDrawingStep(renderer, i, pos);
-            if (this.onProcess != null) {
-                this.onProcess.apply(
-                        i, this.trimming, this.radius, this.center, this.renderingSteps, this.renderingInterval
-                );
-            }
             currAngle += this.clockwise ? angleInterval : -angleInterval;
             currAngle = (float) ((currAngle + Math.TAU) % Math.TAU);
             pos = this.calculatePoint(currAngle);
-        }
-
-        if (this.onEnd != null) {
-            this.onEnd.apply(
-                    this.trimming, pos, this.radius, this.center, this.renderingSteps, this.renderingInterval
-            );
         }
     }
 
@@ -260,5 +249,28 @@ public class CircularAnimator extends PathAnimatorBase {
                 .rotateY(this.rotation.y)
                 .rotateX(this.rotation.x);
         return pos.add(this.center);
+    }
+
+    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
+     * with references to the {@link ServerWorld}, the current step number. As far as it goes for metadata,
+     * there will be a boolean value that dictates if it should draw on this step and the rendering position of the
+     * point that lives in the circle
+     *
+     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
+     */
+    public void setDuringRenderingSteps(DrawInterceptor<CircularAnimator, onRenderingStep> duringRenderingSteps) {
+        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    }
+
+    protected InterceptData<onRenderingStep> doBeforeStep(
+            ServerWorld world, Vector3f position, int currStep
+    ) {
+        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
+                world, null, currStep, onRenderingStep.class
+        );
+        interceptData.addMetadata(onRenderingStep.RENDERING_POSITION, position);
+        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        this.duringRenderingSteps.apply(interceptData, this);
+        return interceptData;
     }
 }

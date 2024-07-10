@@ -5,8 +5,10 @@ import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
+import net.mcbrincie.apel.lib.objects.ParticleBezierCurve;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import org.jetbrains.annotations.NotNull;
@@ -34,10 +36,6 @@ public abstract class PathAnimatorBase {
 
     protected static TrigTable trigTable = Apel.TRIG_TABLE;
 
-    protected Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onEnd;
-    protected Function5<Integer, Integer, Vector3f, Integer, Float, Void> onStart;
-    protected Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onProcess;
-
     /**
      * Constructor for the path animator. This constructor is meant to be used when you want a
      * constant amount of rendering steps. It is worth pointing out that this won't look
@@ -47,7 +45,7 @@ public abstract class PathAnimatorBase {
      * @param particleObject The particle object to use
      * @param renderingSteps The rendering steps to use
      * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, float)
-     */
+    */
     public PathAnimatorBase(int delay, ParticleObject particleObject, int renderingSteps) {
         this.setDelay(delay);
         this.setParticleObject(particleObject);
@@ -88,9 +86,6 @@ public abstract class PathAnimatorBase {
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
         this.processSpeed = animator.processSpeed;
-        this.onEnd = animator.onEnd;
-        this.onStart = animator.onStart;
-        this.onProcess = animator.onProcess;
         this.storedFuncsBuffer = new ArrayList<>();
     }
 
@@ -204,54 +199,6 @@ public abstract class PathAnimatorBase {
         this.renderingSteps = steps;
         this.renderingInterval = 0.0f;
         return prevRenderStep;
-    }
-
-
-    /** Binds a function to listen to end which happens when the animation
-     *  Ends. The function cannot modify anything but exposes some variables
-     *  to be read from
-     *
-     * @param onEnd The function that accepts six arguments and returns nothing.
-     *                  <strong>start step</strong>, <strong>ending step</strong>,
-     *                  <strong>starting position</strong>, <strong>current position</strong>,
-     *                  <strong>particle amount</strong>, <strong>interval of blocks</strong>
-     */
-    public void bindEndAnimListener(
-            Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onEnd
-    ) {
-        this.onEnd = onEnd;
-    }
-
-
-    /** Binds a function to listen to start which happens when the animation
-     *  Begins. The function cannot modify anything but exposes some variables
-     *  to be read from
-     *
-     * @param onStart The function that accepts five arguments and returns nothing.
-     *                  <strong>start step</strong>, <strong>ending step</strong>,
-     *                  <strong>ending position</strong>, <strong>particle amount</strong>,
-     *                  <strong>interval of blocks</strong>
-     */
-    public void bindStartAnimListener(
-            Function5<Integer, Integer, Vector3f, Integer, Float, Void> onStart
-    ) {
-        this.onStart = onStart;
-    }
-
-
-    /** Binds a function to listen to each step that happens when the animation
-     *  is processing the steps. The function cannot modify anything
-     *  but exposes some variables to be read from
-     *
-     * @param onProcess The function that accepts six arguments and returns nothing.
-     *                  <strong>current step</strong>, <strong>ending step</strong>,
-     *                  <strong>current position</strong>, <strong>ending position</strong>,
-     *                  <strong>particle amount</strong>, <strong>interval of blocks</strong>
-     */
-    public void bindProcessAnimListener(
-            Function6<Integer, Integer, Vector3f, Vector3f, Integer, Float, Void> onProcess
-    ) {
-        this.onProcess = onProcess;
     }
 
     /** Sets the processing speed to allow for even faster animations on larger rendering steps.
