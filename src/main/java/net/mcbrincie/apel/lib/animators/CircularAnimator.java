@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.animators;
 
-import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;

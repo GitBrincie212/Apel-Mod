@@ -1,14 +1,10 @@
 package net.mcbrincie.apel.lib.animators;
 
-import com.mojang.datafixers.util.Function5;
-import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleBezierCurve;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import org.jetbrains.annotations.NotNull;

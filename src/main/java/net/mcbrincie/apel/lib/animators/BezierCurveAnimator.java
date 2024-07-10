@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.animators;
 
-import com.mojang.datafixers.util.Function3;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
@@ -14,7 +13,6 @@ import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.Optional;
-import java.util.function.BiFunction;
 
 /** The Bézier curve animator which is used for curved paths, it accepts two or multiple different bézier curves,
  * the curves are called endpoints unlike the linear animator, the Bézier curve path animator the curves one by one.

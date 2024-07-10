@@ -2,12 +2,10 @@ package net.mcbrincie.apel.lib.animators;
 
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleBezierCurve;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
