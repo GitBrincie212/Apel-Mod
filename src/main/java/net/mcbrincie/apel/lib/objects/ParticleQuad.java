@@ -5,8 +5,6 @@ import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
@@ -29,15 +27,13 @@ import java.util.Optional;
  */
 @SuppressWarnings("unused")
 public class ParticleQuad extends ParticleObject {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     protected Vector3f vertex1;
     protected Vector3f vertex2;
     protected Vector3f vertex3;
     protected Vector3f vertex4;
 
-    private DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw;
+    private DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw;
 
     /** There is no data being transmitted */
     public enum BeforeDrawData {}
@@ -47,78 +43,18 @@ public class ParticleQuad extends ParticleObject {
         VERTEX_1, VERTEX_2, VERTEX_3, VERTEX_4
     }
 
-    /** Constructor for the particle quad which is a 2D Quadrilateral. It accepts as parameters
-     * the particle effect to use, the vertices coordinate, the number of particles & the rotation to apply.
-     * There is also a simplified version for no rotation.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param vertices The vertices coordinate
-     * @param rotation The rotation to apply
-     *
-     * @see ParticleQuad#ParticleQuad(ParticleEffect, Vector3f[], int)
-    */
-    public ParticleQuad(ParticleEffect particleEffect, Vector3f[] vertices, int amount, Vector3f rotation) {
-        super(particleEffect, rotation);
-        this.setVertices(vertices);
-        this.setAmount(amount);
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the particle quad which is a 2D Quadrilateral. It accepts as parameters
-     * the particle to use, the vertices coordinate & the number of particles. There is also
-     * a constructor that allows supplying rotation
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param vertices The vertices coordinate
-     *
-     * @see ParticleQuad#ParticleQuad(ParticleEffect, Vector3f[], int, Vector3f)
-    */
-    public ParticleQuad(ParticleEffect particleEffect, Vector3f[] vertices, int amount) {
-        this(particleEffect, vertices, amount, new Vector3f(0));
-    }
-
-    /** Constructor for the particle quad which is a 2D Quadrilateral and more specifically a rectangle.
-     * (or square if width = height), it accepts as parameters the particle effect to use,
-     * the width of the rectangle, the height of the rectangle & the number of particles.
-     * There is also a constructor that allows supplying rotation
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param width The width of the rectangle
-     * @param height The height of the rectangle
-     *
-     * @see ParticleQuad#ParticleQuad(ParticleEffect, float, float, int, Vector3f)
-    */
-    public ParticleQuad(ParticleEffect particleEffect, float width, float height, int amount) {
-        this(particleEffect, rectangle(width, height), amount, new Vector3f(0));
-    }
-
-    /** Constructor for the particle quad which is a 2D Quadrilateral.
-     * And more specifically, a rectangle (or square if width = height).
-     * It accepts as parameters the particle effect to use, the width of the rectangle,
-     * the height of the rectangle, the number of particles, and the rotation to apply.
-     * There is also a constructor for no rotation
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param width The width of the rectangle
-     * @param height The height of the rectangle
-     * @param rotation The rotation to apply
-     *
-     * @see ParticleQuad#ParticleQuad(ParticleEffect, float, float, int, Vector3f)
-    */
-    public ParticleQuad(ParticleEffect particleEffect, float width, float height, int amount, Vector3f rotation) {
-        this(particleEffect, rectangle(width, height), amount, rotation);
-    }
-
-    // Constructor helper to transform width/height into vertices
-    private static Vector3f[] rectangle(float width, float height) {
-        Vector3f vertex1 = new Vector3f(width / 2, height / 2, 0);
-        Vector3f vertex2 = new Vector3f(width / 2, -height / 2, 0);
-        Vector3f vertex3 = new Vector3f(-width / 2, -height / 2, 0);
-        Vector3f vertex4 = new Vector3f(-width / 2, height / 2, 0);
-        return new Vector3f[]{vertex1, vertex2, vertex3, vertex4};
+    private ParticleQuad(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        this.setVertex1(builder.vertex1);
+        this.setVertex2(builder.vertex2);
+        this.setVertex3(builder.vertex3);
+        this.setVertex4(builder.vertex4);
+        this.setAfterDraw(builder.afterDraw);
+        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -154,61 +90,69 @@ public class ParticleQuad extends ParticleObject {
         this.vertex4 = vertices[3];
     }
 
-    /** Sets the first individual vertex, it returns the previous
-     * vertex that was used. If you want to modify multiple
+    /**
+     * Sets the first individual vertex, it returns the previous vertex that was used. If you want to modify multiple
      * vertices at once then use {@code setVertices}.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
      *
      * @see ParticleQuad#setVertices(Vector3f[])
      */
-    public Vector3f setVertex1(Vector3f newVertex) {
+    public final Vector3f setVertex1(Vector3f newVertex) {
         Vector3f prevVertex = this.vertex1;
         this.vertex1 = newVertex;
         return prevVertex;
     }
 
-    /** Sets the second individual vertex, it returns the previous
-     * vertex that was used. If you want to modify multiple
+    /**
+     * Sets the second individual vertex, it returns the previous vertex that was used. If you want to modify multiple
      * vertices at once then use {@code setVertices}.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
      *
      * @see ParticleQuad#setVertices(Vector3f[])
     */
-    public Vector3f setVertex2(Vector3f newVertex) {
+    public final Vector3f setVertex2(Vector3f newVertex) {
         Vector3f prevVertex = this.vertex2;
         this.vertex2 = newVertex;
         return prevVertex;
     }
 
-    /** Sets the third individual vertex, it returns the previous
-     * vertex that was used. If you want to modify multiple
+    /**
+     * Sets the third individual vertex, it returns the previous vertex that was used. If you want to modify multiple
      * vertices at once then use {@code setVertices}.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
      *
      * @see ParticleQuad#setVertices(Vector3f[])
     */
-    public Vector3f setVertex3(Vector3f newVertex) {
+    public final Vector3f setVertex3(Vector3f newVertex) {
         Vector3f prevVertex = this.vertex3;
         this.vertex3 = newVertex;
         return prevVertex;
     }
 
-    /** Sets the fourth individual vertex, it returns the previous
-     * vertex that was used. If you want to modify multiple
+    /**
+     * Sets the fourth individual vertex, it returns the previous vertex that was used. If you want to modify multiple
      * vertices at once then use {@code setVertices}.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
      *
      * @see ParticleQuad#setVertices(Vector3f[])
     */
-    public Vector3f setVertex4(Vector3f newVertex) {
+    public final Vector3f setVertex4(Vector3f newVertex) {
         Vector3f prevVertex = this.vertex4;
         this.vertex4 = newVertex;
         return prevVertex;
@@ -270,13 +214,16 @@ public class ParticleQuad extends ParticleObject {
         this.endDraw(renderer, step, drawPos);
     }
 
-    /** Sets the interceptor to run after drawing the quadrilateral. The interceptor will be provided with references
+    /**
+     * Sets the interceptor to run after drawing the quadrilateral. The interceptor will be provided with references
      * to the {@link ServerWorld}, the animation step number, and the ParticleQuad instance.  The metadata has the four
      * modified vertices.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param afterDraw The new interceptor to use
      */
-    public void setAfterDraw(DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw) {
+    public final void setAfterDraw(DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw) {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
@@ -291,17 +238,107 @@ public class ParticleQuad extends ParticleObject {
         this.afterDraw.apply(interceptData, this);
     }
 
-    /** Set the interceptor to run before drawing the quadrilateral. The interceptor will be provided with references
+    /**
+     * Set the interceptor to run before drawing the quadrilateral. The interceptor will be provided with references
      * to the {@link ServerWorld}, the animation step number, and the ParticleQuad instance.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param beforeDraw The new interceptor to use
      */
-    public void setBeforeDraw(DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw) {
+    public final void setBeforeDraw(DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
     private void beforeDraw(ServerWorld world, int step) {
         InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
         this.beforeDraw.apply(interceptData, this);
+    }
+
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+        protected Vector3f vertex1;
+        protected Vector3f vertex2;
+        protected Vector3f vertex3;
+        protected Vector3f vertex4;
+        protected DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw;
+        protected DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw;
+
+        private Builder() {}
+
+        /**
+         * Sets the vertices to produce a rectangle in the XY-plane.  This method is not cumulative; repeated calls to
+         * this method or the four vertex methods will overwrite values.
+         */
+        // Constructor helper to transform width/height into vertices
+        public B rectangle(float width, float height) {
+            this.vertex1 = new Vector3f(width / 2, height / 2, 0);
+            this.vertex2 = new Vector3f(width / 2, -height / 2, 0);
+            this.vertex3 = new Vector3f(-width / 2, -height / 2, 0);
+            this.vertex4 = new Vector3f(-width / 2, height / 2, 0);
+            return self();
+        }
+
+        /**
+         * Set vertex1 on the builder.  This method is not cumulative; repeated calls to {@code rectangle} or this
+         * method will overwrite the value.
+         */
+        public B vertex1(Vector3f vertex1) {
+            this.vertex1 = vertex1;
+            return self();
+        }
+
+        /**
+         * Set vertex2 on the builder.  This method is not cumulative; repeated calls to {@code rectangle} or this
+         * method will overwrite the value.
+         */
+        public B vertex2(Vector3f vertex2) {
+            this.vertex2 = vertex2;
+            return self();
+        }
+
+        /**
+         * Set vertex3 on the builder.  This method is not cumulative; repeated calls to {@code rectangle} or this
+         * method will overwrite the value.
+         */
+        public B vertex3(Vector3f vertex3) {
+            this.vertex3 = vertex3;
+            return self();
+        }
+
+        /**
+         * Set vertex4 on the builder.  This method is not cumulative; repeated calls to {@code rectangle} or this
+         * method will overwrite the value.
+         */
+        public B vertex4(Vector3f vertex4) {
+            this.vertex4 = vertex4;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleQuad#setAfterDraw(DrawInterceptor)
+         */
+        public B afterDraw(DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw) {
+            this.afterDraw = afterDraw;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleQuad#setBeforeDraw(DrawInterceptor)
+         */
+        public B beforeDraw(DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw) {
+            this.beforeDraw = beforeDraw;
+            return self();
+        }
+
+        @Override
+        public ParticleQuad build() {
+            return new ParticleQuad(this);
+        }
     }
 }

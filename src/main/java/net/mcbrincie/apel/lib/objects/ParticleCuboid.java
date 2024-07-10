@@ -3,9 +3,7 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
@@ -16,14 +14,18 @@ import java.util.Optional;
 /** The particle object class that represents a cuboid which is a rectangle
  * living in 3D. It is a cube if all the values of the size vector
  * are supplied with the same value.
+ * <p>
+ * <strong>Note: </strong>ParticleCuboid does not respect the {@link #getAmount()} or {@link #setAmount(int)} methods
+ * inherited from ParticleObject.  Instead, it stores amounts as described in {@link #getAmount(AreaLabel)} and
+ * {@link #setAmount(Vector3i)}.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCuboid extends ParticleObject {
-    protected Vector3f size = new Vector3f();
-    protected Vector3i amount = new Vector3i();
+    protected Vector3f size;
+    protected Vector3i amount;
 
-    private DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
+    private DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw;
+    private DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw;
 
     /** There is no data being transmitted */
     public enum AfterDrawData {}
@@ -63,88 +65,17 @@ public class ParticleCuboid extends ParticleObject {
         BOTTOM_FACE, TOP_FACE, VERTICAL_BARS, ALL_FACES
     }
 
-    /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle effect to use, the number of particles per line in each face section (bottom is X, top is Y and
-     * the bars are Z), the size of the cuboid (width, height, depth), and the rotation to apply.
-     *
-     * <p>This implementation calls setters for rotation, size, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param size The size in regard to width, height, depth
-     * @param rotation The rotation to apply
-     *
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f)
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f, Vector3f)
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f)
-    */
-    public ParticleCuboid(ParticleEffect particleEffect, Vector3i amount, @NotNull Vector3f size, Vector3f rotation) {
-        super(particleEffect, rotation);
+    public static Builder<?> builder() {
+        return new Builder<>();
+    }
+
+    private ParticleCuboid(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, 1);
         // Defensive copies are made in setters to protect against in-place modification of vectors
-        this.setSize(size);
-        this.setAmount(amount);
-    }
-
-    /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle effect to use, the number of particles per line in each face section (bottom is X, top is Y and
-     * the bars are Z), and the size of the cuboid (width, height, depth).
-     *
-     * <p>This implementation calls setters for rotation, size, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param size The size in regard to width, height, depth
-     *
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f, Vector3f)
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f)
-     */
-    public ParticleCuboid(ParticleEffect particleEffect, Vector3i amount, @NotNull Vector3f size) {
-        this(particleEffect, amount, size, new Vector3f(0));
-    }
-
-    /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle effect to use, the number of particles per line in all face sections, the size of the cuboid
-     * (width, height, depth), and the rotation to apply.
-     *
-     * <p>This implementation calls setters for rotation, size, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param size The size in regard to width, height, depth
-     *
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f)
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f)
-     */
-    public ParticleCuboid(ParticleEffect particleEffect, int amount, @NotNull Vector3f size, Vector3f rotation) {
-        this(particleEffect, new Vector3i(amount), size, rotation);
-    }
-
-    /** Constructor for the particle cuboid which is a 3D rectangle. It accepts as parameters
-     * the particle effect to use, the number of particles per line in all face sections, and the size of the cuboid
-     * (width, height, depth).
-     *
-     * <p>This implementation calls setters for rotation, size, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param size The size in regard to width, height, depth
-     *
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f, Vector3f)
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, Vector3i, Vector3f)
-     * @see ParticleCuboid#ParticleCuboid(ParticleEffect, int, Vector3f, Vector3f)
-     */
-    public ParticleCuboid(ParticleEffect particleEffect, int amount, @NotNull Vector3f size) {
-        this(particleEffect, new Vector3i(amount), size, new Vector3f(0));
+        this.setSize(builder.size);
+        this.setAmount(builder.amount);
+        this.setAfterDraw(builder.afterDraw);
+        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -165,19 +96,22 @@ public class ParticleCuboid extends ParticleObject {
         return new Vector3f(this.size);
     }
 
-    /** Sets the size of the cuboid object. The X axis corresponds to width, Y axis corresponds to height, and Z axis
+    /**
+     * Sets the size of the cuboid object. The X axis corresponds to width, Y axis corresponds to height, and Z axis
      * corresponds to depth.  All dimensions must be positive.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param size The size, a vector of positive numbers
      * @return The previous size
      *
      * @see ParticleCuboid#setSize(float)
      */
-    public Vector3f setSize(Vector3f size) {
+    public final Vector3f setSize(Vector3f size) {
         if (size.x <= 0 || size.y <= 0 || size.z <= 0) {
             throw new IllegalArgumentException("One of the size axis is below or equal to zero");
         }
-        Vector3f prevSize = new Vector3f(this.size);
+        Vector3f prevSize = this.size;
         // Defensive copy to prevent unintended modification
         this.size = new Vector3f(size);
         return prevSize;
@@ -197,25 +131,21 @@ public class ParticleCuboid extends ParticleObject {
         return this.setSize(new Vector3f(size, size, size));
     }
 
-    /** THIS METHOD SHOULD NOT BE USED */
-    @Override
-    @Deprecated
-    public int setAmount(int amount) {
-        throw new UnsupportedOperationException("The method used is deprecated. It is not meant to be used");
-    }
-
-    /** Sets the amount per area.  The X coordinate dictates the particles per line on the bottom face, the Y
+    /**
+     * Sets the amount per area.  The X coordinate dictates the particles per line on the bottom face, the Y
      * coordinate dictates the particles per line on the top face, and the Z coordinate dictates the particles per
      * vertical bar of the cuboid.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param amount The amount per area
      * @return The previous amount to use
      */
-    public Vector3i setAmount(Vector3i amount) {
+    public final Vector3i setAmount(Vector3i amount) {
         if (amount.x <= 0 || amount.y <= 0 || amount.z <= 0) {
             throw new IllegalArgumentException("One of the amount of particles axis is below or equal to 0");
         }
-        Vector3i prevAmount = new Vector3i(this.amount);
+        Vector3i prevAmount = this.amount;
         // Defensive copy to prevent unintended modification
         this.amount = new Vector3i(amount);
         return prevAmount;
@@ -304,12 +234,15 @@ public class ParticleCuboid extends ParticleObject {
         this.endDraw(renderer, step, drawPos);
     }
 
-    /** Set the interceptor to run after drawing the cuboid.  The interceptor will be provided
+    /**
+     * Set the interceptor to run after drawing the cuboid.  The interceptor will be provided
      * with references to the {@link ServerWorld} and the step number of the animation.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
-    public void setAfterDraw(DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw) {
+    public final void setAfterDraw(DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw) {
         this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
     }
 
@@ -318,13 +251,16 @@ public class ParticleCuboid extends ParticleObject {
         this.afterDraw.apply(interceptData, this);
     }
 
-    /** Set the interceptor to run prior to drawing the cuboid.  The interceptor will be provided
+    /**
+     * Set the interceptor to run prior to drawing the cuboid.  The interceptor will be provided
      * with references to the {@link ServerWorld}, the step number of the animation, and the
      * vertices of the cuboid.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param beforeDraw the new interceptor to execute prior to drawing each particle
      */
-    public void setBeforeDraw(DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw) {
+    public final void setBeforeDraw(DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
     }
 
@@ -333,5 +269,69 @@ public class ParticleCuboid extends ParticleObject {
         interceptData.addMetadata(BeforeDrawData.VERTICES, vertices);
         this.beforeDraw.apply(interceptData, this);
         return interceptData;
+    }
+
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+        protected Vector3f size = new Vector3f();
+        protected Vector3i amount = new Vector3i();
+        protected DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw;
+        protected DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw;
+
+        private Builder() {}
+
+        /**
+         * Set the size on the builder to construct a cube (all edges will have equal length).  This method is not
+         * cumulative; repeated calls to either {@code size} method will overwrite the value.
+         */
+        public B size(float size) {
+            this.size = new Vector3f(size);
+            return self();
+        }
+
+        /**
+         * Set the size on the builder.  This method is not cumulative; repeated calls to either {@code size} method
+         * will overwrite the value.
+         */
+        public B size(Vector3f size) {
+            this.size = size;
+            return self();
+        }
+
+        /**
+         * Set the amount of particles to use on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         *
+         * @see ParticleCuboid#setAmount(Vector3i)
+         */
+        public B amount(Vector3i amount) {
+            this.amount = amount;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleCuboid#setAfterDraw(DrawInterceptor)
+         */
+        public B afterDraw(DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw) {
+            this.afterDraw = afterDraw;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleCuboid#setBeforeDraw(DrawInterceptor)
+         */
+        public B beforeDraw(DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw) {
+            this.beforeDraw = beforeDraw;
+            return self();
+        }
+
+        @Override
+        public ParticleCuboid build() {
+            return new ParticleCuboid(this);
+        }
     }
 }

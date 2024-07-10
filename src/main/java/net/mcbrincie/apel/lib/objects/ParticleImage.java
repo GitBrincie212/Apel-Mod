@@ -30,7 +30,7 @@ public class ParticleImage extends ParticleObject {
     private HashMap<Vector3f, ParticleEffect> positions;
 
     public ParticleImage(String filename, Vector3f rotation) {
-        super(null, rotation);
+        super(null, rotation, new Vector3f(0), 1);
         this.setFilename(filename);
     }
 
@@ -80,13 +80,6 @@ public class ParticleImage extends ParticleObject {
     public PalateGenerator getPalateGenerator() {return this.palateGenerator;}
 
     public String getFilename() {return filename;}
-
-    /** THIS METHOD SHOULD NOT BE USED */
-    @Deprecated
-    @Override
-    public ParticleEffect setParticleEffect(ParticleEffect particle) {
-        throw new UnsupportedOperationException("ParticleImage doesn't support setting a particle effect.");
-    }
 
     /** THIS METHOD SHOULD NOT BE USED */
     @Override
