@@ -17,7 +17,8 @@ import java.util.Optional;
  * <p>
  * <strong>Note: </strong>ParticleCuboid does not respect the {@link #getAmount()} or {@link #setAmount(int)} methods
  * inherited from ParticleObject.  Instead, it stores amounts as described in {@link #getAmount(AreaLabel)} and
- * {@link #setAmount(Vector3i)}.
+ * {@link #setAmount(Vector3i)}.  This also means that the builder method {@link ParticleObject.Builder#amount(int)} is
+ * not ideal to use, though it will propagate an integer {@code i} into the vector {@code (i, i, i)}.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCuboid extends ParticleObject {
@@ -337,6 +338,10 @@ public class ParticleCuboid extends ParticleObject {
 
         @Override
         public ParticleCuboid build() {
+            // Handle the amount being set via integer instead of Vector3i
+            if (this.amount.equals(new Vector3i()) && super.amount > 0) {
+                this.amount(new Vector3i(super.amount));
+            }
             return new ParticleCuboid(this);
         }
     }
