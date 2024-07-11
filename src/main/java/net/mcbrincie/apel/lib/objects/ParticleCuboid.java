@@ -307,6 +307,12 @@ public class ParticleCuboid extends ParticleObject {
             return self();
         }
 
+        @Override
+        public B amount(int amount) {
+            this.amount = new Vector3i(amount, amount, amount);
+            return self();
+        }
+
         /**
          * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
          * the value.

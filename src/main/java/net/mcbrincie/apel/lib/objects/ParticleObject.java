@@ -280,7 +280,7 @@ public abstract class ParticleObject {
          * Set the particle amount on the builder.  This method is not cumulative; repeated calls will overwrite the
          * value.
          */
-        public final B amount(int amount) {
+        public B amount(int amount) {
             this.amount = amount;
             return self();
         }
