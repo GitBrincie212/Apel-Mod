@@ -2,15 +2,11 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
-import java.util.Optional;
 
 
 /** The particle object class that represents a 2D regular polygon. Regular polygons contain the
@@ -19,28 +15,21 @@ import java.util.Optional;
  * will have.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticlePolygon extends ParticleObject {
+public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     protected int sides;
     protected float size;
 
     protected HashMap<Integer, Vector3f[]> cachedShapes = new HashMap<>();
-
-    private DrawInterceptor<ParticlePolygon, CommonData> afterDraw;
-    private DrawInterceptor<ParticlePolygon, CommonData> beforeDraw;
-
-    /** There is no data being transmitted */
-    public enum CommonData {}
 
     public static Builder<?> builder() {
         return new Builder<>();
     }
 
     private ParticlePolygon(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
         this.setSides(builder.sides);
         this.setSize(builder.size);
-        this.setAfterDraw(builder.afterDraw);
-        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -53,8 +42,6 @@ public class ParticlePolygon extends ParticleObject {
         this.sides = polygon.sides;
         this.size = polygon.size;
         this.cachedShapes = polygon.cachedShapes;
-        this.beforeDraw = polygon.beforeDraw;
-        this.afterDraw = polygon.afterDraw;
     }
 
     /**
@@ -111,22 +98,18 @@ public class ParticlePolygon extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step);
-
+    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         Vector3f[] vertices = getRawVertices();
         // Defensive copy
-        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
         this.computeVertices(vertices, objectDrawPos);
 
         // Divide the particles evenly among sides
         int particlesPerLine = this.amount / this.sides;
         for (int i = 0; i < vertices.length - 1; i++) {
-            renderer.drawLine(this.particleEffect, step, vertices[i], vertices[i + 1], particlesPerLine);
+            renderer.drawLine(
+                    this.particleEffect, drawContext.getCurrentStep(), vertices[i], vertices[i + 1], particlesPerLine);
         }
-
-        this.doAfterDraw(renderer.getServerWorld(), step);
-        this.endDraw(renderer, step, drawPos);
     }
 
     private @NotNull Vector3f[] getRawVertices() {
@@ -165,45 +148,9 @@ public class ParticlePolygon extends ParticleObject {
         }
     }
 
-    /**
-     * Sets the interceptor to run after drawing the polygon. The interceptor will be provided with references to
-     * the {@link ServerWorld}, the animation step number, and the ParticlePolygon instance.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param afterDraw The new interceptor to use
-     */
-    public final void setAfterDraw(DrawInterceptor<ParticlePolygon, CommonData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doAfterDraw(ServerWorld world, int step) {
-        InterceptData<CommonData> interceptData = new InterceptData<>(world, null, step, CommonData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
-
-    /**
-     * Sets the interceptor to run before drawing the polygon. The interceptor will be provided with references to
-     * the {@link ServerWorld}, the animation step number, and the ParticlePolygon instance.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param beforeDraw The new interceptor to use
-     */
-    public final void setBeforeDraw(DrawInterceptor<ParticlePolygon, CommonData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doBeforeDraw(ServerWorld world, int step) {
-        InterceptData<CommonData> interceptData = new InterceptData<>(world, null, step, CommonData.class);
-        this.beforeDraw.apply(interceptData, this);
-    }
-
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePolygon> {
         protected int sides;
         protected float size;
-        protected DrawInterceptor<ParticlePolygon, CommonData> afterDraw;
-        protected DrawInterceptor<ParticlePolygon, CommonData> beforeDraw;
 
         private Builder() {}
 
@@ -223,28 +170,6 @@ public class ParticlePolygon extends ParticleObject {
          */
         public B size(float size) {
             this.size = size;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticlePolygon#setAfterDraw(DrawInterceptor)
-         */
-        public B afterDraw(DrawInterceptor<ParticlePolygon, CommonData> afterDraw) {
-            this.afterDraw = afterDraw;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticlePolygon#setBeforeDraw(DrawInterceptor)
-         */
-        public B beforeDraw(DrawInterceptor<ParticlePolygon, CommonData> beforeDraw) {
-            this.beforeDraw = beforeDraw;
             return self();
         }
 

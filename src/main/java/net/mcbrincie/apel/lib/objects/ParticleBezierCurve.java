@@ -1,41 +1,36 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 import oshi.util.tuples.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /** The particle object class that represents a series of 3D Bézier curves. It is a bit more
  * advanced than the {@code ParticleLine} due to its curvature and flexibility in terms of
  * its shape. Bézier curves can be linear, but it is recommended to use {@code ParticleLine} if a line is desired.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleBezierCurve extends ParticleObject {
+public class ParticleBezierCurve extends ParticleObject<ParticleBezierCurve> {
     protected List<BezierCurve> bezierCurves;
     protected List<Integer> amounts;
 
-    private DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw;
-    private DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw;
-
-    public enum CommonDrawData {BEZIER_CURVE, AMOUNT}
+    public static final DrawContext.Key<BezierCurve> BEZIER_CURVE = new DrawContext.Key<>("bezierCurve") {};
+    public static final DrawContext.Key<Integer> AMOUNT = DrawContext.integerKey("amount");
 
     public static Builder<?> builder() {
         return new Builder<>();
     }
 
     private ParticleBezierCurve(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        super(
+                builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+                builder.afterDraw
+        );
         this.setBezierCurves(builder.bezierCurves, builder.amounts);
-        this.setBeforeDraw(builder.beforeDraw);
-        this.setAfterDraw(builder.afterDraw);
     }
 
     /** The copy constructor for a specific particle object. It makes shallow copies of all
@@ -47,8 +42,6 @@ public class ParticleBezierCurve extends ParticleObject {
         super(curve);
         this.bezierCurves = new ArrayList<>(curve.bezierCurves);
         this.amounts = new ArrayList<>(curve.amounts);
-        this.beforeDraw = curve.beforeDraw;
-        this.afterDraw = curve.afterDraw;
     }
 
     /**
@@ -169,70 +162,27 @@ public class ParticleBezierCurve extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        int index = 0;
+    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         // Compute total offset from origin
-        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
 
-        for (BezierCurve bezierCurve : this.bezierCurves) {
-            int amountForCurve = this.amounts.get(index);
-            InterceptData<CommonDrawData> interceptData =
-                    this.doBeforeDraw(renderer.getServerWorld(), bezierCurve, amountForCurve, step);
-            bezierCurve = interceptData.getMetadata(CommonDrawData.BEZIER_CURVE, bezierCurve);
-            amountForCurve = interceptData.getMetadata(CommonDrawData.AMOUNT, amountForCurve);
+        int curveCount = this.bezierCurves.size();
+        for (int i = 0; i < curveCount; i++) {
+            drawContext.addMetadata(BEZIER_CURVE, this.bezierCurves.get(i));
+            drawContext.addMetadata(AMOUNT, this.amounts.get(i));
+            this.beforeDraw.apply(drawContext, this);
+            BezierCurve bezierCurve = drawContext.getMetadata(BEZIER_CURVE, this.bezierCurves.get(i));
+            int amountForCurve = drawContext.getMetadata(AMOUNT, this.amounts.get(i));
 
-            renderer.drawBezier(this.particleEffect, step, drawPos, bezierCurve, this.rotation, amountForCurve);
-            this.doAfterDraw(renderer.getServerWorld(), bezierCurve, amountForCurve, step);
+            renderer.drawBezier(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, bezierCurve,
+                                this.rotation, amountForCurve
+            );
         }
-        this.endDraw(renderer, step, drawPos);
     }
 
-    /**
-     * Set the interceptor to run after drawing the Bézier curve.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the animation step number, and the ParticleBezierCurve
-     * instance.  Metadata will include the individual Bézier curve object and its amount of particles.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param afterDraw the new interceptor to execute after drawing the Bézier curve
-     */
-    public final void setAfterDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doAfterDraw(ServerWorld world, BezierCurve curve, int amount, int step) {
-        InterceptData<CommonDrawData> interceptData = new InterceptData<>(world, null, step, CommonDrawData.class);
-        interceptData.addMetadata(CommonDrawData.BEZIER_CURVE, curve);
-        interceptData.addMetadata(CommonDrawData.AMOUNT, amount);
-        this.afterDraw.apply(interceptData, this);
-    }
-
-    /**
-     * Set the interceptor to run before drawing the Bézier curve.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the animation step number, and the ParticleBezierCurve
-     * instance.  Metadata will include the individual Bézier curve object and its amount of particles.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param beforeDraw the new interceptor to execute before drawing the Bézier curve
-     */
-    public final void setBeforeDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private InterceptData<CommonDrawData> doBeforeDraw(ServerWorld world, BezierCurve curve, int amount, int step) {
-        InterceptData<CommonDrawData> interceptData = new InterceptData<>(world, null, step, CommonDrawData.class);
-        interceptData.addMetadata(CommonDrawData.BEZIER_CURVE, curve);
-        interceptData.addMetadata(CommonDrawData.AMOUNT, amount);
-        this.beforeDraw.apply(interceptData, this);
-        return interceptData;
-    }
-
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleBezierCurve> {
         protected List<BezierCurve> bezierCurves = new ArrayList<>();
         protected List<Integer> amounts = new ArrayList<>();
-        protected DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw;
-        protected DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw;
 
         private Builder() {}
 
@@ -269,28 +219,6 @@ public class ParticleBezierCurve extends ParticleObject {
          */
         public B amounts(List<Integer> amounts) {
             this.amounts.addAll(amounts);
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleBezierCurve#setAfterDraw(DrawInterceptor)
-         */
-        public B afterDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> afterDraw) {
-            this.afterDraw = afterDraw;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleBezierCurve#setBeforeDraw(DrawInterceptor)
-         */
-        public B beforeDraw(DrawInterceptor<ParticleBezierCurve, CommonDrawData> beforeDraw) {
-            this.beforeDraw = beforeDraw;
             return self();
         }
 

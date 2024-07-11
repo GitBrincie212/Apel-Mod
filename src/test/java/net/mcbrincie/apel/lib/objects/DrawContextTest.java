@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,7 @@ class DrawContextTest {
         DrawContext.Key<ParticleObject<?>> objectInUse = DrawContext.particleObjectKey("objectInUse");
 
         // Given a ParticlePoint
-        ParticlePoint particlePoint = new ParticlePoint((ParticleEffect) null);
+        ParticlePoint particlePoint = ParticlePoint.builder().particleEffect(null).build();
 
         // When metadata is added, it does not throw
         context.addMetadata(objectInUse, particlePoint);

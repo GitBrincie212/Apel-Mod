@@ -1,12 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 /** The particle object class that represents a circle (2D shape) and not a 3D sphere.
  * It has a radius which dictates how large or small the circle is depending on the
@@ -16,31 +11,17 @@ import java.util.Optional;
  * angles for rotation.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCircle extends ParticleObject {
+public class ParticleCircle extends ParticleObject<ParticleCircle> {
     protected float radius;
 
-    private DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw;
-    private DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw;
-
-    /** This data is used before calculations (it contains the iterated rotation) */
-    public enum BeforeDrawData {}
-
-    /** This data is used after calculations (it contains the drawing position) */
-    public enum AfterDrawData {}
-
-    /**
-     * Provide a builder instance.
-     * @return A builder instance
-     */
     public static Builder<?> builder() {
         return new Builder<>();
     }
 
     private ParticleCircle(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
         this.setRadius(builder.radius);
-        this.setBeforeDraw(builder.beforeDraw);
-        this.setAfterDraw(builder.afterDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -51,8 +32,6 @@ public class ParticleCircle extends ParticleObject {
     public ParticleCircle(ParticleCircle circle) {
         super(circle);
         this.radius = circle.radius;
-        this.afterDraw = circle.afterDraw;
-        this.beforeDraw = circle.beforeDraw;
     }
 
     /** Gets the radius of the ParticleCircle and returns it.
@@ -81,55 +60,16 @@ public class ParticleCircle extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
-        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
         renderer.drawEllipse(
-                this.particleEffect, step, objectDrawPos, this.radius, this.radius, this.rotation, this.amount);
-        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
-        this.endDraw(renderer, step, drawPos);
+                this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, this.radius, this.radius,
+                this.rotation, this.amount
+        );
     }
 
-    /**
-     * Set the interceptor to run after drawing the circle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position of the center of the circle.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param afterDraw the new interceptor to execute after drawing each particle
-     */
-    public void setAfterDraw(DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doAfterDraw(ServerWorld world, int step, Vector3f centerPos) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, centerPos, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
-
-    /**
-     * Set the interceptor to run prior to drawing the circle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position of the center of the circle.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param beforeDraw the new interceptor to execute prior to drawing each particle
-     */
-    public void setBeforeDraw(DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        this.beforeDraw.apply(interceptData, this);
-    }
-
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCircle> {
         protected float radius;
-        protected DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw;
-        protected DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw;
 
         private Builder() {}
 
@@ -138,28 +78,6 @@ public class ParticleCircle extends ParticleObject {
          */
         public B radius(float radius) {
             this.radius = radius;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleCircle#setAfterDraw(DrawInterceptor)
-         */
-        public B afterDraw(DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw) {
-            this.afterDraw = afterDraw;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleCircle#setBeforeDraw(DrawInterceptor)
-         */
-        public B beforeDraw(DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw) {
-            this.beforeDraw = beforeDraw;
             return self();
         }
 

@@ -12,13 +12,14 @@ package net.mcbrincie.apel.lib.objects;
  * an offset, changing a vertex, and so on.  The {@link DrawContext} parameter
  * will contain additional useful information for the point at which the intercept
  * occurs, and modifications to that information are also done in-place via its
- * {@link DrawContext#getMetadata(String, Object)} and
- * {@link DrawContext#addMetadata(String, Object)} methods to retrieve and update
- * metadata values, respectively.
- * @param <T> The type being intercepted
+ * {@link DrawContext#getMetadata(DrawContext.Key, Object)} and
+ * {@link DrawContext#addMetadata(DrawContext.Key, Object)} methods to retrieve and
+ * update metadata values, respectively.
+ *
+ * @param <T> The ParticleObject type being intercepted
  */
 @FunctionalInterface
-public interface DrawInterceptor<T> {
+public interface DrawInterceptor<T extends ParticleObject<T>> {
     /** Apply the interceptor.
      * <br><br>
      * Return values are sent via the {@code InterceptData}'s metadata map.
@@ -26,14 +27,14 @@ public interface DrawInterceptor<T> {
      * @param data metadata useful within the interceptor
      * @param obj the object being intercepted
      */
-    void apply(DrawContext data, ParticleObject<T> obj);
+    void apply(DrawContext data, T obj);
 
     /** An identity interceptor that does nothing.  May be used when clearing an
      * interceptor.
      * @return the identity interceptor
      * @param <T> The type being intercepted
      */
-    static <T> DrawInterceptor<T> identity() {
+    static <T extends ParticleObject<T>> DrawInterceptor<T> identity() {
         return (data, object) -> {};
     }
 }
