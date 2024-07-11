@@ -1,43 +1,29 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 /** The particle object class that represents a tetrahedron which may be irregular.
  *  It has four vertices that make it up which must not be coplanar with each other.
  *  The vertices can be set individually or by supplying a list of four vertices.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleTetrahedron extends ParticleObject {
+public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
     protected Vector3f vertex1;
     protected Vector3f vertex2;
     protected Vector3f vertex3;
     protected Vector3f vertex4;
-
-    private DrawInterceptor<ParticleTetrahedron, AfterDrawData> afterDraw;
-    private DrawInterceptor<ParticleTetrahedron, BeforeDrawData> beforeDraw;
-
-    /** There is no data being transmitted */
-    public enum BeforeDrawData {}
-    public enum AfterDrawData {}
 
     public static Builder<?> builder() {
         return new Builder<>();
     }
 
     private ParticleTetrahedron(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
         this.setVertices(builder.vertex1, builder.vertex2, builder.vertex3, builder.vertex4);
-        this.setAfterDraw(builder.afterDraw);
-        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -51,8 +37,6 @@ public class ParticleTetrahedron extends ParticleObject {
         this.vertex2 = new Vector3f(tetrahedron.vertex2);
         this.vertex3 = new Vector3f(tetrahedron.vertex3);
         this.vertex4 = new Vector3f(tetrahedron.vertex4);
-        this.beforeDraw = tetrahedron.beforeDraw;
-        this.afterDraw = tetrahedron.afterDraw;
     }
 
     private void checkValidTetrahedron(Vector3f vertex1, Vector3f vertex2, Vector3f vertex3, Vector3f vertex4) {
@@ -193,14 +177,13 @@ public class ParticleTetrahedron extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
+    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
 
         // Rotation
         Quaternionfc quaternion =
                 new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         // Defensive copy of `drawPos`
-        Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
+        Vector3f totalOffset = new Vector3f(drawContext.getPosition()).add(this.offset);
 
         // Defensive copies of internal vertices
         Vector3f v1 = this.rigidTransformation(this.vertex1, quaternion, totalOffset);
@@ -208,60 +191,20 @@ public class ParticleTetrahedron extends ParticleObject {
         Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
         Vector3f v4 = this.rigidTransformation(this.vertex4, quaternion, totalOffset);
 
+        int step = drawContext.getCurrentStep();
         renderer.drawLine(this.particleEffect, step, v1, v2, this.amount);
         renderer.drawLine(this.particleEffect, step, v1, v3, this.amount);
         renderer.drawLine(this.particleEffect, step, v1, v4, this.amount);
         renderer.drawLine(this.particleEffect, step, v2, v3, this.amount);
         renderer.drawLine(this.particleEffect, step, v2, v4, this.amount);
         renderer.drawLine(this.particleEffect, step, v3, v4, this.amount);
-
-        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
-        this.endDraw(renderer, step, drawPos);
     }
 
-    /**
-     * Set the interceptor to run after drawing the tetrahedron.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the tetrahedron is rendered, the
-     * step number of the animation, and the ParticleTetrahedron instance.  There is no other data attached.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param afterDraw the new interceptor to execute prior to drawing the tetrahedron
-     */
-    public final void setAfterDraw(DrawInterceptor<ParticleTetrahedron, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doAfterDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, pos, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
-
-    /**
-     * Set the interceptor to run prior to drawing the tetrahedron.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the tetrahedron is rendered, and the
-     * step number of the animation, and the ParticleTetrahedron instance.  There is no other data attached.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param beforeDraw the new interceptor to execute prior to drawing the tetrahedron
-     */
-    public final void setBeforeDraw(DrawInterceptor<ParticleTetrahedron, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        this.beforeDraw.apply(interceptData, this);
-    }
-
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleTetrahedron> {
         protected Vector3f vertex1;
         protected Vector3f vertex2;
         protected Vector3f vertex3;
         protected Vector3f vertex4;
-        protected DrawInterceptor<ParticleTetrahedron, AfterDrawData> afterDraw;
-        protected DrawInterceptor<ParticleTetrahedron, BeforeDrawData> beforeDraw;
 
         private Builder() {}
 
@@ -294,28 +237,6 @@ public class ParticleTetrahedron extends ParticleObject {
          */
         public B vertex4(Vector3f vertex4) {
             this.vertex4 = vertex4;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleTetrahedron#setAfterDraw(DrawInterceptor)
-         */
-        public B afterDraw(DrawInterceptor<ParticleTetrahedron, AfterDrawData> afterDraw) {
-            this.afterDraw = afterDraw;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleTetrahedron#setBeforeDraw(DrawInterceptor)
-         */
-        public B beforeDraw(DrawInterceptor<ParticleTetrahedron, BeforeDrawData> beforeDraw) {
-            this.beforeDraw = beforeDraw;
             return self();
         }
 

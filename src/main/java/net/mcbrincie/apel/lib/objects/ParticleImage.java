@@ -20,7 +20,7 @@ import java.util.HashMap;
  * some known issues as well as being unoptimized
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleImage extends ParticleObject {
+public class ParticleImage extends ParticleObject<ParticleImage> {
     private String filename;
     private BufferedImage image;
     private boolean transparency = false;
@@ -30,7 +30,7 @@ public class ParticleImage extends ParticleObject {
     private HashMap<Vector3f, ParticleEffect> positions;
 
     public ParticleImage(String filename, Vector3f rotation) {
-        super(null, rotation, new Vector3f(0), 1);
+        super(null, rotation, new Vector3f(0), 1, DrawInterceptor.identity(), DrawInterceptor.identity());
         this.setFilename(filename);
     }
 
@@ -89,15 +89,15 @@ public class ParticleImage extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
+    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         int width = this.image.getWidth();
         int height = this.image.getHeight();
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 int rgba = this.rgbArray[y * width + x];
                 int alpha = (rgba >> 24) & 0xff;
-                ParticleEffect particle = this.palateGenerator.apply(rgba, x, y, drawPos);
-                Vector3f pos = drawPos.add(x, y, 0).mul(0.01f);
+                ParticleEffect particle = this.palateGenerator.apply(rgba, x, y, drawContext.getPosition());
+                Vector3f pos = new Vector3f(drawContext.getPosition()).add(x, y, 0).mul(0.01f);
                 // this.drawParticle(particle, renderer, step, pos);
             }
         }

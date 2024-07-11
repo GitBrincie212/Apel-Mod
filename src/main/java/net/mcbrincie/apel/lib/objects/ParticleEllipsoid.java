@@ -1,13 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 /**
  * The particle object class that represents an ellipsoid (3D shape) and not a 2D circle.
@@ -15,36 +9,22 @@ import java.util.Optional;
  * on to the ellipsoid to distribute particles evenly across the surface.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleEllipsoid extends ParticleObject {
+public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
     public static final double SQRT_5_PLUS_1 = 3.23606;
     protected float xSemiAxis;
     protected float ySemiAxis;
     protected float zSemiAxis;
-
-    private DrawInterceptor<ParticleEllipsoid, AfterDrawData> afterDraw;
-    private DrawInterceptor<ParticleEllipsoid, BeforeDrawData> beforeDraw;
-
-    /**
-     * This data is used before calculations
-     */
-    public enum BeforeDrawData {}
-
-    /**
-     * This data is used after calculations
-     */
-    public enum AfterDrawData {}
 
     public static Builder<?> builder() {
         return new Builder<>();
     }
 
     private ParticleEllipsoid(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
         this.setXSemiAxis(builder.xSemiAxis);
         this.setYSemiAxis(builder.ySemiAxis);
         this.setZSemiAxis(builder.zSemiAxis);
-        this.setAfterDraw(builder.afterDraw);
-        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /**
@@ -58,8 +38,6 @@ public class ParticleEllipsoid extends ParticleObject {
         this.xSemiAxis = particleEllipsoid.xSemiAxis;
         this.ySemiAxis = particleEllipsoid.ySemiAxis;
         this.zSemiAxis = particleEllipsoid.zSemiAxis;
-        this.beforeDraw = particleEllipsoid.beforeDraw;
-        this.afterDraw = particleEllipsoid.afterDraw;
     }
 
     /**
@@ -141,58 +119,17 @@ public class ParticleEllipsoid extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
-        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
-        renderer.drawEllipsoid(this.particleEffect, step, objectDrawPos, this.xSemiAxis, this.ySemiAxis, this.zSemiAxis,
-                               this.rotation, this.amount
+    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
+        renderer.drawEllipsoid(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, this.xSemiAxis,
+                               this.ySemiAxis, this.zSemiAxis, this.rotation, this.amount
         );
-        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
-        this.endDraw(renderer, step, drawPos);
     }
 
-    /**
-     * Set the interceptor to run after drawing the ellipsoid.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the center
-     * of the ellipsoid.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param afterDraw the new interceptor to execute after drawing each particle
-     */
-    public final void setAfterDraw(DrawInterceptor<ParticleEllipsoid, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doAfterDraw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
-
-    /**
-     * Set the interceptor to run prior to drawing the ellipsoid.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the center
-     * of the ellipsoid.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param beforeDraw the new interceptor to execute prior to drawing the ellipsoid
-     */
-    public final void setBeforeDraw(DrawInterceptor<ParticleEllipsoid, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doBeforeDraw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, drawPos, step, BeforeDrawData.class);
-        this.beforeDraw.apply(interceptData, this);
-    }
-
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleEllipsoid> {
         protected float xSemiAxis;
         protected float ySemiAxis;
         protected float zSemiAxis;
-        protected DrawInterceptor<ParticleEllipsoid, AfterDrawData> afterDraw;
-        protected DrawInterceptor<ParticleEllipsoid, BeforeDrawData> beforeDraw;
 
         private Builder() {}
 
@@ -217,28 +154,6 @@ public class ParticleEllipsoid extends ParticleObject {
          */
         public B zSemiAxis(float zSemiAxis) {
             this.zSemiAxis = zSemiAxis;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleEllipsoid#setAfterDraw(DrawInterceptor)
-         */
-        public B afterDraw(DrawInterceptor<ParticleEllipsoid, AfterDrawData> afterDraw) {
-            this.afterDraw = afterDraw;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleEllipsoid#setBeforeDraw(DrawInterceptor)
-         */
-        public B beforeDraw(DrawInterceptor<ParticleEllipsoid, BeforeDrawData> beforeDraw) {
-            this.beforeDraw = beforeDraw;
             return self();
         }
 

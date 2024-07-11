@@ -1,31 +1,19 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 /** The particle object class that represents a 2D triangle.
  * It has three vertices that make it up, all of them must be coplanar with each other.
  * The vertices can be set individually or by supplying a list of three vertices.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleTriangle extends ParticleObject {
+public class ParticleTriangle extends ParticleObject<ParticleTriangle> {
     protected Vector3f vertex1;
     protected Vector3f vertex2;
     protected Vector3f vertex3;
-
-    private DrawInterceptor<ParticleTriangle, AfterDrawData> afterDraw;
-    private DrawInterceptor<ParticleTriangle, BeforeDrawData> beforeDraw;
-
-    /** There is no data being transmitted */
-    public enum BeforeDrawData {}
-    public enum AfterDrawData {}
 
     private final IllegalArgumentException UNBALANCED_VERTICES = new IllegalArgumentException(
             "Unbalanced vertices, there must be only 3 vertices"
@@ -36,10 +24,9 @@ public class ParticleTriangle extends ParticleObject {
     }
 
     private ParticleTriangle(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
         this.setVertices(builder.vertex1, builder.vertex2, builder.vertex3);
-        this.setAfterDraw(builder.afterDraw);
-        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -52,8 +39,6 @@ public class ParticleTriangle extends ParticleObject {
         this.vertex1 = new Vector3f(triangle.vertex1);
         this.vertex2 = new Vector3f(triangle.vertex2);
         this.vertex3 = new Vector3f(triangle.vertex3);
-        this.beforeDraw = triangle.beforeDraw;
-        this.afterDraw = triangle.afterDraw;
     }
 
     private void checkValidTriangle(Vector3f vertex1, Vector3f vertex2, Vector3f vertex3) {
@@ -164,70 +149,29 @@ public class ParticleTriangle extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
+    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
 
         // Rotation
         Quaternionfc quaternion =
                 new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         // Defensive copy of `drawPos`
-        Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
+        Vector3f totalOffset = new Vector3f(drawContext.getPosition()).add(this.offset);
 
         // Defensive copies of internal vertices
         Vector3f v1 = this.rigidTransformation(this.vertex1, quaternion, totalOffset);
         Vector3f v2 = this.rigidTransformation(this.vertex2, quaternion, totalOffset);
         Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
 
+        int step = drawContext.getCurrentStep();
         renderer.drawLine(this.particleEffect, step, v1, v2, this.amount);
         renderer.drawLine(this.particleEffect, step, v2, v3, this.amount);
         renderer.drawLine(this.particleEffect, step, v3, v1, this.amount);
-
-        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
-        this.endDraw(renderer, step, drawPos);
     }
 
-    /**
-     * Set the interceptor to run after drawing the triangle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the triangle is rendered, the
-     * step number of the animation, and the ParticleTriangle instance.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param afterDraw the new interceptor to execute prior to drawing the triangle
-     */
-    public final void setAfterDraw(DrawInterceptor<ParticleTriangle, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doAfterDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, pos, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
-
-    /**
-     * Set the interceptor to run prior to drawing the triangle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the triangle is rendered, the
-     * step number of the animation, and the ParticleTriangle instance.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param beforeDraw the new interceptor to execute prior to drawing the triangle
-     */
-    public final void setBeforeDraw(DrawInterceptor<ParticleTriangle, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        this.beforeDraw.apply(interceptData, this);
-    }
-
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleTriangle> {
         protected Vector3f vertex1;
         protected Vector3f vertex2;
         protected Vector3f vertex3;
-        protected DrawInterceptor<ParticleTriangle, AfterDrawData> afterDraw;
-        protected DrawInterceptor<ParticleTriangle, BeforeDrawData> beforeDraw;
 
         private Builder() {}
 
@@ -252,28 +196,6 @@ public class ParticleTriangle extends ParticleObject {
          */
         public B vertex3(Vector3f vertex3) {
             this.vertex3 = vertex3;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleTriangle#setAfterDraw(DrawInterceptor)
-         */
-        public B afterDraw(DrawInterceptor<ParticleTriangle, AfterDrawData> afterDraw) {
-            this.afterDraw = afterDraw;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleTriangle#setBeforeDraw(DrawInterceptor)
-         */
-        public B beforeDraw(DrawInterceptor<ParticleTriangle, BeforeDrawData> beforeDraw) {
-            this.beforeDraw = beforeDraw;
             return self();
         }
 

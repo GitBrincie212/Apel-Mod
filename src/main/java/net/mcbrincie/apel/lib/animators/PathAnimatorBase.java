@@ -266,7 +266,7 @@ public abstract class PathAnimatorBase {
     public void handleDrawingStep(ApelServerRenderer renderer, int step, Vector3f drawPosition) throws SeqMissingException {
         Runnable func = () -> {
             renderer.beforeFrame(step, drawPosition);
-            this.particleObject.draw(renderer, step, drawPosition);
+            this.particleObject.doDraw(renderer, step, drawPosition);
             renderer.afterFrame(step, drawPosition);
         };
         if (this.delay == 0) {

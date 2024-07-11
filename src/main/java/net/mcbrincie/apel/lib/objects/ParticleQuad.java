@@ -1,15 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 
 /** The particle object class that represents a quadrilateral.  This can be a rectangle, a square, a trapezoid,
@@ -26,35 +20,29 @@ import java.util.Optional;
  * </pre>
  */
 @SuppressWarnings("unused")
-public class ParticleQuad extends ParticleObject {
+public class ParticleQuad extends ParticleObject<ParticleQuad> {
     protected Vector3f vertex1;
     protected Vector3f vertex2;
     protected Vector3f vertex3;
     protected Vector3f vertex4;
 
-    private DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw;
-    private DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw;
-
-    /** There is no data being transmitted */
-    public enum BeforeDrawData {}
-
     /** This data is used after calculations (it contains the modified four vertices) */
-    public enum AfterDrawData {
-        VERTEX_1, VERTEX_2, VERTEX_3, VERTEX_4
-    }
+    public static final DrawContext.Key<Vector3f> VERTEX_1 = DrawContext.vector3fKey("vertex1");
+    public static final DrawContext.Key<Vector3f> VERTEX_2 = DrawContext.vector3fKey("vertex2");
+    public static final DrawContext.Key<Vector3f> VERTEX_3 = DrawContext.vector3fKey("vertex3");
+    public static final DrawContext.Key<Vector3f> VERTEX_4 = DrawContext.vector3fKey("vertex4");
 
     public static Builder<?> builder() {
         return new Builder<>();
     }
 
     private ParticleQuad(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount);
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
         this.setVertex1(builder.vertex1);
         this.setVertex2(builder.vertex2);
         this.setVertex3(builder.vertex3);
         this.setVertex4(builder.vertex4);
-        this.setAfterDraw(builder.afterDraw);
-        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -68,8 +56,6 @@ public class ParticleQuad extends ParticleObject {
         this.vertex2 = quad.vertex2;
         this.vertex3 = quad.vertex3;
         this.vertex4 = quad.vertex4;
-        this.beforeDraw = quad.beforeDraw;
-        this.afterDraw = quad.afterDraw;
     }
 
     /** Sets all vertices at once instead of one at a time.
@@ -191,77 +177,37 @@ public class ParticleQuad extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.beforeDraw(renderer.getServerWorld(), step);
+    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
 
         // Rotation
         Quaternionfc quaternion =
                 new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         // Defensive copy of `drawPos`
-        Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
+        Vector3f totalOffset = new Vector3f(drawContext.getPosition()).add(this.offset);
 
         Vector3f v1 = this.rigidTransformation(this.vertex1, quaternion, totalOffset);
         Vector3f v2 = this.rigidTransformation(this.vertex2, quaternion, totalOffset);
         Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
         Vector3f v4 = this.rigidTransformation(this.vertex4, quaternion, totalOffset);
 
+        int step = drawContext.getCurrentStep();
         renderer.drawLine(this.particleEffect, step, v1, v2, this.amount);
         renderer.drawLine(this.particleEffect, step, v2, v3, this.amount);
         renderer.drawLine(this.particleEffect, step, v3, v4, this.amount);
         renderer.drawLine(this.particleEffect, step, v4, v1, this.amount);
 
-        this.doAfterDraw(renderer.getServerWorld(), step, v1, v2, v3, v4);
-        this.endDraw(renderer, step, drawPos);
+        // Provide the four vertices to the `afterDraw` method
+        drawContext.addMetadata(VERTEX_1, v1);
+        drawContext.addMetadata(VERTEX_2, v2);
+        drawContext.addMetadata(VERTEX_3, v3);
+        drawContext.addMetadata(VERTEX_4, v4);
     }
 
-    /**
-     * Sets the interceptor to run after drawing the quadrilateral. The interceptor will be provided with references
-     * to the {@link ServerWorld}, the animation step number, and the ParticleQuad instance.  The metadata has the four
-     * modified vertices.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param afterDraw The new interceptor to use
-     */
-    public final void setAfterDraw(DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doAfterDraw(
-            ServerWorld world, int step, Vector3f alteredVertex1, Vector3f alteredVertex2, Vector3f alteredVertex3, Vector3f alteredVertex4
-    ) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, null, step, AfterDrawData.class);
-        interceptData.addMetadata(AfterDrawData.VERTEX_1, alteredVertex1);
-        interceptData.addMetadata(AfterDrawData.VERTEX_2, alteredVertex2);
-        interceptData.addMetadata(AfterDrawData.VERTEX_3, alteredVertex3);
-        interceptData.addMetadata(AfterDrawData.VERTEX_4, alteredVertex4);
-        this.afterDraw.apply(interceptData, this);
-    }
-
-    /**
-     * Set the interceptor to run before drawing the quadrilateral. The interceptor will be provided with references
-     * to the {@link ServerWorld}, the animation step number, and the ParticleQuad instance.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param beforeDraw The new interceptor to use
-     */
-    public final void setBeforeDraw(DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void beforeDraw(ServerWorld world, int step) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
-        this.beforeDraw.apply(interceptData, this);
-    }
-
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleQuad> {
         protected Vector3f vertex1;
         protected Vector3f vertex2;
         protected Vector3f vertex3;
         protected Vector3f vertex4;
-        protected DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw;
-        protected DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw;
 
         private Builder() {}
 
@@ -311,28 +257,6 @@ public class ParticleQuad extends ParticleObject {
          */
         public B vertex4(Vector3f vertex4) {
             this.vertex4 = vertex4;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleQuad#setAfterDraw(DrawInterceptor)
-         */
-        public B afterDraw(DrawInterceptor<ParticleQuad, AfterDrawData> afterDraw) {
-            this.afterDraw = afterDraw;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleQuad#setBeforeDraw(DrawInterceptor)
-         */
-        public B beforeDraw(DrawInterceptor<ParticleQuad, BeforeDrawData> beforeDraw) {
-            this.beforeDraw = beforeDraw;
             return self();
         }
 

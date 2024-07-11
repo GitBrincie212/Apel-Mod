@@ -19,7 +19,7 @@ class ParticleCombinerTest {
         ParticlePoint p2 = NULL_POINT_BUILDER.build();
 
         // Given a ParticleCombiner
-        ParticleCombiner<ParticleObject> combiner = ParticleCombiner.builder().object(p1).object(p2).build();
+        ParticleCombiner combiner = ParticleCombiner.builder().object(p1).object(p2).build();
 
         // Given points to append
         ParticlePoint p3 = NULL_POINT_BUILDER.build();
@@ -38,7 +38,7 @@ class ParticleCombinerTest {
         ParticlePoint p2 = NULL_POINT_BUILDER.build();
 
         // Given a ParticleCombiner
-        ParticleCombiner<ParticleObject> combiner = ParticleCombiner.builder().object(p1).object(p2).build();
+        ParticleCombiner combiner = ParticleCombiner.builder().object(p1).object(p2).build();
 
         // Given a point to append
         ParticlePoint p3 = NULL_POINT_BUILDER.build();
@@ -58,14 +58,14 @@ class ParticleCombinerTest {
         ParticlePoint p2 = NULL_POINT_BUILDER.build();
 
         // Given a ParticleCombiner
-        ParticleCombiner<ParticleObject> combiner = ParticleCombiner.builder().object(p1).object(p2).build();
+        ParticleCombiner combiner = ParticleCombiner.builder().object(p1).object(p2).build();
 
         // Given points to append
         ParticlePoint p3 = NULL_POINT_BUILDER.build();
         ParticlePoint p4 = NULL_POINT_BUILDER.build();
 
         // When the points are appended
-        combiner.appendObjects(p3, p4);
+        combiner.appendObjects(List.of(p3, p4));
 
         // Then the combiner has four objects
         assertEquals(4, combiner.getObjects().size());
@@ -79,7 +79,7 @@ class ParticleCombinerTest {
         ParticlePoint p3 = NULL_POINT_BUILDER.build();
 
         // Given a ParticleCombiner
-        ParticleCombiner<ParticleObject> combiner = ParticleCombiner.builder().object(p1).object(p2).object(p3).build();
+        ParticleCombiner combiner = ParticleCombiner.builder().object(p1).object(p2).object(p3).build();
 
         // Given a rotation
         Vector3f rotation = new Vector3f(0.1f);
@@ -101,7 +101,7 @@ class ParticleCombinerTest {
         ParticlePoint p3 = NULL_POINT_BUILDER.build();
 
         // Given a ParticleCombiner
-        ParticleCombiner<ParticleObject> combiner = ParticleCombiner.builder().object(p1).object(p2).object(p3).build();
+        ParticleCombiner combiner = ParticleCombiner.builder().object(p1).object(p2).object(p3).build();
 
         // Given a rotation
         Vector3f rotation = new Vector3f(0.1f);

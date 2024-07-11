@@ -1,15 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaternionf;
 import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
-
-import java.util.Optional;
 
 /** The particle object class that represents a cuboid which is a rectangle
  * living in 3D. It is a cube if all the values of the size vector
@@ -21,47 +16,38 @@ import java.util.Optional;
  * not ideal to use, though it will propagate an integer {@code i} into the vector {@code (i, i, i)}.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCuboid extends ParticleObject {
-    protected Vector3f size;
-    protected Vector3i amount;
+public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
+    protected Vector3f size = new Vector3f();
+    protected Vector3i amount = new Vector3i();
 
-    private DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw;
-    private DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw;
+    /**
+     * The vertices provided follow this indexing scheme (using Minecraft's axes where +x is east, +y is up, and
+     * +z is south), but will be rotated and translated prior to the interceptor:
+     *
+     * <pre>
+     *               y         z
+     *               ^        ↗
+     *               |       /
+     *          5----|--------6
+     *         /|    |     / /|
+     *        / |    |    / / |
+     *       /  |    |   / /  |
+     *      4-------------7   +
+     *      |   |    | /  |   |
+     *      |   |    |/   |   |
+     * x <--|--------+    |   |
+     *      |   |         |   |
+     *      |   |         |   |
+     *      |   1---------|---2
+     *      |  /          |  /
+     *      | /           | /
+     *      |/            |/
+     *      0-------------3
+     * </pre>
+     */
+    public static final DrawContext.Key<Vector3f[]> VERTICES = DrawContext.vector3fArrayKey("vertices");
 
-    /** There is no data being transmitted */
-    public enum AfterDrawData {}
-
-    /** This data is used before calculations (it contains the vertices)*/
-    public enum BeforeDrawData {
-        /**
-         * The vertices provided follow this indexing scheme (using Minecraft's axes where +x is east, +y is up, and
-         * +z is south), but will be rotated and translated prior to the interceptor:
-         *
-         * <pre>
-         *               y         z
-         *               ^        ↗
-         *               |       /
-         *          5----|--------6
-         *         /|    |     / /|
-         *        / |    |    / / |
-         *       /  |    |   / /  |
-         *      4-------------7   +
-         *      |   |    | /  |   |
-         *      |   |    |/   |   |
-         * x <--|--------+    |   |
-         *      |   |         |   |
-         *      |   |         |   |
-         *      |   1---------|---2
-         *      |  /          |  /
-         *      | /           | /
-         *      |/            |/
-         *      0-------------3
-         * </pre>
-         */
-        VERTICES,
-    }
-
-    /** This enum is used for the getter method of setAmount */
+    /** This enum is used when retrieving amounts used to render the cuboid. */
     public enum AreaLabel {
         BOTTOM_FACE, TOP_FACE, VERTICAL_BARS, ALL_FACES
     }
@@ -71,12 +57,10 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     private ParticleCuboid(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, 1);
+        super(builder.particleEffect, builder.rotation, builder.offset, 1, builder.beforeDraw, builder.afterDraw);
         // Defensive copies are made in setters to protect against in-place modification of vectors
         this.setSize(builder.size);
         this.setAmount(builder.amount);
-        this.setAfterDraw(builder.afterDraw);
-        this.setBeforeDraw(builder.beforeDraw);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -88,8 +72,6 @@ public class ParticleCuboid extends ParticleObject {
         super(cuboid);
         this.size = new Vector3f(cuboid.size);
         this.amount = new Vector3i(cuboid.amount);
-        this.beforeDraw = cuboid.beforeDraw;
-        this.afterDraw = cuboid.afterDraw;
     }
 
     public Vector3f getSize() {
@@ -176,7 +158,7 @@ public class ParticleCuboid extends ParticleObject {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
+    protected void prepareContext(DrawContext drawContext) {
         // Scale
         float width = size.x / 2f;
         float height = size.y / 2f;
@@ -185,7 +167,7 @@ public class ParticleCuboid extends ParticleObject {
         Quaternionfc quaternion =
                 new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         // Translation
-        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
         // Compute the cuboid vertices
         Vector3f vertex0 = this.rigidTransformation(width, -height, -depth, quaternion, objectDrawPos);
         Vector3f vertex1 = this.rigidTransformation(width, -height, depth, quaternion, objectDrawPos);
@@ -197,18 +179,23 @@ public class ParticleCuboid extends ParticleObject {
         Vector3f vertex7 = this.rigidTransformation(-width, height, -depth, quaternion, objectDrawPos);
 
         Vector3f[] vertices = {vertex0, vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7};
-        InterceptData<BeforeDrawData> interceptData = this.doBeforeDraw(renderer.getServerWorld(), step, vertices);
-        vertices = interceptData.getMetadata(BeforeDrawData.VERTICES, vertices);
+        drawContext.addMetadata(VERTICES, vertices);
+    }
 
-        vertex0 = vertices[0];
-        vertex1 = vertices[1];
-        vertex2 = vertices[2];
-        vertex3 = vertices[3];
-        vertex4 = vertices[4];
-        vertex5 = vertices[5];
-        vertex6 = vertices[6];
-        vertex7 = vertices[7];
+    @Override
+    public void draw(ApelServerRenderer renderer, DrawContext data) {
+        Vector3f[] vertices = data.getMetadata(VERTICES);
 
+        Vector3f vertex0 = vertices[0];
+        Vector3f vertex1 = vertices[1];
+        Vector3f vertex2 = vertices[2];
+        Vector3f vertex3 = vertices[3];
+        Vector3f vertex4 = vertices[4];
+        Vector3f vertex5 = vertices[5];
+        Vector3f vertex6 = vertices[6];
+        Vector3f vertex7 = vertices[7];
+
+        int step = data.getCurrentStep();
         int bottomFaceAmount = this.amount.x;
         int topFaceAmount = this.amount.y;
         int verticalBarsAmount = this.amount.z;
@@ -230,53 +217,11 @@ public class ParticleCuboid extends ParticleObject {
         renderer.drawLine(this.particleEffect, step, vertex1, vertex5, verticalBarsAmount);
         renderer.drawLine(this.particleEffect, step, vertex2, vertex6, verticalBarsAmount);
         renderer.drawLine(this.particleEffect, step, vertex3, vertex7, verticalBarsAmount);
-
-        this.doAfterDraw(renderer.getServerWorld(), step);
-        this.endDraw(renderer, step, drawPos);
     }
 
-    /**
-     * Set the interceptor to run after drawing the cuboid.  The interceptor will be provided
-     * with references to the {@link ServerWorld} and the step number of the animation.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param afterDraw the new interceptor to execute after drawing each particle
-     */
-    public final void setAfterDraw(DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private void doAfterDraw(ServerWorld world, int step) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, null, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
-
-    /**
-     * Set the interceptor to run prior to drawing the cuboid.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * vertices of the cuboid.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param beforeDraw the new interceptor to execute prior to drawing each particle
-     */
-    public final void setBeforeDraw(DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
-
-    private InterceptData<BeforeDrawData> doBeforeDraw(ServerWorld world, int step, Vector3f[] vertices) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, null, step, BeforeDrawData.class);
-        interceptData.addMetadata(BeforeDrawData.VERTICES, vertices);
-        this.beforeDraw.apply(interceptData, this);
-        return interceptData;
-    }
-
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B> {
+    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCuboid> {
         protected Vector3f size = new Vector3f();
         protected Vector3i amount = new Vector3i();
-        protected DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw;
-        protected DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw;
 
         private Builder() {}
 
@@ -311,28 +256,6 @@ public class ParticleCuboid extends ParticleObject {
         @Override
         public B amount(int amount) {
             this.amount = new Vector3i(amount, amount, amount);
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleCuboid#setAfterDraw(DrawInterceptor)
-         */
-        public B afterDraw(DrawInterceptor<ParticleCuboid, AfterDrawData> afterDraw) {
-            this.afterDraw = afterDraw;
-            return self();
-        }
-
-        /**
-         * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
-         * the value.
-         *
-         * @see ParticleCuboid#setBeforeDraw(DrawInterceptor)
-         */
-        public B beforeDraw(DrawInterceptor<ParticleCuboid, BeforeDrawData> beforeDraw) {
-            this.beforeDraw = beforeDraw;
             return self();
         }
 
