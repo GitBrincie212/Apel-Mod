@@ -205,6 +205,18 @@ public class LinearAnimator extends PathAnimatorBase {
         return this.trimming;
     }
 
+    /** Sets the endpoint to a new value and returns the previous used value
+     *
+     * @param endpointIndex The endpoint index
+     * @param newEndpoint The new position of the endpoint
+     * @return The previous endpoint
+     */
+    public Vector3f setEndpoint(int endpointIndex, Vector3f newEndpoint) {
+        Vector3f prevEndpoint = this.endpoints[endpointIndex];
+        this.endpoints[endpointIndex] = newEndpoint;
+        return prevEndpoint;
+    }
+
 
     @Override
     public int convertToSteps() {
