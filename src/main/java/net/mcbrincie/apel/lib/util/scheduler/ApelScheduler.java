@@ -6,6 +6,9 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /** The Scheduler. The scheduler runs on the world server ticks and handles
  *  delaying multiple functions requested by a path animator object by creating
@@ -15,6 +18,8 @@ import java.util.List;
 public class ApelScheduler {
     private final List<ScheduledSequence> scheduledTasks = new ArrayList<>();
     private final List<PathAnimatorBase> animators = new ArrayList<>();
+
+    private final ExecutorService SchedulerThread = Executors.newSingleThreadExecutor();
 
     /** Allocates a new sequence chunk to be used in the scheduler. It accepts the animator object
      *  as a parameter. It is crucial to allocate first if you don't have any chunk. The method
@@ -54,8 +59,8 @@ public class ApelScheduler {
             if (sequence.isEmpty()) {
                 continue;
             }
-            boolean sequenceStepped = sequence.tick();
-            if (sequenceStepped && sequence.isFinished()) {
+            Future<?> future = this.SchedulerThread.submit(sequence::tick);
+            if (sequence.isFinished()) {
                 this.deallocateSequence(index);
                 index--;
             }
