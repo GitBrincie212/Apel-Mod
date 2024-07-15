@@ -27,9 +27,9 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     protected float[] renderingInterval;
     protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
 
-    protected DrawInterceptor<BezierCurveAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
+    protected DrawInterceptor<BezierCurveAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
-    public enum onRenderingStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
+    public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
     /**
      * Constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want a good consistent
@@ -255,10 +255,10 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             for (float t = 0; t < 1.0f; t += tStep) {
                 step++;
                 Vector3f pos = bezierCurve.compute(t);
-                InterceptData<onRenderingStep> interceptData =
+                InterceptData<OnRenderStep> interceptData =
                         this.doBeforeStep(renderer.getServerWorld(), pos, step);
-                if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
-                pos = (Vector3f) interceptData.getMetadata(onRenderingStep.RENDERING_POSITION);
+                if (!((boolean) interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP))) continue;
+                pos = (Vector3f) interceptData.getMetadata(OnRenderStep.RENDERING_POSITION);
                 this.handleDrawingStep(renderer, step, pos);
             }
         }
@@ -271,18 +271,18 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<BezierCurveAnimator, onRenderingStep> duringRenderingSteps) {
+    public void setDuringRenderingSteps(DrawInterceptor<BezierCurveAnimator, OnRenderStep> duringRenderingSteps) {
         this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
     }
 
-    protected InterceptData<onRenderingStep> doBeforeStep(
+    protected InterceptData<OnRenderStep> doBeforeStep(
             ServerWorld world, Vector3f position, int currStep
     ) {
-        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
-                world, null, currStep, onRenderingStep.class
+        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
+                world, null, currStep, OnRenderStep.class
         );
-        interceptData.addMetadata(onRenderingStep.RENDERING_POSITION, position);
-        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        interceptData.addMetadata(OnRenderStep.RENDERING_POSITION, position);
+        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
         this.duringRenderingSteps.apply(interceptData, this);
         return interceptData;
     }

@@ -28,9 +28,9 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
     protected List<PathAnimatorBase> animators = new ArrayList<>();
     protected List<Integer> delays = new ArrayList<>();
 
-    protected DrawInterceptor<ParallelAnimator, onPathAnimatorRendering> onAnimatorRendering = DrawInterceptor.identity();
+    protected DrawInterceptor<ParallelAnimator, OnRenderPathAnimator> onAnimatorRendering = DrawInterceptor.identity();
 
-    public enum onPathAnimatorRendering {PATH_ANIMATOR, SHOULD_RENDER_ANIMATOR, DELAY}
+    public enum OnRenderPathAnimator {PATH_ANIMATOR, SHOULD_RENDER_ANIMATOR, DELAY}
 
     /** Constructor for the parallel animation. This constructor is
      * meant to be used in the case that you want to supply a specific
@@ -184,12 +184,12 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
         int step = 0;
         for (PathAnimatorBase animator : this.animators) {
             step++;
-            InterceptData<onPathAnimatorRendering> interceptData = this.doBeforeStep(
+            InterceptData<OnRenderPathAnimator> interceptData = this.doBeforeStep(
                     renderer.getServerWorld(), animator, getDelayForAnimator(step), step
             );
-            if (!((boolean) interceptData.getMetadata(onPathAnimatorRendering.SHOULD_RENDER_ANIMATOR))) continue;
-            animator = (PathAnimatorBase) interceptData.getMetadata(onPathAnimatorRendering.PATH_ANIMATOR);
-            int delayForAnimator = (int) interceptData.getMetadata(onPathAnimatorRendering.DELAY);
+            if (!((boolean) interceptData.getMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR))) continue;
+            animator = (PathAnimatorBase) interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR);
+            int delayForAnimator = (int) interceptData.getMetadata(OnRenderPathAnimator.DELAY);
             int delayForAnimatorInUse = this.getDelayForAnimator(step);
             if (delayForAnimator != delayForAnimatorInUse) {
                 this.delays.set(step - 1, delayForAnimator);
@@ -233,19 +233,19 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setOnAnimatorRendering(DrawInterceptor<ParallelAnimator, onPathAnimatorRendering> duringRenderingSteps) {
+    public void setOnAnimatorRendering(DrawInterceptor<ParallelAnimator, OnRenderPathAnimator> duringRenderingSteps) {
         this.onAnimatorRendering = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
     }
 
-    protected InterceptData<onPathAnimatorRendering> doBeforeStep(
+    protected InterceptData<OnRenderPathAnimator> doBeforeStep(
             ServerWorld world, PathAnimatorBase pathAnimatorBase, int delay, int currStep
     ) {
-        InterceptData<onPathAnimatorRendering> interceptData = new InterceptData<>(
-                world, null, currStep, onPathAnimatorRendering.class
+        InterceptData<OnRenderPathAnimator> interceptData = new InterceptData<>(
+                world, null, currStep, OnRenderPathAnimator.class
         );
-        interceptData.addMetadata(onPathAnimatorRendering.PATH_ANIMATOR, pathAnimatorBase);
-        interceptData.addMetadata(onPathAnimatorRendering.DELAY, delay);
-        interceptData.addMetadata(onPathAnimatorRendering.SHOULD_RENDER_ANIMATOR, true);
+        interceptData.addMetadata(OnRenderPathAnimator.PATH_ANIMATOR, pathAnimatorBase);
+        interceptData.addMetadata(OnRenderPathAnimator.DELAY, delay);
+        interceptData.addMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR, true);
         this.onAnimatorRendering.apply(interceptData, this);
         return interceptData;
     }

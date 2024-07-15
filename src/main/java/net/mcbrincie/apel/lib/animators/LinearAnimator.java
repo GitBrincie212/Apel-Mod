@@ -25,9 +25,9 @@ public class LinearAnimator extends PathAnimatorBase {
     protected float[] renderingInterval;
     protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
 
-    protected DrawInterceptor<LinearAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
+    protected DrawInterceptor<LinearAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
-    public enum onRenderingStep {SHOULD_DRAW_STEP, CURRENT_ENDPOINT, RENDERING_POSITION}
+    public enum OnRenderStep {SHOULD_DRAW_STEP, CURRENT_ENDPOINT, RENDERING_POSITION}
 
     /** Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want a constant number
@@ -280,10 +280,10 @@ public class LinearAnimator extends PathAnimatorBase {
                 float newZ = curr.z + (dirZ * particleInterval);
                 curr = new Vector3f(newX, newY, newZ);
                 if (i < startStep) continue;
-                InterceptData<onRenderingStep> interceptData =
+                InterceptData<OnRenderStep> interceptData =
                         this.doBeforeStep(renderer.getServerWorld(), endpointIndex, curr, currStep);
-                if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
-                curr = (Vector3f) interceptData.getMetadata(onRenderingStep.RENDERING_POSITION);
+                if (!((boolean) interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP))) continue;
+                curr = (Vector3f) interceptData.getMetadata(OnRenderStep.RENDERING_POSITION);
                 this.handleDrawingStep(renderer, i, curr);
             }
         }
@@ -296,19 +296,19 @@ public class LinearAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<LinearAnimator, onRenderingStep> duringRenderingSteps) {
+    public void setDuringRenderingSteps(DrawInterceptor<LinearAnimator, OnRenderStep> duringRenderingSteps) {
         this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
     }
 
-    protected InterceptData<onRenderingStep> doBeforeStep(
+    protected InterceptData<OnRenderStep> doBeforeStep(
             ServerWorld world, int currEndpointIndex, Vector3f position, int currStep
     ) {
-        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
-                world, null, currStep, onRenderingStep.class
+        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
+                world, null, currStep, OnRenderStep.class
         );
-        interceptData.addMetadata(onRenderingStep.RENDERING_POSITION, position);
-        interceptData.addMetadata(onRenderingStep.CURRENT_ENDPOINT, currEndpointIndex);
-        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        interceptData.addMetadata(OnRenderStep.RENDERING_POSITION, position);
+        interceptData.addMetadata(OnRenderStep.CURRENT_ENDPOINT, currEndpointIndex);
+        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
         this.duringRenderingSteps.apply(interceptData, this);
         return interceptData;
     }

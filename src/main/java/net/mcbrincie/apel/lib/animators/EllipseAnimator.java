@@ -30,9 +30,9 @@ public class EllipseAnimator extends PathAnimatorBase {
     protected float stretch;
 
     private float tempDiffStore;
-    private DrawInterceptor<EllipseAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
+    private DrawInterceptor<EllipseAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
-    public enum onRenderingStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
+    public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
 
     /**
      * Constructor for the ellipse animation. This constructor is
@@ -250,9 +250,9 @@ public class EllipseAnimator extends PathAnimatorBase {
         Vector3f pos = calculatePoint(currAngle);
         this.allocateToScheduler();
         for (int i = 0; i < particleAmount; i++) {
-            InterceptData<onRenderingStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
-            if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
-            pos = (Vector3f) interceptData.getMetadata(onRenderingStep.RENDERING_POSITION);
+            InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
+            if (!((boolean) interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP))) continue;
+            pos = (Vector3f) interceptData.getMetadata(OnRenderStep.RENDERING_POSITION);
             this.handleDrawingStep(renderer, i, pos);
             currAngle += this.clockwise ? angleInterval : -angleInterval;
             currAngle = (float) ((currAngle + Math.TAU) % Math.TAU);
@@ -267,7 +267,7 @@ public class EllipseAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<EllipseAnimator, onRenderingStep> duringRenderingSteps) {
+    public void setDuringRenderingSteps(DrawInterceptor<EllipseAnimator, OnRenderStep> duringRenderingSteps) {
         this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
     }
 
@@ -284,14 +284,14 @@ public class EllipseAnimator extends PathAnimatorBase {
         return pos.add(this.center);
     }
 
-    protected InterceptData<onRenderingStep> doBeforeStep(
+    protected InterceptData<OnRenderStep> doBeforeStep(
             ServerWorld world, Vector3f position, int currStep
     ) {
-        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
-                world, null, currStep, onRenderingStep.class
+        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
+                world, null, currStep, OnRenderStep.class
         );
-        interceptData.addMetadata(onRenderingStep.RENDERING_POSITION, position);
-        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        interceptData.addMetadata(OnRenderStep.RENDERING_POSITION, position);
+        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
         this.duringRenderingSteps.apply(interceptData, this);
         return interceptData;
     }
