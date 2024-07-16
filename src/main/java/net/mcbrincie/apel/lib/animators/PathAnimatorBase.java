@@ -268,19 +268,17 @@ public abstract class PathAnimatorBase {
             Apel.DRAW_EXECUTOR.submit(func);
             return;
         }
-        if (this.processingSpeed <= 1) {
-            Apel.SCHEDULER.allocateNewStep(
-                    this, new ScheduledStep(this.delay, new Runnable[]{func})
-            );
-            return;
-        } else if (step % this.processingSpeed != 0) {
-            this.storedFuncsBuffer.add(func);
+        if (this.processingSpeed == 1) {
+            Apel.SCHEDULER.allocateNewStep(this, new ScheduledStep(this.delay, new Runnable[]{func}));
             return;
         }
-        Apel.SCHEDULER.allocateNewStep(
-                this, new ScheduledStep(this.delay, this.storedFuncsBuffer.toArray(Runnable[]::new))
-        );
-        this.storedFuncsBuffer.clear();
+        this.storedFuncsBuffer.add(func);
+        if (this.storedFuncsBuffer.size() == this.processingSpeed) {
+            Apel.SCHEDULER.allocateNewStep(
+                    this, new ScheduledStep(this.delay, this.storedFuncsBuffer.toArray(Runnable[]::new))
+            );
+            this.storedFuncsBuffer.clear();
+        }
     }
 
     /**
