@@ -225,57 +225,50 @@ public class LinearAnimator extends PathAnimatorBase {
     public int convertIntervalToSteps() {
         int steps = 0;
         for (int i = 0; i < this.endpoints.length - 1; i++) {
-            float distance = this.endpoints[i].distance(this.endpoints[i + 1]);
-            int segmentSteps = (int) Math.ceil(distance / this.renderingInterval[i]);
+            int segmentSteps = getSegmentSteps(i, this.renderingInterval[i]);
             steps += segmentSteps;
         }
         return steps;
     }
 
+    private int getSegmentSteps(int segmentIndex, float segmentInterval) {
+        float distance = this.endpoints[segmentIndex].distance(this.endpoints[segmentIndex + 1]);
+        return (int) Math.ceil(distance / segmentInterval);
+    }
+
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
-        int particleAmount;
-        float particleInterval;
         int startStep = this.trimming.getStart();
         int endStep = this.trimming.getEnd();
-        Vector3f curr = new Vector3f(this.endpoints[0].x, this.endpoints[0].y, this.endpoints[0].z);
         this.allocateToScheduler();
-        int currStep = -1;
-        int endpointIndex = -1;
-        for (Vector3f endPos : this.endpoints) {
-            endpointIndex++;
-            if(endpointIndex == 0) continue;
-            particleAmount = this.renderingSteps[endpointIndex - 1];
-            particleInterval = this.renderingInterval[endpointIndex - 1];
-            if (particleInterval == 0.0f) {
-                particleInterval = (this.getDistance() / particleAmount) * (this.endpoints.length - 1);
-            } else {
-                particleAmount = this.convertIntervalToSteps();
+        int step = -1;
+        for (int segmentIndex = 0; segmentIndex < this.endpoints.length - 1; segmentIndex++) {
+            Vector3f segmentStart = this.endpoints[segmentIndex];
+            Vector3f segmentEnd = this.endpoints[segmentIndex + 1];
+            int segmentSteps = this.renderingSteps[segmentIndex];
+            float segmentInterval = this.renderingInterval[segmentIndex];
+            if (segmentInterval != 0.0f) {
+                // Compute steps based on length of segment
+                segmentSteps = this.getSegmentSteps(segmentIndex, segmentInterval);
             }
-            Vector3f startPos = this.endpoints[endpointIndex - 1];
-            float dist = this.getDistance();
-            for (int i = 0; i < particleAmount; i++) {
-                currStep++;
-                double currDist = curr.distance(endPos);
-                float dirX = (endPos.x - startPos.x) / dist;
-                float dirY = (endPos.y - startPos.y) / dist;
-                float dirZ = (endPos.z - startPos.z) / dist;
-                int currDirX = (int) Math.round((endPos.x - curr.x) / currDist);
-                int currDirY = (int) Math.round((endPos.y - curr.y) / currDist);
-                int currDirZ = (int) Math.round((endPos.z - curr.z) / currDist);
-                double dotProduct = (currDirX * dirX) + (currDirY * dirY) + (currDirZ * dirZ);
-                boolean isGoingSameDir = dotProduct > 0;
-                if (i == 0 && (curr.equals(endPos) || !isGoingSameDir || (i >= endStep && endStep != -1))) break;
-                float newX = curr.x + (dirX * particleInterval);
-                float newY = curr.y + (dirY * particleInterval);
-                float newZ = curr.z + (dirZ * particleInterval);
-                curr = new Vector3f(newX, newY, newZ);
-                if (i < startStep) continue;
+            Vector3f segmentDelta = new Vector3f(segmentEnd).sub(segmentStart).div(segmentSteps);
+            for (int i = 0; i < segmentSteps; i++) {
+                step++;
+                if (i < startStep) {
+                    continue;
+                }
+                // Handle trimming, but only if the end was set to a non-default value
+                if (i >= endStep && endStep != -1) {
+                    break;
+                }
+                Vector3f pos = new Vector3f(segmentDelta).mul(i).add(segmentStart);
                 InterceptData<OnRenderStep> interceptData =
-                        this.doBeforeStep(renderer.getServerWorld(), endpointIndex, curr, currStep);
-                if (!((boolean) interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP))) continue;
-                curr = (Vector3f) interceptData.getMetadata(OnRenderStep.RENDERING_POSITION);
-                this.handleDrawingStep(renderer, i, curr);
+                        this.doBeforeStep(renderer.getServerWorld(), segmentIndex, pos, step);
+                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
+                    continue;
+                }
+                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
+                this.handleDrawingStep(renderer, step, pos);
             }
         }
     }
