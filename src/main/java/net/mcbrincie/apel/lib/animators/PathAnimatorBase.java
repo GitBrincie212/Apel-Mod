@@ -26,7 +26,7 @@ public abstract class PathAnimatorBase {
     protected int renderingSteps = 0;
     protected int delay;
     protected int processSpeed = 1;
-    protected ParticleObject particleObject;
+    protected ParticleObject<? extends ParticleObject<?>> particleObject;
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
 
@@ -42,7 +42,7 @@ public abstract class PathAnimatorBase {
      * @param renderingSteps The rendering steps to use
      * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, float)
     */
-    public PathAnimatorBase(int delay, ParticleObject particleObject, int renderingSteps) {
+    public PathAnimatorBase(int delay, ParticleObject<? extends ParticleObject<?>> particleObject, int renderingSteps) {
         this.setDelay(delay);
         this.setParticleObject(particleObject);
         this.setRenderSteps(renderingSteps);
@@ -62,7 +62,7 @@ public abstract class PathAnimatorBase {
      * @param renderingInterval The rendering interval to use, which is how many blocks per new rendering step
      * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, int)
      */
-    public PathAnimatorBase(int delay, @NotNull ParticleObject particle, float renderingInterval) {
+    public PathAnimatorBase(int delay, @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval) {
         this.setDelay(delay);
         this.setParticleObject(particle);
         this.setRenderInterval(renderingInterval);
@@ -150,7 +150,7 @@ public abstract class PathAnimatorBase {
      *
      * @return The particle object
      */
-    public ParticleObject getParticleObject() {
+    public ParticleObject<?> getParticleObject() {
         return this.particleObject;
     }
 
@@ -159,8 +159,8 @@ public abstract class PathAnimatorBase {
      *
      * @return The previous amount of rendering steps
      */
-    public ParticleObject setParticleObject(@NotNull ParticleObject object) {
-        ParticleObject particleObject = this.particleObject;
+    public ParticleObject<?> setParticleObject(@NotNull ParticleObject<? extends ParticleObject<?>> object) {
+        ParticleObject<?> particleObject = this.particleObject;
         this.particleObject = object;
         return particleObject;
     }

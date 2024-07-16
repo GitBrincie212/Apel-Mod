@@ -149,7 +149,7 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
     /** This method is DEPRECATED and SHOULD NOT BE USED */
     @Deprecated
     @Override
-    public ParticleObject setParticleObject(@NotNull ParticleObject object) {
+    public ParticleObject<? extends ParticleObject<?>> setParticleObject(@NotNull ParticleObject<? extends ParticleObject<?>> object) {
         throw new UnsupportedOperationException("Parallel Animators cannot set an individual particle object");
     }
 

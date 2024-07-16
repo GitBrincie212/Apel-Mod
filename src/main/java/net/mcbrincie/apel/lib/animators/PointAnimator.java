@@ -31,7 +31,8 @@ public class PointAnimator extends PathAnimatorBase {
      * @param particle The particle object to use
      * @param renderingSteps The rendering steps to use
     */
-    public PointAnimator(int delay, @NotNull ParticleObject particle, Vector3f origin, int renderingSteps) {
+    public PointAnimator(int delay, @NotNull ParticleObject<? extends ParticleObject<?>> particle, Vector3f origin,
+                         int renderingSteps) {
         super(delay, particle, renderingSteps);
         this.origin = origin;
     }

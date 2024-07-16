@@ -49,7 +49,7 @@ public class EllipseAnimator extends PathAnimatorBase {
      */
     public EllipseAnimator(
             int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            float stretch, @NotNull ParticleObject particle, int renderingSteps
+            float stretch, @NotNull ParticleObject<? extends ParticleObject<?>> particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
         this.setRadius(radius);
@@ -75,7 +75,7 @@ public class EllipseAnimator extends PathAnimatorBase {
      */
     public EllipseAnimator(
             int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            float stretch, @NotNull ParticleObject particle, float renderingInterval
+            float stretch, @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
         this.setRadius(radius);

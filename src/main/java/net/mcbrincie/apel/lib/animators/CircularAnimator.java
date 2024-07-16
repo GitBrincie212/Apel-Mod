@@ -48,7 +48,7 @@ public class CircularAnimator extends PathAnimatorBase {
      */
     public CircularAnimator(
             int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            @NotNull ParticleObject particle, int renderingSteps
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, int renderingSteps
     ) {
         super(delay, particle, renderingSteps);
         this.setRadius(radius);
@@ -72,7 +72,7 @@ public class CircularAnimator extends PathAnimatorBase {
      */
     public CircularAnimator(
             int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            @NotNull ParticleObject particle, float renderingInterval
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval
     ) {
         super(delay, particle, renderingInterval);
         this.setRadius(radius);

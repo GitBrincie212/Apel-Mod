@@ -43,7 +43,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject particle, float renderingInterval
+            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            float renderingInterval
     ) {
         this(delay, new BezierCurve[]{curve}, particle, new float[]{renderingInterval});
     }
@@ -58,7 +59,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject particle, int renderingSteps
+            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            int renderingSteps
     ) {
         this(delay, new BezierCurve[]{curve}, particle, new int[]{renderingSteps});
     }
@@ -77,7 +79,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, float renderingInterval
+            int delay, @NotNull BezierCurve[] bezierCurves,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval
     ) {
         this(delay, bezierCurves, particle, defaultedArray(new float[bezierCurves.length], renderingInterval));
     }
@@ -94,7 +97,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, int renderingSteps
+            int delay, @NotNull BezierCurve[] bezierCurves,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, int renderingSteps
     ) {
         this(delay, bezierCurves, particle, defaultedArray(new int[bezierCurves.length], renderingSteps));
     }
@@ -113,7 +117,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, float[] renderingInterval
+            int delay, @NotNull BezierCurve[] bezierCurves,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, float[] renderingInterval
     ) {
         super(delay, particle, renderingInterval[0]);
         if (bezierCurves.length == 0) {
@@ -139,7 +144,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, int[] renderingSteps
+            int delay, @NotNull BezierCurve[] bezierCurves,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, int[] renderingSteps
     ) {
         super(delay, particle, renderingSteps[0]);
         if (bezierCurves.length == 0) {

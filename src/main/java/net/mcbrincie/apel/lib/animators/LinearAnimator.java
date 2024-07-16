@@ -40,8 +40,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f start, @NotNull Vector3f end, @NotNull ParticleObject particle,
-            int renderingSteps
+            int delay, @NotNull Vector3f start, @NotNull Vector3f end,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, int renderingSteps
     ) {
         this(delay, new Vector3f[]{start, end}, particle, new int[]{renderingSteps});
     }
@@ -60,8 +60,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f start, @NotNull Vector3f end, @NotNull ParticleObject particle,
-            float renderingInterval
+            int delay, @NotNull Vector3f start, @NotNull Vector3f end,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval
     ) {
         this(delay, new Vector3f[]{start, end}, particle, new float[]{renderingInterval});
     }
@@ -80,7 +80,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The distance, in blocks, between rendering steps
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, float renderingInterval
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            float renderingInterval
     ) {
         // There should be one fewer interval entries than endpoints, since each pair needs an interval
         this(delay, endpoints, particle, defaultedArray(new float[endpoints.length - 1], renderingInterval));
@@ -98,7 +99,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps between each pair of endpoints
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, int renderingSteps
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            int renderingSteps
     ) {
         // There should be one fewer step entries than endpoints since each segment needs steps
         this(delay, endpoints, particle, defaultedArray(new int[endpoints.length - 1], renderingSteps));
@@ -118,7 +120,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, float[] renderingInterval
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            float[] renderingInterval
     ) {
         super(delay, particle, renderingInterval[0]);
         if ((renderingInterval.length - 1) == endpoints.length) {
@@ -141,7 +144,7 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, int[] renderingSteps
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject<? extends ParticleObject<?>> particle, int[] renderingSteps
     ) {
         super(delay, particle, renderingSteps[0]);
         if ((renderingSteps.length - 1) == endpoints.length) {
