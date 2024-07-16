@@ -25,7 +25,7 @@ public abstract class PathAnimatorBase {
     protected float renderingInterval = 0.0f;
     protected int renderingSteps = 0;
     protected int delay;
-    protected int processSpeed = 1;
+    protected int processingSpeed = 1;
     protected ParticleObject<? extends ParticleObject<?>> particleObject;
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
@@ -45,7 +45,7 @@ public abstract class PathAnimatorBase {
     public PathAnimatorBase(int delay, ParticleObject<? extends ParticleObject<?>> particleObject, int renderingSteps) {
         this.setDelay(delay);
         this.setParticleObject(particleObject);
-        this.setRenderSteps(renderingSteps);
+        this.setRenderingSteps(renderingSteps);
     }
 
     /** This is an empty constructor meant as a placeholder */
@@ -65,7 +65,7 @@ public abstract class PathAnimatorBase {
     public PathAnimatorBase(int delay, @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval) {
         this.setDelay(delay);
         this.setParticleObject(particle);
-        this.setRenderInterval(renderingInterval);
+        this.setRenderingInterval(renderingInterval);
     }
 
     /**
@@ -81,7 +81,7 @@ public abstract class PathAnimatorBase {
         this.particleObject = animator.particleObject;
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
-        this.processSpeed = animator.processSpeed;
+        this.processingSpeed = animator.processingSpeed;
         this.storedFuncsBuffer = new ArrayList<>();
     }
 
@@ -91,7 +91,7 @@ public abstract class PathAnimatorBase {
      */
     public void allocateToScheduler() {
         if (this.delay == 0) return;
-        int steps = this.renderingSteps != 0 ? this.scheduleGetAmount() : this.convertToSteps();
+        int steps = this.renderingSteps != 0 ? this.scheduleGetAmount() : this.convertIntervalToSteps();
         Apel.SCHEDULER.allocateNewSequence(this, steps);
     }
 
@@ -104,7 +104,7 @@ public abstract class PathAnimatorBase {
      *
      * @return The number of particles
      */
-    public int getRenderSteps() {
+    public int getRenderingSteps() {
         return this.renderingSteps;
     }
 
@@ -114,7 +114,7 @@ public abstract class PathAnimatorBase {
      * @param steps The new rendering steps to set
      * @return The previous rendering interval
      */
-    public int setRenderSteps(int steps) {
+    public int setRenderingSteps(int steps) {
         if (steps < 0) {
             throw new IllegalArgumentException("Rendering Steps is not positive or equals to 0");
         }
@@ -130,7 +130,7 @@ public abstract class PathAnimatorBase {
      *
      * @return The interval of blocks per particle object render
      */
-    public float getRenderInterval() {
+    public float getRenderingInterval() {
         return this.renderingInterval;
     }
 
@@ -140,7 +140,7 @@ public abstract class PathAnimatorBase {
      * @param interval The new rendering interval to set
      * @return The previous rendering interval
      */
-    public float setRenderInterval(float interval) {
+    public float setRenderingInterval(float interval) {
         if (interval < 0) {
             throw new IllegalArgumentException("Rendering Interval is not positive or equals to 0");
         }
@@ -182,7 +182,7 @@ public abstract class PathAnimatorBase {
      *
      * @return The particle object
      */
-    public ParticleObject<?> getParticleObject() {
+    public ParticleObject<? extends ParticleObject<?>> getParticleObject() {
         return this.particleObject;
     }
 
@@ -191,7 +191,7 @@ public abstract class PathAnimatorBase {
      *
      * @return The previous amount of rendering steps
      */
-    public ParticleObject<?> setParticleObject(@NotNull ParticleObject<? extends ParticleObject<?>> object) {
+    public ParticleObject<? extends ParticleObject<?>> setParticleObject(@NotNull ParticleObject<? extends ParticleObject<?>> object) {
         ParticleObject<?> particleObject = this.particleObject;
         this.particleObject = object;
         return particleObject;
@@ -204,7 +204,7 @@ public abstract class PathAnimatorBase {
      * @return The processing speed used
      */
     public int getProcessingSpeed() {
-        return this.processSpeed;
+        return this.processingSpeed;
     }
 
     /** Sets the processing speed to allow for even faster animations on larger rendering steps.
@@ -224,8 +224,8 @@ public abstract class PathAnimatorBase {
         if (speed < 1) {
             throw new IllegalArgumentException("Process speed cannot be below 1 rs/st");
         }
-        int prevProcessSpeed = this.processSpeed;
-        this.processSpeed = speed;
+        int prevProcessSpeed = this.processingSpeed;
+        this.processingSpeed = speed;
         return prevProcessSpeed;
     }
 
@@ -233,7 +233,7 @@ public abstract class PathAnimatorBase {
      *
      * @return The number of steps
      */
-    public abstract int convertToSteps();
+    public abstract int convertIntervalToSteps();
 
     /**
      * This method is used for beginning the animation logic.
@@ -245,14 +245,14 @@ public abstract class PathAnimatorBase {
      */
     public abstract void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException;
 
-    /** Calculates the total delay for the path animator
+    /** Calculates the total duration, in ticks, for the path animator
      *
-     * @return The delay as an integer
+     * @return Animation duration, as an integer
      */
     protected int calculateDuration() {
-        int steps = this.getRenderSteps();
+        int steps = this.getRenderingSteps();
         int speed = this.getProcessingSpeed();
-        return this.delay * ((steps == 0 ? this.convertToSteps() : steps) / speed);
+        return this.delay * ((steps == 0 ? this.convertIntervalToSteps() : steps) / speed);
     }
 
     /**
@@ -273,12 +273,12 @@ public abstract class PathAnimatorBase {
             Apel.DRAW_EXECUTOR.submit(func);
             return;
         }
-        if (this.processSpeed <= 1) {
+        if (this.processingSpeed <= 1) {
             Apel.SCHEDULER.allocateNewStep(
                     this, new ScheduledStep(this.delay, new Runnable[]{func})
             );
             return;
-        } else if (step % this.processSpeed != 0) {
+        } else if (step % this.processingSpeed != 0) {
             this.storedFuncsBuffer.add(func);
             return;
         }

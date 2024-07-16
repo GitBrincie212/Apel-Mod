@@ -25,28 +25,28 @@ class LinearAnimatorTest {
     }
 
     @Test
-    void testConvertToSteps() {
+    void testConvertIntervalToSteps() {
         // Given a LinearAnimator with a rendering interval
         LinearAnimator linearAnimator = new LinearAnimator(1, new Vector3f[]{
                 new Vector3f(10, 0, 0), new Vector3f(-10, 0, 0), new Vector3f(9, 0, 0), new Vector3f(-9, 0, 0),
         }, POINT_WITH_NULL_PARTICLE, .04f);
 
         // When the distance is computed
-        int steps = linearAnimator.convertToSteps();
+        int steps = linearAnimator.convertIntervalToSteps();
 
         // Then it is 1425: (10 to -10) + (-10 to 9) + (9 to -9), or 20 + 19 + 18 == 57 / .04 == 1425.
         assertEquals(1425, steps);
     }
 
     @Test
-    void testConvertToStepsWithUniqueIntervals() {
+    void testConvertIntervalToStepsWithUniqueIntervals() {
         // Given a LinearAnimator with a rendering interval
         LinearAnimator linearAnimator = new LinearAnimator(1, new Vector3f[]{
                 new Vector3f(10, 0, 0), new Vector3f(-10, 0, 0), new Vector3f(9, 0, 0), new Vector3f(-9, 0, 0),
         }, POINT_WITH_NULL_PARTICLE, new float[]{.04f, .1f, .5f});
 
         // When the distance is computed
-        int steps = linearAnimator.convertToSteps();
+        int steps = linearAnimator.convertIntervalToSteps();
 
         // Then it is 726:
         // (10 to -10) * 25 == 500

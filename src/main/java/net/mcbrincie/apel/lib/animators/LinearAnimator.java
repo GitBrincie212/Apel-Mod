@@ -192,7 +192,7 @@ public class LinearAnimator extends PathAnimatorBase {
     public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
         int startStep = trimming.getStart();
         int endStep = trimming.getEnd();
-        if (startStep <= 0 || endStep >= this.getRenderSteps() || startStep >= endStep) {
+        if (startStep <= 0 || endStep >= this.getRenderingSteps() || startStep >= endStep) {
             throw new IllegalArgumentException("Invalid animation trimming range");
         }
         AnimationTrimming<Integer> prevTrimming = this.trimming;
@@ -222,7 +222,7 @@ public class LinearAnimator extends PathAnimatorBase {
 
 
     @Override
-    public int convertToSteps() {
+    public int convertIntervalToSteps() {
         int steps = 0;
         for (int i = 0; i < this.endpoints.length - 1; i++) {
             float distance = this.endpoints[i].distance(this.endpoints[i + 1]);
@@ -259,7 +259,7 @@ public class LinearAnimator extends PathAnimatorBase {
             if (particleInterval == 0.0f) {
                 particleInterval = (this.getDistance() / particleAmount) * (this.endpoints.length - 1);
             } else {
-                particleAmount = this.convertToSteps();
+                particleAmount = this.convertIntervalToSteps();
             }
             Vector3f startPos = this.endpoints[endpointIndex - 1];
             float dist = this.getDistance();

@@ -183,7 +183,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     public float getDistance() {
         float sumDistance = 0;
         for (BezierCurve bezierCurve : this.bezierCurves) {
-            sumDistance += bezierCurve.length(this.convertToSteps());
+            sumDistance += bezierCurve.length(this.convertIntervalToSteps());
         }
         return sumDistance;
     }
@@ -196,7 +196,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
         int startStep = trimming.getStart();
         int endStep = trimming.getEnd();
-        if (startStep <= 0 || endStep >= this.getRenderSteps() || startStep >= endStep) {
+        if (startStep <= 0 || endStep >= this.getRenderingSteps() || startStep >= endStep) {
             throw new IllegalArgumentException("Invalid animation trimming range");
         }
         AnimationTrimming<Integer> prevTrimming = this.trimming;
@@ -213,7 +213,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public int convertToSteps() {
+    public int convertIntervalToSteps() {
         int steps = 0;
         for (int i = 0; i < this.bezierCurves.length; i++) {
             int curveSteps = getCurveSteps(this.bezierCurves[i], this.renderingInterval[i]);

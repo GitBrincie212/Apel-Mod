@@ -198,7 +198,7 @@ public class CircularAnimator extends PathAnimatorBase {
      * @return The converted step
      */
     @Override
-    public int convertToSteps() {
+    public int convertIntervalToSteps() {
         return (int) (Math.ceil(this.tempDiffStore / this.renderingInterval) + 1) * this.revolutions;
     }
 
@@ -218,7 +218,7 @@ public class CircularAnimator extends PathAnimatorBase {
         float differenceAngle = this.trimming.getEnd() - startAngle;
         this.tempDiffStore = differenceAngle;
 
-        int particleAmount = this.renderingSteps == 0 ? this.convertToSteps() : this.renderingSteps * this.revolutions;
+        int particleAmount = this.renderingSteps == 0 ? this.convertIntervalToSteps() : this.renderingSteps * this.revolutions;
         float angleInterval = this.renderingInterval == 0 ? (
                 ((differenceAngle) / (this.renderingSteps - 1)) * this.revolutions
         ): this.renderingInterval * this.revolutions;

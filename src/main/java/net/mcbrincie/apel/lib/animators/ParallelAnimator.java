@@ -142,7 +142,7 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
     /** This method is DEPRECATED and SHOULD NOT BE USED */
     @Override
     @Deprecated
-    public int setRenderSteps(int steps) {
+    public int setRenderingSteps(int steps) {
         throw new UnsupportedOperationException("Parallel Animators cannot set rendering steps");
     }
 
@@ -156,12 +156,12 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
     /** This method is DEPRECATED and SHOULD NOT BE USED */
     @Override
     @Deprecated
-    public float setRenderInterval(float interval) {
+    public float setRenderingInterval(float interval) {
         throw new UnsupportedOperationException("Parallel Animators cannot set rendering interval");
     }
 
     @Override
-    public int convertToSteps() {
+    public int convertIntervalToSteps() {
         return this.animators.size();
     }
 
@@ -211,12 +211,12 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
             Apel.DRAW_EXECUTOR.submit(func);
             return;
         }
-        if (this.processSpeed <= 1) {
+        if (this.processingSpeed <= 1) {
             Apel.SCHEDULER.allocateNewStep(
                     this, new ScheduledStep(delayUsed, new Runnable[]{func})
             );
             return;
-        } else if (step % this.processSpeed != 0) {
+        } else if (step % this.processingSpeed != 0) {
             this.storedFuncsBuffer.add(func);
             return;
         }

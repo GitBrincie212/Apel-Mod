@@ -71,7 +71,7 @@ public class PointAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public int convertToSteps() {
+    public int convertIntervalToSteps() {
         return this.renderingSteps;
     }
 
