@@ -1,9 +1,9 @@
 package net.mcbrincie.apel.lib.util;
 
 /** The path animation trimming, which is a basic container that holds the trimming data for
- * the path animator to use, the trimming data varies from one path animator to the other.
- * For example, the circular path animator requires degrees as trimming, whereas the linear
- * path animator requires the steps for trimming
+ * the path animator to use.  Trimming data varies among path animators, for example, the circular
+ * path animator requires radian values when trimming, whereas the linear path animator requires
+ * the steps for trimming.
  *
  * @param <T> The type to use for the trimming (look up what type the path animator you target uses)
  */
@@ -40,7 +40,7 @@ public class AnimationTrimming<T> {
      * @return The previous start trimming value
      */
     public T setStart(T newStart) {
-        T prev = this.end;
+        T prev = this.start;
         this.start = newStart;
         return prev;
     }
@@ -51,8 +51,8 @@ public class AnimationTrimming<T> {
      * @return The previous ending trimming value
      */
     public T setEnd(T newEnd) {
-        T prev = this.start;
-        this.start = newEnd;
+        T prev = this.end;
+        this.end = newEnd;
         return prev;
     }
 
