@@ -80,7 +80,9 @@ public class PointAnimator extends PathAnimatorBase {
         this.allocateToScheduler();
         for (int i = 0; i < this.renderingSteps; i++) {
             InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), i);
-            if (!((boolean) interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP))) continue;
+            if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
+                continue;
+            }
             this.handleDrawingStep(renderer, i, this.origin);
         }
     }

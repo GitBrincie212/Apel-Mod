@@ -187,8 +187,10 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
             InterceptData<OnRenderPathAnimator> interceptData = this.doBeforeStep(
                     renderer.getServerWorld(), animator, getDelayForAnimator(step), step
             );
-            if (!((boolean) interceptData.getMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR))) continue;
-            animator = (PathAnimatorBase) interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR);
+            if (!interceptData.getMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR, true)) {
+                continue;
+            }
+            animator = interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR, animator);
             int delayForAnimator = (int) interceptData.getMetadata(OnRenderPathAnimator.DELAY);
             int delayForAnimatorInUse = this.getDelayForAnimator(step);
             if (delayForAnimator != delayForAnimatorInUse) {

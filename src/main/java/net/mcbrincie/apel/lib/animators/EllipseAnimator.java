@@ -246,8 +246,10 @@ public class EllipseAnimator extends PathAnimatorBase {
         this.allocateToScheduler();
         for (int i = 0; i < particleAmount; i++) {
             InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
-            if (!((boolean) interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP))) continue;
-            pos = (Vector3f) interceptData.getMetadata(OnRenderStep.RENDERING_POSITION);
+            if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
+                continue;
+            }
+            pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
             this.handleDrawingStep(renderer, i, pos);
             currAngle += this.clockwise ? angleInterval : -angleInterval;
             currAngle = (float) ((currAngle + Math.TAU) % Math.TAU);

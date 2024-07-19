@@ -237,8 +237,10 @@ public class BezierCurveAnimator extends PathAnimatorBase {
                 Vector3f pos = bezierCurve.compute(t);
                 InterceptData<OnRenderStep> interceptData =
                         this.doBeforeStep(renderer.getServerWorld(), pos, step);
-                if (!((boolean) interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP))) continue;
-                pos = (Vector3f) interceptData.getMetadata(OnRenderStep.RENDERING_POSITION);
+                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
+                    continue;
+                }
+                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
                 this.handleDrawingStep(renderer, step, pos);
             }
         }

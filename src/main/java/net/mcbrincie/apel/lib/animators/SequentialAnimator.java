@@ -173,8 +173,10 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
             step++;
             InterceptData<OnRenderPathAnimator> interceptData =
                     this.doBeforeStep(renderer.getServerWorld(), animator, getDelayOfAnimator(step), step);
-            if (!((boolean) interceptData.getMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR))) continue;
-            animator = (PathAnimatorBase) interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR);
+            if (!interceptData.getMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR, true)) {
+                continue;
+            }
+            animator = interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR, animator);
             int delayForAnimator = (int) interceptData.getMetadata(OnRenderPathAnimator.DELAY);
             int delayForAnimatorInUse = this.getDelayOfAnimator(step);
             if (delayForAnimator != delayForAnimatorInUse) {
