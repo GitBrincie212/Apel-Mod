@@ -225,11 +225,6 @@ public class EllipseAnimator extends PathAnimatorBase {
         return (int) (Math.ceil(this.tempDiffStore / this.renderingInterval) + 1) * this.revolutions;
     }
 
-    @Override
-    protected int scheduleGetAmount() {
-        return this.renderingSteps * this.revolutions;
-    }
-
     /**
      * This method is used for beginning the animation logic.
      * It accepts the server world as a parameter. Unlike most

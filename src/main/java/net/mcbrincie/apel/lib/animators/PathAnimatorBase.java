@@ -91,12 +91,7 @@ public abstract class PathAnimatorBase {
      */
     public void allocateToScheduler() {
         if (this.delay == 0) return;
-        int steps = this.renderingSteps != 0 ? this.scheduleGetAmount() : this.convertIntervalToSteps();
-        Apel.SCHEDULER.allocateNewSequence(this, steps);
-    }
-
-    protected int scheduleGetAmount() {
-        return this.renderingSteps;
+        Apel.SCHEDULER.allocateNewSequence(this);
     }
 
     /** Gets the amount of rendering steps, which can be zero indicating

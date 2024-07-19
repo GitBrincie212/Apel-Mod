@@ -233,15 +233,6 @@ public class LinearAnimator extends PathAnimatorBase {
     }
 
     @Override
-    protected int scheduleGetAmount() {
-        int sumSteps = 0;
-        for (int i : this.renderingSteps) {
-            sumSteps += i;
-        }
-        return sumSteps;
-    }
-
-    @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         int particleAmount;
         float particleInterval;

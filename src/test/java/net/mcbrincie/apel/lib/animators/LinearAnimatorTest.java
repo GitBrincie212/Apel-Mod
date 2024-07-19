@@ -54,32 +54,4 @@ class LinearAnimatorTest {
         // (9 to -9) * 2 == 36
         assertEquals(726, steps);
     }
-
-    @Test
-    void testScheduleGetAmount() {
-        // Given a LinearAnimator with a rendering step count
-        LinearAnimator linearAnimator = new LinearAnimator(1, new Vector3f[]{
-                new Vector3f(10, 0, 0), new Vector3f(-10, 0, 0), new Vector3f(9, 0, 0), new Vector3f(-9, 0, 0),
-        }, POINT_WITH_NULL_PARTICLE, 400);
-
-        // When the total step count is requested by the scheduler allocation
-        int steps = linearAnimator.scheduleGetAmount();
-
-        // Then it is 400 per segment, or 1200 total
-        assertEquals(1200, steps);
-    }
-
-    @Test
-    void testScheduleGetAmountWithUniqueStepCounts() {
-        // Given a LinearAnimator with a rendering step count
-        LinearAnimator linearAnimator = new LinearAnimator(1, new Vector3f[]{
-                new Vector3f(10, 0, 0), new Vector3f(-10, 0, 0), new Vector3f(9, 0, 0), new Vector3f(-9, 0, 0),
-        }, POINT_WITH_NULL_PARTICLE, new int[]{400, 200, 100});
-
-        // When the total step count is requested by the scheduler allocation
-        int steps = linearAnimator.scheduleGetAmount();
-
-        // Then it is the sum of the values
-        assertEquals(700, steps);
-    }
 }

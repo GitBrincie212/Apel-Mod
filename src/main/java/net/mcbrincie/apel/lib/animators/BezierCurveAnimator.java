@@ -30,6 +30,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     protected DrawInterceptor<BezierCurveAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
     public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
+
     /**
      * Constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want a good consistent
@@ -176,18 +177,6 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         this.duringRenderingSteps = animator.duringRenderingSteps;
     }
 
-    /** Gets the distance needed to travel from the starting bézier curve to the ending bézier curve
-     *
-     * @return The distance between the starting bézier curve & ending bézier curve
-     */
-    public float getDistance() {
-        float sumDistance = 0;
-        for (BezierCurve bezierCurve : this.bezierCurves) {
-            sumDistance += bezierCurve.length(this.convertIntervalToSteps());
-        }
-        return sumDistance;
-    }
-
     /** Sets the animation trimming which accepts a start trim or
      * an ending trim. The trim parts have to be integer values
      *
@@ -226,15 +215,6 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         // TODO: choose this value better, perhaps based on distance between start/end or start/controls/end?
         float distance = bezierCurve.length(100);
         return (int) Math.ceil(distance / interval);
-    }
-
-    @Override
-    protected int scheduleGetAmount() {
-        int sumSteps = 0;
-        for (int i : this.renderingSteps) {
-            sumSteps += i;
-        }
-        return sumSteps;
     }
 
     @Override
