@@ -90,7 +90,9 @@ public abstract class PathAnimatorBase {
      *  sequence. The method does that for your convenience
      */
     public void allocateToScheduler() {
-        if (this.delay == 0) return;
+        if (this.delay == 0) {
+            return;
+        }
         Apel.SCHEDULER.allocateNewSequence(this);
     }
 
@@ -303,5 +305,45 @@ public abstract class PathAnimatorBase {
     protected static float[] defaultedArray(float[] array, float defaultValue) {
         Arrays.fill(array, defaultValue);
         return array;
+    }
+
+    public static abstract class Builder<B extends Builder<B, T>, T extends PathAnimatorBase> {
+        protected ParticleObject<? extends ParticleObject<?>> particleObject;
+        protected int delay = 1;
+        protected int processingSpeed = 1;
+        protected int renderingSteps;
+        protected float renderingInterval;
+
+        @SuppressWarnings({"unchecked"})
+        public final B self() {
+            return (B) this;
+        }
+
+        public final B particleObject(ParticleObject<? extends ParticleObject<?>> particleObject) {
+            this.particleObject = particleObject;
+            return self();
+        }
+
+        public final B delay(int delay) {
+            this.delay = delay;
+            return self();
+        }
+
+        public final B processingSpeed(int processingSpeed) {
+            this.processingSpeed = processingSpeed;
+            return self();
+        }
+
+        public final B renderingSteps(int renderingSteps) {
+            this.renderingSteps = renderingSteps;
+            return self();
+        }
+
+        public final B renderingInterval(float renderingInterval) {
+            this.renderingInterval = renderingInterval;
+            return self();
+        }
+
+        public abstract T build();
     }
 }
