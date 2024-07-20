@@ -24,7 +24,7 @@ import java.util.Optional;
 public class BezierCurveAnimator extends PathAnimatorBase {
     protected List<BezierCurve> bezierCurves;
     protected List<Integer> stepsForCurves;
-    protected AnimationTrimming<Integer> trimming;
+    protected AnimationTrimming<Float> trimming;
 
     protected DrawInterceptor<BezierCurveAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
@@ -62,13 +62,13 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      *
      * @return The animation trimming that is used
      */
-    public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
-        int startStep = trimming.getStart();
-        int endStep = trimming.getEnd();
-        if (startStep <= 0 || endStep >= this.getRenderingSteps() || startStep >= endStep) {
-            throw new IllegalArgumentException("Invalid animation trimming range");
+    public AnimationTrimming<Float> setTrimming(AnimationTrimming<Float> trimming) {
+        float start = trimming.getStart();
+        float end = trimming.getEnd();
+        if (start < 0.0f || end > 1.0f || start >= end) {
+            throw new IllegalArgumentException("Animation trimming must be within [0.0, 1.0]");
         }
-        AnimationTrimming<Integer> prevTrimming = this.trimming;
+        AnimationTrimming<Float> prevTrimming = this.trimming;
         this.trimming = trimming;
         return prevTrimming;
     }
@@ -77,7 +77,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      *
      * @return The animation trimming that is used
      */
-    public AnimationTrimming<Integer> getTrimming() {
+    public AnimationTrimming<Float> getTrimming() {
         return this.trimming;
     }
 
@@ -88,16 +88,26 @@ public class BezierCurveAnimator extends PathAnimatorBase {
 
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
-        int step = -1;
+        float tStart = this.trimming.getStart();
+        float tEnd = this.trimming.getEnd();
         this.allocateToScheduler();
+
+        int step = -1;
         for (int index = 0; index < this.bezierCurves.size(); index++) {
             BezierCurve bezierCurve = this.bezierCurves.get(index);
             int curveSteps = this.stepsForCurves.get(index);
 
             // Interval MUST be the reciprocal of steps so t is in [0, 1].
-            float tStep = 1.0f / curveSteps;
-            for (float t = 0; t < 1.0f; t += tStep) {
+            float tDelta = 1.0f / curveSteps;
+            for (float t = 0; t < 1.0f; t += tDelta) {
                 step++;
+                if (t < tStart) {
+                    continue;
+                }
+                // Handle trimming, but only if the end was set to a non-default value
+                if (t >= tEnd && tEnd != -1) {
+                    break;
+                }
                 Vector3f pos = bezierCurve.compute(t);
                 InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, step);
                 if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
@@ -138,7 +148,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         protected int stepsForAllCurves = 0;
         protected List<Float> intervalsForCurves = new ArrayList<>();
         protected float intervalForAllCurves = 0.0f;
-        protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
+        protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, 1.0f);
 
         private Builder() {}
 
@@ -182,7 +192,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             return self();
         }
 
-        public B trimming(AnimationTrimming<Integer> trimming) {
+        public B trimming(AnimationTrimming<Float> trimming) {
             this.trimming = trimming;
             return self();
         }
