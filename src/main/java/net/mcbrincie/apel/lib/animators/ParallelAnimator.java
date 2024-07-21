@@ -25,88 +25,20 @@ import java.util.Optional;
  */
 @SuppressWarnings("unused")
 public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimator<PathAnimatorBase> {
-    protected List<PathAnimatorBase> animators = new ArrayList<>();
-    protected List<Integer> delays = new ArrayList<>();
+    protected List<PathAnimatorBase> animators;
+    protected List<Integer> animatorDelays;
 
     protected DrawInterceptor<ParallelAnimator, OnRenderPathAnimator> onAnimatorRendering = DrawInterceptor.identity();
 
     public enum OnRenderPathAnimator {PATH_ANIMATOR, SHOULD_RENDER_ANIMATOR, DELAY}
 
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you want to supply a specific
-     * number of path animators in the form of varargs
-     *
-     * @param delay The delay between each particle object render
-     * @param pathAnimators The path animators to append
-     */
-    public ParallelAnimator(int delay, PathAnimatorBase... pathAnimators) {
-        super();
-        this.renderingSteps = pathAnimators.length;
-        this.setDelay(delay);
-        if (pathAnimators.length == 0) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        this.animators.addAll(List.of(pathAnimators));
+    public static <B extends Builder<B>> Builder<B> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you have a list of path
-     * animators which you want to supply all of them
-     *
-     * @param delay The delay between each particle object render
-     * @param pathAnimators The path animators to append
-    */
-    public ParallelAnimator(int delay, List<PathAnimatorBase> pathAnimators) {
-        super();
-        this.renderingSteps = pathAnimators.size();
-        this.setDelay(delay);
-        if (pathAnimators.isEmpty()) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        this.animators.addAll(pathAnimators);
-    }
-
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you have a list of path
-     * animators and a list of the delays
-     *
-     * @param delay The delays between each particle object render for each particle animator
-     * @param pathAnimators The path animators to append
-     */
-    public ParallelAnimator(List<Integer> delay, List<PathAnimatorBase> pathAnimators) {
-        super();
-        this.delay = -1;
-        this.renderingSteps = pathAnimators.size();
-        if (pathAnimators.isEmpty()) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        if (pathAnimators.size() != delay.size()) {
-            throw new IllegalArgumentException("Delays must match the number of path animators");
-        }
-        this.animators.addAll(pathAnimators);
-        this.delays.addAll(delay);
-    }
-
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you want to supply the path
-     * animators in the form of varargs, and in addition you want a
-     * separate delays
-     *
-     * @param delay The delay between each particle object render
-     * @param pathAnimators The path animators to append
-     */
-    public ParallelAnimator(List<Integer> delay, PathAnimatorBase... pathAnimators) {
-        super();
-        this.delay = -1;
-        this.renderingSteps = pathAnimators.length;
-        if (pathAnimators.length == 0) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        if (pathAnimators.length != delay.size()) {
-            throw new IllegalArgumentException("Delays must match the number of path animators");
-        }
-        this.animators.addAll(List.of(pathAnimators));
-        this.delays.addAll(delay);
+    private <B extends Builder<B>> ParallelAnimator(Builder<B> builder) {
+        this.animators = builder.childAnimators;
+        this.animatorDelays = builder.childAnimatorDelays;
     }
 
     /** Appends a new child path animator to the collection of the child path animators
@@ -250,5 +182,54 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
         interceptData.addMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR, true);
         this.onAnimatorRendering.apply(interceptData, this);
         return interceptData;
+    }
+
+    public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, ParallelAnimator> {
+        protected List<PathAnimatorBase> childAnimators = new ArrayList<>();
+        protected List<Integer> childAnimatorDelays = new ArrayList<>();
+
+        private Builder () {}
+
+        public B animator(PathAnimatorBase animator) {
+            this.childAnimators.add(animator);
+            return self();
+        }
+
+        public B animator(PathAnimatorBase animator, int delay) {
+            this.childAnimators.add(animator);
+            this.childAnimatorDelays.add(delay);
+            return self();
+        }
+
+        public B animators(List<PathAnimatorBase> animators) {
+            this.childAnimators.addAll(animators);
+            return self();
+        }
+
+        public B animators(List<PathAnimatorBase> animators, List<Integer> delays) {
+            this.childAnimators.addAll(animators);
+            this.childAnimatorDelays.addAll(delays);
+            return self();
+        }
+
+        @Override
+        public ParallelAnimator build() {
+            if (this.delay < 0) {
+                throw new IllegalStateException("Initial delay must be non-negative");
+            }
+            for (int i = 0; i < this.childAnimators.size(); i++) {
+                if (this.childAnimators.get(i) == null) {
+                    throw new NullPointerException("Child Animator cannot be null");
+                }
+                // Pad the list of delays, so it's equal in length
+                if (this.childAnimatorDelays.size() == i) {
+                    this.childAnimatorDelays.add(0);
+                }
+                if (this.childAnimatorDelays.get(i) < 0) {
+                    throw new IllegalStateException("Child animator delays must be non-negative");
+                }
+            }
+            return new ParallelAnimator(this);
+        }
     }
 }
