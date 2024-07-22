@@ -36,6 +36,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
     }
 
     private <B extends Builder<B>> SequentialAnimator(Builder<B> builder) {
+        super(builder);
         this.animators = builder.childAnimators;
         this.animatorDelays = builder.childAnimatorDelays;
     }
@@ -98,71 +99,45 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
 
     @Override
     protected int calculateDuration() {
-        int index = 0;
-        int delaySum = 0;
-        for (PathAnimatorBase animatorChild : this.animators) {
-            int seqDelay = getDelayOfAnimator(index);
-            delaySum += seqDelay + animatorChild.calculateDuration();
-            index++;
+        int totalDuration = this.delay;
+        for (int index = 0; index < this.animators.size(); index++) {
+            int childAnimatorDelay = this.animatorDelays.get(index);
+            PathAnimatorBase childAnimator = this.animators.get(index);
+            totalDuration += childAnimatorDelay + childAnimator.calculateDuration();
         }
-        return delaySum;
+        return totalDuration;
     }
 
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
-        this.allocateToScheduler();
-        int step = 0;
-        PathAnimatorBase prev = null;
-        for (PathAnimatorBase animator : this.animators) {
-            step++;
+        int totalDelay = this.delay;
+        for (int index = 0; index < this.animators.size(); index++) {
+            PathAnimatorBase animator = this.animators.get(index);
+            int animatorDelay = this.animatorDelays.get(index);
+
             InterceptData<OnRenderPathAnimator> interceptData =
-                    this.doBeforeStep(renderer.getServerWorld(), animator, getDelayOfAnimator(step), step);
+                    this.doBeforeAnimator(renderer.getServerWorld(), animator, animatorDelay);
             if (!interceptData.getMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR, true)) {
                 continue;
             }
-            animator = interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR, animator);
-            int delayForAnimator = (int) interceptData.getMetadata(OnRenderPathAnimator.DELAY);
-            int delayForAnimatorInUse = this.getDelayOfAnimator(step);
-            if (delayForAnimator != delayForAnimatorInUse) {
-                this.animatorDelays.set(step - 1, delayForAnimator);
-                if (delayForAnimator != this.delay) this.delay = -1;
-                for (int delayPerAnimator : this.animatorDelays) {
-                    if (delayPerAnimator != delayForAnimator) continue;
-                    this.delay = -1;
-                    break;
-                }
+
+            // Effectively final variables for the lambda
+            PathAnimatorBase animatorToSchedule = interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR, animator);
+            int delayForAnimator = interceptData.getMetadata(OnRenderPathAnimator.DELAY, animatorDelay);
+            Runnable func = () -> animatorToSchedule.beginAnimation(renderer);
+
+            if (this.delay + delayForAnimator == 0) {
+                Apel.DRAW_EXECUTOR.submit(func);
+            } else {
+                totalDelay += delayForAnimator;
+                animatorToSchedule.allocateToScheduler();
+                Apel.LOGGER.info("Scheduling {} with {} delay", animatorToSchedule.getClass(), totalDelay);
+                Apel.SCHEDULER.allocateNewStep(
+                        animatorToSchedule, new ScheduledStep(totalDelay, new Runnable[]{func})
+                );
+                totalDelay += animatorToSchedule.calculateDuration();
             }
-            this.allocateNewAnimator(renderer, step, animator, prev);
-            prev = animator;
         }
-    }
-
-    private int getDelayOfAnimator(int step) {
-        return (this.delay == -1) ? this.animatorDelays.get(step - 1) : this.delay;
-    }
-
-    protected void allocateNewAnimator(ApelServerRenderer renderer, int step, PathAnimatorBase animator, PathAnimatorBase prev) {
-        Runnable func = () -> animator.beginAnimation(renderer);
-        int childDelay = 0;
-        if (prev != null) childDelay = prev.calculateDuration();
-        int delayUsed = childDelay + getDelayOfAnimator(step);
-        if (delayUsed == 0) {
-            Apel.DRAW_EXECUTOR.submit(func);
-            return;
-        }
-        if (this.processingSpeed <= 1) {
-            Apel.SCHEDULER.allocateNewStep(
-                    this, new ScheduledStep(delayUsed, new Runnable[]{func})
-            );
-            return;
-        } else if (step % this.processingSpeed != 0) {
-            this.storedFuncsBuffer.add(func);
-            return;
-        }
-        Apel.SCHEDULER.allocateNewStep(
-                this, new ScheduledStep(delayUsed, this.storedFuncsBuffer.toArray(Runnable[]::new))
-        );
-        this.storedFuncsBuffer.clear();
     }
 
     /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
@@ -176,11 +151,11 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
         this.onAnimatorRendering = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
     }
 
-    protected InterceptData<OnRenderPathAnimator> doBeforeStep(
-            ServerWorld world, PathAnimatorBase pathAnimatorBase, int delay, int currStep
+    protected InterceptData<OnRenderPathAnimator> doBeforeAnimator(
+            ServerWorld world, PathAnimatorBase pathAnimatorBase, int delay
     ) {
         InterceptData<OnRenderPathAnimator> interceptData = new InterceptData<>(
-                world, null, currStep, OnRenderPathAnimator.class
+                world, null, -1, OnRenderPathAnimator.class
         );
         interceptData.addMetadata(OnRenderPathAnimator.PATH_ANIMATOR, pathAnimatorBase);
         interceptData.addMetadata(OnRenderPathAnimator.DELAY, delay);
