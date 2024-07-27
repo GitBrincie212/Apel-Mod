@@ -163,39 +163,40 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
         float width = size.x / 2f;
         float height = size.y / 2f;
         float depth = size.z / 2f;
-        // Rotation
-        Quaternionfc quaternion =
-                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
-        // Translation
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
         // Compute the cuboid vertices
-        Vector3f vertex0 = this.rigidTransformation(width, -height, -depth, quaternion, objectDrawPos);
-        Vector3f vertex1 = this.rigidTransformation(width, -height, depth, quaternion, objectDrawPos);
-        Vector3f vertex2 = this.rigidTransformation(-width, -height, depth, quaternion, objectDrawPos);
-        Vector3f vertex3 = this.rigidTransformation(-width, -height, -depth, quaternion, objectDrawPos);
-        Vector3f vertex4 = this.rigidTransformation(width, height, -depth, quaternion, objectDrawPos);
-        Vector3f vertex5 = this.rigidTransformation(width, height, depth, quaternion, objectDrawPos);
-        Vector3f vertex6 = this.rigidTransformation(-width, height, depth, quaternion, objectDrawPos);
-        Vector3f vertex7 = this.rigidTransformation(-width, height, -depth, quaternion, objectDrawPos);
+        Vector3f vertex0 = new Vector3f(width, -height, -depth);
+        Vector3f vertex1 = new Vector3f(width, -height, depth);
+        Vector3f vertex2 = new Vector3f(-width, -height, depth);
+        Vector3f vertex3 = new Vector3f(-width, -height, -depth);
+        Vector3f vertex4 = new Vector3f(width, height, -depth);
+        Vector3f vertex5 = new Vector3f(width, height, depth);
+        Vector3f vertex6 = new Vector3f(-width, height, depth);
+        Vector3f vertex7 = new Vector3f(-width, height, -depth);
 
         Vector3f[] vertices = {vertex0, vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7};
         drawContext.addMetadata(VERTICES, vertices);
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext data) {
-        Vector3f[] vertices = data.getMetadata(VERTICES);
+    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+        // Rotation
+        Quaternionfc quaternion =
+                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
+        // Translation
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
+        // Scaled and re-positioned vertices
+        Vector3f[] vertices = drawContext.getMetadata(VERTICES);
 
-        Vector3f vertex0 = vertices[0];
-        Vector3f vertex1 = vertices[1];
-        Vector3f vertex2 = vertices[2];
-        Vector3f vertex3 = vertices[3];
-        Vector3f vertex4 = vertices[4];
-        Vector3f vertex5 = vertices[5];
-        Vector3f vertex6 = vertices[6];
-        Vector3f vertex7 = vertices[7];
+        Vector3f vertex0 = this.rigidTransformation(vertices[0], quaternion, objectDrawPos);
+        Vector3f vertex1 = this.rigidTransformation(vertices[1], quaternion, objectDrawPos);
+        Vector3f vertex2 = this.rigidTransformation(vertices[2], quaternion, objectDrawPos);
+        Vector3f vertex3 = this.rigidTransformation(vertices[3], quaternion, objectDrawPos);
+        Vector3f vertex4 = this.rigidTransformation(vertices[4], quaternion, objectDrawPos);
+        Vector3f vertex5 = this.rigidTransformation(vertices[5], quaternion, objectDrawPos);
+        Vector3f vertex6 = this.rigidTransformation(vertices[6], quaternion, objectDrawPos);
+        Vector3f vertex7 = this.rigidTransformation(vertices[7], quaternion, objectDrawPos);
 
-        int step = data.getCurrentStep();
+        int step = drawContext.getCurrentStep();
         int bottomFaceAmount = this.amount.x;
         int topFaceAmount = this.amount.y;
         int verticalBarsAmount = this.amount.z;

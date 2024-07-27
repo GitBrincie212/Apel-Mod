@@ -271,22 +271,6 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     }
 
     /**
-     * Transforms the point at {@code (x, y, z)} according to the {@code quaternion} and {@code translation}.
-     *
-     * <p>Does not modify the {@code quaternion} or {@code translation}.
-     *
-     * @param x The x-coordinate of the point to transform
-     * @param y The y-coordinate of the point to transform
-     * @param z The z-coordinate of the point to transform
-     * @param quaternion The rotation to apply
-     * @param translation The translation to apply
-     * @return The transformed point
-     */
-    protected final Vector3f rigidTransformation(float x, float y, float z, Quaternionfc quaternion, Vector3f translation) {
-        return new Vector3f(x, y, z).rotate(quaternion).add(translation);
-    }
-
-    /**
      * Transforms a copy of the point at {@code position} according to the {@code quaternion} and {@code translation}.
      *
      * <p>Does not modify the {@code quaternion} or {@code translation}.
