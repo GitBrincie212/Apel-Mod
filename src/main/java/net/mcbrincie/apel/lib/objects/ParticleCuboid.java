@@ -10,15 +10,15 @@ import org.joml.Vector3i;
  * living in 3D. It is a cube if all the values of the size vector
  * are supplied with the same value.
  * <p>
- * <strong>Note: </strong>ParticleCuboid does not respect the {@link #getAmount()} or {@link #setAmount(int)} methods
- * inherited from ParticleObject.  Instead, it stores amounts as described in {@link #getAmount(AreaLabel)} and
- * {@link #setAmount(Vector3i)}.  This also means that the builder method {@link ParticleObject.Builder#amount(int)} is
- * not ideal to use, though it will propagate an integer {@code i} into the vector {@code (i, i, i)}.
+ * <strong>Note: </strong>ParticleCuboid does not respect the {@link #getAmount()} method inherited from ParticleObject.
+ * Instead, it contains amounts for the edges parallel to each axis using {@link #setAmounts(Vector3i)}.  If all edges
+ * should have the same number of of particles, then {@link #setAmount(int)} may be used.  The builder allows both
+ * methods as well.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
     protected Vector3f size = new Vector3f();
-    protected Vector3i amount = new Vector3i();
+    protected Vector3i amounts = new Vector3i();
 
     /**
      * The vertices provided follow this indexing scheme (using Minecraft's axes where +x is east, +y is up, and
@@ -47,11 +47,6 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
      */
     public static final DrawContext.Key<Vector3f[]> VERTICES = DrawContext.vector3fArrayKey("vertices");
 
-    /** This enum is used when retrieving amounts used to render the cuboid. */
-    public enum AreaLabel {
-        BOTTOM_FACE, TOP_FACE, VERTICAL_BARS, ALL_FACES
-    }
-
     public static Builder<?> builder() {
         return new Builder<>();
     }
@@ -60,7 +55,7 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
         super(builder.particleEffect, builder.rotation, builder.offset, 1, builder.beforeDraw, builder.afterDraw);
         // Defensive copies are made in setters to protect against in-place modification of vectors
         this.setSize(builder.size);
-        this.setAmount(builder.amount);
+        this.setAmounts(builder.amounts);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -71,7 +66,7 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
     public ParticleCuboid(ParticleCuboid cuboid) {
         super(cuboid);
         this.size = new Vector3f(cuboid.size);
-        this.amount = new Vector3i(cuboid.amount);
+        this.amounts = new Vector3i(cuboid.amounts);
     }
 
     public Vector3f getSize() {
@@ -115,22 +110,20 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
     }
 
     /**
-     * Sets the amount per area.  The X coordinate dictates the particles per line on the bottom face, the Y
-     * coordinate dictates the particles per line on the top face, and the Z coordinate dictates the particles per
-     * vertical bar of the cuboid.
+     * Sets the amount of particles used per axis.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param amount The amount per area
      * @return The previous amount to use
      */
-    public final Vector3i setAmount(Vector3i amount) {
+    public final Vector3i setAmounts(Vector3i amount) {
         if (amount.x <= 0 || amount.y <= 0 || amount.z <= 0) {
             throw new IllegalArgumentException("One of the amount of particles axis is below or equal to 0");
         }
-        Vector3i prevAmount = this.amount;
+        Vector3i prevAmount = this.amounts;
         // Defensive copy to prevent unintended modification
-        this.amount = new Vector3i(amount);
+        this.amounts = new Vector3i(amount);
         return prevAmount;
     }
 
@@ -147,14 +140,8 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
      *
      * @return The amount of particles per line on the face requested
     */
-    public Vector3i getAmount(AreaLabel faceIndex) {
-        return switch(faceIndex) {
-            // Defensive copies are return to prevent unintended modification
-            case ALL_FACES -> new Vector3i(this.amount);
-            case BOTTOM_FACE -> new Vector3i(this.amount.x, -1, -1);
-            case TOP_FACE -> new Vector3i(-1, this.amount.y, -1);
-            case VERTICAL_BARS -> new Vector3i(-1, -1, this.amount.z);
-        };
+    public Vector3i getAmounts() {
+        return new Vector3i(this.amounts);
     }
 
     @Override
@@ -197,32 +184,32 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
         Vector3f vertex7 = this.rigidTransformation(vertices[7], quaternion, objectDrawPos);
 
         int step = drawContext.getCurrentStep();
-        int bottomFaceAmount = this.amount.x;
-        int topFaceAmount = this.amount.y;
-        int verticalBarsAmount = this.amount.z;
+        int xAmount = this.amounts.x;
+        int yAmount = this.amounts.y;
+        int zAmount = this.amounts.z;
 
         // Bottom Face
-        renderer.drawLine(this.particleEffect, step, vertex0, vertex1, bottomFaceAmount);
-        renderer.drawLine(this.particleEffect, step, vertex1, vertex2, bottomFaceAmount);
-        renderer.drawLine(this.particleEffect, step, vertex2, vertex3, bottomFaceAmount);
-        renderer.drawLine(this.particleEffect, step, vertex3, vertex0, bottomFaceAmount);
+        renderer.drawLine(this.particleEffect, step, vertex0, vertex1, zAmount);
+        renderer.drawLine(this.particleEffect, step, vertex1, vertex2, xAmount);
+        renderer.drawLine(this.particleEffect, step, vertex2, vertex3, zAmount);
+        renderer.drawLine(this.particleEffect, step, vertex3, vertex0, xAmount);
 
         // Top Face
-        renderer.drawLine(this.particleEffect, step, vertex4, vertex5, topFaceAmount);
-        renderer.drawLine(this.particleEffect, step, vertex5, vertex6, topFaceAmount);
-        renderer.drawLine(this.particleEffect, step, vertex6, vertex7, topFaceAmount);
-        renderer.drawLine(this.particleEffect, step, vertex7, vertex4, topFaceAmount);
+        renderer.drawLine(this.particleEffect, step, vertex4, vertex5, zAmount);
+        renderer.drawLine(this.particleEffect, step, vertex5, vertex6, xAmount);
+        renderer.drawLine(this.particleEffect, step, vertex6, vertex7, zAmount);
+        renderer.drawLine(this.particleEffect, step, vertex7, vertex4, xAmount);
 
         // Vertical
-        renderer.drawLine(this.particleEffect, step, vertex0, vertex4, verticalBarsAmount);
-        renderer.drawLine(this.particleEffect, step, vertex1, vertex5, verticalBarsAmount);
-        renderer.drawLine(this.particleEffect, step, vertex2, vertex6, verticalBarsAmount);
-        renderer.drawLine(this.particleEffect, step, vertex3, vertex7, verticalBarsAmount);
+        renderer.drawLine(this.particleEffect, step, vertex0, vertex4, yAmount);
+        renderer.drawLine(this.particleEffect, step, vertex1, vertex5, yAmount);
+        renderer.drawLine(this.particleEffect, step, vertex2, vertex6, yAmount);
+        renderer.drawLine(this.particleEffect, step, vertex3, vertex7, yAmount);
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCuboid> {
         protected Vector3f size = new Vector3f();
-        protected Vector3i amount = new Vector3i();
+        protected Vector3i amounts = new Vector3i();
 
         private Builder() {}
 
@@ -245,26 +232,37 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
         }
 
         /**
-         * Set the amount of particles to use on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         * Set the amount of particles to use on the builder.  This method is not cumulative; repeated calls will
+         * overwrite previous values from this method and from {@link #amounts(int)}.
          *
-         * @see ParticleCuboid#setAmount(Vector3i)
+         * @see #amounts(int)
+         * @see ParticleCuboid#setAmounts(Vector3i)
          */
-        public B amount(Vector3i amount) {
-            this.amount = amount;
+        public B amounts(Vector3i amount) {
+            this.amounts = amount;
             return self();
         }
 
-        @Override
-        public B amount(int amount) {
-            this.amount = new Vector3i(amount, amount, amount);
+        /**
+         * Set the amount of particles to use on all edges.  This method is not cumulative, repeated calls will
+         * overwrite previous values from this method and from {@link #amounts(Vector3i)}.
+         * <p>
+         * Note that {@link #amount(int)} acts as s synonym, but is only considered if neither {@code amounts} method is
+         * used.
+         *
+         * @see #amounts(Vector3i)
+         * @see ParticleCuboid#setAmounts(Vector3i)
+         */
+        public B amounts(int amount) {
+            this.amounts = new Vector3i(amount, amount, amount);
             return self();
         }
 
         @Override
         public ParticleCuboid build() {
             // Handle the amount being set via integer instead of Vector3i
-            if (this.amount.equals(new Vector3i()) && super.amount > 0) {
-                this.amount(new Vector3i(super.amount));
+            if (this.amounts.equals(new Vector3i()) && super.amount > 0) {
+                this.amounts(new Vector3i(super.amount));
             }
             return new ParticleCuboid(this);
         }
