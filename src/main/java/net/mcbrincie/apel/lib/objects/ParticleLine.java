@@ -1,14 +1,22 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
-/** The particle object class that represents a 2D line. It is one of the
- * most simple objects to use as it needs only a start & an ending position
- * to draw that line. The line cannot be curved and is only linear.
- *
- * <p><b>Note:</b> Rotation is not applied to the calculations, as such it doesn't make
- * any difference.
+/**
+ * This particle object subclass represents a 3D line. Constructing the line requires two points, both relative to the
+ * provided origin in the {@code DrawContext}.  The line may be rotated and offset relative to the draw origin by using
+ * the builder properties, setters after construction, or during interceptor calls.
+ * <p>
+ * If more complicated, line-based shapes are desired, see the following:
+ * @see ParticleCuboid
+ * @see ParticlePolygon
+ * @see ParticleQuad
+ * @see ParticleTetrahedron
+ * @see ParticleTriangle
+ * </p>
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleLine extends ParticleObject<ParticleLine> {
@@ -89,17 +97,15 @@ public class ParticleLine extends ParticleObject<ParticleLine> {
     }
 
     @Override
-    @Deprecated
-    public Vector3f getRotation() {
-        // Do not throw UnsupportedOperationException in case this is called in a series of ParticleObjects
-        return null;
-    }
-
-    @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+        // Rotation
+        Quaternionfc quaternion =
+                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
+        // Translation
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
 
-        Vector3f v1 = new Vector3f(this.start).add(drawContext.getPosition()).add(this.offset);
-        Vector3f v2 = new Vector3f(this.end).add(drawContext.getPosition()).add(this.offset);
+        Vector3f v1 = this.rigidTransformation(this.start, quaternion, objectDrawPos);
+        Vector3f v2 = this.rigidTransformation(this.end, quaternion, objectDrawPos);
 
         renderer.drawLine(this.particleEffect, drawContext.getCurrentStep(), v1, v2, this.amount);
     }
