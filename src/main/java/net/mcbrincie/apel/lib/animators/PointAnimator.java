@@ -20,9 +20,9 @@ import java.util.Optional;
 @SuppressWarnings("unused")
 public class PointAnimator extends PathAnimatorBase {
     protected Vector3f origin;
-    protected DrawInterceptor<PointAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
+    protected DrawInterceptor<PointAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
-    public enum onRenderingStep {SHOULD_DRAW_STEP}
+    public enum OnRenderStep {SHOULD_DRAW_STEP}
 
     /** Constructor for the point animator. It basically animates the object in a certain place.
      * The place is called the origin, which is only a point (hence the point animator)
@@ -31,7 +31,8 @@ public class PointAnimator extends PathAnimatorBase {
      * @param particle The particle object to use
      * @param renderingSteps The rendering steps to use
     */
-    public PointAnimator(int delay, @NotNull ParticleObject particle, Vector3f origin, int renderingSteps) {
+    public PointAnimator(int delay, @NotNull ParticleObject<? extends ParticleObject<?>> particle, Vector3f origin,
+                         int renderingSteps) {
         super(delay, particle, renderingSteps);
         this.origin = origin;
     }
@@ -70,7 +71,7 @@ public class PointAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public int convertToSteps() {
+    public int convertIntervalToSteps() {
         return this.renderingSteps;
     }
 
@@ -78,8 +79,10 @@ public class PointAnimator extends PathAnimatorBase {
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         this.allocateToScheduler();
         for (int i = 0; i < this.renderingSteps; i++) {
-            InterceptData<onRenderingStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), i);
-            if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
+            InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), i);
+            if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
+                continue;
+            }
             this.handleDrawingStep(renderer, i, this.origin);
         }
     }
@@ -90,15 +93,15 @@ public class PointAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<PointAnimator, onRenderingStep> duringRenderingSteps) {
+    public void setDuringRenderingSteps(DrawInterceptor<PointAnimator, OnRenderStep> duringRenderingSteps) {
         this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
     }
 
-    protected InterceptData<onRenderingStep> doBeforeStep(ServerWorld world, int currStep) {
-        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
-                world, null, currStep, onRenderingStep.class
+    protected InterceptData<OnRenderStep> doBeforeStep(ServerWorld world, int currStep) {
+        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
+                world, null, currStep, OnRenderStep.class
         );
-        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
         this.duringRenderingSteps.apply(interceptData, this);
         return interceptData;
     }

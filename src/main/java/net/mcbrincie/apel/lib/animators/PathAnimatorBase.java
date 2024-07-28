@@ -25,8 +25,8 @@ public abstract class PathAnimatorBase {
     protected float renderingInterval = 0.0f;
     protected int renderingSteps = 0;
     protected int delay;
-    protected int processSpeed = 1;
-    protected ParticleObject particleObject;
+    protected int processingSpeed = 1;
+    protected ParticleObject<? extends ParticleObject<?>> particleObject;
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
 
@@ -42,10 +42,10 @@ public abstract class PathAnimatorBase {
      * @param renderingSteps The rendering steps to use
      * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, float)
     */
-    public PathAnimatorBase(int delay, ParticleObject particleObject, int renderingSteps) {
+    public PathAnimatorBase(int delay, ParticleObject<? extends ParticleObject<?>> particleObject, int renderingSteps) {
         this.setDelay(delay);
         this.setParticleObject(particleObject);
-        this.setRenderSteps(renderingSteps);
+        this.setRenderingSteps(renderingSteps);
     }
 
     /** This is an empty constructor meant as a placeholder */
@@ -62,10 +62,10 @@ public abstract class PathAnimatorBase {
      * @param renderingInterval The rendering interval to use, which is how many blocks per new rendering step
      * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, int)
      */
-    public PathAnimatorBase(int delay, @NotNull ParticleObject particle, float renderingInterval) {
+    public PathAnimatorBase(int delay, @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval) {
         this.setDelay(delay);
         this.setParticleObject(particle);
-        this.setRenderInterval(renderingInterval);
+        this.setRenderingInterval(renderingInterval);
     }
 
     /**
@@ -81,7 +81,7 @@ public abstract class PathAnimatorBase {
         this.particleObject = animator.particleObject;
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
-        this.processSpeed = animator.processSpeed;
+        this.processingSpeed = animator.processingSpeed;
         this.storedFuncsBuffer = new ArrayList<>();
     }
 
@@ -91,12 +91,7 @@ public abstract class PathAnimatorBase {
      */
     public void allocateToScheduler() {
         if (this.delay == 0) return;
-        int steps = this.renderingSteps != 0 ? this.scheduleGetAmount() : this.convertToSteps();
-        Apel.SCHEDULER.allocateNewSequence(this, steps);
-    }
-
-    protected int scheduleGetAmount() {
-        return this.renderingSteps;
+        Apel.SCHEDULER.allocateNewSequence(this);
     }
 
     /** Gets the amount of rendering steps, which can be zero indicating
@@ -104,8 +99,24 @@ public abstract class PathAnimatorBase {
      *
      * @return The number of particles
      */
-    public int getRenderSteps() {
+    public int getRenderingSteps() {
         return this.renderingSteps;
+    }
+
+    /** Sets the rendering steps to a new value. It resets the rendering interval
+     *  to 0.0f. And returns the previous rendering steps used
+     *
+     * @param steps The new rendering steps to set
+     * @return The previous rendering interval
+     */
+    public int setRenderingSteps(int steps) {
+        if (steps < 0) {
+            throw new IllegalArgumentException("Rendering Steps is not positive or equals to 0");
+        }
+        int prevRenderStep = this.renderingSteps;
+        this.renderingSteps = steps;
+        this.renderingInterval = 0.0f;
+        return prevRenderStep;
     }
 
     /** Gets the interval of blocks per particle object render.
@@ -114,8 +125,24 @@ public abstract class PathAnimatorBase {
      *
      * @return The interval of blocks per particle object render
      */
-    public float getRenderInterval() {
+    public float getRenderingInterval() {
         return this.renderingInterval;
+    }
+
+    /** Sets the rendering interval to a new value. It resets the rendering steps
+     *  to 0. And returns the previous rendering interval used
+     *
+     * @param interval The new rendering interval to set
+     * @return The previous rendering interval
+     */
+    public float setRenderingInterval(float interval) {
+        if (interval < 0) {
+            throw new IllegalArgumentException("Rendering Interval is not positive or equals to 0");
+        }
+        float prevInterval = this.renderingInterval;
+        this.renderingInterval = interval;
+        this.renderingSteps = 0;
+        return prevInterval;
     }
 
     /** Gets the delay per rendering step, this can be zero indicating
@@ -126,7 +153,7 @@ public abstract class PathAnimatorBase {
      * @return The amount of rendering steps
      */
     public int getDelay() {
-        return this.renderingSteps;
+        return this.delay;
     }
 
     /** Sets the delay per rendering step to a new value. And
@@ -150,7 +177,7 @@ public abstract class PathAnimatorBase {
      *
      * @return The particle object
      */
-    public ParticleObject getParticleObject() {
+    public ParticleObject<? extends ParticleObject<?>> getParticleObject() {
         return this.particleObject;
     }
 
@@ -159,42 +186,20 @@ public abstract class PathAnimatorBase {
      *
      * @return The previous amount of rendering steps
      */
-    public ParticleObject setParticleObject(@NotNull ParticleObject object) {
-        ParticleObject particleObject = this.particleObject;
+    public ParticleObject<? extends ParticleObject<?>> setParticleObject(@NotNull ParticleObject<? extends ParticleObject<?>> object) {
+        ParticleObject<?> particleObject = this.particleObject;
         this.particleObject = object;
         return particleObject;
     }
 
-    /** Sets the rendering interval to a new value. It resets the rendering steps
-     *  to 0. And returns the previous rendering interval used
+    /** Gets the processing speed. Which is measured in rs/st and dictates how many functions
+     * to execute per rendering step. By default, it is set to 1 rs/st
      *
-     * @param interval The new rendering interval to set
-     * @return The previous rendering interval
-    */
-    public float setRenderInterval(float interval) {
-        if (interval < 0) {
-            throw new IllegalArgumentException("Rendering Interval is not positive or equals to 0");
-        }
-        float prevInterval = this.renderingInterval;
-        this.renderingInterval = interval;
-        this.renderingSteps = 0;
-        return prevInterval;
-    }
-
-    /** Sets the rendering steps to a new value. It resets the rendering interval
-     *  to 0.0f. And returns the previous rendering steps used
-     *
-     * @param steps The new rendering steps to set
-     * @return The previous rendering interval
-    */
-    public int setRenderSteps(int steps) {
-        if (steps < 0) {
-            throw new IllegalArgumentException("Rendering Steps is not positive or equals to 0");
-        }
-        int prevRenderStep = this.renderingSteps;
-        this.renderingSteps = steps;
-        this.renderingInterval = 0.0f;
-        return prevRenderStep;
+     * @see PathAnimatorBase#getDelay()
+     * @return The processing speed used
+     */
+    public int getProcessingSpeed() {
+        return this.processingSpeed;
     }
 
     /** Sets the processing speed to allow for even faster animations on larger rendering steps.
@@ -214,26 +219,16 @@ public abstract class PathAnimatorBase {
         if (speed < 1) {
             throw new IllegalArgumentException("Process speed cannot be below 1 rs/st");
         }
-        int prevProcessSpeed = this.processSpeed;
-        this.processSpeed = speed;
+        int prevProcessSpeed = this.processingSpeed;
+        this.processingSpeed = speed;
         return prevProcessSpeed;
-    }
-
-    /** Gets the processing speed. Which is measured in rs/st and dictates how many functions
-     * to execute per rendering step. By default, it is set to 1 rs/st
-     *
-     * @see PathAnimatorBase#getDelay()
-     * @return The processing speed used
-     */
-    public int getProcessingSpeed() {
-        return this.processSpeed;
     }
 
     /** Does the calculations to convert from an interval to rendering steps
      *
      * @return The number of steps
      */
-    public abstract int convertToSteps();
+    public abstract int convertIntervalToSteps();
 
     /**
      * This method is used for beginning the animation logic.
@@ -245,14 +240,14 @@ public abstract class PathAnimatorBase {
      */
     public abstract void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException;
 
-    /** Calculates the total delay for the path animator
+    /** Calculates the total duration, in ticks, for the path animator
      *
-     * @return The delay as an integer
+     * @return Animation duration, as an integer
      */
     protected int calculateDuration() {
-        int steps = this.getRenderSteps();
+        int steps = this.getRenderingSteps();
         int speed = this.getProcessingSpeed();
-        return this.delay * ((steps == 0 ? this.convertToSteps() : steps) / speed);
+        return this.delay * ((steps == 0 ? this.convertIntervalToSteps() : steps) / speed);
     }
 
     /**
@@ -273,12 +268,12 @@ public abstract class PathAnimatorBase {
             Apel.DRAW_EXECUTOR.submit(func);
             return;
         }
-        if (this.processSpeed <= 1) {
+        if (this.processingSpeed <= 1) {
             Apel.SCHEDULER.allocateNewStep(
                     this, new ScheduledStep(this.delay, new Runnable[]{func})
             );
             return;
-        } else if (step % this.processSpeed != 0) {
+        } else if (step % this.processingSpeed != 0) {
             this.storedFuncsBuffer.add(func);
             return;
         }

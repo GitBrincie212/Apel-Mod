@@ -27,9 +27,10 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     protected float[] renderingInterval;
     protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
 
-    protected DrawInterceptor<BezierCurveAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
+    protected DrawInterceptor<BezierCurveAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
-    public enum onRenderingStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
+    public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
+
     /**
      * Constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want a good consistent
@@ -43,7 +44,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject particle, float renderingInterval
+            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            float renderingInterval
     ) {
         this(delay, new BezierCurve[]{curve}, particle, new float[]{renderingInterval});
     }
@@ -58,7 +60,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject particle, int renderingSteps
+            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            int renderingSteps
     ) {
         this(delay, new BezierCurve[]{curve}, particle, new int[]{renderingSteps});
     }
@@ -77,7 +80,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, float renderingInterval
+            int delay, @NotNull BezierCurve[] bezierCurves,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval
     ) {
         this(delay, bezierCurves, particle, defaultedArray(new float[bezierCurves.length], renderingInterval));
     }
@@ -94,7 +98,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, int renderingSteps
+            int delay, @NotNull BezierCurve[] bezierCurves,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, int renderingSteps
     ) {
         this(delay, bezierCurves, particle, defaultedArray(new int[bezierCurves.length], renderingSteps));
     }
@@ -113,7 +118,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, float[] renderingInterval
+            int delay, @NotNull BezierCurve[] bezierCurves,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, float[] renderingInterval
     ) {
         super(delay, particle, renderingInterval[0]);
         if (bezierCurves.length == 0) {
@@ -139,7 +145,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves, @NotNull ParticleObject particle, int[] renderingSteps
+            int delay, @NotNull BezierCurve[] bezierCurves,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, int[] renderingSteps
     ) {
         super(delay, particle, renderingSteps[0]);
         if (bezierCurves.length == 0) {
@@ -170,18 +177,6 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         this.duringRenderingSteps = animator.duringRenderingSteps;
     }
 
-    /** Gets the distance needed to travel from the starting bézier curve to the ending bézier curve
-     *
-     * @return The distance between the starting bézier curve & ending bézier curve
-     */
-    public float getDistance() {
-        float sumDistance = 0;
-        for (BezierCurve bezierCurve : this.bezierCurves) {
-            sumDistance += bezierCurve.length(this.convertToSteps());
-        }
-        return sumDistance;
-    }
-
     /** Sets the animation trimming which accepts a start trim or
      * an ending trim. The trim parts have to be integer values
      *
@@ -190,7 +185,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
         int startStep = trimming.getStart();
         int endStep = trimming.getEnd();
-        if (startStep <= 0 || endStep >= this.getRenderSteps() || startStep >= endStep) {
+        if (startStep <= 0 || endStep >= this.getRenderingSteps() || startStep >= endStep) {
             throw new IllegalArgumentException("Invalid animation trimming range");
         }
         AnimationTrimming<Integer> prevTrimming = this.trimming;
@@ -207,7 +202,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     }
 
     @Override
-    public int convertToSteps() {
+    public int convertIntervalToSteps() {
         int steps = 0;
         for (int i = 0; i < this.bezierCurves.length; i++) {
             int curveSteps = getCurveSteps(this.bezierCurves[i], this.renderingInterval[i]);
@@ -220,15 +215,6 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         // TODO: choose this value better, perhaps based on distance between start/end or start/controls/end?
         float distance = bezierCurve.length(100);
         return (int) Math.ceil(distance / interval);
-    }
-
-    @Override
-    protected int scheduleGetAmount() {
-        int sumSteps = 0;
-        for (int i : this.renderingSteps) {
-            sumSteps += i;
-        }
-        return sumSteps;
     }
 
     @Override
@@ -249,10 +235,12 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             for (float t = 0; t < 1.0f; t += tStep) {
                 step++;
                 Vector3f pos = bezierCurve.compute(t);
-                InterceptData<onRenderingStep> interceptData =
+                InterceptData<OnRenderStep> interceptData =
                         this.doBeforeStep(renderer.getServerWorld(), pos, step);
-                if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
-                pos = (Vector3f) interceptData.getMetadata(onRenderingStep.RENDERING_POSITION);
+                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
+                    continue;
+                }
+                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
                 this.handleDrawingStep(renderer, step, pos);
             }
         }
@@ -265,18 +253,18 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<BezierCurveAnimator, onRenderingStep> duringRenderingSteps) {
+    public void setDuringRenderingSteps(DrawInterceptor<BezierCurveAnimator, OnRenderStep> duringRenderingSteps) {
         this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
     }
 
-    protected InterceptData<onRenderingStep> doBeforeStep(
+    protected InterceptData<OnRenderStep> doBeforeStep(
             ServerWorld world, Vector3f position, int currStep
     ) {
-        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
-                world, null, currStep, onRenderingStep.class
+        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
+                world, null, currStep, OnRenderStep.class
         );
-        interceptData.addMetadata(onRenderingStep.RENDERING_POSITION, position);
-        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        interceptData.addMetadata(OnRenderStep.RENDERING_POSITION, position);
+        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
         this.duringRenderingSteps.apply(interceptData, this);
         return interceptData;
     }

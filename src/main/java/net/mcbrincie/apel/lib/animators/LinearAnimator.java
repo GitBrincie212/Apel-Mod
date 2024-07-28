@@ -25,9 +25,9 @@ public class LinearAnimator extends PathAnimatorBase {
     protected float[] renderingInterval;
     protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
 
-    protected DrawInterceptor<LinearAnimator, onRenderingStep> duringRenderingSteps = DrawInterceptor.identity();
+    protected DrawInterceptor<LinearAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
-    public enum onRenderingStep {SHOULD_DRAW_STEP, CURRENT_ENDPOINT, RENDERING_POSITION}
+    public enum OnRenderStep {SHOULD_DRAW_STEP, CURRENT_ENDPOINT, RENDERING_POSITION}
 
     /** Constructor for the linear animation. This constructor is
      * meant to be used in the case that you want a constant number
@@ -40,8 +40,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f start, @NotNull Vector3f end, @NotNull ParticleObject particle,
-            int renderingSteps
+            int delay, @NotNull Vector3f start, @NotNull Vector3f end,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, int renderingSteps
     ) {
         this(delay, new Vector3f[]{start, end}, particle, new int[]{renderingSteps});
     }
@@ -60,8 +60,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f start, @NotNull Vector3f end, @NotNull ParticleObject particle,
-            float renderingInterval
+            int delay, @NotNull Vector3f start, @NotNull Vector3f end,
+            @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval
     ) {
         this(delay, new Vector3f[]{start, end}, particle, new float[]{renderingInterval});
     }
@@ -80,7 +80,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The distance, in blocks, between rendering steps
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, float renderingInterval
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            float renderingInterval
     ) {
         // There should be one fewer interval entries than endpoints, since each pair needs an interval
         this(delay, endpoints, particle, defaultedArray(new float[endpoints.length - 1], renderingInterval));
@@ -98,7 +99,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps between each pair of endpoints
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, int renderingSteps
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            int renderingSteps
     ) {
         // There should be one fewer step entries than endpoints since each segment needs steps
         this(delay, endpoints, particle, defaultedArray(new int[endpoints.length - 1], renderingSteps));
@@ -118,7 +120,8 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingInterval The number of blocks before placing a new render step
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, float[] renderingInterval
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
+            float[] renderingInterval
     ) {
         super(delay, particle, renderingInterval[0]);
         if ((renderingInterval.length - 1) == endpoints.length) {
@@ -141,7 +144,7 @@ public class LinearAnimator extends PathAnimatorBase {
      * @param renderingSteps The amount of rendering steps for the animation
      */
     public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, int[] renderingSteps
+            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject<? extends ParticleObject<?>> particle, int[] renderingSteps
     ) {
         super(delay, particle, renderingSteps[0]);
         if ((renderingSteps.length - 1) == endpoints.length) {
@@ -189,7 +192,7 @@ public class LinearAnimator extends PathAnimatorBase {
     public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
         int startStep = trimming.getStart();
         int endStep = trimming.getEnd();
-        if (startStep <= 0 || endStep >= this.getRenderSteps() || startStep >= endStep) {
+        if (startStep <= 0 || endStep >= this.getRenderingSteps() || startStep >= endStep) {
             throw new IllegalArgumentException("Invalid animation trimming range");
         }
         AnimationTrimming<Integer> prevTrimming = this.trimming;
@@ -219,69 +222,53 @@ public class LinearAnimator extends PathAnimatorBase {
 
 
     @Override
-    public int convertToSteps() {
+    public int convertIntervalToSteps() {
         int steps = 0;
         for (int i = 0; i < this.endpoints.length - 1; i++) {
-            float distance = this.endpoints[i].distance(this.endpoints[i + 1]);
-            int segmentSteps = (int) Math.ceil(distance / this.renderingInterval[i]);
+            int segmentSteps = getSegmentSteps(i, this.renderingInterval[i]);
             steps += segmentSteps;
         }
         return steps;
     }
 
-    @Override
-    protected int scheduleGetAmount() {
-        int sumSteps = 0;
-        for (int i : this.renderingSteps) {
-            sumSteps += i;
-        }
-        return sumSteps;
+    private int getSegmentSteps(int segmentIndex, float segmentInterval) {
+        float distance = this.endpoints[segmentIndex].distance(this.endpoints[segmentIndex + 1]);
+        return (int) Math.ceil(distance / segmentInterval);
     }
 
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
-        int particleAmount;
-        float particleInterval;
         int startStep = this.trimming.getStart();
         int endStep = this.trimming.getEnd();
-        Vector3f curr = new Vector3f(this.endpoints[0].x, this.endpoints[0].y, this.endpoints[0].z);
         this.allocateToScheduler();
-        int currStep = -1;
-        int endpointIndex = -1;
-        for (Vector3f endPos : this.endpoints) {
-            endpointIndex++;
-            if(endpointIndex == 0) continue;
-            particleAmount = this.renderingSteps[endpointIndex - 1];
-            particleInterval = this.renderingInterval[endpointIndex - 1];
-            if (particleInterval == 0.0f) {
-                particleInterval = (this.getDistance() / particleAmount) * (this.endpoints.length - 1);
-            } else {
-                particleAmount = this.convertToSteps();
+        int step = -1;
+        for (int segmentIndex = 0; segmentIndex < this.endpoints.length - 1; segmentIndex++) {
+            Vector3f segmentStart = this.endpoints[segmentIndex];
+            Vector3f segmentEnd = this.endpoints[segmentIndex + 1];
+            int segmentSteps = this.renderingSteps[segmentIndex];
+            float segmentInterval = this.renderingInterval[segmentIndex];
+            if (segmentInterval != 0.0f) {
+                // Compute steps based on length of segment
+                segmentSteps = this.getSegmentSteps(segmentIndex, segmentInterval);
             }
-            Vector3f startPos = this.endpoints[endpointIndex - 1];
-            float dist = this.getDistance();
-            for (int i = 0; i < particleAmount; i++) {
-                currStep++;
-                double currDist = curr.distance(endPos);
-                float dirX = (endPos.x - startPos.x) / dist;
-                float dirY = (endPos.y - startPos.y) / dist;
-                float dirZ = (endPos.z - startPos.z) / dist;
-                int currDirX = (int) Math.round((endPos.x - curr.x) / currDist);
-                int currDirY = (int) Math.round((endPos.y - curr.y) / currDist);
-                int currDirZ = (int) Math.round((endPos.z - curr.z) / currDist);
-                double dotProduct = (currDirX * dirX) + (currDirY * dirY) + (currDirZ * dirZ);
-                boolean isGoingSameDir = dotProduct > 0;
-                if (i == 0 && (curr.equals(endPos) || !isGoingSameDir || (i >= endStep && endStep != -1))) break;
-                float newX = curr.x + (dirX * particleInterval);
-                float newY = curr.y + (dirY * particleInterval);
-                float newZ = curr.z + (dirZ * particleInterval);
-                curr = new Vector3f(newX, newY, newZ);
-                if (i < startStep) continue;
-                InterceptData<onRenderingStep> interceptData =
-                        this.doBeforeStep(renderer.getServerWorld(), endpointIndex, curr, currStep);
-                if (!((boolean) interceptData.getMetadata(onRenderingStep.SHOULD_DRAW_STEP))) continue;
-                curr = (Vector3f) interceptData.getMetadata(onRenderingStep.RENDERING_POSITION);
-                this.handleDrawingStep(renderer, i, curr);
+            Vector3f segmentDelta = new Vector3f(segmentEnd).sub(segmentStart).div(segmentSteps);
+            for (int i = 0; i < segmentSteps; i++) {
+                step++;
+                if (i < startStep) {
+                    continue;
+                }
+                // Handle trimming, but only if the end was set to a non-default value
+                if (i >= endStep && endStep != -1) {
+                    break;
+                }
+                Vector3f pos = new Vector3f(segmentDelta).mul(i).add(segmentStart);
+                InterceptData<OnRenderStep> interceptData =
+                        this.doBeforeStep(renderer.getServerWorld(), segmentIndex, pos, step);
+                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
+                    continue;
+                }
+                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
+                this.handleDrawingStep(renderer, step, pos);
             }
         }
     }
@@ -293,19 +280,19 @@ public class LinearAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<LinearAnimator, onRenderingStep> duringRenderingSteps) {
+    public void setDuringRenderingSteps(DrawInterceptor<LinearAnimator, OnRenderStep> duringRenderingSteps) {
         this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
     }
 
-    protected InterceptData<onRenderingStep> doBeforeStep(
+    protected InterceptData<OnRenderStep> doBeforeStep(
             ServerWorld world, int currEndpointIndex, Vector3f position, int currStep
     ) {
-        InterceptData<onRenderingStep> interceptData = new InterceptData<>(
-                world, null, currStep, onRenderingStep.class
+        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
+                world, null, currStep, OnRenderStep.class
         );
-        interceptData.addMetadata(onRenderingStep.RENDERING_POSITION, position);
-        interceptData.addMetadata(onRenderingStep.CURRENT_ENDPOINT, currEndpointIndex);
-        interceptData.addMetadata(onRenderingStep.SHOULD_DRAW_STEP, true);
+        interceptData.addMetadata(OnRenderStep.RENDERING_POSITION, position);
+        interceptData.addMetadata(OnRenderStep.CURRENT_ENDPOINT, currEndpointIndex);
+        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
         this.duringRenderingSteps.apply(interceptData, this);
         return interceptData;
     }
