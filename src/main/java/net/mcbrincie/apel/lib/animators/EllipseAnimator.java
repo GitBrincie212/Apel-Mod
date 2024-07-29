@@ -2,13 +2,11 @@ package net.mcbrincie.apel.lib.animators;
 
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.server.world.ServerWorld;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -24,8 +22,8 @@ public class EllipseAnimator extends PathAnimatorBase {
     protected float radius;
     protected Vector3f center;
     protected Vector3f rotation;
-    protected int revolutions = 1;
-    protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, (float) (Math.TAU - 0.0001f));
+    protected int revolutions;
+    protected AnimationTrimming<Float> trimming;
     protected boolean clockwise;
     protected float stretch;
 
@@ -34,54 +32,19 @@ public class EllipseAnimator extends PathAnimatorBase {
 
     public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
 
-    /**
-     * Constructor for the ellipse animation. This constructor is
-     * meant to be used in the case that you want a constant number
-     * of particles. It doesn't look pretty at large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param radius The radius of the 2D ellipse
-     * @param center The center point of the 2D ellipse
-     * @param rotation the rotation in XYZ of the 2D ellipse<strong>(IN RADIANS)</strong>
-     * @param stretch the stretch factor of the ellipse
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps for the animation
-     */
-    public EllipseAnimator(
-            int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            float stretch, @NotNull ParticleObject<? extends ParticleObject<?>> particle, int renderingSteps
-    ) {
-        super(delay, particle, renderingSteps);
-        this.setRadius(radius);
-        this.setCenter(center);
-        this.rotate(rotation.x, rotation.y, rotation.z);
-        this.setStretch(stretch);
+    public static <B extends Builder<B>> Builder<B> builder() {
+        return new Builder<>();
     }
 
-    /**
-     * Constructor for the ellipse animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle ellipse. The amount is dynamic that can cause
-     * performance issues for larger distances (The higher the interval,
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param radius The radius of the 2D ellipse
-     * @param center The center point of the 2D ellipse
-     * @param rotation the rotation in XYZ of the 2D ellipse<strong>(IN RADIANS)</strong>
-     * @param stretch the stretch factor of the ellipse
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public EllipseAnimator(
-            int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            float stretch, @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval
-    ) {
-        super(delay, particle, renderingInterval);
-        this.setRadius(radius);
-        this.setCenter(center);
-        this.rotate(rotation.x, rotation.y, rotation.z);
-        this.setStretch(stretch);
+    private <B extends Builder<B>> EllipseAnimator(Builder<B> builder) {
+        super(builder);
+        this.center = builder.center;
+        this.radius = builder.radius;
+        this.stretch = builder.stretch;
+        this.rotation = builder.rotation;
+        this.revolutions = builder.revolutions;
+        this.clockwise = builder.clockwise;
+        this.trimming = builder.trimming;
     }
 
     /**
@@ -291,5 +254,71 @@ public class EllipseAnimator extends PathAnimatorBase {
         interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
         this.duringRenderingSteps.apply(interceptData, this);
         return interceptData;
+    }
+
+    public static class Builder<B extends EllipseAnimator.Builder<B>> extends PathAnimatorBase.Builder<B, EllipseAnimator> {
+        protected Vector3f center;
+        protected float radius;
+        protected float stretch;
+        protected Vector3f rotation = new Vector3f();
+        protected int revolutions = 1;
+        protected boolean clockwise = true;
+        protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, (float) (Math.TAU - 0.0001f));
+
+        private Builder() {}
+
+        public B center(Vector3f center) {
+            this.center = center;
+            return self();
+        }
+
+        public B radius(float radius) {
+            this.radius = radius;
+            return self();
+        }
+
+        public B stretch(float stretch) {
+            this.stretch = stretch;
+            return self();
+        }
+
+        public B rotation(Vector3f rotation) {
+            this.rotation = rotation;
+            return self();
+        }
+
+        public B revolutions(int revolutions) {
+            this.revolutions = revolutions;
+            return self();
+        }
+
+        public B clockwise() {
+            this.clockwise = true;
+            return self();
+        }
+
+        public B counterclockwise() {
+            this.clockwise = false;
+            return self();
+        }
+
+        public B trimming(AnimationTrimming<Float> trimming) {
+            this.trimming = trimming;
+            return self();
+        }
+
+        @Override
+        public EllipseAnimator build() {
+            if (this.center == null) {
+                throw new IllegalStateException("Center must be provided");
+            }
+            if (this.radius <= 0.0f) {
+                throw new IllegalStateException("Radius must be positive");
+            }
+            if (this.stretch <= 0.0f) {
+                throw new IllegalStateException("Radius must be positive");
+            }
+            return new EllipseAnimator(this);
+        }
     }
 }

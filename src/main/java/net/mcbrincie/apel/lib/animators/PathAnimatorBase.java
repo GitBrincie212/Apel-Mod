@@ -32,40 +32,16 @@ public abstract class PathAnimatorBase {
 
     protected static TrigTable trigTable = Apel.TRIG_TABLE;
 
-    /**
-     * Constructor for the path animator. This constructor is meant to be used when you want a
-     * constant amount of rendering steps. It is worth pointing out that this won't look
-     * pleasant in the eyes at larger distances. For that, it is recommended to look into:
-     *
-     * @param delay          The delay per rendering step
-     * @param particleObject The particle object to use
-     * @param renderingSteps The rendering steps to use
-     * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, float)
-    */
-    public PathAnimatorBase(int delay, ParticleObject<? extends ParticleObject<?>> particleObject, int renderingSteps) {
-        this.setDelay(delay);
-        this.setParticleObject(particleObject);
-        this.setRenderingSteps(renderingSteps);
+    protected <B extends Builder<B, T>, T extends PathAnimatorBase> PathAnimatorBase(Builder<B, T> builder) {
+        this.particleObject = builder.particleObject;
+        this.delay = builder.delay;
+        this.processingSpeed = builder.processingSpeed;
+        this.renderingSteps = builder.renderingSteps;
+        this.renderingInterval = builder.renderingInterval;
     }
 
     /** This is an empty constructor meant as a placeholder */
     public PathAnimatorBase() {
-    }
-
-    /**
-     * Constructor for the path animator. This constructor is meant to be used when you want a
-     * consistent amount of rendering steps no matter the distance. It is worth pointing out that
-     * there will be performance overhead for large distances. To minimize, it is recommended to look into:
-     *
-     * @param delay             The delay per rendering step
-     * @param particle          The particle object to use
-     * @param renderingInterval The rendering interval to use, which is how many blocks per new rendering step
-     * @see PathAnimatorBase#PathAnimatorBase(int, ParticleObject, int)
-     */
-    public PathAnimatorBase(int delay, @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval) {
-        this.setDelay(delay);
-        this.setParticleObject(particle);
-        this.setRenderingInterval(renderingInterval);
     }
 
     /**
@@ -90,7 +66,9 @@ public abstract class PathAnimatorBase {
      *  sequence. The method does that for your convenience
      */
     public void allocateToScheduler() {
-        if (this.delay == 0) return;
+        if (this.delay == 0) {
+            return;
+        }
         Apel.SCHEDULER.allocateNewSequence(this);
     }
 
@@ -303,5 +281,45 @@ public abstract class PathAnimatorBase {
     protected static float[] defaultedArray(float[] array, float defaultValue) {
         Arrays.fill(array, defaultValue);
         return array;
+    }
+
+    public static abstract class Builder<B extends Builder<B, T>, T extends PathAnimatorBase> {
+        protected ParticleObject<? extends ParticleObject<?>> particleObject;
+        protected int delay = 1;
+        protected int processingSpeed = 1;
+        protected int renderingSteps;
+        protected float renderingInterval;
+
+        @SuppressWarnings({"unchecked"})
+        public final B self() {
+            return (B) this;
+        }
+
+        public final B particleObject(ParticleObject<? extends ParticleObject<?>> particleObject) {
+            this.particleObject = particleObject;
+            return self();
+        }
+
+        public final B delay(int delay) {
+            this.delay = delay;
+            return self();
+        }
+
+        public final B processingSpeed(int processingSpeed) {
+            this.processingSpeed = processingSpeed;
+            return self();
+        }
+
+        public final B renderingSteps(int renderingSteps) {
+            this.renderingSteps = renderingSteps;
+            return self();
+        }
+
+        public final B renderingInterval(float renderingInterval) {
+            this.renderingInterval = renderingInterval;
+            return self();
+        }
+
+        public abstract T build();
     }
 }

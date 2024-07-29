@@ -2,16 +2,16 @@ package net.mcbrincie.apel.lib.animators;
 
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.server.world.ServerWorld;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 /** The Bézier curve animator which is used for curved paths, it accepts two or multiple different bézier curves,
@@ -22,142 +22,23 @@ import java.util.Optional;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class BezierCurveAnimator extends PathAnimatorBase {
-    protected BezierCurve[] bezierCurves;
-    protected int[] renderingSteps;
-    protected float[] renderingInterval;
-    protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
+    protected List<BezierCurve> bezierCurves;
+    protected List<Integer> stepsForCurves;
+    protected AnimationTrimming<Float> trimming;
 
     protected DrawInterceptor<BezierCurveAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
     public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
 
-    /**
-     * Constructor for the bézier animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle curve. The amount is dynamic that can cause
-     * performance issues for larger distances (The higher the interval,
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param curve The bézier curve
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
-            float renderingInterval
-    ) {
-        this(delay, new BezierCurve[]{curve}, particle, new float[]{renderingInterval});
+    public static <B extends Builder<B>> Builder<B> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the bézier curve animation. This constructor is
-     * meant to be used in the case that you want a constant number
-     * of particles. It doesn't look pretty at large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param curve The bézier curve
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps for the animation
-     */
-    public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve curve, @NotNull ParticleObject<? extends ParticleObject<?>> particle,
-            int renderingSteps
-    ) {
-        this(delay, new BezierCurve[]{curve}, particle, new int[]{renderingSteps});
-    }
-
-    /**
-     * Constructor for the bézier animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle line & also want to create multiple bézier curves.
-     * Because of the interval, the amount is dynamic that can cause
-     * performance issues for larger distances (The higher the interval
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param bezierCurves The bézier curves
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves,
-            @NotNull ParticleObject<? extends ParticleObject<?>> particle, float renderingInterval
-    ) {
-        this(delay, bezierCurves, particle, defaultedArray(new float[bezierCurves.length], renderingInterval));
-    }
-
-    /**
-     * Constructor for the Bézier curve animation. This constructor is
-     * meant to be used in the case that you want a constant number
-     * of particles & also multiple bézier curves. It doesn't look pretty at
-     * large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param bezierCurves The bézier curves
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps for the animation
-     */
-    public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves,
-            @NotNull ParticleObject<? extends ParticleObject<?>> particle, int renderingSteps
-    ) {
-        this(delay, bezierCurves, particle, defaultedArray(new int[bezierCurves.length], renderingSteps));
-    }
-
-    /**
-     * Constructor for the Bézier animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle curve as well as better control on their interval
-     * Because of the interval, the amount is dynamic which can cause
-     * performance issues for larger distances(The higher the interval
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param bezierCurves The bézier curves
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves,
-            @NotNull ParticleObject<? extends ParticleObject<?>> particle, float[] renderingInterval
-    ) {
-        super(delay, particle, renderingInterval[0]);
-        if (bezierCurves.length == 0) {
-            throw new IllegalArgumentException("Must provide at least one Bézier curve");
-        }
-        if (bezierCurves.length != renderingInterval.length) {
-            throw new IllegalArgumentException("Length of curve and interval arrays do not match");
-        }
-        this.bezierCurves = bezierCurves;
-        this.renderingInterval = renderingInterval;
-        this.renderingSteps = new int[this.bezierCurves.length];
-    }
-
-    /**
-     * Constructor for the bézier animation. This constructor is
-     * meant to be used in the case that you want a constant amount &
-     * of particles also multiple bézier curves. It doesn't look pretty at
-     * large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param bezierCurves The bézier curves
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps for the animation
-     */
-    public BezierCurveAnimator(
-            int delay, @NotNull BezierCurve[] bezierCurves,
-            @NotNull ParticleObject<? extends ParticleObject<?>> particle, int[] renderingSteps
-    ) {
-        super(delay, particle, renderingSteps[0]);
-        if (bezierCurves.length == 0) {
-            throw new IllegalArgumentException("Must provide at least one Bézier curve");
-        }
-        if (bezierCurves.length != renderingSteps.length) {
-            throw new IllegalArgumentException("Length of curve and step arrays do not match");
-        }
-        this.bezierCurves = bezierCurves;
-        this.renderingSteps = renderingSteps;
-        this.renderingInterval = new float[this.renderingSteps.length];
+    private <B extends Builder<B>> BezierCurveAnimator(Builder<B> builder) {
+        super(builder);
+        this.bezierCurves = builder.bezierCurves;
+        this.stepsForCurves = builder.stepsForCurves;
+        this.trimming = builder.trimming;
     }
 
     /**
@@ -171,8 +52,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     public BezierCurveAnimator(BezierCurveAnimator animator) {
         super(animator);
         this.bezierCurves = animator.bezierCurves;
-        this.renderingInterval = animator.renderingInterval;
-        this.renderingSteps = animator.renderingSteps;
+        this.stepsForCurves = animator.stepsForCurves;
         this.trimming = animator.trimming;
         this.duringRenderingSteps = animator.duringRenderingSteps;
     }
@@ -182,13 +62,13 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      *
      * @return The animation trimming that is used
      */
-    public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
-        int startStep = trimming.getStart();
-        int endStep = trimming.getEnd();
-        if (startStep <= 0 || endStep >= this.getRenderingSteps() || startStep >= endStep) {
-            throw new IllegalArgumentException("Invalid animation trimming range");
+    public AnimationTrimming<Float> setTrimming(AnimationTrimming<Float> trimming) {
+        float start = trimming.getStart();
+        float end = trimming.getEnd();
+        if (start < 0.0f || end > 1.0f || start >= end) {
+            throw new IllegalArgumentException("Animation trimming must be within [0.0, 1.0]");
         }
-        AnimationTrimming<Integer> prevTrimming = this.trimming;
+        AnimationTrimming<Float> prevTrimming = this.trimming;
         this.trimming = trimming;
         return prevTrimming;
     }
@@ -197,46 +77,39 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      *
      * @return The animation trimming that is used
      */
-    public AnimationTrimming<Integer> getTrimming() {
+    public AnimationTrimming<Float> getTrimming() {
         return this.trimming;
     }
 
     @Override
     public int convertIntervalToSteps() {
-        int steps = 0;
-        for (int i = 0; i < this.bezierCurves.length; i++) {
-            int curveSteps = getCurveSteps(this.bezierCurves[i], this.renderingInterval[i]);
-            steps += curveSteps;
-        }
-        return steps;
-    }
-
-    private int getCurveSteps(BezierCurve bezierCurve, float interval) {
-        // TODO: choose this value better, perhaps based on distance between start/end or start/controls/end?
-        float distance = bezierCurve.length(100);
-        return (int) Math.ceil(distance / interval);
+        return this.stepsForCurves.stream().mapToInt(i -> i).sum();
     }
 
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
-        int index = -1;
-        int step = -1;
+        float tStart = this.trimming.getStart();
+        float tEnd = this.trimming.getEnd();
         this.allocateToScheduler();
-        for (BezierCurve bezierCurve : this.bezierCurves) {
-            index++;
-            int curveSteps = this.renderingSteps[index];
-            float renderInterval = this.renderingInterval[index];
-            if (renderInterval != 0.0f) {
-                // Compute steps base on length of curve
-                curveSteps = this.getCurveSteps(bezierCurve, renderInterval);
-            }
+
+        int step = -1;
+        for (int index = 0; index < this.bezierCurves.size(); index++) {
+            BezierCurve bezierCurve = this.bezierCurves.get(index);
+            int curveSteps = this.stepsForCurves.get(index);
+
             // Interval MUST be the reciprocal of steps so t is in [0, 1].
-            float tStep = 1.0f / curveSteps;
-            for (float t = 0; t < 1.0f; t += tStep) {
+            float tDelta = 1.0f / curveSteps;
+            for (float t = 0; t < 1.0f; t += tDelta) {
                 step++;
+                if (t < tStart) {
+                    continue;
+                }
+                // Handle trimming, but only if the end was set to a non-default value
+                if (t >= tEnd && tEnd != -1) {
+                    break;
+                }
                 Vector3f pos = bezierCurve.compute(t);
-                InterceptData<OnRenderStep> interceptData =
-                        this.doBeforeStep(renderer.getServerWorld(), pos, step);
+                InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, step);
                 if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
                     continue;
                 }
@@ -267,5 +140,110 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
         this.duringRenderingSteps.apply(interceptData, this);
         return interceptData;
+    }
+
+    public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, BezierCurveAnimator> {
+        protected List<BezierCurve> bezierCurves = new ArrayList<>();
+        protected List<Integer> stepsForCurves = new ArrayList<>();
+        protected int stepsForAllCurves = 0;
+        protected List<Float> intervalsForCurves = new ArrayList<>();
+        protected float intervalForAllCurves = 0.0f;
+        protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, 1.0f);
+
+        private Builder() {}
+
+        public B bezierCurve(BezierCurve bezierCurve) {
+            this.bezierCurves.add(bezierCurve);
+            return self();
+        }
+
+        public B bezierCurves(List<BezierCurve> bezierCurves) {
+            this.bezierCurves.addAll(bezierCurves);
+            return self();
+        }
+
+        public B stepsForCurve(int stepsForCurve) {
+            this.stepsForCurves.add(stepsForCurve);
+            return self();
+        }
+
+        public B stepsForAllCurves(int steps) {
+            this.stepsForAllCurves = steps;
+            return self();
+        }
+
+        public B stepsForCurves(List<Integer> stepsForCurves) {
+            this.stepsForCurves.addAll(stepsForCurves);
+            return self();
+        }
+
+        public B intervalForCurve(float intervalForCurve) {
+            this.intervalsForCurves.add(intervalForCurve);
+            return self();
+        }
+
+        public B intervalForAllCurves(int interval) {
+            this.intervalForAllCurves = interval;
+            return self();
+        }
+
+        public B intervalsForCurves(List<Float> intervalsForCurves) {
+            this.intervalsForCurves.addAll(intervalsForCurves);
+            return self();
+        }
+
+        public B trimming(AnimationTrimming<Float> trimming) {
+            this.trimming = trimming;
+            return self();
+        }
+
+        @Override
+        public BezierCurveAnimator build() {
+            if (this.bezierCurves.isEmpty()) {
+                throw new IllegalStateException("Must provide at least one curve");
+            }
+            // If an "all curve" value is provided, it takes priority: interval first, then steps
+            if (this.intervalForAllCurves != 0.0f) {
+                this.intervalsForCurves.clear();
+                for (int i = 0; i < this.bezierCurves.size() - 1; i++) {
+                    this.intervalsForCurves.add(this.intervalForAllCurves);
+                }
+            } else if (this.stepsForAllCurves != 0) {
+                this.stepsForCurves.clear();
+                for (int i = 0; i < this.bezierCurves.size() - 1; i++) {
+                    this.stepsForCurves.add(this.stepsForAllCurves);
+                }
+            }
+            // At this point, either an "all curves" value is provided or individual values for either steps or
+            // intervals must be provided.  At this point, mixing intervals and steps is not allowed.
+            if ((this.stepsForCurves.size() + 1 != this.bezierCurves.size()) && (this.intervalsForCurves.size() + 1 != this.bezierCurves.size())) {
+                throw new IllegalStateException("Must provide steps or intervals for every curve");
+            }
+            for (int i = 0; i < this.bezierCurves.size() - 1; i++) {
+                // Pad the lists so the conversion from interval to steps is straightforward
+                if (this.stepsForCurves.size() == i) {
+                    this.stepsForCurves.add(0);
+                }
+                if (this.intervalsForCurves.size() == i) {
+                    this.intervalsForCurves.add(0.0f);
+                }
+                // Verify that at least one of steps/interval is provided
+                if (this.stepsForCurves.get(i) == 0 && this.intervalsForCurves.get(i) == 0.0f) {
+                    throw new IllegalStateException("Either steps or interval must be positive for curve " + i);
+                }
+                // Interval takes priority, if set.  If not set, then steps must already be set.
+                if (this.intervalsForCurves.get(i) != 0.0f) {
+                    this.stepsForCurves.set(i, this.getCurveSteps(i));
+                }
+            }
+            // TODO: Convert intervals to steps
+            return new BezierCurveAnimator(this);
+        }
+
+        private int getCurveSteps(int index) {
+            // TODO: choose this value better, perhaps based on distance between start/end or start/controls/end?
+            float distance = this.bezierCurves.get(index).length(100);
+            return (int) Math.ceil(distance / this.intervalsForCurves.get(index));
+        }
     }
 }

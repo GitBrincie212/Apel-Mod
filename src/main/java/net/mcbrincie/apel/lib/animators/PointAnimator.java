@@ -2,12 +2,10 @@ package net.mcbrincie.apel.lib.animators;
 
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.server.world.ServerWorld;
-import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -19,41 +17,16 @@ import java.util.Optional;
 */
 @SuppressWarnings("unused")
 public class PointAnimator extends PathAnimatorBase {
-    protected Vector3f origin;
+    protected Vector3f point;
     protected DrawInterceptor<PointAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
     public enum OnRenderStep {SHOULD_DRAW_STEP}
 
-    /** Constructor for the point animator. It basically animates the object in a certain place.
-     * The place is called the origin, which is only a point (hence the point animator)
-     *
-     * @param delay The delay per rendering step
-     * @param particle The particle object to use
-     * @param renderingSteps The rendering steps to use
-    */
-    public PointAnimator(int delay, @NotNull ParticleObject<? extends ParticleObject<?>> particle, Vector3f origin,
-                         int renderingSteps) {
-        super(delay, particle, renderingSteps);
-        this.origin = origin;
-    }
+    public static <B extends Builder<B>> Builder<B> builder() { return new Builder<>(); }
 
-    /** Gets the origin point. Which is where the particle animation plays at
-     *
-     * @return The origin point(that is stationary)
-    */
-    public Vector3f getOrigin() {
-        return this.origin;
-    }
-
-    /** Sets the origin point. Which is where the particle animation plays at. Returns
-     * the previous origin point that was used
-     *
-     * @return The previous origin point used
-    */
-    public Vector3f setOrigin(Vector3f origin) {
-        Vector3f prevOrigin = this.origin;
-        this.origin = origin;
-        return prevOrigin;
+    private <B extends Builder<B>> PointAnimator(Builder<B> builder) {
+        super(builder);
+        this.point = builder.point;
     }
 
     /**
@@ -63,11 +36,30 @@ public class PointAnimator extends PathAnimatorBase {
      * of their visibility (this means protected & private params are copied)
      *
      * @param animator The animator to copy from
-    */
+     */
     public PointAnimator(PointAnimator animator) {
         super(animator);
-        this.origin = animator.origin;
+        this.point = animator.point;
         this.duringRenderingSteps = animator.duringRenderingSteps;
+    }
+
+    /** Gets the origin point. Which is where the particle animation plays at
+     *
+     * @return The origin point(that is stationary)
+    */
+    public Vector3f getPoint() {
+        return this.point;
+    }
+
+    /** Sets the origin point. Which is where the particle animation plays at. Returns
+     * the previous origin point that was used
+     *
+     * @return The previous origin point used
+    */
+    public Vector3f setPoint(Vector3f point) {
+        Vector3f prevPoint = this.point;
+        this.point = point;
+        return prevPoint;
     }
 
     @Override
@@ -83,7 +75,7 @@ public class PointAnimator extends PathAnimatorBase {
             if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
                 continue;
             }
-            this.handleDrawingStep(renderer, i, this.origin);
+            this.handleDrawingStep(renderer, i, this.point);
         }
     }
 
@@ -104,5 +96,21 @@ public class PointAnimator extends PathAnimatorBase {
         interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
         this.duringRenderingSteps.apply(interceptData, this);
         return interceptData;
+    }
+
+    public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, PointAnimator> {
+        protected Vector3f point = new Vector3f();
+
+        private Builder() {}
+
+        public B point(Vector3f point) {
+            this.point = point;
+            return self();
+        }
+
+        @Override
+        public PointAnimator build() {
+            return new PointAnimator(this);
+        }
     }
 }
