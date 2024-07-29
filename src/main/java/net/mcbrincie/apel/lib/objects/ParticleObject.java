@@ -206,7 +206,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     /**
      * Set the interceptor to run prior to drawing the object.  The interceptor will be provided with references to the
      * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation,
-     * and any metadata defined by {@link DrawContext.Key>}s defined in the specific subclass.
+     * and any metadata defined by {@link DrawContext.Key} defined in the specific subclass.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
@@ -362,7 +362,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
          * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
          * the value.
          *
-         * @see ParticleCuboid#setBeforeDraw(DrawInterceptor)
+         * @see ParticleObject#setBeforeDraw(DrawInterceptor)
          */
         public final B beforeDraw(DrawInterceptor<T> beforeDraw) {
             this.beforeDraw = beforeDraw;
@@ -373,7 +373,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
          * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
          * the value.
          *
-         * @see ParticleCuboid#setAfterDraw(DrawInterceptor)
+         * @see ParticleObject#setAfterDraw(DrawInterceptor)
          */
         public final B afterDraw(DrawInterceptor<T> afterDraw) {
             this.afterDraw = afterDraw;
