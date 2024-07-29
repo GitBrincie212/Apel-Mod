@@ -12,7 +12,6 @@ import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,88 +24,21 @@ import java.util.Optional;
  */
 @SuppressWarnings("unused")
 public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimator<PathAnimatorBase> {
-    protected List<PathAnimatorBase> animators = new ArrayList<>();
-    protected List<Integer> delays = new ArrayList<>();
+    protected List<PathAnimatorBase> animators;
+    protected List<Integer> animatorDelays;
 
     protected DrawInterceptor<ParallelAnimator, OnRenderPathAnimator> onAnimatorRendering = DrawInterceptor.identity();
 
     public enum OnRenderPathAnimator {PATH_ANIMATOR, SHOULD_RENDER_ANIMATOR, DELAY}
 
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you want to supply a specific
-     * number of path animators in the form of varargs
-     *
-     * @param delay The delay between each particle object render
-     * @param pathAnimators The path animators to append
-     */
-    public ParallelAnimator(int delay, PathAnimatorBase... pathAnimators) {
-        super();
-        this.renderingSteps = pathAnimators.length;
-        this.setDelay(delay);
-        if (pathAnimators.length == 0) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        this.animators.addAll(List.of(pathAnimators));
+    public static <B extends Builder<B>> Builder<B> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you have a list of path
-     * animators which you want to supply all of them
-     *
-     * @param delay The delay between each particle object render
-     * @param pathAnimators The path animators to append
-    */
-    public ParallelAnimator(int delay, List<PathAnimatorBase> pathAnimators) {
-        super();
-        this.renderingSteps = pathAnimators.size();
-        this.setDelay(delay);
-        if (pathAnimators.isEmpty()) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        this.animators.addAll(pathAnimators);
-    }
-
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you have a list of path
-     * animators and a list of the delays
-     *
-     * @param delay The delays between each particle object render for each particle animator
-     * @param pathAnimators The path animators to append
-     */
-    public ParallelAnimator(List<Integer> delay, List<PathAnimatorBase> pathAnimators) {
-        super();
-        this.delay = -1;
-        this.renderingSteps = pathAnimators.size();
-        if (pathAnimators.isEmpty()) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        if (pathAnimators.size() != delay.size()) {
-            throw new IllegalArgumentException("Delays must match the number of path animators");
-        }
-        this.animators.addAll(pathAnimators);
-        this.delays.addAll(delay);
-    }
-
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you want to supply the path
-     * animators in the form of varargs, and in addition you want a
-     * separate delays
-     *
-     * @param delay The delay between each particle object render
-     * @param pathAnimators The path animators to append
-     */
-    public ParallelAnimator(List<Integer> delay, PathAnimatorBase... pathAnimators) {
-        super();
-        this.delay = -1;
-        this.renderingSteps = pathAnimators.length;
-        if (pathAnimators.length == 0) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        if (pathAnimators.length != delay.size()) {
-            throw new IllegalArgumentException("Delays must match the number of path animators");
-        }
-        this.animators.addAll(List.of(pathAnimators));
-        this.delays.addAll(delay);
+    private <B extends Builder<B>> ParallelAnimator(Builder<B> builder) {
+        super(builder);
+        this.animators = builder.childAnimators;
+        this.animatorDelays = builder.childAnimatorDelays;
     }
 
     /** Appends a new child path animator to the collection of the child path animators
@@ -162,70 +94,50 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
 
     @Override
     public int convertIntervalToSteps() {
-        return this.animators.size();
+        return 0;
     }
 
     @Override
     protected int calculateDuration() {
-        int delay = (this.delay != -1) ? this.delay : this.delays.parallelStream().reduce(0, Integer::sum);
-        return delay + this.animators.parallelStream()
-                .map(PathAnimatorBase::calculateDuration)
-                .max(Comparator.naturalOrder())
-                .orElse(0);
-    }
-
-    private int getDelayForAnimator(int step) {
-        return (this.delay == -1) ? this.delays.get(step - 1) : this.delay;
+        int maxDuration = 0;
+        for (int index = 0; index < this.animators.size(); index++) {
+            int childAnimatorDelay = this.animatorDelays.get(index);
+            PathAnimatorBase childAnimator = this.animators.get(index);
+            int duration = childAnimatorDelay + childAnimator.calculateDuration();
+            if (duration > maxDuration) {
+                maxDuration = duration;
+            }
+        }
+        return maxDuration;
     }
 
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
-        this.allocateToScheduler();
-        int step = 0;
-        for (PathAnimatorBase animator : this.animators) {
-            step++;
-            InterceptData<OnRenderPathAnimator> interceptData = this.doBeforeStep(
-                    renderer.getServerWorld(), animator, getDelayForAnimator(step), step
+        for (int index = 0; index < this.animators.size(); index++) {
+            PathAnimatorBase animator = this.animators.get(index);
+            int totalDelay = this.delay + this.animatorDelays.get(index);
+
+            InterceptData<OnRenderPathAnimator> interceptData = this.doBeforeAnimator(
+                    renderer.getServerWorld(), animator, totalDelay
             );
             if (!interceptData.getMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR, true)) {
                 continue;
             }
-            animator = interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR, animator);
-            int delayForAnimator = (int) interceptData.getMetadata(OnRenderPathAnimator.DELAY);
-            int delayForAnimatorInUse = this.getDelayForAnimator(step);
-            if (delayForAnimator != delayForAnimatorInUse) {
-                this.delays.set(step - 1, delayForAnimator);
-                if (delayForAnimator != this.delay) this.delay = -1;
-                for (int delayPerAnimator : this.delays) {
-                    if (delayPerAnimator != delayForAnimator) continue;
-                    this.delay = -1;
-                    break;
-                }
-            }
-            this.allocateNewAnimator(renderer, step, animator);
-        }
-    }
 
-    protected void allocateNewAnimator(ApelServerRenderer renderer, int step, PathAnimatorBase animator) {
-        Runnable func = () -> animator.beginAnimation(renderer);
-        int delayUsed = getDelayForAnimator(step);
-        if (delayUsed == 0) {
-            Apel.DRAW_EXECUTOR.submit(func);
-            return;
+            // Effectively final variables for the lambda
+            PathAnimatorBase scheduledAnimator = interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR, animator);
+            int delayForAnimator = interceptData.getMetadata(OnRenderPathAnimator.DELAY, totalDelay);
+            Runnable func = () -> scheduledAnimator.beginAnimation(renderer);
+
+            if (delayForAnimator == 0) {
+                Apel.DRAW_EXECUTOR.submit(func);
+            } else {
+                scheduledAnimator.allocateToScheduler();
+                Apel.SCHEDULER.allocateNewStep(
+                        scheduledAnimator, new ScheduledStep(delayForAnimator, new Runnable[]{func})
+                );
+            }
         }
-        if (this.processingSpeed <= 1) {
-            Apel.SCHEDULER.allocateNewStep(
-                    this, new ScheduledStep(delayUsed, new Runnable[]{func})
-            );
-            return;
-        } else if (step % this.processingSpeed != 0) {
-            this.storedFuncsBuffer.add(func);
-            return;
-        }
-        Apel.SCHEDULER.allocateNewStep(
-                this, new ScheduledStep(delayUsed, this.storedFuncsBuffer.toArray(Runnable[]::new))
-        );
-        this.storedFuncsBuffer.clear();
     }
 
     /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
@@ -239,16 +151,65 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
         this.onAnimatorRendering = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
     }
 
-    protected InterceptData<OnRenderPathAnimator> doBeforeStep(
-            ServerWorld world, PathAnimatorBase pathAnimatorBase, int delay, int currStep
+    protected InterceptData<OnRenderPathAnimator> doBeforeAnimator(
+            ServerWorld world, PathAnimatorBase pathAnimatorBase, int delay
     ) {
         InterceptData<OnRenderPathAnimator> interceptData = new InterceptData<>(
-                world, null, currStep, OnRenderPathAnimator.class
+                world, null, -1, OnRenderPathAnimator.class
         );
         interceptData.addMetadata(OnRenderPathAnimator.PATH_ANIMATOR, pathAnimatorBase);
         interceptData.addMetadata(OnRenderPathAnimator.DELAY, delay);
         interceptData.addMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR, true);
         this.onAnimatorRendering.apply(interceptData, this);
         return interceptData;
+    }
+
+    public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, ParallelAnimator> {
+        protected List<PathAnimatorBase> childAnimators = new ArrayList<>();
+        protected List<Integer> childAnimatorDelays = new ArrayList<>();
+
+        private Builder () {}
+
+        public B animator(PathAnimatorBase animator) {
+            this.childAnimators.add(animator);
+            return self();
+        }
+
+        public B animator(PathAnimatorBase animator, int delay) {
+            this.childAnimators.add(animator);
+            this.childAnimatorDelays.add(delay);
+            return self();
+        }
+
+        public B animators(List<PathAnimatorBase> animators) {
+            this.childAnimators.addAll(animators);
+            return self();
+        }
+
+        public B animators(List<PathAnimatorBase> animators, List<Integer> delays) {
+            this.childAnimators.addAll(animators);
+            this.childAnimatorDelays.addAll(delays);
+            return self();
+        }
+
+        @Override
+        public ParallelAnimator build() {
+            if (this.delay < 0) {
+                throw new IllegalStateException("Initial delay must be non-negative");
+            }
+            for (int i = 0; i < this.childAnimators.size(); i++) {
+                if (this.childAnimators.get(i) == null) {
+                    throw new NullPointerException("Child Animator cannot be null");
+                }
+                // Pad the list of delays, so it's equal in length
+                if (this.childAnimatorDelays.size() == i) {
+                    this.childAnimatorDelays.add(0);
+                }
+                if (this.childAnimatorDelays.get(i) < 0) {
+                    throw new IllegalStateException("Child animator delays must be non-negative");
+                }
+            }
+            return new ParallelAnimator(this);
+        }
     }
 }
