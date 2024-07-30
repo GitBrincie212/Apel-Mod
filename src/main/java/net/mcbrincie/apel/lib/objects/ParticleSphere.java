@@ -1,5 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.ease.ConstantEase;
+import net.mcbrincie.apel.lib.ease.EaseCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import org.joml.Vector3f;
 
@@ -10,7 +12,7 @@ import org.joml.Vector3f;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleSphere extends ParticleObject<ParticleSphere> {
     public static final double SQRT_5_PLUS_1 = 3.23606;
-    protected float radius;
+    protected EaseCurve<Float> radius;
 
     public static Builder<?> builder() {
         return new Builder<>();
@@ -40,11 +42,8 @@ public class ParticleSphere extends ParticleObject<ParticleSphere> {
      * @param radius The radius of the sphere
      * @return The previous radius used
     */
-    public final float setRadius(float radius) {
-        if (radius <= 0) {
-            throw new IllegalArgumentException("Radius must be positive");
-        }
-        float prevRadius = this.radius;
+    public final EaseCurve<Float> setRadius(EaseCurve<Float> radius) {
+        EaseCurve<Float> prevRadius = this.radius;
         this.radius = radius;
         return prevRadius;
     }
@@ -53,28 +52,44 @@ public class ParticleSphere extends ParticleObject<ParticleSphere> {
      *
      * @return the radius of the sphere
      */
-    public float getRadius() {
+    public EaseCurve<Float> getRadius() {
         return this.radius;
     }
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+        System.out.println("what");
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
-        renderer.drawEllipsoid(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, this.radius,
-                               this.radius, this.radius, this.rotation, this.amount
+        System.out.println("what2");
+        float computedRadius = this.radius.compute(drawContext.getCurrentStep());
+        System.out.println("what3");
+        if (computedRadius <= 0) {
+             throw new IllegalArgumentException("Radius must be positive");
+        }
+        System.out.println("what4");
+        renderer.drawEllipsoid(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, 1.0f,
+                1.0f, 1.0f, this.rotation, this.amount
         );
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleSphere> {
-        protected float radius;
+        protected EaseCurve<Float> radius;
 
         private Builder() {}
 
         /**
          * Set the radius on the builder.  This method is not cumulative; repeated calls will overwrite the value.
          */
-        public B radius(float radius) {
+        public B radius(EaseCurve<Float> radius) {
             this.radius = radius;
+            return self();
+        }
+
+        /**
+         * Set the radius on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B radius(float radius) {
+            this.radius = new ConstantEase<>(radius);
             return self();
         }
 

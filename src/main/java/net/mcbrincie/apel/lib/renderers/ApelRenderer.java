@@ -47,25 +47,36 @@ public interface ApelRenderer {
 
     /**
      * Instructs the renderer to draw a line of the given particle effect from {@code start} to {@code end} using
-     * {@code count} particles.  Particles
-     * will be spaced evenly along the defined line.
+     * {@code count} particles. Particles will be spaced evenly along the defined line.
      *
      * @param particleEffect The ParticleEffect to use
      * @param start The 3D point at which to start
      * @param end The 3D point at which to end
      * @param amount The number of particles to draw along the line
      */
-    default void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int amount) {
+    default void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int amount, Vector3f curr) {
         int amountSubOne = (amount - 1);
         // Do not use 'sub', it modifies in-place
         float stepX = (end.x - start.x) / amountSubOne;
         float stepY = (end.y - start.y) / amountSubOne;
         float stepZ = (end.z - start.z) / amountSubOne;
-        Vector3f curr = new Vector3f(start);
         for (int i = 0; i < amount; i++) {
             drawParticle(particleEffect, step, curr);
             curr.add(stepX, stepY, stepZ);
         }
+    }
+
+    /**
+     * Instructs the renderer to draw a line of the given particle effect from {@code start} to {@code end} using
+     * {@code count} particles. Particles will be spaced evenly along the defined line.
+     *
+     * @param particleEffect The ParticleEffect to use
+     * @param start The 3D point at which to start
+     * @param end The 3D point at which to end
+     * @param amount The number of particles to draw along the line
+    */
+    default void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int amount) {
+        this.drawLine(particleEffect, step, start, end, amount, new Vector3f(start));
     }
 
     /**
