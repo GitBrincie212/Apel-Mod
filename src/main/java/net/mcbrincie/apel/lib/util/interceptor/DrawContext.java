@@ -131,10 +131,6 @@ public class DrawContext {
         return new Key<>(name) { };
     }
 
-    public static Key<List<Pair<Vector3f, Vector3f>>> vector3fListPairKey(String name) {
-        return new Key<>(name) { };
-    }
-
     @SuppressWarnings("unused")
     public static Key<Float> floatKey(String name) {
         return new Key<>(name) { };
