@@ -103,15 +103,15 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         Quaternionfc quaternion = new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
-        for (Pair<Vector3f, Vector3f> vertexPair : positions.keySet()) {
-            ParticleEffect currParticle = positions.get(vertexPair);
+        for (Pair<Vector3f, Vector3f> vertexPair : this.positions.keySet()) {
+            ParticleEffect currParticle = this.positions.get(vertexPair);
             Vector3f vertex1 = new Vector3f(vertexPair.getA()).mul(this.scale);
             Vector3f vertex2 = new Vector3f(vertexPair.getB()).mul(this.scale);
             vertex1 = this.rigidTransformation(vertex1, quaternion, objectDrawPos);
             vertex2 = this.rigidTransformation(vertex2, quaternion, objectDrawPos);
             renderer.drawLine(
                     currParticle, drawContext.getCurrentStep(),
-                    vertex1, vertex2, 10
+                    vertex1, vertex2, 20
             );
         }
     }
