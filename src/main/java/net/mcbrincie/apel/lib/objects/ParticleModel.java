@@ -4,6 +4,7 @@ import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.mcbrincie.apel.lib.util.models.ModelParserManager;
+import net.mcbrincie.apel.lib.util.models.ObjModel;
 import net.minecraft.util.Pair;
 import org.joml.Vector3f;
 
@@ -20,11 +21,11 @@ import java.util.List;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleModel extends ParticleObject<ParticleModel> {
+    private static final ModelParserManager MODEL_PARSER_MANAGER = new ModelParserManager();
+
     private String filename;
+    private ObjModel objModel;
     private Vector3f scale;
-    private File model_file;
-    private List<Pair<Vector3f, Vector3f>> face_vertices = new ArrayList<>();
-    private final ModelParserManager modelParserManager = new ModelParserManager();
 
     public static final DrawContext.Key<List<Pair<Vector3f, Vector3f>>> FACE_VERTICES = DrawContext.vector3fListPairKey(
             "face_vertices"
@@ -49,8 +50,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
         super(model);
         this.scale = model.scale;
         this.filename = model.filename;
-        this.face_vertices = model.face_vertices;
-        this.model_file = model.model_file;
+        this.objModel = model.objModel;
     }
 
     /**
@@ -80,23 +80,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
     public final String setFilename(String filename) {
         String prevFilename = this.filename;
         this.filename = filename;
-        this.model_file = new File(filename);
-        this.modelParserManager.parseFile(this.model_file);
-        for (ModelParserManager.FaceToken faceToken : this.modelParserManager.drawableFaces) {
-            Vector3f prevVertex = faceToken.vertices[0];
-            int vertexIndex = 0;
-            for (Vector3f vertex : faceToken.vertices) {
-                if (vertexIndex == 0) {
-                    vertexIndex++;
-                    continue;
-                } else if (vertexIndex == faceToken.vertices.length - 1) {
-                    prevVertex = faceToken.vertices[0];
-                }
-                this.face_vertices.add(new Pair<>(prevVertex, vertex));
-                prevVertex = vertex;
-                vertexIndex++;
-            }
-        }
+        this.objModel = MODEL_PARSER_MANAGER.parse(new File(this.filename));
         return prevFilename;
     }
 
@@ -120,14 +104,24 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
-        List<Pair<Vector3f, Vector3f>> modifiedPos = drawContext.getMetadata(FACE_VERTICES);
-        for (Pair<Vector3f, Vector3f> vertexPair : modifiedPos) {
-            Vector3f vertex1 = new Vector3f(vertexPair.getLeft()).mul(this.scale);
-            Vector3f vertex2 = new Vector3f(vertexPair.getRight()).mul(this.scale);
-            renderer.drawLine(
-                    this.particleEffect, drawContext.getCurrentStep(), objectDrawPos,
-                    vertex1, vertex2, this.rotation, this.amount
-            );
+
+        for (ObjModel.Face face : this.objModel.faces()) {
+            List<ObjModel.Vertex> vertices = face.vertices();
+            List<Vector3f> positions = new ArrayList<>(vertices.size());
+
+            for (ObjModel.Vertex vertex : face.vertices()) {
+                // Defensive copies of internal vertices
+                positions.add(new Vector3f(vertex.position()).mul(this.scale));
+            }
+
+            int step = drawContext.getCurrentStep();
+            for (int i = 0; i < positions.size() - 1; i++) {
+                renderer.drawLine(this.particleEffect, step, objectDrawPos, positions.get(i), positions.get(i + 1),
+                        this.rotation, this.amount);
+            }
+            // Close the face
+            renderer.drawLine(this.particleEffect, step, objectDrawPos, positions.getLast(), positions.getFirst(),
+                    this.rotation, this.amount);
         }
     }
 
