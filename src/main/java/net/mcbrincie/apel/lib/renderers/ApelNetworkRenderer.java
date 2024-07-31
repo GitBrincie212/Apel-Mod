@@ -101,8 +101,11 @@ public class ApelNetworkRenderer implements ApelServerRenderer {
     @Override
     public void afterFrame(int step, Vector3f frameOrigin) {
         ApelFramePayload payload = new ApelFramePayload(this.instructions);
-        for (ServerPlayerEntity player : PlayerLookup.around(this.getServerWorld(), new Vec3d(frameOrigin), 32)) {
-            ServerPlayNetworking.send(player, payload);
+        // Only send if there's more than the Frame instruction (it's always first)
+        if (this.instructions.size() > 1) {
+            for (ServerPlayerEntity player : PlayerLookup.around(this.getServerWorld(), new Vec3d(frameOrigin), 32)) {
+                ServerPlayNetworking.send(player, payload);
+            }
         }
         // Recreate, with initial capacity
         this.instructions = new ArrayList<>(this.instructions.size());

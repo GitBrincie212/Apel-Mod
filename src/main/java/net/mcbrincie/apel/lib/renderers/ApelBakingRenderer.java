@@ -5,8 +5,6 @@ import io.netty.buffer.Unpooled;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.joml.Vector3f;
 
 import java.io.DataOutputStream;
@@ -22,8 +20,8 @@ import java.util.List;
 import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 public class ApelBakingRenderer implements ApelServerRenderer {
-    private static final Logger LOGGER = LogManager.getLogger();
     private static final DateTimeFormatter INSTANT_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    private static final int WRITE_CHUNK_SIZE = 4096;
 
     private final ServerWorld world;
     private final String animationName;
@@ -128,7 +126,7 @@ public class ApelBakingRenderer implements ApelServerRenderer {
         for (Instruction ins : this.instructions) {
             ins.write(buffer);
             // Flush periodically
-            if (buffer.readableBytes() > 1024) {
+            if (buffer.readableBytes() > WRITE_CHUNK_SIZE) {
                 writeBytes(buffer);
             }
         }
