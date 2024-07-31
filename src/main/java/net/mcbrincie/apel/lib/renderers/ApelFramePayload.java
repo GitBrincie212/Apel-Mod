@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public record ApelFramePayload(List<ApelNetworkRenderer.Instruction> instructions) implements CustomPayload {
+public record ApelFramePayload(List<ApelRenderer.Instruction> instructions) implements CustomPayload {
     public static final CustomPayload.Id<ApelFramePayload> ID = new CustomPayload.Id<>(Identifier.of(Apel.MOD_ID,
                                                                                                      "frame"));
     public static final PacketCodec<RegistryByteBuf, ApelFramePayload> PACKET_CODEC = PacketCodec.of(ApelFramePayload::write,
@@ -20,21 +20,11 @@ public record ApelFramePayload(List<ApelNetworkRenderer.Instruction> instruction
         this(readInstructions(buf));
     }
 
-    private static @NotNull List<ApelNetworkRenderer.Instruction> readInstructions(RegistryByteBuf buf) {
+    private static @NotNull List<ApelRenderer.Instruction> readInstructions(RegistryByteBuf buf) {
         // TODO: Consider a value to describe the number of instructions
-        List<ApelNetworkRenderer.Instruction> instructions = new ArrayList<>();
+        List<ApelRenderer.Instruction> instructions = new ArrayList<>();
         while (buf.readableBytes() > 0) {
-            switch (buf.readByte()) {
-                case 'F' -> instructions.add(ApelRenderer.Frame.from(buf));
-                case 'T' -> instructions.add(ApelRenderer.PType.from(buf));
-                case 'L' -> instructions.add(ApelRenderer.Line.from(buf));
-                case 'P' -> instructions.add(ApelRenderer.Particle.from(buf));
-                case 'E' -> instructions.add(ApelRenderer.Ellipse.from(buf));
-                case 'S' -> instructions.add(ApelRenderer.Ellipsoid.from(buf));
-                case 'B' -> instructions.add(ApelRenderer.BezierCurve.from(buf));
-                case 'C' -> instructions.add(ApelRenderer.Cone.from(buf));
-                case 'Y' -> instructions.add(ApelRenderer.Cylinder.from(buf));
-            }
+            instructions.add(ApelRenderer.Instruction.from(buf));
         }
         return instructions;
     }

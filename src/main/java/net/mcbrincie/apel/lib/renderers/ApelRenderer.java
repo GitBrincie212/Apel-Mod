@@ -254,6 +254,21 @@ public interface ApelRenderer {
          * @return an array of Vector3f instances representing the unit points
          */
         Vector3f[] computePoints();
+
+        static Instruction from(RegistryByteBuf buf) {
+            return switch (buf.readByte()) {
+                case 'F' -> Frame.from(buf);
+                case 'T' -> PType.from(buf);
+                case 'L' -> Line.from(buf);
+                case 'P' -> Particle.from(buf);
+                case 'E' -> Ellipse.from(buf);
+                case 'S' -> Ellipsoid.from(buf);
+                case 'B' -> BezierCurve.from(buf);
+                case 'C' -> Cone.from(buf);
+                case 'Y' -> Cylinder.from(buf);
+                default -> throw new IllegalStateException("Invalid instruction identifier");
+            };
+        }
     }
 
     record Frame(Vector3f origin) implements Instruction {
