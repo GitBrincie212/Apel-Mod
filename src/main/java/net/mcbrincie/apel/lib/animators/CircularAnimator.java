@@ -2,20 +2,68 @@ package net.mcbrincie.apel.lib.animators;
 
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
+import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.server.world.ServerWorld;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
-/** A slightly more complex animator than linear animator or point animator because it deals with a circle.
- * The animator basically creates a circle, and when animating on it, you specify which angle (IN RADIANS) should
- * be the start & end, to trim some parts. If you wanna fully revolve around the circle and end up back at the
- * same point, then you can specify the revolutions it should do by using {@code setRevolutions}. By default, it's
- * set to one revolution, which means it loops the circle once
+/**
+ * The {@code CircularAnimator} moves the given {@link ParticleObject} along a circular path.  This path is defined
+ * by a center point and a radius that describe a circle in the XY-plane.  The path starts at 2&pi; radians and proceeds
+ * clockwise by default.  It makes one revolution, by default, though {@link #setRevolutions(int)} may be used to do
+ * more revolutions if desired.  Potential transformations include rotation, direction, and trimming.
+ * <p>
+ * Rotation is done by providing a {@link Vector3f} indicating rotations about each axis.  For example, putting the
+ * circle in the XZ-plane can be done by passing {@code new Vector3f((float)Math.PI / 2, 0, 0)} to the constructor's
+ * {@code rotation} parameter.
+ * <p>
+ * Directionality is controlled by {@link #setClockwise()}.  This toggles the direction, so each call reverses
+ * direction, with the initial value of {@code true} indicating clockwise.
+ * <p>
+ * Trimming is done by providing a single arc on the circle, in radians, where the object will be rendered.  The start
+ * and end points will be normalized within the interval [0, 2&pi;) such that the arc length between them is 2&pi; or
+ * less.  By default, the entire circle is rendered because the trimming parameters are equal, and this class
+ * interprets that as drawing all particles from the start point to the end point.
+ * <p>
+ * For example, calling {@link #setTrimming(AnimationTrimming)} with {@code new AnimationTrimming<>(0.0f, (float)Math.PI)}
+ * would render on the second half of the circle if the direction is counter-clockwise because 0 == 2&pi; on the circle,
+ * and the first half if the direction is clockwise.  The code for the first is:
+ * <pre>
+ * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
+ *                 .counterclockwise().trimming(new AnimationTrimming<>(0.0f, (float)Math.PI))
+ *                 .build();
+ * </pre>
+ * and the second is:
+ * <pre>
+ * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
+ *                 .clockwise().trimming(new AnimationTrimming<>(0.0f, (float)Math.PI))
+ *                 .build();
+ * </pre>
+ * <p>
+ * As another example, the following code will begin at 2&pi;, go counter-clockwise to 3&pi;/2, then
+ * skip to &pi;/2 and continue rendering until it reaches {@code 0}.
+ * <pre>
+ * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
+ *                 .counterclockwise().trimming(new AnimationTrimming<>((float)Math.PI/2, -(float)Math.PI/2))
+ *                 .build();
+ * </pre>
+ * If the previous code set `clockwise()` on the builder, it would render continuously from &pi;/2 to -&pi;/2;
+ * <p>
+ * To have it start at &pi;/2 and render continuously in a counter-clockwise direction, rotate the circular path &pi;/2
+ * clockwise around the z-axis, and change the trim interval to [0, &pi;]:
+ * <pre>
+ * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
+ *                 .rotation(new Vector3f(0.0f, 0.0f, (float)Math.PI/2))
+ *                 .counterclockwise().trimming(new AnimationTrimming<>(0, (float)Math.PI))
+ *                 .build();
+ * </pre>
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CircularAnimator extends PathAnimatorBase {
@@ -25,8 +73,6 @@ public class CircularAnimator extends PathAnimatorBase {
     protected int revolutions;
     protected AnimationTrimming<Float> trimming;
     protected boolean clockwise;
-
-    private float tempDiffStore;
 
     protected DrawInterceptor<CircularAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
 
@@ -60,7 +106,6 @@ public class CircularAnimator extends PathAnimatorBase {
         this.center = animator.center;
         this.radius = animator.radius;
         this.revolutions = animator.revolutions;
-        this.tempDiffStore = -1.0f;
         this.duringRenderingSteps = animator.duringRenderingSteps;
         this.clockwise = animator.clockwise;
         this.trimming = animator.trimming;
@@ -120,16 +165,37 @@ public class CircularAnimator extends PathAnimatorBase {
         return this.radius;
     }
 
-    /** Sets the animation trimming which accepts a start trim or
-     * an ending trim. The trim parts have to be float values
+    /**
+     * Sets the animation trimming.  This animator trims based on angle (in radians) such that any steps that occur
+     * between the start and end of the trim interval will render.
+     * <p>
+     * The maximum interval of the AnimationTrimming instance is 2&pi;<sup>-</sup> radians, so it can approach
+     * 2&pi;, but will never actually be 2&pi;.  If the trimming interval is greater than 2&pi;, it will be normalized
+     * such that its length is &lt; 2&pi;.  If the entire circle should render an object, the default trimming is
+     * {@code (0.0, 0.0)} which means "start at 0.0 and traverse the circle until reaching 0.0"; this results in
+     * rendering the object at all points on the circle.
      *
-     * @return The animation trimming that is used
+     * @return The previous animation trimming
      */
     public AnimationTrimming<Float> setTrimming(AnimationTrimming<Float> trimming) {
-        trimming.setStart((float) (trimming.getStart() % Math.TAU));
-        trimming.setEnd((float) (trimming.getEnd() % Math.TAU));
+        float start = trimming.getStart();
+        float end = trimming.getEnd();
+        // Ensure start is within [0, TAU)
+        while (start < 0) {
+            start += (float) Math.TAU;
+        }
+        while (start >= Math.TAU) {
+            start -= (float) Math.TAU;
+        }
+        // Ensure end is within [0, TAU)
+        while (end < 0) {
+            end += (float) Math.TAU;
+        }
+        while (end >= Math.TAU) {
+            end -= (float) Math.TAU;
+        }
         AnimationTrimming<Float> prevTrimming = this.trimming;
-        this.trimming = trimming;
+        this.trimming = new AnimationTrimming<>(start, end);
         return prevTrimming;
     }
 
@@ -141,7 +207,7 @@ public class CircularAnimator extends PathAnimatorBase {
         return this.trimming;
     }
 
-    /** Sets the clockwise value that is used
+    /** Toggles the direction of rotation between clockwise and counter-clockwise.
      *
      * @return The previous clockwise value
      */
@@ -158,45 +224,76 @@ public class CircularAnimator extends PathAnimatorBase {
         return this.clockwise;
     }
 
-    /** Converts any render-interval-based animation into render steps
-     *
-     * @return The converted step
-     */
     @Override
     public int convertIntervalToSteps() {
-        return (int) (Math.ceil(this.tempDiffStore / this.renderingInterval) + 1) * this.revolutions;
+        return (int) (Math.ceil(Math.TAU / this.renderingInterval) + 1) * this.revolutions;
     }
 
     /**
-     * This method is used for beginning the animation logic.
-     * It accepts the server world as a parameter. Unlike most
-     * path animators, this one uses angles for trimming
+     * This method is used to compute the animation logic.  It runs, in its entirety, as soon as it's called.
      */
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqMissingException, SeqDuplicateException {
-        float startAngle = this.trimming.getStart();
-        float differenceAngle = this.trimming.getEnd() - startAngle;
-        this.tempDiffStore = differenceAngle;
+        Predicate<Float> isTrimmed = this.computeTrimmingPredicate();
 
-        int particleAmount = this.renderingSteps == 0 ? this.convertIntervalToSteps() : this.renderingSteps * this.revolutions;
-        float angleInterval = this.renderingInterval == 0 ? (
-                ((differenceAngle) / (this.renderingSteps - 1)) * this.revolutions
-        ): this.renderingInterval * this.revolutions;
-
-        float currAngle = startAngle;
-        Vector3f pos = calculatePoint(currAngle);
-        this.allocateToScheduler();
-        for (int i = 0; i < particleAmount ; i++) {
-            InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
-            if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
-                continue;
-            }
-            pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
-            this.handleDrawingStep(renderer, i, pos);
-            currAngle += this.clockwise ? angleInterval : -angleInterval;
-            currAngle = (float) ((currAngle + Math.TAU) % Math.TAU);
-            pos = this.calculatePoint(currAngle);
+        int stepsPerRevolution = this.renderingSteps;
+        if (this.renderingInterval != 0.0f) {
+            stepsPerRevolution = (int) (Math.ceil(Math.TAU / this.renderingInterval) + 1);
         }
+
+        float angleInterval;
+        float referenceAngle;
+        if (this.clockwise) {
+            angleInterval = (float) (Math.TAU / stepsPerRevolution);
+            referenceAngle = 0.0f;
+        } else {
+            angleInterval = -(float) (Math.TAU / stepsPerRevolution);
+            referenceAngle = (float) Math.TAU;
+        }
+
+        this.allocateToScheduler();
+        int step = -1;
+        for (int revolutionCount = 0; revolutionCount < this.revolutions; revolutionCount++) {
+            for (int i = 0; i < stepsPerRevolution; i++) {
+                step++;
+                // Compute this way to avoid the awkward i == 0 case
+                float currAngle = referenceAngle + i * angleInterval;
+                if (isTrimmed.test(currAngle)) {
+                    continue;
+                }
+                Vector3f pos = calculatePoint(currAngle);
+                InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
+                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
+                    continue;
+                }
+                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
+                this.handleDrawingStep(renderer, step, pos);
+            }
+        }
+    }
+
+    private @NotNull Predicate<Float> computeTrimmingPredicate() {
+        float startAngle = this.trimming.getStart();
+        float endAngle = this.trimming.getEnd();
+        Predicate<Float> isTrimmed;
+        if (this.clockwise) {
+            if (startAngle < endAngle) {
+                isTrimmed = (Float angle) -> angle < startAngle || angle > endAngle;
+            } else {
+                // If start > end, then clockwise traversal is start to TAU, then 0 to end.
+                // Note: if start == end, this is never true
+                isTrimmed = (Float angle) -> angle < startAngle && angle > endAngle;
+            }
+        } else {
+            if (startAngle > endAngle) {
+                isTrimmed = (Float angle) -> angle > startAngle || angle < endAngle;
+            } else {
+                // If start < end, counter-clockwise traversal is start to 0, then TAU to end.
+                // Note: if start == end, this is never true
+                isTrimmed = (Float angle) -> angle > startAngle && angle < endAngle;
+            }
+        }
+        return isTrimmed;
     }
 
     private Vector3f calculatePoint(float currAngle) {
@@ -238,7 +335,7 @@ public class CircularAnimator extends PathAnimatorBase {
         protected Vector3f rotation = new Vector3f();
         protected int revolutions = 1;
         protected boolean clockwise = true;
-        protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, (float) (Math.TAU - 0.0001f));
+        protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, 0.0f);
 
         private Builder() {}
 
