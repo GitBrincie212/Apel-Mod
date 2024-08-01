@@ -9,8 +9,13 @@ All without the need of knowing complex mathematics (such as linear algebra, alt
 
 ## Gallery
 <p style="display: flex; width: 250px; gap: 30px;">
-    <img alt="cone 1" src="./README_media/1.webp">
-    <img alt="cone 2" src="./README_media/2.webp">
+    <img alt="particlecone-1" src="./README_media/1.webp">
+    <img alt="particle-model-1" src="https://github.com/user-attachments/assets/49195959-652f-46aa-9927-935d5be57ef3">
+    <img alt="particle-model-2" src="https://github.com/user-attachments/assets/1367705d-f1da-4dc9-ad05-62025d3f5fdb">
+    <img alt="particle-sphere" src="https://github.com/user-attachments/assets/416022cc-8c0d-44ad-88e4-47e65a52e7cc">
+    <img alt="particle-polygon" src="https://github.com/user-attachments/assets/79bff9eb-d081-4317-a13b-ebf53ad4cf2f">
+    <img alt="complex-particle-animation-1" src="https://github.com/user-attachments/assets/d1fb4dfb-32fc-40af-9154-fef28f084098">
+    <img alt="complex-particle-animation-2" src="https://github.com/user-attachments/assets/00453091-4a13-4bc3-9020-c2cde9141cbc">
 </p>
 
 ## Key Features
