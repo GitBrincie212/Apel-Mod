@@ -64,9 +64,12 @@ public class ApelBakingRenderer implements ApelServerRenderer {
     }
 
     @Override
-    public void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int count) {
+    public void drawLine(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, Vector3f start, Vector3f end,
+            Vector3f rotation, int amount
+    ) {
         this.detectParticleTypeChange(particleEffect);
-        this.instructions.add(new Line(start, end, count));
+        this.instructions.add(new Line(drawPos, start, end, rotation, amount));
     }
 
     @Override
