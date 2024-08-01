@@ -1,6 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.models.ModelParserManager;
 import net.mcbrincie.apel.lib.util.models.ObjParser;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.particle.ParticleTypes;
@@ -10,6 +11,7 @@ import org.joml.Vector3f;
 import oshi.util.tuples.Pair;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
 
 
@@ -23,7 +25,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
     private Vector3f scale;
     private File model_file;
     private HashMap<Pair<Vector3f, Vector3f>, ParticleEffect> positions = new HashMap<>();
-    private final ObjParser objParser = new ObjParser();
+    private final ModelParserManager modelParserManager = new ModelParserManager();
 
     public ParticleModel(String filename, Vector3f rotation) {
         this(filename, rotation, new Vector3f(1, 1, 1));
@@ -61,20 +63,20 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
         String prevFilename = this.filename;
         this.filename = filename;
         this.model_file = new File(filename);
-        this.objParser.parseObjFile(this.model_file);
-        for (ObjParser.FaceToken faceToken : this.objParser.faceTokens) {
+        this.modelParserManager.parseFile(this.model_file);
+        for (ModelParserManager.FaceToken faceToken : this.modelParserManager.drawableFaces) {
             Vector3f prevVertex = faceToken.vertices[0];
-            int index = 0;
+            int vertexIndex = 0;
             for (Vector3f vertex : faceToken.vertices) {
-                if (index == 0) {
-                    index++;
+                if (vertexIndex == 0) {
+                    vertexIndex++;
                     continue;
-                } else if (index == faceToken.vertices.length - 1) {
+                } else if (vertexIndex == faceToken.vertices.length - 1) {
                     prevVertex = faceToken.vertices[0];
                 }
                 this.positions.put(new Pair<>(prevVertex, vertex), ParticleTypes.END_ROD);
                 prevVertex = vertex;
-                index++;
+                vertexIndex++;
             }
         }
         return prevFilename;
@@ -111,7 +113,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
             vertex2 = this.rigidTransformation(vertex2, quaternion, objectDrawPos);
             renderer.drawLine(
                     currParticle, drawContext.getCurrentStep(),
-                    vertex1, vertex2, 20
+                    vertex1, vertex2, 10
             );
         }
     }

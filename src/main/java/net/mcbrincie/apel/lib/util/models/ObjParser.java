@@ -11,37 +11,7 @@ import java.util.List;
 import java.util.Scanner;
 
 public class ObjParser {
-    static public List<Vector3f> vertexTokens = new ArrayList<>();
-    static public List<Vector3f> vertexNormalTokens = new ArrayList<>();
-    static public List<Vector2f> textureVertexTokens = new ArrayList<>();
-    static public List<FaceToken> faceTokens = new ArrayList<>();
-    static public List<PolyLineToken> polyLineTokens = new ArrayList<>();
-
-    public static class FaceToken {
-        public Vector3f[] vertices;
-        public Vector2f[] textureVertices;
-        public Vector3f[] normalVertices;
-
-        public FaceToken(
-                Vector3f[] vertex_tokens,
-                Vector2f[] texture_vertex_tokens,
-                Vector3f[] normal_vertex_tokens
-        ) {
-            this.vertices = vertex_tokens;
-            this.textureVertices = texture_vertex_tokens;
-            this.normalVertices = normal_vertex_tokens;
-        }
-    }
-
-    public static class PolyLineToken {
-        public Vector3f[] vertices;
-
-        public PolyLineToken(Vector3f[] vertex_tokens) {
-            this.vertices = vertex_tokens;
-        }
-    }
-
-    public void readLine(String line) {
+    public void readLine(ModelParserManager manager, String line) {
         line = line.replace("#.*", "");
         line = line.replace("o.*", "");
         if (line.isBlank()) return;
@@ -49,82 +19,83 @@ public class ObjParser {
         String token = line.substring(0, first_space_index);
         line = line.substring(first_space_index + 1);
         switch (token) {
-            case "v" -> parseVertexToken(line);
-            case "vn" -> parseVertexNormalToken(line);
-            case "vt" -> parseVertexTextureToken(line);
-            case "f" -> parseFaceToken(line);
-            case "l" -> parsePolyLineToken(line);
+            case "v" -> parseVertexToken(manager, line);
+            case "vn" -> parseVertexNormalToken(manager, line);
+            case "vt" -> parseVertexTextureToken(manager, line);
+            case "f" -> parseFaceToken(manager, line);
+            case "l" -> parsePolyLineToken(manager, line);
             case "mtllib" -> parseMTLFileDependency(line);
         }
     }
 
-    public void parseVertexToken(String metadata) {
+    public void parseVertexToken(ModelParserManager manager, String metadata) {
         String[] coords = metadata.split(" ");
-        vertexTokens.add(new Vector3f(
+        manager.vertices.add(new Vector3f(
                 Float.parseFloat(coords[0]),
                 Float.parseFloat(coords[1]),
                 Float.parseFloat(coords[2])
         ));
     }
 
-    public void parsePolyLineToken(String metadata) {
+    public void parsePolyLineToken(ModelParserManager manager, String metadata) {
         String[] verticesString = metadata.split(" ");
-        List<Vector3f> arr = new ArrayList<>();
+        List<Vector3f> listOfVertices = new ArrayList<>();
         for (String stringVertex : verticesString) {
-            Vector3f vertex = vertexTokens.get(Integer.parseInt(stringVertex) - 1);
-            arr.add(vertex);
+            Vector3f vertex = manager.vertices.get(Integer.parseInt(stringVertex) - 1);
+            listOfVertices.add(vertex);
         }
-        polyLineTokens.add(new PolyLineToken(arr.toArray(Vector3f[]::new)));
+        manager.drawableLines.add(listOfVertices);
     }
 
-    public void parseVertexNormalToken(String metadata) {
+    public void parseVertexNormalToken(ModelParserManager manager, String metadata) {
         String[] coords = metadata.split(" ");
-        vertexNormalTokens.add(new Vector3f(
+        manager.normalVertices.add(new Vector3f(
                 Float.parseFloat(coords[0]),
                 Float.parseFloat(coords[1]),
                 Float.parseFloat(coords[2])
         ));
     }
 
-    public void parseVertexTextureToken(String metadata) {
+    public void parseVertexTextureToken(ModelParserManager manager, String metadata) {
         String[] coords = metadata.split(" ");
-        textureVertexTokens.add(new Vector2f(
+        manager.textureVertices.add(new Vector2f(
                 Float.parseFloat(coords[0]),
                 Float.parseFloat(coords[1])
         ));
     }
 
-    public void parseFaceToken(String metadata) {
+    public void parseFaceToken(ModelParserManager manager, String metadata) {
         String[] elements = metadata.split(" ");
+        List<Vector3f> verticesPair = new ArrayList<>();
+        List<Vector3f> normalVerticesPair = new ArrayList<>();
+        List<Vector2f> textureVerticesPair = new ArrayList<>();
         for (String element : elements) {
             boolean usingDoubleSlashes = element.contains("//");
             String[] data = element.split("(/|//)");
-            List<Vector3f> verticesPair = new ArrayList<>();
-            List<Vector3f> normalVerticesPair = new ArrayList<>();
-            List<Vector2f> textureVerticesPair = new ArrayList<>();
             int pair_normal_vertex_index = usingDoubleSlashes ? 1 : 2;
             if (!usingDoubleSlashes) {
                 int textureVertexIndex = Integer.parseInt(data[1]);
-                textureVerticesPair.add(textureVertexTokens.get(textureVertexIndex - 1));
+                textureVerticesPair.add(manager.textureVertices.get(textureVertexIndex - 1));
             }
             int vertexIndex = Integer.parseInt(data[0]);
             int vertexNormalIndex = Integer.parseInt(data[pair_normal_vertex_index]);
-            verticesPair.add(vertexTokens.get(vertexIndex - 1));
-            normalVerticesPair.add(vertexNormalTokens.get(vertexNormalIndex));
-            faceTokens.add(new FaceToken(
-                    verticesPair.toArray(Vector3f[]::new),
-                    textureVerticesPair.toArray(Vector2f[]::new),
-                    normalVerticesPair.toArray(Vector3f[]::new)
-            ));
+            verticesPair.add(manager.vertices.get(vertexIndex - 1));
+            normalVerticesPair.add(manager.normalVertices.get(vertexNormalIndex));
         }
+        manager.drawableFaces.add(new ModelParserManager.FaceToken(
+                verticesPair.toArray(Vector3f[]::new),
+                textureVerticesPair.toArray(Vector2f[]::new),
+                normalVerticesPair.toArray(Vector3f[]::new)
+        ));
     }
 
-    public void parseObjFile(File model_file) {
+    public void parseObjFile(ModelParserManager manager, File model_file) {
+        manager.normalVertices.add(new Vector3f());
         try {
             Scanner myReader = new Scanner(model_file);
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
-                this.readLine(data);
+                this.readLine(manager, data);
             }
             myReader.close();
         } catch (FileNotFoundException e) {
