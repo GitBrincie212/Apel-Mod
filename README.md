@@ -8,15 +8,12 @@ high performance.
 All without the need of knowing complex mathematics (such as linear algebra, although a basic grasp is recommended)<br><br>
 
 ## Gallery
-<p style="display: flex; width: 250px; gap: 30px;">
-    <img alt="particlecone-1" src="./README_media/1.webp">
-    <img alt="particle-model-1" src="https://github.com/user-attachments/assets/49195959-652f-46aa-9927-935d5be57ef3">
-    <img alt="particle-model-2" src="https://github.com/user-attachments/assets/1367705d-f1da-4dc9-ad05-62025d3f5fdb">
-    <img alt="particle-sphere" src="https://github.com/user-attachments/assets/416022cc-8c0d-44ad-88e4-47e65a52e7cc">
-    <img alt="particle-polygon" src="https://github.com/user-attachments/assets/79bff9eb-d081-4317-a13b-ebf53ad4cf2f">
-    <img alt="complex-particle-animation-1" src="https://github.com/user-attachments/assets/d1fb4dfb-32fc-40af-9154-fef28f084098">
-    <img alt="complex-particle-animation-2" src="https://github.com/user-attachments/assets/00453091-4a13-4bc3-9020-c2cde9141cbc">
-</p>
+<img alt="particle-model-1" src="https://github.com/user-attachments/assets/49195959-652f-46aa-9927-935d5be57ef3" width="35%">
+<img alt="particle-model-2" src="https://github.com/user-attachments/assets/1367705d-f1da-4dc9-ad05-62025d3f5fdb" width="35%">
+<img alt="particle-sphere" src="https://github.com/user-attachments/assets/416022cc-8c0d-44ad-88e4-47e65a52e7cc" width="35%">
+<img alt="particle-polygon" src="https://github.com/user-attachments/assets/79bff9eb-d081-4317-a13b-ebf53ad4cf2f" width="35%">
+<img alt="complex-particle-animation-1" src="https://github.com/user-attachments/assets/d1fb4dfb-32fc-40af-9154-fef28f084098" width="35%">
+<img alt="complex-particle-animation-2" src="https://github.com/user-attachments/assets/00453091-4a13-4bc3-9020-c2cde9141cbc" width="35%">
 
 ## Key Features
 - **Particle Objects:** These are objects which render, they can be 2D, 3D shapes (such as a cube, circle, triangle) or 
