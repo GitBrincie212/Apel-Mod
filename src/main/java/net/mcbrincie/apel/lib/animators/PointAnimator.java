@@ -98,11 +98,22 @@ public class PointAnimator extends PathAnimatorBase {
         return interceptData;
     }
 
+    /** This is the point path animator builder used for setting up a new point path animator instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+    */
     public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, PointAnimator> {
         protected Vector3f point = new Vector3f();
 
         private Builder() {}
 
+        /** The point that the particle object stays anchored to
+         *
+         * @param point The point's location
+         * @return The builder instance
+         */
         public B point(Vector3f point) {
             this.point = point;
             return self();
