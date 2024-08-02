@@ -1,5 +1,5 @@
 # Getting Started
-As from the `README.md` you know, Apel consists of two primary systems which compliment each other.
+If you read [README.md](../README.md) you know, Apel consists of two primary systems which compliment each other.
 These systems allow for the flexible behavior you see when writing code for complex particle
 scenes. The systems are **Particle Objects** and **Path Animators**
 
