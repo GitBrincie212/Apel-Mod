@@ -142,6 +142,12 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         return interceptData;
     }
 
+    /** This is the Bézier Curve path-animator builder used for setting up a new Bézier Curve path-animator instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+    */
     public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, BezierCurveAnimator> {
         protected List<BezierCurve> bezierCurves = new ArrayList<>();
         protected List<Integer> stepsForCurves = new ArrayList<>();
@@ -152,46 +158,91 @@ public class BezierCurveAnimator extends PathAnimatorBase {
 
         private Builder() {}
 
+        /** Adds a new Bézier curve to the Bézier curve collection
+         *
+         * @param bezierCurve The Bézier curve to add
+         * @return The builder instance
+         */
         public B bezierCurve(BezierCurve bezierCurve) {
             this.bezierCurves.add(bezierCurve);
             return self();
         }
 
+        /** Adds all Bézier curve from the list provided to the Bézier curve collection
+         *
+         * @param bezierCurves The Bézier curves to add
+         * @return The builder instance
+        */
         public B bezierCurves(List<BezierCurve> bezierCurves) {
             this.bezierCurves.addAll(bezierCurves);
             return self();
         }
 
+        /** Sets the rendering step for the specific Bézier curve
+         *
+         * @param stepsForCurve The rendering steps for the Bézier curve
+         * @return The builder instance
+        */
         public B stepsForCurve(int stepsForCurve) {
             this.stepsForCurves.add(stepsForCurve);
             return self();
         }
 
+        /** Sets the rendering step for all the Bézier curves
+         *
+         * @param steps The rendering steps
+         * @return The builder instance
+        */
         public B stepsForAllCurves(int steps) {
             this.stepsForAllCurves = steps;
             return self();
         }
 
+        /** Sets the rendering step for specific Bézier curves
+         *
+         * @param stepsForCurves The rendering steps for the specific Bézier curves
+         * @return The builder instance
+        */
         public B stepsForCurves(List<Integer> stepsForCurves) {
             this.stepsForCurves.addAll(stepsForCurves);
             return self();
         }
 
+        /** Sets the rendering interval for the specific Bézier curve
+         *
+         * @param intervalForCurve The rendering interval for the Bézier curve
+         * @return The builder instance
+         */
         public B intervalForCurve(float intervalForCurve) {
             this.intervalsForCurves.add(intervalForCurve);
             return self();
         }
 
+        /** Sets the rendering interval for all the Bézier curves
+         *
+         * @param interval The rendering interval
+         * @return The builder instance
+         */
         public B intervalForAllCurves(int interval) {
             this.intervalForAllCurves = interval;
             return self();
         }
 
+        /** Sets the rendering intervals for specific Bézier curves
+         *
+         * @param intervalsForCurves The rendering intervals for the specific Bézier curves
+         * @return The builder instance
+        */
         public B intervalsForCurves(List<Float> intervalsForCurves) {
             this.intervalsForCurves.addAll(intervalsForCurves);
             return self();
         }
 
+        /** The animation trimming for the Bézier curve path-animator
+         *
+         * @param trimming The animation trimming
+         * @return The builder instance
+         */
         public B trimming(AnimationTrimming<Float> trimming) {
             this.trimming = trimming;
             return self();
