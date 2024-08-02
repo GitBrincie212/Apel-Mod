@@ -164,28 +164,57 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
         return interceptData;
     }
 
+    /** This is the parallel path-animator builder used for setting up a new parallel path-animator instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+    */
     public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, ParallelAnimator> {
         protected List<PathAnimatorBase> childAnimators = new ArrayList<>();
         protected List<Integer> childAnimatorDelays = new ArrayList<>();
 
         private Builder () {}
 
+        /** Add an animator to the list of path-animators
+         *
+         * @param animator The path-animator instance
+         * @return The builder instance
+        */
         public B animator(PathAnimatorBase animator) {
             this.childAnimators.add(animator);
             return self();
         }
 
+        /** Add the animator to the list of path-animators along with a set-delay
+         *
+         * @param animator The path-animator instance
+         * @param delay The delay for the path-animator
+         * @return The builder instance
+        */
         public B animator(PathAnimatorBase animator, int delay) {
             this.childAnimators.add(animator);
             this.childAnimatorDelays.add(delay);
             return self();
         }
 
+        /** Add all the path-animators to the list of path-animators
+         *
+         * @param animators The path-animator instance
+         * @return The builder instance
+        */
         public B animators(List<PathAnimatorBase> animators) {
             this.childAnimators.addAll(animators);
             return self();
         }
 
+        /** Add all the path-animators to the list of path-animators along with
+         * an individual delay for each path-animator matching 1:1
+         *
+         * @param animators The path-animator instance
+         * @param delays The delays of each path-animator
+         * @return The builder instance
+        */
         public B animators(List<PathAnimatorBase> animators, List<Integer> delays) {
             this.childAnimators.addAll(animators);
             this.childAnimatorDelays.addAll(delays);
