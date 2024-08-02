@@ -33,11 +33,14 @@ public abstract class PathAnimatorBase {
     protected static TrigTable trigTable = Apel.TRIG_TABLE;
 
     protected <B extends Builder<B, T>, T extends PathAnimatorBase> PathAnimatorBase(Builder<B, T> builder) {
-        this.particleObject = builder.particleObject;
-        this.delay = builder.delay;
-        this.processingSpeed = builder.processingSpeed;
-        this.renderingSteps = builder.renderingSteps;
-        this.renderingInterval = builder.renderingInterval;
+        this.setParticleObject(builder.particleObject);
+        this.setDelay(builder.delay);
+        this.setProcessingSpeed(builder.processingSpeed);
+        if (builder.renderingInterval == -1.0f) {
+            this.renderingSteps = builder.renderingSteps;
+            return;
+        }
+        this.setRenderingInterval(builder.renderingInterval);
     }
 
     /** This is an empty constructor meant as a placeholder */
@@ -281,43 +284,93 @@ public abstract class PathAnimatorBase {
         return array;
     }
 
+    /** This is the path-animator builder used for setting up a new path-animator instance.
+     * It is designed to be more friendly of how you arrange the parameters.
+     * Call {@code .builder()} to initiate the builder, once you supplied the parameters
+     * then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+     * @param <T> The path-animator instance that is building
+     */
     public static abstract class Builder<B extends Builder<B, T>, T extends PathAnimatorBase> {
         protected ParticleObject<? extends ParticleObject<?>> particleObject;
         protected int delay = 1;
         protected int processingSpeed = 1;
-        protected int renderingSteps;
-        protected float renderingInterval;
+        protected int renderingSteps = -1;
+        protected float renderingInterval = -1.0f;
+        protected renderingTypeUsed renderTypeUsed = Builder.renderingTypeUsed.UNSET;
+
+        protected enum renderingTypeUsed {
+            UNSET, RENDERING_STEPS, RENDERING_INTERVAL
+        }
 
         @SuppressWarnings({"unchecked"})
         public final B self() {
             return (B) this;
         }
 
+        /** The particle object in use for the path animator
+         *
+         * @param particleObject The particle object
+         * @return The builder instance
+        */
         public final B particleObject(ParticleObject<? extends ParticleObject<?>> particleObject) {
             this.particleObject = particleObject;
             return self();
         }
 
+        /** The delay in use for the path animator
+         *
+         * @param delay The delay in use
+         * @return The builder instance
+        */
         public final B delay(int delay) {
             this.delay = delay;
             return self();
         }
 
+        /** The processingSpeed in use for the path animator
+         *
+         * @param processingSpeed The processingSpeed in use
+         * @return The builder instance
+        */
         public final B processingSpeed(int processingSpeed) {
             this.processingSpeed = processingSpeed;
             return self();
         }
 
+        /** The renderingSteps in use for the path animator
+         *
+         * @param renderingSteps The processingSpeed in use
+         * @return The builder instance
+        */
         public final B renderingSteps(int renderingSteps) {
+            if (this.renderTypeUsed == renderingTypeUsed.RENDERING_INTERVAL) {
+                throw new IllegalArgumentException("Cannot specify both rendering steps and rendering intervals in the builder");
+            }
+            this.renderTypeUsed = renderingTypeUsed.RENDERING_STEPS;
             this.renderingSteps = renderingSteps;
             return self();
         }
 
+        /** The renderingInterval in use for the path animator
+         *
+         * @param renderingInterval The processingSpeed in use
+         * @return The builder instance
+        */
         public final B renderingInterval(float renderingInterval) {
+            if (this.renderTypeUsed == renderingTypeUsed.RENDERING_STEPS) {
+                throw new IllegalArgumentException("Cannot specify both rendering steps and rendering intervals in the builder");
+            }
+            this.renderTypeUsed = renderingTypeUsed.RENDERING_INTERVAL;
             this.renderingInterval = renderingInterval;
             return self();
         }
 
+        /** Builds the path animator instance from all the supplied parameters passed to the builder
+         *
+         * @return The newly created path animator instance
+        */
         public abstract T build();
     }
 }
