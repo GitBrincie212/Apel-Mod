@@ -25,13 +25,18 @@ public abstract class BaseApelRenderer implements ApelRenderer {
     }
 
     @Override
-    public void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int amount) {
-        Instruction line = new Line(start, end, amount);
+    public void drawLine(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, Vector3f start, Vector3f end, Vector3f rotation,
+            int amount
+    ) {
+        Instruction line = new Line(IGNORED_OFFSET, start, end, IGNORED_ROTATION, amount);
         Vector3f[] positions = this.positionsCache.computeIfAbsent(line, Instruction::computePoints);
 
-        // Lines do not rotate or translate
+        // Rotate and translate
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
         for (Vector3f position : positions) {
-            drawParticle(particleEffect, step, position);
+            Vector3f pos = new Vector3f(position).rotate(quaternion).add(drawPos);
+            drawParticle(particleEffect, step, pos);
         }
     }
 

@@ -1,8 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import org.joml.Quaternionf;
-import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 
@@ -25,12 +23,6 @@ public class ParticleQuad extends ParticleObject<ParticleQuad> {
     protected Vector3f vertex2;
     protected Vector3f vertex3;
     protected Vector3f vertex4;
-
-    /** This data is used after calculations (it contains the modified four vertices) */
-    public static final DrawContext.Key<Vector3f> VERTEX_1 = DrawContext.vector3fKey("vertex1");
-    public static final DrawContext.Key<Vector3f> VERTEX_2 = DrawContext.vector3fKey("vertex2");
-    public static final DrawContext.Key<Vector3f> VERTEX_3 = DrawContext.vector3fKey("vertex3");
-    public static final DrawContext.Key<Vector3f> VERTEX_4 = DrawContext.vector3fKey("vertex4");
 
     public static Builder<?> builder() {
         return new Builder<>();
@@ -178,29 +170,14 @@ public class ParticleQuad extends ParticleObject<ParticleQuad> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-
-        // Rotation
-        Quaternionfc quaternion =
-                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         // Defensive copy of `drawPos`
-        Vector3f totalOffset = new Vector3f(drawContext.getPosition()).add(this.offset);
-
-        Vector3f v1 = this.rigidTransformation(this.vertex1, quaternion, totalOffset);
-        Vector3f v2 = this.rigidTransformation(this.vertex2, quaternion, totalOffset);
-        Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
-        Vector3f v4 = this.rigidTransformation(this.vertex4, quaternion, totalOffset);
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
 
         int step = drawContext.getCurrentStep();
-        renderer.drawLine(this.particleEffect, step, v1, v2, this.amount);
-        renderer.drawLine(this.particleEffect, step, v2, v3, this.amount);
-        renderer.drawLine(this.particleEffect, step, v3, v4, this.amount);
-        renderer.drawLine(this.particleEffect, step, v4, v1, this.amount);
-
-        // Provide the four vertices to the `afterDraw` method
-        drawContext.addMetadata(VERTEX_1, v1);
-        drawContext.addMetadata(VERTEX_2, v2);
-        drawContext.addMetadata(VERTEX_3, v3);
-        drawContext.addMetadata(VERTEX_4, v4);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex1, this.vertex2, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex2, this.vertex3, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex3, this.vertex4, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex4, this.vertex1, this.rotation, this.amount);
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleQuad> {

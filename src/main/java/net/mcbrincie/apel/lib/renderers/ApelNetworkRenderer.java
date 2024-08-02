@@ -54,12 +54,15 @@ public class ApelNetworkRenderer implements ApelServerRenderer {
      * @param step The step its currently in
      * @param start The 3D point at which to start
      * @param end The 3D point at which to end
-     * @param count The number of particles to draw along the line
+     * @param amount The number of particles to draw along the line
      */
     @Override
-    public void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int count) {
+    public void drawLine(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, Vector3f start, Vector3f end, Vector3f rotation,
+            int amount
+    ) {
         this.detectParticleTypeChange(particleEffect);
-        this.instructions.add(new Line(start, end, count));
+        this.instructions.add(new Line(drawPos, start, end, rotation, amount));
     }
 
     @Override

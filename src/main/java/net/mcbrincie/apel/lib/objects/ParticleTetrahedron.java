@@ -1,8 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import org.joml.Quaternionf;
-import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 /** The particle object class that represents a tetrahedron which may be irregular.
@@ -178,26 +176,16 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-
-        // Rotation
-        Quaternionfc quaternion =
-                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         // Defensive copy of `drawPos`
-        Vector3f totalOffset = new Vector3f(drawContext.getPosition()).add(this.offset);
-
-        // Defensive copies of internal vertices
-        Vector3f v1 = this.rigidTransformation(this.vertex1, quaternion, totalOffset);
-        Vector3f v2 = this.rigidTransformation(this.vertex2, quaternion, totalOffset);
-        Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
-        Vector3f v4 = this.rigidTransformation(this.vertex4, quaternion, totalOffset);
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
 
         int step = drawContext.getCurrentStep();
-        renderer.drawLine(this.particleEffect, step, v1, v2, this.amount);
-        renderer.drawLine(this.particleEffect, step, v1, v3, this.amount);
-        renderer.drawLine(this.particleEffect, step, v1, v4, this.amount);
-        renderer.drawLine(this.particleEffect, step, v2, v3, this.amount);
-        renderer.drawLine(this.particleEffect, step, v2, v4, this.amount);
-        renderer.drawLine(this.particleEffect, step, v3, v4, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex1, this.vertex2, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex1, this.vertex3, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex1, this.vertex4, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex2, this.vertex3, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex2, this.vertex4, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex3, this.vertex4, this.rotation, this.amount);
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleTetrahedron> {

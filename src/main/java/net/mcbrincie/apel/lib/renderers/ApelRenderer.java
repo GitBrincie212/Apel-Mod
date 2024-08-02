@@ -51,17 +51,28 @@ public interface ApelRenderer {
      * will be spaced evenly along the defined line.
      *
      * @param particleEffect The ParticleEffect to use
+     * @param step The current step of the animation
+     * @param drawPos The position at which to draw
      * @param start The 3D point at which to start
      * @param end The 3D point at which to end
+     * @param rotation The rotation of the line around the {@code drawPos}
      * @param amount The number of particles to draw along the line
      */
-    default void drawLine(ParticleEffect particleEffect, int step, Vector3f start, Vector3f end, int amount) {
+    default void drawLine(
+            ParticleEffect particleEffect, int step, Vector3f drawPos, Vector3f start, Vector3f end, Vector3f rotation,
+            int amount
+    ) {
+        Quaternionfc quaternion = new Quaternionf().rotateZ(rotation.z).rotateY(rotation.y).rotateX(rotation.x);
+
+        Vector3f transformedStart = new Vector3f(start).rotate(quaternion).add(drawPos);
+        Vector3f transformedEnd = new Vector3f(end).rotate(quaternion).add(drawPos);
+
         int amountSubOne = (amount - 1);
         // Do not use 'sub', it modifies in-place
-        float stepX = (end.x - start.x) / amountSubOne;
-        float stepY = (end.y - start.y) / amountSubOne;
-        float stepZ = (end.z - start.z) / amountSubOne;
-        Vector3f curr = new Vector3f(start);
+        float stepX = (transformedEnd.x - transformedStart.x) / amountSubOne;
+        float stepY = (transformedEnd.y - transformedStart.y) / amountSubOne;
+        float stepZ = (transformedEnd.z - transformedStart.z) / amountSubOne;
+        Vector3f curr = new Vector3f(transformedStart);
         for (int i = 0; i < amount; i++) {
             drawParticle(particleEffect, step, curr);
             curr.add(stepX, stepY, stepZ);
@@ -303,23 +314,37 @@ public interface ApelRenderer {
         }
     }
 
-    record Line(Vector3f start, Vector3f end, int amount) implements Instruction {
+    record Line(Vector3f drawPos, Vector3f start, Vector3f end, Vector3f rotation, int amount) implements Instruction {
 
         static Line from(RegistryByteBuf buf) {
-            return new Line(new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
-                            new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
-                            buf.readShort());
+            return new Line(
+                    // drawPos (relative origin for start/end)
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // start
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // end
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // rotation
+                    new Vector3f(buf.readFloat(), buf.readFloat(), buf.readFloat()),
+                    // amount
+                    buf.readShort());
         }
 
         @Override
         public void write(RegistryByteBuf buf) {
             buf.writeByte('L');
+            buf.writeFloat(drawPos.x);
+            buf.writeFloat(drawPos.y);
+            buf.writeFloat(drawPos.z);
             buf.writeFloat(start.x);
             buf.writeFloat(start.y);
             buf.writeFloat(start.z);
             buf.writeFloat(end.x);
             buf.writeFloat(end.y);
             buf.writeFloat(end.z);
+            buf.writeFloat(rotation.x);
+            buf.writeFloat(rotation.y);
+            buf.writeFloat(rotation.z);
             buf.writeShort(amount);
         }
 

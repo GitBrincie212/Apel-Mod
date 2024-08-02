@@ -1,8 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import org.joml.Quaternionf;
-import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -12,8 +10,8 @@ import org.joml.Vector3i;
  * <p>
  * <strong>Note: </strong>ParticleCuboid does not respect the {@link #getAmount()} method inherited from ParticleObject.
  * Instead, it contains amounts for the edges parallel to each axis using {@link #setAmounts(Vector3i)}.  If all edges
- * should have the same number of of particles, then {@link #setAmount(int)} may be used.  The builder allows both
- * methods as well.
+ * should have the same number of particles, then {@link #setAmount(int)} may be used.  The builder allows both methods
+ * as well.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
@@ -166,22 +164,18 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        // Rotation
-        Quaternionfc quaternion =
-                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
-        // Translation
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
         // Scaled and re-positioned vertices
         Vector3f[] vertices = drawContext.getMetadata(VERTICES);
 
-        Vector3f vertex0 = this.rigidTransformation(vertices[0], quaternion, objectDrawPos);
-        Vector3f vertex1 = this.rigidTransformation(vertices[1], quaternion, objectDrawPos);
-        Vector3f vertex2 = this.rigidTransformation(vertices[2], quaternion, objectDrawPos);
-        Vector3f vertex3 = this.rigidTransformation(vertices[3], quaternion, objectDrawPos);
-        Vector3f vertex4 = this.rigidTransformation(vertices[4], quaternion, objectDrawPos);
-        Vector3f vertex5 = this.rigidTransformation(vertices[5], quaternion, objectDrawPos);
-        Vector3f vertex6 = this.rigidTransformation(vertices[6], quaternion, objectDrawPos);
-        Vector3f vertex7 = this.rigidTransformation(vertices[7], quaternion, objectDrawPos);
+        Vector3f vertex0 = vertices[0];
+        Vector3f vertex1 = vertices[1];
+        Vector3f vertex2 = vertices[2];
+        Vector3f vertex3 = vertices[3];
+        Vector3f vertex4 = vertices[4];
+        Vector3f vertex5 = vertices[5];
+        Vector3f vertex6 = vertices[6];
+        Vector3f vertex7 = vertices[7];
 
         int step = drawContext.getCurrentStep();
         int xAmount = this.amounts.x;
@@ -189,22 +183,22 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
         int zAmount = this.amounts.z;
 
         // Bottom Face
-        renderer.drawLine(this.particleEffect, step, vertex0, vertex1, zAmount);
-        renderer.drawLine(this.particleEffect, step, vertex1, vertex2, xAmount);
-        renderer.drawLine(this.particleEffect, step, vertex2, vertex3, zAmount);
-        renderer.drawLine(this.particleEffect, step, vertex3, vertex0, xAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex0, vertex1, this.rotation, zAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex1, vertex2, this.rotation, xAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex2, vertex3, this.rotation, zAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex3, vertex0, this.rotation, xAmount);
 
         // Top Face
-        renderer.drawLine(this.particleEffect, step, vertex4, vertex5, zAmount);
-        renderer.drawLine(this.particleEffect, step, vertex5, vertex6, xAmount);
-        renderer.drawLine(this.particleEffect, step, vertex6, vertex7, zAmount);
-        renderer.drawLine(this.particleEffect, step, vertex7, vertex4, xAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex4, vertex5, this.rotation, zAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex5, vertex6, this.rotation, xAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex6, vertex7, this.rotation, zAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex7, vertex4, this.rotation, xAmount);
 
         // Vertical
-        renderer.drawLine(this.particleEffect, step, vertex0, vertex4, yAmount);
-        renderer.drawLine(this.particleEffect, step, vertex1, vertex5, yAmount);
-        renderer.drawLine(this.particleEffect, step, vertex2, vertex6, yAmount);
-        renderer.drawLine(this.particleEffect, step, vertex3, vertex7, yAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex0, vertex4, this.rotation, yAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex1, vertex5, this.rotation, yAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex2, vertex6, this.rotation, yAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex3, vertex7, this.rotation, yAmount);
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCuboid> {

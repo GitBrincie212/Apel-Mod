@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
@@ -100,15 +99,15 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         Vector3f[] vertices = getRawVertices();
-        // Defensive copy
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
-        this.computeVertices(vertices, objectDrawPos);
 
         // Divide the particles evenly among sides
         int particlesPerLine = this.amount / this.sides;
         for (int i = 0; i < vertices.length - 1; i++) {
             renderer.drawLine(
-                    this.particleEffect, drawContext.getCurrentStep(), vertices[i], vertices[i + 1], particlesPerLine);
+                    this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, vertices[i], vertices[i + 1],
+                    this.rotation, particlesPerLine
+            );
         }
     }
 
@@ -137,15 +136,6 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
             verticesCopy[i] = new Vector3f(cachedVertices[i]);
         }
         return verticesCopy;
-    }
-
-    private void computeVertices(Vector3f[] vertices, Vector3f center) {
-        Quaternionf quaternion = new Quaternionf().rotateZ(this.rotation.z)
-                                                  .rotateY(this.rotation.y)
-                                                  .rotateX(this.rotation.x);
-        for (Vector3f vertex : vertices) {
-            vertex.rotate(quaternion).add(center);
-        }
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePolygon> {
