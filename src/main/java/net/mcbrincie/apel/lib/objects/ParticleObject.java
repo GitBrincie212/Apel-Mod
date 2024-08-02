@@ -3,7 +3,6 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
-import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 import java.util.Optional;
@@ -268,20 +267,6 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      */
     protected void prepareContext(DrawContext drawContext) {
         // Default implementation does nothing
-    }
-
-    /**
-     * Transforms a copy of the point at {@code position} according to the {@code quaternion} and {@code translation}.
-     *
-     * <p>Does not modify the {@code quaternion} or {@code translation}.
-     *
-     * @param position The x-coordinate of the point to transform.
-     * @param quaternion The rotation to apply
-     * @param translation The translation to apply
-     * @return The transformed point in a new Vector3f
-     */
-    protected final Vector3f rigidTransformation(Vector3f position, Quaternionfc quaternion, Vector3f translation) {
-        return new Vector3f(position).rotate(quaternion).add(translation);
     }
 
     /**

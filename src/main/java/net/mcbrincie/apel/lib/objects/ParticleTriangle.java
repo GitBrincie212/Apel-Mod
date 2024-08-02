@@ -150,22 +150,13 @@ public class ParticleTriangle extends ParticleObject<ParticleTriangle> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-
-        // Rotation
-        Quaternionfc quaternion =
-                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         // Defensive copy of `drawPos`
-        Vector3f totalOffset = new Vector3f(drawContext.getPosition()).add(this.offset);
-
-        // Defensive copies of internal vertices
-        Vector3f v1 = this.rigidTransformation(this.vertex1, quaternion, totalOffset);
-        Vector3f v2 = this.rigidTransformation(this.vertex2, quaternion, totalOffset);
-        Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
 
         int step = drawContext.getCurrentStep();
-        renderer.drawLine(this.particleEffect, step, v1, v2, this.amount);
-        renderer.drawLine(this.particleEffect, step, v2, v3, this.amount);
-        renderer.drawLine(this.particleEffect, step, v3, v1, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex1, this.vertex2, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex2, this.vertex3, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex3, this.vertex1, this.rotation, this.amount);
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleTriangle> {

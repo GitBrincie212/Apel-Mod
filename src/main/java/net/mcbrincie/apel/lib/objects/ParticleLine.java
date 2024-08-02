@@ -1,8 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import org.joml.Quaternionf;
-import org.joml.Quaternionfc;
 import org.joml.Vector3f;
 
 /**
@@ -98,16 +96,8 @@ public class ParticleLine extends ParticleObject<ParticleLine> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        // Rotation
-        Quaternionfc quaternion =
-                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
-        // Translation
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
-
-        Vector3f v1 = this.rigidTransformation(this.start, quaternion, objectDrawPos);
-        Vector3f v2 = this.rigidTransformation(this.end, quaternion, objectDrawPos);
-
-        renderer.drawLine(this.particleEffect, drawContext.getCurrentStep(), v1, v2, this.amount);
+        renderer.drawLine(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, this.start, this.end, this.rotation, this.amount);
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleLine> {
