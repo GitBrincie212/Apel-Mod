@@ -256,6 +256,12 @@ public class EllipseAnimator extends PathAnimatorBase {
         return interceptData;
     }
 
+    /** This is the ellipse path-animator builder used for setting up a new ellipse path-animator instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+    */
     public static class Builder<B extends EllipseAnimator.Builder<B>> extends PathAnimatorBase.Builder<B, EllipseAnimator> {
         protected Vector3f center;
         protected float radius;
@@ -267,41 +273,79 @@ public class EllipseAnimator extends PathAnimatorBase {
 
         private Builder() {}
 
+        /** The center position of the ellipse
+         *
+         * @param center The center of the ellipse
+         * @return The builder instance
+         */
         public B center(Vector3f center) {
             this.center = center;
             return self();
         }
 
+        /** The radius of the ellipse
+         *
+         * @param radius The radius of the ellipse
+         * @return The builder instance
+        */
         public B radius(float radius) {
             this.radius = radius;
             return self();
         }
 
+        /** The stretch of the ellipse. If this tends to equal radius, then it becomes a circle
+         *
+         * @param stretch The stretch of the ellipse
+         * @return The builder instance
+        */
         public B stretch(float stretch) {
             this.stretch = stretch;
             return self();
         }
 
+        /** The rotation of the ellipse
+         *
+         * @param rotation The rotation of the ellipse
+         * @return The builder instance
+        */
         public B rotation(Vector3f rotation) {
             this.rotation = rotation;
             return self();
         }
 
+        /** The revolutions of the ellipse. How many times to loop through the ellipse
+         *
+         * @param revolutions The revolutions of the ellipse
+         * @return The builder instance
+        */
         public B revolutions(int revolutions) {
             this.revolutions = revolutions;
             return self();
         }
 
+        /** Sets the particle object to rotate clockwise of the ellipse
+         *
+         * @return The builder instance
+        */
         public B clockwise() {
             this.clockwise = true;
             return self();
         }
 
+        /** Sets the particle object to rotate counter-clockwise of the ellipse
+         *
+         * @return The builder instance
+        */
         public B counterclockwise() {
             this.clockwise = false;
             return self();
         }
 
+        /** Sets the trimming of the ellipse path-animator
+         *
+         * @param trimming The trimming for the ellipse path-animator
+         * @return The builder instance
+        */
         public B trimming(AnimationTrimming<Float> trimming) {
             this.trimming = trimming;
             return self();
@@ -315,8 +359,11 @@ public class EllipseAnimator extends PathAnimatorBase {
             if (this.radius <= 0.0f) {
                 throw new IllegalStateException("Radius must be positive");
             }
+            if (this.revolutions <= 0) {
+                throw new IllegalStateException("Revolutions must be positive");
+            }
             if (this.stretch <= 0.0f) {
-                throw new IllegalStateException("Radius must be positive");
+                throw new IllegalStateException("Stretch must be positive");
             }
             return new EllipseAnimator(this);
         }
