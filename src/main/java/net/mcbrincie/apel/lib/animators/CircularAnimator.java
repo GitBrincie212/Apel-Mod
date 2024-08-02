@@ -275,25 +275,16 @@ public class CircularAnimator extends PathAnimatorBase {
     private @NotNull Predicate<Float> computeTrimmingPredicate() {
         float startAngle = this.trimming.getStart();
         float endAngle = this.trimming.getEnd();
-        Predicate<Float> isTrimmed;
         if (this.clockwise) {
             if (startAngle < endAngle) {
-                isTrimmed = (Float angle) -> angle < startAngle || angle > endAngle;
-            } else {
-                // If start > end, then clockwise traversal is start to TAU, then 0 to end.
-                // Note: if start == end, this is never true
-                isTrimmed = (Float angle) -> angle < startAngle && angle > endAngle;
+                return (Float angle) -> angle < startAngle || angle > endAngle;
             }
-        } else {
-            if (startAngle > endAngle) {
-                isTrimmed = (Float angle) -> angle > startAngle || angle < endAngle;
-            } else {
-                // If start < end, counter-clockwise traversal is start to 0, then TAU to end.
-                // Note: if start == end, this is never true
-                isTrimmed = (Float angle) -> angle > startAngle && angle < endAngle;
-            }
+            return (Float angle) -> angle < startAngle && angle > endAngle;
         }
-        return isTrimmed;
+        if (startAngle > endAngle) {
+            return (Float angle) -> angle > startAngle || angle < endAngle;
+        }
+        return (Float angle) -> angle > startAngle && angle < endAngle;
     }
 
     private Vector3f calculatePoint(float currAngle) {
@@ -329,6 +320,12 @@ public class CircularAnimator extends PathAnimatorBase {
         return interceptData;
     }
 
+    /** This is the Circular path-animator builder used for setting up a new Circular path-animator instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+    */
     public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, CircularAnimator> {
         protected Vector3f center;
         protected float radius;
@@ -339,36 +336,69 @@ public class CircularAnimator extends PathAnimatorBase {
 
         private Builder() {}
 
+        /** The center position of the circle
+         *
+         * @param center The center of the circle
+         * @return The builder instance
+        */
         public B center(Vector3f center) {
             this.center = center;
             return self();
         }
 
+        /** The radius of the circle
+         *
+         * @param radius The radius of the circle
+         * @return The builder instance
+        */
         public B radius(float radius) {
             this.radius = radius;
             return self();
         }
 
+        /** The rotation of the circle
+         *
+         * @param rotation The rotation of the circle
+         * @return The builder instance
+        */
         public B rotation(Vector3f rotation) {
             this.rotation = rotation;
             return self();
         }
 
+        /** The revolutions of the circle. How many times to loop through the circle
+         *
+         * @param revolutions The revolutions of the circle
+         * @return The builder instance
+        */
         public B revolutions(int revolutions) {
             this.revolutions = revolutions;
             return self();
         }
 
+        /** Sets the particle object to rotate clockwise of the circle
+         *
+         * @return The builder instance
+        */
         public B clockwise() {
             this.clockwise = true;
             return self();
         }
 
+        /** Sets the particle object to rotate counter-clockwise of the circle
+         *
+         * @return The builder instance
+        */
         public B counterclockwise() {
             this.clockwise = false;
             return self();
         }
 
+        /** Sets the trimming of the circle path-animator
+         *
+         * @param trimming The trimming for the circle path-animator
+         * @return The builder instance
+        */
         public B trimming(AnimationTrimming<Float> trimming) {
             this.trimming = trimming;
             return self();
@@ -381,6 +411,9 @@ public class CircularAnimator extends PathAnimatorBase {
             }
             if (this.radius <= 0.0f) {
                 throw new IllegalStateException("Radius must be positive");
+            }
+            if (this.revolutions <= 0) {
+                throw new IllegalStateException("Revolutions must be positive");
             }
             return new CircularAnimator(this);
         }
