@@ -118,6 +118,12 @@ public class LinearAnimator extends PathAnimatorBase {
         return interceptData;
     }
 
+    /** This is the linear path animator builder used for setting up a new linear path animator instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+    */
     public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, LinearAnimator> {
         protected List<Vector3f> endpoints = new ArrayList<>();
         protected List<Integer> stepsForSegments = new ArrayList<>();
@@ -128,15 +134,28 @@ public class LinearAnimator extends PathAnimatorBase {
 
         private Builder() {}
 
+        /** The endpoint of the linear path animator.
+         * Do note that it adds it to the list of the endpoints as last
+         *
+         * @param endpoint The endpoint to add to the list of endpoints
+         * @return The builder instance
+         */
         public B endpoint(Vector3f endpoint) {
             this.endpoints.add(endpoint);
             return self();
         }
 
+        /** The endpoints of the linear path animator.
+         * Do note that it adds all to the list of the endpoints as last
+         *
+         * @param endpoints The endpoints to add to the list of endpoints
+         * @return The builder instance
+        */
         public B endpoints(List<Vector3f> endpoints) {
             this.endpoints.addAll(endpoints);
             return self();
         }
+
 
         public B stepsForSegment(int steps) {
             if (steps < 0) {
@@ -164,7 +183,7 @@ public class LinearAnimator extends PathAnimatorBase {
 
         public B intervalForSegment(float interval) {
             if (interval < 0.0f) {
-                throw new IllegalArgumentException("Interval must be non-negative");
+                throw new IllegalStateException("Interval must be non-negative");
             }
             this.intervalsForSegments.add(interval);
             return self();
@@ -173,7 +192,7 @@ public class LinearAnimator extends PathAnimatorBase {
         // Takes priority, if set
         public B intervalForAllSegments(float interval) {
             if (interval <= 0.0f) {
-                throw new IllegalArgumentException("Interval for all segments must be positive");
+                throw new IllegalStateException("Interval for all segments must be positive");
             }
             this.intervalForAllSegments = interval;
             return self();
@@ -186,6 +205,11 @@ public class LinearAnimator extends PathAnimatorBase {
             return self();
         }
 
+        /** The trimming of the linear path animator
+         *
+         * @param trimming The trimming of the linear path animator
+         * @return The builder instance
+         */
         public B trimming(AnimationTrimming<Integer> trimming) {
             if (trimming.getStart() < 0) {
                 throw new IllegalArgumentException("Trim start must be non-negative");
