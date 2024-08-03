@@ -2,12 +2,10 @@ package net.mcbrincie.apel.lib.objects;
 
 import com.google.common.reflect.TypeToken;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Pair;
 import org.joml.Vector3f;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.Objects.requireNonNull;
 
@@ -129,6 +127,10 @@ public class DrawContext {
     }
 
     public static Key<Vector3f[]> vector3fArrayKey(String name) {
+        return new Key<>(name) { };
+    }
+
+    public static Key<List<Pair<Vector3f, Vector3f>>> vector3fListPairKey(String name) {
         return new Key<>(name) { };
     }
 
