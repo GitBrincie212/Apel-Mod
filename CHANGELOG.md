@@ -1,5 +1,5 @@
 <h1 style="text-align: center;"> APEL - v0.2.0</h1><br>
-The first update ever for apel to receive, brings to the table new things as well as reworks and additionally patches
+The first update for apel to ever receive, brings to the table new things as well as reworks and additionally patches
 unintended stuff. We always wanted and still want to expand upon the library and making it a better place for developers
 to use in their own projects
 
@@ -11,6 +11,8 @@ to use in their own projects
 - [ ] Added the ability to stack interceptors
 - [ ] Added ``ParticleText`` for text rendering with particles
 - [ ] Added more markdown documentation on specific topics
+- [ ] Added the ability to allow for indefinite animations
+- [ ] Added the ability to allow for looping animations
 
 
 
