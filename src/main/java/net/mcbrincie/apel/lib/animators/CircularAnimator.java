@@ -5,7 +5,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
@@ -74,7 +74,7 @@ public class CircularAnimator extends PathAnimatorBase {
     protected AnimationTrimming<Float> trimming;
     protected boolean clockwise;
 
-    protected DrawInterceptor<CircularAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
+    protected OldInterceptors<CircularAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
 
     public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
 
@@ -304,8 +304,8 @@ public class CircularAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<CircularAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    public void setDuringRenderingSteps(OldInterceptors<CircularAnimator, OnRenderStep> duringRenderingSteps) {
+        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
     }
 
     protected InterceptData<OnRenderStep> doBeforeStep(

@@ -1,6 +1,8 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import org.joml.Vector3f;
 
 
@@ -46,8 +48,8 @@ public class ParticlePoint extends ParticleObject<ParticlePoint> {
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePoint> {
-        protected DrawInterceptor<ParticlePoint> afterDraw;
-        protected DrawInterceptor<ParticlePoint> beforeDraw;
+        protected ObjectInterceptor<ParticlePoint> afterDraw;
+        protected ObjectInterceptor<ParticlePoint> beforeDraw;
 
         private Builder() {}
 

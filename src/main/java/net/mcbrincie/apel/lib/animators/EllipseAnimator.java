@@ -4,7 +4,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -28,7 +28,7 @@ public class EllipseAnimator extends PathAnimatorBase {
     protected float stretch;
 
     private float tempDiffStore;
-    private DrawInterceptor<EllipseAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
+    private OldInterceptors<EllipseAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
 
     public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
 
@@ -227,8 +227,8 @@ public class EllipseAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<EllipseAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    public void setDuringRenderingSteps(OldInterceptors<EllipseAnimator, OnRenderStep> duringRenderingSteps) {
+        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
     }
 
     private Vector3f calculatePoint(float currAngle) {

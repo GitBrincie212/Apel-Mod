@@ -1,6 +1,8 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -37,7 +39,7 @@ import java.util.Optional;
  * object to the particle combiner and from there APEL would take care the rest.<br><br>
  *
  * <b>Controlling Objects Before Being Drawn</b><br>
- * Developers may use {@link #setBeforeChildDraw(DrawInterceptor)} to control the object itself before other
+ * Developers may use {@link #setBeforeChildDraw(ObjectInterceptor)} to control the object itself before other
  * interceptors from that object apply.  They may also choose whether to draw the object or not by modifying
  * {@code CAN_DRAW_OBJECT}, which this logic is not possible without changing the particle object's class.<br><br>
  *
@@ -52,8 +54,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
     protected List<ParticleObject<?>> objects = new ArrayList<>();
     protected int amount = -1;
 
-    private DrawInterceptor<ParticleCombiner> afterChildDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleCombiner> beforeChildDraw = DrawInterceptor.identity();
+    private ObjectInterceptor<ParticleCombiner> afterChildDraw = ObjectInterceptor.identity();
+    private ObjectInterceptor<ParticleCombiner> beforeChildDraw = ObjectInterceptor.identity();
 
     public static final DrawContext.Key<ParticleObject<?>> OBJECT_IN_USE = DrawContext.particleObjectKey("objectInUse");
     public static final DrawContext.Key<Boolean> SHOULD_DRAW_OBJECT = DrawContext.booleanKey("shouldDraw");
@@ -63,8 +65,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
     }
 
     private ParticleCombiner(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, DrawInterceptor.identity(),
-              DrawInterceptor.identity());
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, ObjectInterceptor.identity(),
+              ObjectInterceptor.identity());
         this.setObjects(builder.objects);
         this.setAfterChildDraw(builder.afterChildDraw);
         this.setBeforeChildDraw(builder.beforeChildDraw);
@@ -573,8 +575,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      *
      * @param beforeChildDrawIntercept The interceptor to execute before drawing each child object
      */
-    public void setBeforeChildDraw(DrawInterceptor<ParticleCombiner> beforeChildDrawIntercept) {
-        this.beforeChildDraw = Optional.ofNullable(beforeChildDrawIntercept).orElse(DrawInterceptor.identity());
+    public void setBeforeChildDraw(ObjectInterceptor<ParticleCombiner> beforeChildDrawIntercept) {
+        this.beforeChildDraw = Optional.ofNullable(beforeChildDrawIntercept).orElse(ObjectInterceptor.identity());
     }
 
     /**
@@ -583,14 +585,14 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      *
      * @param afterChildDraw The interceptor to execute after drawing each child object
      */
-    public void setAfterChildDraw(DrawInterceptor<ParticleCombiner> afterChildDraw) {
-        this.afterChildDraw = Optional.ofNullable(afterChildDraw).orElse(DrawInterceptor.identity());
+    public void setAfterChildDraw(ObjectInterceptor<ParticleCombiner> afterChildDraw) {
+        this.afterChildDraw = Optional.ofNullable(afterChildDraw).orElse(ObjectInterceptor.identity());
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCombiner> {
         protected List<ParticleObject<?>> objects = new ArrayList<>();
-        protected DrawInterceptor<ParticleCombiner> afterChildDraw;
-        protected DrawInterceptor<ParticleCombiner> beforeChildDraw;
+        protected ObjectInterceptor<ParticleCombiner> afterChildDraw;
+        protected ObjectInterceptor<ParticleCombiner> beforeChildDraw;
 
         private Builder() {}
 
@@ -616,9 +618,9 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
          * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
          * the value.
          *
-         * @see ParticleCombiner#setAfterChildDraw(DrawInterceptor)
+         * @see ParticleCombiner#setAfterChildDraw(ObjectInterceptor)
          */
-        public B afterChildDraw(DrawInterceptor<ParticleCombiner> afterChildDraw) {
+        public B afterChildDraw(ObjectInterceptor<ParticleCombiner> afterChildDraw) {
             this.afterChildDraw = afterChildDraw;
             return self();
         }
@@ -627,9 +629,9 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
          * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
          * the value.
          *
-         * @see ParticleCombiner#setBeforeChildDraw(DrawInterceptor)
+         * @see ParticleCombiner#setBeforeChildDraw(ObjectInterceptor)
          */
-        public B beforeChildDraw(DrawInterceptor<ParticleCombiner> beforeChildDraw) {
+        public B beforeChildDraw(ObjectInterceptor<ParticleCombiner> beforeChildDraw) {
             this.beforeChildDraw = beforeChildDraw;
             return self();
         }

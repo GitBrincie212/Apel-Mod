@@ -5,7 +5,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import net.minecraft.server.world.ServerWorld;
@@ -27,7 +27,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
     protected List<PathAnimatorBase> animators;
     protected List<Integer> animatorDelays;
 
-    protected DrawInterceptor<SequentialAnimator, OnRenderPathAnimator> onAnimatorRendering = DrawInterceptor.identity();
+    protected OldInterceptors<SequentialAnimator, OnRenderPathAnimator> onAnimatorRendering = OldInterceptors.identity();
 
     public enum OnRenderPathAnimator {PATH_ANIMATOR, SHOULD_RENDER_ANIMATOR, DELAY}
 
@@ -147,8 +147,8 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setOnAnimatorRendering(DrawInterceptor<SequentialAnimator, OnRenderPathAnimator> duringRenderingSteps) {
-        this.onAnimatorRendering = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    public void setOnAnimatorRendering(OldInterceptors<SequentialAnimator, OnRenderPathAnimator> duringRenderingSteps) {
+        this.onAnimatorRendering = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
     }
 
     protected InterceptData<OnRenderPathAnimator> doBeforeAnimator(

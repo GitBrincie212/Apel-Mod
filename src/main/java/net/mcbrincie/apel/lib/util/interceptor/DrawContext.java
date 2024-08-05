@@ -1,6 +1,7 @@
-package net.mcbrincie.apel.lib.objects;
+package net.mcbrincie.apel.lib.util.interceptor;
 
 import com.google.common.reflect.TypeToken;
+import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Pair;
 import org.joml.Vector3f;

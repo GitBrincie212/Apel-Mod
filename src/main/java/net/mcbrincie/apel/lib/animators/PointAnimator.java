@@ -3,7 +3,7 @@ package net.mcbrincie.apel.lib.animators;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -18,7 +18,7 @@ import java.util.Optional;
 @SuppressWarnings("unused")
 public class PointAnimator extends PathAnimatorBase {
     protected Vector3f point;
-    protected DrawInterceptor<PointAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
+    protected OldInterceptors<PointAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
 
     public enum OnRenderStep {SHOULD_DRAW_STEP}
 
@@ -85,8 +85,8 @@ public class PointAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<PointAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    public void setDuringRenderingSteps(OldInterceptors<PointAnimator, OnRenderStep> duringRenderingSteps) {
+        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
     }
 
     protected InterceptData<OnRenderStep> doBeforeStep(ServerWorld world, int currStep) {

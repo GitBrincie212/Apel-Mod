@@ -4,7 +4,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -24,7 +24,7 @@ public class LinearAnimator extends PathAnimatorBase {
     protected List<Integer> stepsForSegments;
     protected AnimationTrimming<Integer> trimming;
 
-    protected DrawInterceptor<LinearAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
+    protected OldInterceptors<LinearAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
 
     public enum OnRenderStep {SHOULD_DRAW_STEP, CURRENT_ENDPOINT, RENDERING_POSITION}
 
@@ -101,8 +101,8 @@ public class LinearAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<LinearAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    public void setDuringRenderingSteps(OldInterceptors<LinearAnimator, OnRenderStep> duringRenderingSteps) {
+        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
     }
 
     protected InterceptData<OnRenderStep> doBeforeStep(

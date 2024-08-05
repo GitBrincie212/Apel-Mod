@@ -4,7 +4,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.server.world.ServerWorld;
@@ -26,7 +26,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     protected List<Integer> stepsForCurves;
     protected AnimationTrimming<Float> trimming;
 
-    protected DrawInterceptor<BezierCurveAnimator, OnRenderStep> duringRenderingSteps = DrawInterceptor.identity();
+    protected OldInterceptors<BezierCurveAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
 
     public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
 
@@ -126,8 +126,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
      *
      * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
      */
-    public void setDuringRenderingSteps(DrawInterceptor<BezierCurveAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(DrawInterceptor.identity());
+    public void setDuringRenderingSteps(OldInterceptors<BezierCurveAnimator, OnRenderStep> duringRenderingSteps) {
+        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
     }
 
     protected InterceptData<OnRenderStep> doBeforeStep(

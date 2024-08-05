@@ -1,8 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import org.joml.Quaternionf;
-import org.joml.Quaternionfc;
+import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import org.joml.Vector3f;
 
 /** The particle object class that represents a 2D triangle.

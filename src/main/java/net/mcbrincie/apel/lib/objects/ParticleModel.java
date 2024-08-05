@@ -1,6 +1,8 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.mcbrincie.apel.lib.util.models.ModelParserManager;
 import net.minecraft.util.Pair;
 import org.joml.Vector3f;
@@ -136,8 +138,8 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
      * @param <B> The builder type itself
     */
     public static class Builder<B extends ParticleModel.Builder<B>> extends ParticleObject.Builder<B, ParticleModel> {
-        protected DrawInterceptor<ParticleModel> afterDraw;
-        protected DrawInterceptor<ParticleModel> beforeDraw;
+        protected ObjectInterceptor<ParticleModel> afterDraw;
+        protected ObjectInterceptor<ParticleModel> beforeDraw;
         protected Vector3f scale = new Vector3f(1);
         protected String filename;
 

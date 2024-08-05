@@ -19,7 +19,7 @@ package net.mcbrincie.apel.lib.util.interceptor;
  * @param <R> The enum type defining the additional keys available in {@code InterceptData}.
  */
 @FunctionalInterface
-public interface DrawInterceptor<T, R extends Enum<R>> {
+public interface OldInterceptors<T, R extends Enum<R>> {
     /** Apply the interceptor.
      * <br><br>
      * Return values are sent via the {@code InterceptData}'s metadata map.
@@ -35,7 +35,7 @@ public interface DrawInterceptor<T, R extends Enum<R>> {
      * @param <T> The type being intercepted
      * @param <R> The enum type defining the additional keys available in {@code InterceptData}.
      */
-    static <T, R extends Enum<R>> DrawInterceptor<T, R> identity() {
+    static <T, R extends Enum<R>> OldInterceptors<T, R> identity() {
         return (data, object) -> {};
     }
 }

@@ -1,6 +1,8 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -50,8 +52,8 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     protected Vector3f rotation;
     protected Vector3f offset = new Vector3f(0, 0, 0);
     protected int amount = 1;
-    protected DrawInterceptor<T> afterDraw = DrawInterceptor.identity();
-    protected DrawInterceptor<T> beforeDraw = DrawInterceptor.identity();
+    protected ObjectInterceptor<T> afterDraw = ObjectInterceptor.identity();
+    protected ObjectInterceptor<T> beforeDraw = ObjectInterceptor.identity();
 
     /**
      * Used by subclasses to when constructing themselves to set the properties shared by all ParticleObjects.
@@ -65,7 +67,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      * @param afterDraw The interceptor to call after drawing the object
      */
     protected ParticleObject(ParticleEffect particleEffect, Vector3f rotation, Vector3f offset, int amount,
-                             DrawInterceptor<T> beforeDraw, DrawInterceptor<T> afterDraw
+                             ObjectInterceptor<T> beforeDraw, ObjectInterceptor<T> afterDraw
     ) {
         this.setParticleEffect(particleEffect);
         this.setRotation(rotation);
@@ -211,8 +213,8 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      *
      * @param beforeDraw the new interceptor to execute prior to drawing each particle
      */
-    public final void setBeforeDraw(DrawInterceptor<T> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
+    public final void setBeforeDraw(ObjectInterceptor<T> beforeDraw) {
+        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(ObjectInterceptor.identity());
     }
 
     /**
@@ -224,8 +226,8 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
-    public final void setAfterDraw(DrawInterceptor<T> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
+    public final void setAfterDraw(ObjectInterceptor<T> afterDraw) {
+        this.afterDraw = Optional.ofNullable(afterDraw).orElse(ObjectInterceptor.identity());
     }
 
     /**
@@ -285,8 +287,8 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
         protected Vector3f rotation = new Vector3f(0);
         protected Vector3f offset = new Vector3f(0);
         protected int amount = 1;
-        protected DrawInterceptor<T> beforeDraw;
-        protected DrawInterceptor<T> afterDraw;
+        protected ObjectInterceptor<T> beforeDraw;
+        protected ObjectInterceptor<T> afterDraw;
 
         @SuppressWarnings({"unchecked"})
         public final B self() {
@@ -331,9 +333,9 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
          * Sets the interceptor to run before drawing.  This method is not cumulative; repeated calls will overwrite
          * the value.
          *
-         * @see ParticleObject#setBeforeDraw(DrawInterceptor)
+         * @see ParticleObject#setBeforeDraw(ObjectInterceptor)
          */
-        public final B beforeDraw(DrawInterceptor<T> beforeDraw) {
+        public final B beforeDraw(ObjectInterceptor<T> beforeDraw) {
             this.beforeDraw = beforeDraw;
             return self();
         }
@@ -342,9 +344,9 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
          * Sets the interceptor to run after drawing.  This method is not cumulative; repeated calls will overwrite
          * the value.
          *
-         * @see ParticleObject#setAfterDraw(DrawInterceptor)
+         * @see ParticleObject#setAfterDraw(ObjectInterceptor)
          */
-        public final B afterDraw(DrawInterceptor<T> afterDraw) {
+        public final B afterDraw(ObjectInterceptor<T> afterDraw) {
             this.afterDraw = afterDraw;
             return self();
         }
