@@ -40,11 +40,12 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
 
     private void checkValidTetrahedron(Vector3f vertex1, Vector3f vertex2, Vector3f vertex3, Vector3f vertex4) {
         // Defensive copies prior to subtraction and cross-product, which are done in-place.
-        Vector3f v1 = new Vector3f(vertex1);
-        Vector3f v2 = new Vector3f(vertex2);
-        Vector3f v3 = new Vector3f(vertex3);
-        Vector3f v4 = new Vector3f(vertex4);
-        float result = ((v2.sub(v1).cross(v3.sub(v1))).dot(v4.sub(v1)));
+        Vector3f v1 = new Vector3f(vertex2).sub(vertex1);
+        Vector3f v2 = new Vector3f(vertex3).sub(vertex1);
+        Vector3f v3 = new Vector3f(vertex4).sub(vertex1);
+        // This performs the scalar triple product, which calculates the volume of the parallelepiped formed by
+        // three vectors sharing an origin.  If any are co-planar, the volume is zero, and there is no tetrahedron.
+        float result = v1.cross(v2).dot(v3);
         if (Math.abs(result) < 0.0001f) {
             throw new IllegalArgumentException("Provided vertices do not produce a tetrahedron");
         }
