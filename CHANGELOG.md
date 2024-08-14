@@ -16,8 +16,7 @@ to use in their own projects
 - [x] Added ``ParticleMirror`` for mirroring a particle object
 - [ ] Added ``ParticleGrid`` for copying particle objects in an alternating pattern
 - [ ] Added ``ParticleTrial`` for making a trial of particle objects
-
-
+- [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
 
 ## Modifications
 - [x] Reworked the way **Particle Objects** are created by using the builder pattern

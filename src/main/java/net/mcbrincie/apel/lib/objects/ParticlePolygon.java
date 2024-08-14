@@ -3,6 +3,8 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.math.bezier.QuadraticBezierCurve;
+import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
@@ -18,6 +20,7 @@ import java.util.HashMap;
 public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     protected int sides;
     protected float size;
+    protected float roundness;
 
     protected HashMap<Integer, Vector3f[]> cachedShapes = new HashMap<>();
 
@@ -30,6 +33,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
               builder.afterDraw);
         this.setSides(builder.sides);
         this.setSize(builder.size);
+        this.setRoundness(builder.roundness);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -41,6 +45,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         super(polygon);
         this.sides = polygon.sides;
         this.size = polygon.size;
+        this.roundness = polygon.roundness;
         this.cachedShapes = polygon.cachedShapes;
     }
 
@@ -97,6 +102,34 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         return this.size;
     }
 
+    /**
+     * Sets the roundness of the polygon to a new value and returns the previous roundness value used.
+     * The roundness is the distance of the control points that make up the Bézier curves. Values that
+     * are below 1 make the shape contract while values that are above 0 make the shape rounder
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newRoundness The new roundness value
+     * @throws IllegalArgumentException If the roundness value
+     * @return The previous roundness value used
+     */
+    public final float setRoundness(float newRoundness) throws IllegalArgumentException {
+        if (newRoundness < -1 || newRoundness > 1) {
+            throw new IllegalArgumentException("Roundness value is out of bounds between [-1, 1]");
+        }
+        float prevRoundness = this.roundness - 1;
+        this.roundness = newRoundness + 1;
+        return prevRoundness;
+    }
+
+    /** Gets the roundness of the regular polygon
+     *
+     * @return The roundness of the regular polygon
+     */
+    public float getRoundness() {
+        return this.roundness;
+    }
+
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         Vector3f[] vertices = getRawVertices();
@@ -105,9 +138,19 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         // Divide the particles evenly among sides
         int particlesPerLine = this.amount / this.sides;
         for (int i = 0; i < vertices.length - 1; i++) {
-            renderer.drawLine(
-                    this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, vertices[i], vertices[i + 1],
-                    this.rotation, particlesPerLine
+            Vector3f currVertex = vertices[i];
+            Vector3f nextVertex = vertices[i + 1];
+            Vector3f controlPoint = new Vector3f(
+                    MathHelper.lerp(0.5f, currVertex.x, nextVertex.x),
+                    MathHelper.lerp(0.5f, currVertex.y, nextVertex.y),
+                    MathHelper.lerp(0.5f, currVertex.z, nextVertex.z)
+            ).mul(this.roundness);
+            QuadraticBezierCurve quadraticBezierCurve = new QuadraticBezierCurve(
+                    currVertex, nextVertex, controlPoint
+            );
+            renderer.drawBezier(
+                    this.particleEffect, drawContext.getCurrentStep(), objectDrawPos,
+                    quadraticBezierCurve, this.rotation, particlesPerLine
             );
         }
     }
@@ -142,6 +185,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePolygon> {
         protected int sides;
         protected float size;
+        protected float roundness;
 
         private Builder() {}
 
@@ -155,12 +199,22 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         }
 
         /**
-         * Set the size on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         * Set the size on the builder. This method is not cumulative; repeated calls will overwrite the value.
          *
          * @see ParticlePolygon#setSize(float)
          */
         public B size(float size) {
             this.size = size;
+            return self();
+        }
+
+        /**
+         * Set the roundness on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         *
+         * @see ParticlePolygon#setSize(float)
+         */
+        public B roundness(float roundness) {
+            this.roundness = roundness;
             return self();
         }
 
