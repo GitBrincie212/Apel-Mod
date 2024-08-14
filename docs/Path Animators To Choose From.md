@@ -29,7 +29,7 @@ path-animator and repeating the process
 _TL;DR: tree-path animators define a tree / hierarchy of path-animators which is useful when needing to control various
 path-animators in one path-animator rather than implementing a whole new system_
 
-## Overview Of All Path Animators
+## Overview Of All Currently Available Visual Path Animators
 We will start from the simpler ones and work our way to the more niche and complex path animators. Suppose our particle
 object is a cuboid attached to the various path-animators that apel provides to us. Also assume that the path-animator
 begins right away with server-side rendering. This is the code for the particle object we have
@@ -56,10 +56,6 @@ PointAnimator pointAnimator = PointAnimator.builder()
     .build();
 ```
 
-<video controls>
-    <source src="media/path_animators_to_choose_from_point_animator_1.mp4" type="video/mp4">
-</video>
-
 [Linear Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/LinearAnimator.java) another beginner-friendly 
 path animator, a tiny bit more complex than the previous path animator, but linear path animators define one or more lines
 for the particle object to traverse<br><br>
@@ -79,14 +75,41 @@ LinearAnimator linearAnimator = LinearAnimator.builder()
 animator that allows to define a circle for the particle object to revolve around ``revolution`` times
 ```java
 CircularAnimator circularAnimator = CircularAnimator.builder()
-    .radius(1f)
+    .radius(2f)
     .center(new Vector3f())
     .revolutions(3)
     .particleObject(particleCuboid)
     .delay(1)
+    .renderingSteps(100)
     .build();
 ```
 
-<video controls>
-    <source src="media/path_animators_to_choose_from_point_animator_3.mp4" type="video/mp4">
-</video>
+[Ellipse Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/EllipseAnimator.java) yet another more advanced 
+path animator that allows to define an ellipse for the particle object to revolve around ``revolution`` times
+```java
+EllipseAnimator ellipseAnimator = EllipseAnimator.builder()
+    .radius(2f)
+    .stretch(3f)
+    .center(new Vector3f())
+    .revolutions(3)
+    .particleObject(particleCuboid)
+    .delay(1)
+    .renderingSteps(100)
+    .build();
+```
+
+[Bezier Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/BezierCurveAnimator.java) by far a tricky path
+ animator, especially when using the raw interface of the library, it defines a Bézier curved path
+```java
+BezierCurveAnimator bezierCurveAnimator = BezierCurveAnimator.builder()
+    .bezierCurve(new CubicBezierCurve(
+        new Vector3f(),
+        new Vector3f(0, 10, 0),
+        new Vector3f(20, 3, 14),
+        new Vector3f(0, 2, -12)
+    ))
+    .delay(1)
+    .particleObject(particleCuboid)
+    .stepsForAllCurves(200)
+    .build();
+```
