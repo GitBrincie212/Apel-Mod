@@ -254,14 +254,15 @@ public class BezierCurveAnimator extends PathAnimatorBase {
                 throw new IllegalStateException("Must provide at least one curve");
             }
             // If an "all curve" value is provided, it takes priority: interval first, then steps
+            float boundary = Math.max(this.bezierCurves.size() - 1, 1);
             if (this.intervalForAllCurves != 0.0f) {
                 this.intervalsForCurves.clear();
-                for (int i = 0; i < this.bezierCurves.size() - 1; i++) {
+                for (int i = 0; i < boundary; i++) {
                     this.intervalsForCurves.add(this.intervalForAllCurves);
                 }
             } else if (this.stepsForAllCurves != 0) {
                 this.stepsForCurves.clear();
-                for (int i = 0; i < this.bezierCurves.size() - 1; i++) {
+                for (int i = 0; i < boundary; i++) {
                     this.stepsForCurves.add(this.stepsForAllCurves);
                 }
             }
@@ -270,7 +271,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             if ((this.stepsForCurves.size() + 1 != this.bezierCurves.size()) && (this.intervalsForCurves.size() + 1 != this.bezierCurves.size())) {
                 throw new IllegalStateException("Must provide steps or intervals for every curve");
             }
-            for (int i = 0; i < this.bezierCurves.size() - 1; i++) {
+            for (int i = 0; i < boundary; i++) {
                 // Pad the lists so the conversion from interval to steps is straightforward
                 if (this.stepsForCurves.size() == i) {
                     this.stepsForCurves.add(0);
