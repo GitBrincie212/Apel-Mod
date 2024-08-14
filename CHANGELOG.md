@@ -14,7 +14,7 @@ to use in their own projects
 - [ ] Added the ability to allow for indefinite animations
 - [ ] Added the ability to allow for looping animations
 - [x] Added ``ParticleMirror`` for mirroring a particle object
-- [ ] Added ``ParticleGrid`` for copying particle objects in an alternating pattern
+- [ ] Added ``ParticleArray`` for copying particle objects in an alternating pattern
 - [ ] Added ``ParticleTrial`` for making a trial of particle objects
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
 
@@ -32,4 +32,5 @@ to use in their own projects
 ## Patches
 - [x] Fixed a bug where setting a vertex on ``ParticleTriangle`` wouldn't check if all of them are making up a triangle
 - [x] Fixed a bug where setting a vertex on ``ParticleTetrahedron`` wouldn't check if all of them are making up a tetrahedron
-- [ ] Fixed a unintended side effect of ``ParticleQuad`` 
+- [ ] Fixed an unintended side effect of ``ParticleQuad`` 
+- [x] Fixed a bug where ``EllipseAnimator`` does squared the revolutions
