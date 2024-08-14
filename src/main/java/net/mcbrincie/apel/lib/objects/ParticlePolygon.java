@@ -185,7 +185,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePolygon> {
         protected int sides;
         protected float size;
-        protected float roundness;
+        protected float roundness = 1f;
 
         private Builder() {}
 
