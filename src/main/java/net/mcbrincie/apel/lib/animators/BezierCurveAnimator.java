@@ -254,24 +254,23 @@ public class BezierCurveAnimator extends PathAnimatorBase {
                 throw new IllegalStateException("Must provide at least one curve");
             }
             // If an "all curve" value is provided, it takes priority: interval first, then steps
-            float boundary = Math.max(this.bezierCurves.size() - 1, 1);
             if (this.intervalForAllCurves != 0.0f) {
                 this.intervalsForCurves.clear();
-                for (int i = 0; i < boundary; i++) {
+                for (int i = 0; i < this.bezierCurves.size(); i++) {
                     this.intervalsForCurves.add(this.intervalForAllCurves);
                 }
             } else if (this.stepsForAllCurves != 0) {
                 this.stepsForCurves.clear();
-                for (int i = 0; i < boundary; i++) {
+                for (int i = 0; i < this.bezierCurves.size(); i++) {
                     this.stepsForCurves.add(this.stepsForAllCurves);
                 }
             }
             // At this point, either an "all curves" value is provided or individual values for either steps or
             // intervals must be provided.  At this point, mixing intervals and steps is not allowed.
-            if ((this.stepsForCurves.size() + 1 != this.bezierCurves.size()) && (this.intervalsForCurves.size() + 1 != this.bezierCurves.size())) {
+            if ((this.stepsForCurves.size() != this.bezierCurves.size()) && (this.intervalsForCurves.size() != this.bezierCurves.size())) {
                 throw new IllegalStateException("Must provide steps or intervals for every curve");
             }
-            for (int i = 0; i < boundary; i++) {
+            for (int i = 0; i < this.bezierCurves.size(); i++) {
                 // Pad the lists so the conversion from interval to steps is straightforward
                 if (this.stepsForCurves.size() == i) {
                     this.stepsForCurves.add(0);
@@ -288,7 +287,6 @@ public class BezierCurveAnimator extends PathAnimatorBase {
                     this.stepsForCurves.set(i, this.getCurveSteps(i));
                 }
             }
-            // TODO: Convert intervals to steps
             return new BezierCurveAnimator(this);
         }
 
