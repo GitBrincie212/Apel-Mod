@@ -7,9 +7,11 @@ import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
 import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
 import net.minecraft.server.world.ServerWorld;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /** A slightly more complex animator than ellipse animator or linear animator because it deals with an ellipse.
  * The animator basically creates an ellipse, and when animating on it, you specify which angle (IN RADIANS) should
@@ -195,29 +197,57 @@ public class EllipseAnimator extends PathAnimatorBase {
      */
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqMissingException, SeqDuplicateException {
-        float startAngle = this.trimming.getStart();
-        float differenceAngle = this.trimming.getEnd() - startAngle;
-        this.tempDiffStore = differenceAngle;
+        Predicate<Float> isTrimmed = this.computeTrimmingPredicate();
 
-        int particleAmount = this.renderingSteps == 0 ? this.convertIntervalToSteps() : this.renderingSteps * this.revolutions;
-        float angleInterval = this.renderingInterval == 0 ? (
-                ((differenceAngle) / (this.renderingSteps - 1)) * this.revolutions
-        ): this.renderingInterval * this.revolutions;
-
-        float currAngle = startAngle;
-        Vector3f pos = calculatePoint(currAngle);
-        this.allocateToScheduler();
-        for (int i = 0; i < particleAmount; i++) {
-            InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
-            if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
-                continue;
-            }
-            pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
-            this.handleDrawingStep(renderer, i, pos);
-            currAngle += this.clockwise ? angleInterval : -angleInterval;
-            currAngle = (float) ((currAngle + Math.TAU) % Math.TAU);
-            pos = this.calculatePoint(currAngle);
+        int stepsPerRevolution = this.renderingSteps;
+        if (this.renderingInterval != 0.0f) {
+            stepsPerRevolution = (int) (Math.ceil(Math.TAU / this.renderingInterval) + 1);
         }
+
+        float angleInterval;
+        float referenceAngle;
+        if (this.clockwise) {
+            angleInterval = (float) (Math.TAU / stepsPerRevolution);
+            referenceAngle = 0.0f;
+        } else {
+            angleInterval = -(float) (Math.TAU / stepsPerRevolution);
+            referenceAngle = (float) Math.TAU;
+        }
+
+        this.allocateToScheduler();
+        int step = -1;
+        for (int revolutionCount = 0; revolutionCount < this.revolutions; revolutionCount++) {
+            for (int i = 0; i < stepsPerRevolution; i++) {
+                step++;
+                // Compute this way to avoid the awkward i == 0 case
+                float currAngle = referenceAngle + i * angleInterval;
+                if (isTrimmed.test(currAngle)) {
+                    continue;
+                }
+                Vector3f pos = calculatePoint(currAngle);
+                InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
+                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
+                    continue;
+                }
+                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
+                this.handleDrawingStep(renderer, step, pos);
+            }
+        }
+    }
+
+    private @NotNull Predicate<Float> computeTrimmingPredicate() {
+        float startAngle = this.trimming.getStart();
+        float endAngle = this.trimming.getEnd();
+        if (this.clockwise) {
+            if (startAngle < endAngle) {
+                return (Float angle) -> angle < startAngle || angle > endAngle;
+            }
+            return (Float angle) -> angle < startAngle && angle > endAngle;
+        }
+        if (startAngle > endAngle) {
+            return (Float angle) -> angle > startAngle || angle < endAngle;
+        }
+        return (Float angle) -> angle > startAngle && angle < endAngle;
     }
 
     /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
