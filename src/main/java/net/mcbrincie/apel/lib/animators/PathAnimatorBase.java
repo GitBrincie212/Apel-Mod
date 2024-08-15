@@ -37,7 +37,7 @@ public abstract class PathAnimatorBase {
         this.setDelay(builder.delay);
         this.setProcessingSpeed(builder.processingSpeed);
         if (builder.renderingInterval == -1.0f) {
-            this.renderingSteps = builder.renderingSteps;
+            this.setRenderingSteps(builder.renderingSteps);
             return;
         }
         this.setRenderingInterval(builder.renderingInterval);
