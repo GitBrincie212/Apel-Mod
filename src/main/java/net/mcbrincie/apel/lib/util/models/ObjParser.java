@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.util.models;
 
+import com.google.common.collect.ImmutableList;
 import net.mcbrincie.apel.Apel;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
@@ -10,101 +11,93 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class ObjParser {
-    public void readLine(ModelParserManager manager, String line) {
-        line = line.replace("#.*", "");
-        line = line.replace("o.*", "");
-        if (line.isBlank()) return;
-        int first_space_index = line.indexOf(" ");
-        String token = line.substring(0, first_space_index);
-        line = line.substring(first_space_index + 1);
-        switch (token) {
-            case "v" -> parseVertexToken(manager, line);
-            case "vn" -> parseVertexNormalToken(manager, line);
-            case "vt" -> parseVertexTextureToken(manager, line);
-            case "f" -> parseFaceToken(manager, line);
-            case "l" -> parsePolyLineToken(manager, line);
-            case "mtllib" -> parseMTLFileDependency(line);
+/**
+ * Parses an *.obj file into an {@link ObjModel}.
+ */
+public class ObjParser implements ModelParser {
+
+    private Vector3f parseVertexToken(String metadata) {
+        String[] coords = metadata.split(" ");
+        return new Vector3f(Float.parseFloat(coords[0]), Float.parseFloat(coords[1]), Float.parseFloat(coords[2]));
+    }
+
+    private ObjModel.PolyLine parsePolyLineToken(String metadata, List<Vector3f> vertices) {
+        String[] indices = metadata.split(" ");
+        ImmutableList.Builder<Vector3f> positions = ImmutableList.builder();
+        for (String index : indices) {
+            Vector3f position = vertices.get(Integer.parseInt(index) - 1);
+            positions.add(position);
         }
+        return new ObjModel.PolyLine(positions.build());
     }
 
-    public void parseVertexToken(ModelParserManager manager, String metadata) {
+    private Vector3f parseVertexNormalToken(String metadata) {
         String[] coords = metadata.split(" ");
-        manager.vertices.add(new Vector3f(
-                Float.parseFloat(coords[0]),
-                Float.parseFloat(coords[1]),
-                Float.parseFloat(coords[2])
-        ));
+        return new Vector3f(Float.parseFloat(coords[0]), Float.parseFloat(coords[1]), Float.parseFloat(coords[2]));
     }
 
-    public void parsePolyLineToken(ModelParserManager manager, String metadata) {
-        String[] verticesString = metadata.split(" ");
-        List<Vector3f> listOfVertices = new ArrayList<>();
-        for (String stringVertex : verticesString) {
-            Vector3f vertex = manager.vertices.get(Integer.parseInt(stringVertex) - 1);
-            listOfVertices.add(vertex);
-        }
-        manager.drawableLines.add(listOfVertices);
-    }
-
-    public void parseVertexNormalToken(ModelParserManager manager, String metadata) {
+    private Vector2f parseVertexTextureToken(String metadata) {
         String[] coords = metadata.split(" ");
-        manager.normalVertices.add(new Vector3f(
-                Float.parseFloat(coords[0]),
-                Float.parseFloat(coords[1]),
-                Float.parseFloat(coords[2])
-        ));
+        return new Vector2f(Float.parseFloat(coords[0]), Float.parseFloat(coords[1]));
     }
 
-    public void parseVertexTextureToken(ModelParserManager manager, String metadata) {
-        String[] coords = metadata.split(" ");
-        manager.textureVertices.add(new Vector2f(
-                Float.parseFloat(coords[0]),
-                Float.parseFloat(coords[1])
-        ));
-    }
-
-    public void parseFaceToken(ModelParserManager manager, String metadata) {
+    private ObjModel.Face parseFaceToken(String metadata, List<Vector3f> positions, List<Vector2f> vertexTextures, List<Vector3f> vertexNormals) {
         String[] elements = metadata.split(" ");
-        List<Vector3f> verticesPair = new ArrayList<>();
-        List<Vector3f> normalVerticesPair = new ArrayList<>();
-        List<Vector2f> textureVerticesPair = new ArrayList<>();
+        ImmutableList.Builder<ObjModel.Vertex> vertices = ImmutableList.builder();
         for (String element : elements) {
-            boolean usingDoubleSlashes = element.contains("//");
-            String[] data = element.split("(/|//)");
-            int pair_normal_vertex_index = usingDoubleSlashes ? 1 : 2;
-            if (!usingDoubleSlashes) {
-                int textureVertexIndex = Integer.parseInt(data[1]);
-                textureVerticesPair.add(manager.textureVertices.get(textureVertexIndex - 1));
+            String[] indices = element.split("(/|//)");
+            Vector3f position = positions.get(Integer.parseInt(indices[0]) - 1);
+            Vector2f textureCoordinates;
+            if (indices[1].isEmpty()) {
+                textureCoordinates = null;
+            } else {
+                textureCoordinates = vertexTextures.get(Integer.parseInt(indices[1]) - 1);
             }
-            int vertexIndex = Integer.parseInt(data[0]);
-            int vertexNormalIndex = Integer.parseInt(data[pair_normal_vertex_index]);
-            verticesPair.add(manager.vertices.get(vertexIndex - 1));
-            normalVerticesPair.add(manager.normalVertices.get(vertexNormalIndex));
+            Vector3f normal = vertexNormals.get(Integer.parseInt(indices[2]) - 1);
+            ObjModel.Vertex vertex = new ObjModel.Vertex(position, textureCoordinates, normal);
+            vertices.add(vertex);
         }
-        manager.drawableFaces.add(new ModelParserManager.FaceToken(
-                verticesPair.toArray(Vector3f[]::new),
-                textureVerticesPair.toArray(Vector2f[]::new),
-                normalVerticesPair.toArray(Vector3f[]::new)
-        ));
+        return new ObjModel.Face(vertices.build());
     }
 
-    public void parseObjFile(ModelParserManager manager, File model_file) {
-        manager.normalVertices.add(new Vector3f());
+    /**
+     * Read the file indicated by {@code modelFile} and load it into an {@link ObjModel} for use in a
+     * {@code ParticleModel}.
+     *
+     * @param modelFile a File containing the model
+     * @return an ObjModel instance
+     */
+    @Override
+    public ObjModel parse(File modelFile) {
+        List<Vector3f> vertices = new ArrayList<>();
+        List<Vector2f> vertexTextures = new ArrayList<>();
+        List<Vector3f> vertexNormals = new ArrayList<>();
+        ImmutableList.Builder<ObjModel.Face> faces = ImmutableList.builder();
+        ImmutableList.Builder<ObjModel.PolyLine> polyLines = ImmutableList.builder();
         try {
-            Scanner myReader = new Scanner(model_file);
+            Scanner myReader = new Scanner(modelFile);
             while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
-                this.readLine(manager, data);
+                String line = myReader.nextLine();
+                int first_space_index = line.indexOf(" ");
+                String token = line.substring(0, first_space_index);
+                line = line.substring(first_space_index + 1);
+                switch (token) {
+                    case "v" -> vertices.add(parseVertexToken(line));
+                    case "vn" -> vertexNormals.add(parseVertexNormalToken(line));
+                    case "vt" -> vertexTextures.add(parseVertexTextureToken(line));
+                    case "f" -> faces.add(parseFaceToken(line, vertices, vertexTextures, vertexNormals));
+                    case "l" -> polyLines.add(parsePolyLineToken(line, vertices));
+                    case "mtllib" -> parseMTLFileDependency(line);
+                }
             }
             myReader.close();
         } catch (FileNotFoundException e) {
             Apel.LOGGER.error("Object Model File Has Not Been Found");
-            e.printStackTrace();
         }
+        return new ObjModel(faces.build(), polyLines.build());
     }
 
-    public void parseMTLFileDependency(String line) {
+    private void parseMTLFileDependency(String line) {
         // Work In Progress
     }
 }
