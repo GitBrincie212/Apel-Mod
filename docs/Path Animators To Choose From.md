@@ -16,20 +16,18 @@ visual. Examples of those can be [Point Path Animator](../src/main/java/net/mcbr
 [Linear Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/LinearAnimator.java)... etc. Unlike other
 path animators (like tree path animators which we will touch on a bit soon), they do not handle other path-animators
 
-## Tree Path Animators
-These belong to the utility path-animators. Utility path-animators specialize in providing specific QoL stuff to the user,
-this can be nesting path animators in a tree form (hence tree path animators). Having a hierarchy of path-animators is
-more useful than just being complex. Currently, there are two path-animators that are the type of tree-path animators,
-those being [Parallel Animator](../src/main/java/net/mcbrincie/apel/lib/animators/ParallelAnimator.java) and
-[Sequential Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/SequentialAnimator.java). These path
-animators orchestrate the timings of other path-animators. Parallel Path Animators trigger all path-animators to run
-in parallel with each other while sequential waits for the other path-animators to finish before executing the next 
-path-animator and repeating the process
+## Utility Path Animators
+Utility path-animators specialize in providing specific QoL stuff to the user, this can be nesting path animators in a
+tree form (these path animators are referred to tree path animators). Having a hierarchy of path-animators is more useful 
+than just being complex. Currently, there are two path-animators that are the type of tree-path animators, those being 
+[Parallel Animator](../src/main/java/net/mcbrincie/apel/lib/animators/ParallelAnimator.java) and [Sequential Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/SequentialAnimator.java). These path animators orchestrate the timings of other path-animators. 
+Parallel Path Animators trigger all path-animators to run in parallel with each other while sequential waits for the other
+path-animators to finish before executing the next path-animator and repeating the process
 
-_TL;DR: tree-path animators define a tree / hierarchy of path-animators which is useful when needing to control various
-path-animators in one path-animator rather than implementing a whole new system_
+_TL;DR: Utility path animators specialise in providing QoL features, a sub category of them are tree-path animators
+which define a tree-like structure for path animators which allows for nesting_
 
-## Overview Of All Currently Available Visual Path Animators
+## Overview Of All Visual Path Animators
 We will start from the simpler ones and work our way to the more niche and complex path animators. Suppose our particle
 object is a cuboid attached to the various path-animators that apel provides to us. Also assume that the path-animator
 begins right away with server-side rendering. This is the code for the particle object we have
@@ -122,3 +120,43 @@ BezierCurveAnimator bezierCurveAnimator = BezierCurveAnimator.builder()
     .build();
 ```
 [![Video Title](https://img.youtube.com/vi/ZRQDuM9RuKg/0.jpg)](https://www.youtube.com/watch?v=ZRQDuM9RuKg)
+
+## Overview Of All Tree-Path Animators
+Again, we will start from the simpler path animators (as of the time of writing, this doesn't really matter as there
+are only 2 utility path animators to view) and move our way to the more complex and niche path animators. Suppose we have 
+the same particle cuboid object and two more particle cuboids being the same size but with different particle effects which 
+they are attached to different path animators
+
+[Parallel Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/ParallelAnimator.java) this path animator
+runs child path animators in parallel. You can give it delay offsets and control via interceptors if the path animator
+should render or not, and even switch the path animator during runtime
+```java
+ParallelAnimator parallelAnimator = ParallelAnimator.builder()
+    .animator(pointAnimator)
+    .animator(pointAnimator2)
+    .animator(pointAnimator3)
+    .delay(1)
+    .build();
+```
+In this example, we shouldn't care how the other path animators behave but more so
+the timings on when the path animators first appear
+
+[![Video Title](https://img.youtube.com/vi/ZEpDaA-iEDI/0.jpg)](https://www.youtube.com/watch?v=ZEpDaA-iEDI)
+
+
+[Sequential Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/SequentialAnimator.java) this path animator
+runs child path animators in a sequence. It waits for the first path animator to finish before playing the next one, you 
+can give it delay offsets and control via interceptors if the path animator should render or not. And even switch the path 
+animator during runtime
+```java
+SequentialAnimator sequentialAnimator = SequentialAnimator.builder()
+    .animator(pointAnimator)
+    .animator(pointAnimator2)
+    .animator(pointAnimator3)
+    .delay(1)
+    .build();
+```
+In this example, we shouldn't care how the other path animators behave but more so
+the order of timings on when each of the path animators plays
+
+[![Video Title](https://img.youtube.com/vi/DXIaQGQYl7E/0.jpg)](https://www.youtube.com/watch?v=DXIaQGQYl7E)
