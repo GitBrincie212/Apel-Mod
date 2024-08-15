@@ -41,7 +41,7 @@ ParticleCuboid particleCuboid = ParticleCuboid.builder()
     .particleEffect(ParticleTypes.END_ROD)
     .build();
 ```
-**Disclaimer:** There may be lag during those videos. This lag is caused by the video itself
+**Disclaimer:** There may be lag during those videos. This lag is caused by the video itself, we apologise for this inconvinience that may be caused
 <br><br>
 
 [Point Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/PointAnimator.java) the most beginner-friendly
@@ -55,6 +55,8 @@ PointAnimator pointAnimator = PointAnimator.builder()
     .renderingSteps(100)
     .build();
 ```
+[![Video Title](https://img.youtube.com/vi/WF3Dy24YNeQ/0.jpg)](https://www.youtube.com/watch?v=WF3Dy24YNeQ)
+
 
 [Linear Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/LinearAnimator.java) another beginner-friendly 
 path animator, a tiny bit more complex than the previous path animator, but linear path animators define one or more lines
@@ -70,6 +72,8 @@ LinearAnimator linearAnimator = LinearAnimator.builder()
     .stepsForAllSegments(100)
     .build();
 ```
+[![Video Title](https://img.youtube.com/vi/pI0jWMVeW3k/0.jpg)](https://www.youtube.com/watch?v=pI0jWMVeW3k)
+
 
 [Circular Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/CircularAnimator.java) a more advanced path
 animator that allows to define a circle for the particle object to revolve around ``revolution`` times
@@ -83,6 +87,8 @@ CircularAnimator circularAnimator = CircularAnimator.builder()
     .renderingSteps(100)
     .build();
 ```
+[![Video Title](https://img.youtube.com/vi/Cb-sOY14CvU/0.jpg)](https://www.youtube.com/watch?v=Cb-sOY14CvU)
+
 
 [Ellipse Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/EllipseAnimator.java) yet another more advanced 
 path animator that allows to define an ellipse for the particle object to revolve around ``revolution`` times
@@ -97,6 +103,8 @@ EllipseAnimator ellipseAnimator = EllipseAnimator.builder()
     .renderingSteps(100)
     .build();
 ```
+[![Video Title](https://img.youtube.com/vi/RgR8Nx47iqQ/0.jpg)](https://www.youtube.com/watch?v=RgR8Nx47iqQ)
+
 
 [Bezier Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/BezierCurveAnimator.java) by far a tricky path
  animator, especially when using the raw interface of the library, it defines a Bézier curved path
@@ -113,3 +121,4 @@ BezierCurveAnimator bezierCurveAnimator = BezierCurveAnimator.builder()
     .stepsForAllCurves(200)
     .build();
 ```
+[![Video Title](https://img.youtube.com/vi/ZRQDuM9RuKg/0.jpg)](https://www.youtube.com/watch?v=ZRQDuM9RuKg)
