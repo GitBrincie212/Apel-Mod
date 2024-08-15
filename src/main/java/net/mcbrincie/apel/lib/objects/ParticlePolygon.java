@@ -3,12 +3,14 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.mcbrincie.apel.lib.util.math.bezier.QuadraticBezierCurve;
+import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 
 /** The particle object class that represents a 2D regular polygon. Regular polygons contain the
@@ -21,14 +23,15 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     protected int sides;
     protected float size;
     protected float roundness;
+    private final List<BezierCurve> bezierCurves = new ArrayList<>();
 
     protected HashMap<Integer, Vector3f[]> cachedShapes = new HashMap<>();
 
-    public static Builder<?> builder() {
+    public static <B extends Builder<B>> Builder<B> builder() {
         return new Builder<>();
     }
 
-    private ParticlePolygon(Builder<?> builder) {
+    private <B extends Builder<B>> ParticlePolygon(Builder<B> builder) {
         super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
               builder.afterDraw);
         this.setSides(builder.sides);
@@ -109,16 +112,16 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
-     * @param newRoundness The new roundness value
+     * @param roundness The new roundness value
      * @throws IllegalArgumentException If the roundness value
      * @return The previous roundness value used
      */
-    public final float setRoundness(float newRoundness) throws IllegalArgumentException {
-        if (newRoundness < -1 || newRoundness > 1) {
+    public final float setRoundness(float roundness) throws IllegalArgumentException {
+        if (roundness < -1 || roundness > 1) {
             throw new IllegalArgumentException("Roundness value is out of bounds between [-1, 1]");
         }
         float prevRoundness = this.roundness - 1;
-        this.roundness = newRoundness + 1;
+        this.roundness = roundness + 1;
         return prevRoundness;
     }
 
@@ -140,18 +143,33 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         for (int i = 0; i < vertices.length - 1; i++) {
             Vector3f currVertex = vertices[i];
             Vector3f nextVertex = vertices[i + 1];
-            Vector3f controlPoint = new Vector3f(
-                    MathHelper.lerp(0.5f, currVertex.x, nextVertex.x),
-                    MathHelper.lerp(0.5f, currVertex.y, nextVertex.y),
-                    MathHelper.lerp(0.5f, currVertex.z, nextVertex.z)
-            ).mul(this.roundness);
-            QuadraticBezierCurve quadraticBezierCurve = new QuadraticBezierCurve(
-                    currVertex, nextVertex, controlPoint
-            );
-            renderer.drawBezier(
-                    this.particleEffect, drawContext.getCurrentStep(), objectDrawPos,
-                    quadraticBezierCurve, this.rotation, particlesPerLine
-            );
+            if (this.roundness == 1.0f) {
+                renderer.drawLine(
+                    this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, vertices[i], vertices[i + 1],
+                    this.rotation, particlesPerLine
+                );
+            } else {
+                // Create Bézier curves, if needed
+                if (this.bezierCurves.size() < vertices.length - 1) {
+                    // Empty is OK, values will be set right after this
+                    this.bezierCurves.add(BezierCurve.of(new Vector3f(), new Vector3f(), new Vector3f()));
+                }
+                Vector3f controlPoint = new Vector3f(
+                        MathHelper.lerp(0.5f, currVertex.x, nextVertex.x),
+                        MathHelper.lerp(0.5f, currVertex.y, nextVertex.y),
+                        MathHelper.lerp(0.5f, currVertex.z, nextVertex.z)
+                ).mul(this.roundness);
+
+                BezierCurve bezierCurve = this.bezierCurves.get(i);
+                bezierCurve.setStart(currVertex);
+                bezierCurve.setEnd(nextVertex);
+                bezierCurve.getControlPoints().getFirst().set(controlPoint);
+
+                renderer.drawBezier(
+                        this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, bezierCurve,
+                        this.rotation, particlesPerLine
+                );
+            }
         }
     }
 
@@ -160,24 +178,22 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         // (since these change a lot and the goal is to use the cache as much as possible)
         Vector3f[] cachedVertices = this.cachedShapes.computeIfAbsent(this.sides, sides -> {
             float angleInterval = (float) (Math.TAU / this.sides);
-            // Apply this angle offset to make it point up to 0º
-            float offset = (float) (2.5f * Math.PI);
             // Sides + 1 to repeat the starting point to prevent modulo math later
             Vector3f[] newVertices = new Vector3f[this.sides + 1];
             for (int i = 0; i < this.sides; i++) {
-                float currAngle = (angleInterval * i) + offset;
-                float x = this.size * Apel.TRIG_TABLE.getCosine(currAngle);
-                float y = this.size * Apel.TRIG_TABLE.getSine(currAngle);
+                float currAngle = angleInterval * i; //) + offset;
+                float x = Apel.TRIG_TABLE.getCosine(currAngle);
+                float y = Apel.TRIG_TABLE.getSine(currAngle);
                 newVertices[i] = new Vector3f(x, y, 0);
             }
             // Ensure the last particle is exactly the same as the first
             newVertices[this.sides] = new Vector3f(newVertices[0]);
             return newVertices;
         });
-        // Defensive copy of vertices so the cache isn't corrupted
+        // Defensive copy of vertices, scaled after copying, so the cache isn't corrupted
         Vector3f[] verticesCopy = new Vector3f[cachedVertices.length];
         for (int i = 0; i < cachedVertices.length; i++) {
-            verticesCopy[i] = new Vector3f(cachedVertices[i]);
+            verticesCopy[i] = new Vector3f(cachedVertices[i]).mul(this.size);
         }
         return verticesCopy;
     }
@@ -185,7 +201,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePolygon> {
         protected int sides;
         protected float size;
-        protected float roundness = 1f;
+        protected float roundness = 0f;
 
         private Builder() {}
 
@@ -211,7 +227,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         /**
          * Set the roundness on the builder. This method is not cumulative; repeated calls will overwrite the value.
          *
-         * @see ParticlePolygon#setSize(float)
+         * @see ParticlePolygon#setRoundness(float)
          */
         public B roundness(float roundness) {
             this.roundness = roundness;
