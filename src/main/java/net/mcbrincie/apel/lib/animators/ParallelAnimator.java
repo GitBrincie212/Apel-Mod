@@ -36,7 +36,9 @@ public class ParallelAnimator extends PathAnimatorBase implements TreePathAnimat
     }
 
     private <B extends Builder<B>> ParallelAnimator(Builder<B> builder) {
-        super(builder);
+        super();
+        this.setDelay(builder.delay);
+        this.setProcessingSpeed(builder.processingSpeed);
         this.animators = builder.childAnimators;
         this.animatorDelays = builder.childAnimatorDelays;
     }
