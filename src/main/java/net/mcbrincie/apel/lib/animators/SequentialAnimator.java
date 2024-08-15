@@ -36,7 +36,9 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
     }
 
     private <B extends Builder<B>> SequentialAnimator(Builder<B> builder) {
-        super(builder);
+        super();
+        this.setDelay(builder.delay);
+        this.setProcessingSpeed(builder.processingSpeed);
         this.animators = builder.childAnimators;
         this.animatorDelays = builder.childAnimatorDelays;
     }
@@ -131,7 +133,6 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
             } else {
                 totalDelay += delayForAnimator;
                 animatorToSchedule.allocateToScheduler();
-                Apel.LOGGER.info("Scheduling {} with {} delay", animatorToSchedule.getClass(), totalDelay);
                 Apel.SCHEDULER.allocateNewStep(
                         animatorToSchedule, new ScheduledStep(totalDelay, new Runnable[]{func})
                 );
