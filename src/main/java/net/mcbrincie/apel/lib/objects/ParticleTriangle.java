@@ -41,9 +41,13 @@ public class ParticleTriangle extends ParticleObject<ParticleTriangle> {
     }
 
     private void checkValidTriangle(Vector3f vertex1, Vector3f vertex2, Vector3f vertex3) {
-        // Defensive copy before cross-product, which is done in-place.
-        float dotProduct1 = vertex3.dot(new Vector3f(vertex1).cross(vertex2));
-        if (dotProduct1 == 0) {
+        // Defensive copies prior to subtraction and cross-product, which are done in-place.
+        Vector3f v1 = new Vector3f(vertex2).sub(vertex1);
+        Vector3f v2 = new Vector3f(vertex3).sub(vertex1);
+        // As long as the vectors from vertex1->vertex2 and vertex1->vertex3 are not collinear, the triangle is valid.
+        // If they are collinear, the magnitude of the cross product vector will be zero (as will its square).
+        float crossProductMagnitudeSquared = v1.cross(v2).lengthSquared();
+        if (crossProductMagnitudeSquared == 0) {
             throw new IllegalArgumentException("Provided vertices do not produce a triangle");
         }
     }
