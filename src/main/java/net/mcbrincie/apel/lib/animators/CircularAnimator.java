@@ -400,7 +400,7 @@ public class CircularAnimator extends PathAnimatorBase {
          * @return The builder instance
         */
         public B trimming(AnimationTrimming<Float> trimming) {
-            this.trimming = trimming;
+            this.trimming = new AnimationTrimming<>(trimming);
             return self();
         }
 
@@ -414,6 +414,9 @@ public class CircularAnimator extends PathAnimatorBase {
             }
             if (this.revolutions <= 0) {
                 throw new IllegalStateException("Revolutions must be positive");
+            }
+            if (this.renderCalculationMethod == RenderCalculationMethod.UNSET) {
+                throw new IllegalStateException("Either rendering steps or rendering interval must be set");
             }
             return new CircularAnimator(this);
         }

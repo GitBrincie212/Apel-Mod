@@ -120,22 +120,35 @@ public class LinearAnimator extends PathAnimatorBase {
 
     /** This is the linear path animator builder used for setting up a new linear path animator instance.
      * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
-     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance.
+     * <p>
+     * The LinearAnimator supports multiple, linked segments.  Every endpoint added beyond the first will create a
+     * segment along which the particle object travels.  The travel speed may be configured by providing the number of
+     * steps into which to divide the segment, or an interval that also divides the segment into steps.  These interval
+     * and step values may be provided uniquely for every segment, set in groups of segments, or uniform across all
+     * segments.  The priority is as follows:
+     * <ol>
+     *     <li>{@link #intervalForAllSegments(float)}</li>
+     *     <li>{@link #stepsForAllSegments(int)}</li>
+     *     <li>{@link #intervalForSegment(float)} and {@link #intervalsForSegments(List)}</li>
+     *     <li>{@link #stepsForSegment(int)} and {@link #stepsForSegments(List)}</li>
+     * </ol>
      *
      * @param <B> The builder type itself
     */
     public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, LinearAnimator> {
         protected List<Vector3f> endpoints = new ArrayList<>();
         protected List<Integer> stepsForSegments = new ArrayList<>();
-        protected int stepsForAllSegments;
+        protected int stepsForAllSegments = 0;
         protected List<Float> intervalsForSegments = new ArrayList<>();
-        protected float intervalForAllSegments;
+        protected float intervalForAllSegments = 0.0f;
         protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
 
         private Builder() {}
 
-        /** The endpoint of the linear path animator.
-         * Do note that it adds it to the list of the endpoints as last
+        /**
+         * Adds a waypoint to the path this animator takes.  This method is cumulative; repeated calls will append to
+         * the list of waypoints.  There must be at least two waypoints.
          *
          * @param endpoint The endpoint to add to the list of endpoints
          * @return The builder instance
@@ -145,8 +158,9 @@ public class LinearAnimator extends PathAnimatorBase {
             return self();
         }
 
-        /** The endpoints of the linear path animator.
-         * Do note that it adds all to the list of the endpoints as last
+        /**
+         * Adds multiple waypoints to the path this animator takes.  This method is cumulative; repeated calls will
+         * append to the list of waypoints.  There must be at least two waypoints.
          *
          * @param endpoints The endpoints to add to the list of endpoints
          * @return The builder instance
@@ -156,7 +170,14 @@ public class LinearAnimator extends PathAnimatorBase {
             return self();
         }
 
-
+        /**
+         * Set the number of steps to use when rendering the object along a segment between two waypoints.  This method
+         * is cumulative, each successive call configures a segment.  Any segments not configured will default to 0.
+         * Segments with steps set to 0 will use the segment's interval value.
+         *
+         * @param steps The steps for the next segment
+         * @return The builder instance
+         */
         public B stepsForSegment(int steps) {
             if (steps < 0) {
                 throw new IllegalArgumentException("Steps must be non-negative");
@@ -165,7 +186,32 @@ public class LinearAnimator extends PathAnimatorBase {
             return self();
         }
 
-        // Takes priority, if set
+        /**
+         * Set the number of steps to use when rendering the object along multiple segments.  This method is cumulative,
+         * each successive call configures one or more segments.  Any segments not configured will default to 0.
+         * Segments with steps set to 0 will use the segment's interval value.
+         *
+         * @param stepsForSegments The steps for the next N segments
+         * @return The builder instance
+         */
+        public B stepsForSegments(List<Integer> stepsForSegments) {
+            for (Integer steps : stepsForSegments) {
+                this.stepsForSegment(steps);
+            }
+            return self();
+        }
+
+        /**
+         * Set the number of steps to use on every segment.  This method is not cumulative; repeated calls will
+         * overwrite the value.
+         * <p>
+         * Note: This will take priority over individual segments set in {@link #stepsForSegment(int)} or
+         * {@link #stepsForSegments(List)}.  If all segments but one need the same value, you must use those two
+         * methods to configure values in the proper order.
+         *
+         * @param steps The steps for every segment
+         * @return The builder instance
+         */
         public B stepsForAllSegments(int steps) {
             if (steps <= 0) {
                 throw new IllegalArgumentException("Steps for all segments must be positive");
@@ -174,13 +220,14 @@ public class LinearAnimator extends PathAnimatorBase {
             return self();
         }
 
-        public B stepsForSegments(List<Integer> stepsForSegments) {
-            for (Integer steps : stepsForSegments) {
-                this.stepsForSegment(steps);
-            }
-            return self();
-        }
-
+        /**
+         * Set the interval to use when rendering the object along a segment between two waypoints.  This method
+         * is cumulative, each successive call configures a segment.  Any segments not configured will default to 0.0.
+         * Segments with an interval of 0.0 will use the segment's value for steps.
+         *
+         * @param interval The interval for the next segment
+         * @return The builder instance
+         */
         public B intervalForSegment(float interval) {
             if (interval < 0.0f) {
                 throw new IllegalStateException("Interval must be non-negative");
@@ -189,7 +236,32 @@ public class LinearAnimator extends PathAnimatorBase {
             return self();
         }
 
-        // Takes priority, if set
+        /**
+         * Set the interval to use when rendering the object along multiple segments.  This method is cumulative, each
+         * successive call configures a segment.  Any segments not configured will default to 0.0.  Segments with an
+         * interval of 0.0 will use the segment's value for steps.
+         *
+         * @param intervalsForSegments The intervals for the next N segments
+         * @return The builder instance
+         */
+        public B intervalsForSegments(List<Float> intervalsForSegments) {
+            for (Float interval : intervalsForSegments) {
+                this.intervalForSegment(interval);
+            }
+            return self();
+        }
+
+        /**
+         * Set the interval to use on every segment.  This method is not cumulative; repeated calls will overwrite the
+         * value.
+         * <p>
+         * Note: This will take priority over individual segments set in {@link #intervalForSegment(float)} or
+         * {@link #intervalsForSegments(List)}.  If all segments but one need the same value, you must use those two
+         * methods to configure values in the proper order.
+         *
+         * @param interval The interval for every segment
+         * @return The builder instance
+         */
         public B intervalForAllSegments(float interval) {
             if (interval <= 0.0f) {
                 throw new IllegalStateException("Interval for all segments must be positive");
@@ -198,14 +270,10 @@ public class LinearAnimator extends PathAnimatorBase {
             return self();
         }
 
-        public B intervalsForSegments(List<Float> intervalsForSegments) {
-            for (Float interval : intervalsForSegments) {
-                this.intervalForSegment(interval);
-            }
-            return self();
-        }
-
-        /** The trimming of the linear path animator
+        /**
+         * Set the trimming of each segment of the path.  Trimming refers to step numbers, and all segments will use
+         * the same trimming settings.  Valid start values range from 0 to the value used for the end.  Valid end values
+         * are 0 and greater.  If the end is set to -1, no steps will be trimmed off the end.
          *
          * @param trimming The trimming of the linear path animator
          * @return The builder instance
@@ -220,7 +288,7 @@ public class LinearAnimator extends PathAnimatorBase {
             if (trimming.getEnd() != -1 && trimming.getStart() >= trimming.getEnd()) {
                 throw new IllegalArgumentException("Trim start must be less than trim end");
             }
-            this.trimming = trimming;
+            this.trimming = new AnimationTrimming<>(trimming);
             return self();
         }
 

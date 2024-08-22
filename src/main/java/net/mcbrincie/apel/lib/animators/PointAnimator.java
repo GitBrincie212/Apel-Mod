@@ -121,6 +121,9 @@ public class PointAnimator extends PathAnimatorBase {
 
         @Override
         public PointAnimator build() {
+            if (this.renderCalculationMethod != RenderCalculationMethod.RENDERING_STEPS) {
+                throw new IllegalStateException("Rendering steps must be set");
+            }
             return new PointAnimator(this);
         }
     }

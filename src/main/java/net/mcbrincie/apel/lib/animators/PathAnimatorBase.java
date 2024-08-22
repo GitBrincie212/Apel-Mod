@@ -24,7 +24,7 @@ import java.util.List;
 public abstract class PathAnimatorBase {
     protected float renderingInterval = 0.0f;
     protected int renderingSteps = 0;
-    protected int delay;
+    protected int delay = 1;
     protected int processingSpeed = 1;
     protected ParticleObject<? extends ParticleObject<?>> particleObject;
 
@@ -36,11 +36,17 @@ public abstract class PathAnimatorBase {
         this.setParticleObject(builder.particleObject);
         this.setDelay(builder.delay);
         this.setProcessingSpeed(builder.processingSpeed);
-        if (builder.renderingInterval == -1.0f) {
-            this.setRenderingSteps(builder.renderingSteps);
-            return;
+        switch (builder.renderCalculationMethod) {
+            case UNSET -> {
+                // Take no action, since not all animators need these (e.g., Linear, BezierCurve)
+            }
+            case RENDERING_STEPS -> {
+                this.setRenderingSteps(builder.renderingSteps);
+            }
+            case RENDERING_INTERVAL -> {
+                this.setRenderingInterval(builder.renderingInterval);
+            }
         }
-        this.setRenderingInterval(builder.renderingInterval);
     }
 
     /** This is an empty constructor meant as a placeholder */
@@ -92,7 +98,7 @@ public abstract class PathAnimatorBase {
      */
     public int setRenderingSteps(int steps) {
         if (steps < 0) {
-            throw new IllegalArgumentException("Rendering Steps is not positive or equals to 0");
+            throw new IllegalArgumentException("Rendering Steps must be non-negative");
         }
         int prevRenderStep = this.renderingSteps;
         this.renderingSteps = steps;
@@ -118,7 +124,7 @@ public abstract class PathAnimatorBase {
      */
     public float setRenderingInterval(float interval) {
         if (interval < 0) {
-            throw new IllegalArgumentException("Rendering Interval is not positive or equals to 0");
+            throw new IllegalArgumentException("Rendering Interval must be non-negative");
         }
         float prevInterval = this.renderingInterval;
         this.renderingInterval = interval;
@@ -296,11 +302,11 @@ public abstract class PathAnimatorBase {
         protected ParticleObject<? extends ParticleObject<?>> particleObject;
         protected int delay = 1;
         protected int processingSpeed = 1;
-        protected int renderingSteps = -1;
-        protected float renderingInterval = -1.0f;
-        protected renderingTypeUsed renderTypeUsed = Builder.renderingTypeUsed.UNSET;
+        protected int renderingSteps = 0;
+        protected float renderingInterval = 0.0f;
+        protected RenderCalculationMethod renderCalculationMethod = RenderCalculationMethod.UNSET;
 
-        protected enum renderingTypeUsed {
+        protected enum RenderCalculationMethod {
             UNSET, RENDERING_STEPS, RENDERING_INTERVAL
         }
 
@@ -345,10 +351,10 @@ public abstract class PathAnimatorBase {
          * @return The builder instance
         */
         public final B renderingSteps(int renderingSteps) {
-            if (this.renderTypeUsed == renderingTypeUsed.RENDERING_INTERVAL) {
-                throw new IllegalArgumentException("Cannot specify both rendering steps and rendering intervals in the builder");
+            if (this.renderCalculationMethod == RenderCalculationMethod.RENDERING_INTERVAL) {
+                throw new IllegalStateException("Cannot specify both rendering steps and rendering intervals in the builder");
             }
-            this.renderTypeUsed = renderingTypeUsed.RENDERING_STEPS;
+            this.renderCalculationMethod = RenderCalculationMethod.RENDERING_STEPS;
             this.renderingSteps = renderingSteps;
             return self();
         }
@@ -359,10 +365,10 @@ public abstract class PathAnimatorBase {
          * @return The builder instance
         */
         public final B renderingInterval(float renderingInterval) {
-            if (this.renderTypeUsed == renderingTypeUsed.RENDERING_STEPS) {
-                throw new IllegalArgumentException("Cannot specify both rendering steps and rendering intervals in the builder");
+            if (this.renderCalculationMethod == RenderCalculationMethod.RENDERING_STEPS) {
+                throw new IllegalStateException("Cannot specify both rendering steps and rendering intervals in the builder");
             }
-            this.renderTypeUsed = renderingTypeUsed.RENDERING_INTERVAL;
+            this.renderCalculationMethod = RenderCalculationMethod.RENDERING_INTERVAL;
             this.renderingInterval = renderingInterval;
             return self();
         }

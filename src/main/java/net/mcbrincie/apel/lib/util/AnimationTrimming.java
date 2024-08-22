@@ -34,6 +34,14 @@ public class AnimationTrimming<T> {
         this.start = start;
     }
 
+    /**
+     * Copy constructor for AnimationTrimming.
+     */
+    public AnimationTrimming(AnimationTrimming<T> trimming) {
+        this.start = trimming.getStart();
+        this.end = trimming.getEnd();
+    }
+
     /** Sets the starting trimming to a new value and returns the previous value used
      *
      * @param newStart the new start trimming value
