@@ -377,7 +377,7 @@ public class EllipseAnimator extends PathAnimatorBase {
          * @return The builder instance
         */
         public B trimming(AnimationTrimming<Float> trimming) {
-            this.trimming = trimming;
+            this.trimming = new AnimationTrimming<>(trimming);
             return self();
         }
 
@@ -394,6 +394,9 @@ public class EllipseAnimator extends PathAnimatorBase {
             }
             if (this.stretch <= 0.0f) {
                 throw new IllegalStateException("Stretch must be positive");
+            }
+            if (this.renderCalculationMethod == RenderCalculationMethod.UNSET) {
+                throw new IllegalStateException("Either rendering steps or rendering interval must be set");
             }
             return new EllipseAnimator(this);
         }

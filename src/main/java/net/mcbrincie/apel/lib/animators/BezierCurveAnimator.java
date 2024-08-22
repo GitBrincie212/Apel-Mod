@@ -145,6 +145,17 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     /** This is the Bézier Curve path-animator builder used for setting up a new Bézier Curve path-animator instance.
      * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
      * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     * <p>
+     * The BezierCurveAnimator supports multiple, linked curves.  The travel speed may be configured by providing the
+     * number of steps into which to divide the curve, or an interval that also divides the curve into steps.  These
+     * interval and step values may be provided uniquely for every curve, set in groups of curves, or uniform across all
+     * curves.  The priority is as follows:
+     * <ol>
+     *     <li>{@link #intervalForAllCurves(float)}</li>
+     *     <li>{@link #stepsForAllCurves(int)}</li>
+     *     <li>{@link #intervalForCurve(float)} and {@link #intervalsForCurves(List)}</li>
+     *     <li>{@link #stepsForCurve(int)} and {@link #stepsForCurves(List)}</li>
+     * </ol>
      *
      * @param <B> The builder type itself
     */
@@ -158,7 +169,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
 
         private Builder() {}
 
-        /** Adds a new Bézier curve to the Bézier curve collection
+        /** Adds a new Bézier curve to the path this animator takes. This method is cumulative; repeated calls will
+         * append to the list of curves.  There must be at least one curve.
          *
          * @param bezierCurve The Bézier curve to add
          * @return The builder instance
@@ -168,7 +180,8 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             return self();
         }
 
-        /** Adds all Bézier curve from the list provided to the Bézier curve collection
+        /** Adds all Bézier curve from the list provided to the path this animator takes. This method is cumulative;
+         * repeated calls will append to the list of curves.  There must be at least one curve.
          *
          * @param bezierCurves The Bézier curves to add
          * @return The builder instance
@@ -178,39 +191,54 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             return self();
         }
 
-        /** Sets the rendering step for the specific Bézier curve
+        /**
+         * Set the number of steps to use when rendering the object along the curve.  This method is cumulative, each
+         * successive call configures a curve.  Any curves not configured will default to 0.  Curves with steps
+         * set to 0 will use the curve's interval value.
          *
-         * @param stepsForCurve The rendering steps for the Bézier curve
+         * @param stepsForCurve The steps for the next curve
          * @return The builder instance
-        */
+         */
         public B stepsForCurve(int stepsForCurve) {
             this.stepsForCurves.add(stepsForCurve);
             return self();
         }
 
-        /** Sets the rendering step for all the Bézier curves
+        /**
+         * Set the number of steps to use when rendering the object along multiple curves.  This method is cumulative,
+         * each successive call configures one or more curves.  Any curves not configured will default to 0.  Curves
+         * with steps set to 0 will use the curve's interval value.
          *
-         * @param steps The rendering steps
+         * @param stepsForCurves The steps for the next N curves
          * @return The builder instance
-        */
-        public B stepsForAllCurves(int steps) {
-            this.stepsForAllCurves = steps;
-            return self();
-        }
-
-        /** Sets the rendering step for specific Bézier curves
-         *
-         * @param stepsForCurves The rendering steps for the specific Bézier curves
-         * @return The builder instance
-        */
+         */
         public B stepsForCurves(List<Integer> stepsForCurves) {
             this.stepsForCurves.addAll(stepsForCurves);
             return self();
         }
 
-        /** Sets the rendering interval for the specific Bézier curve
+        /**
+         * Set the number of steps to use on every curve.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         * <p>
+         * Note: This will take priority over individual curves set in {@link #stepsForCurve(int)} or
+         * {@link #stepsForCurves(List)}.  If all curves but one need the same value, you must use those two methods to
+         * configure values in the proper order.
          *
-         * @param intervalForCurve The rendering interval for the Bézier curve
+         * @param steps The steps for every curve
+         * @return The builder instance
+         */
+        public B stepsForAllCurves(int steps) {
+            this.stepsForAllCurves = steps;
+            return self();
+        }
+
+        /**
+         * Set the interval to use when rendering the object along the curve.  This method is cumulative, each
+         * successive call configures a curve.  Any curves not configured will default to 0.0.  Curves with interval
+         * set to 0.0 will use the curve's step value.
+         *
+         * @param intervalForCurve The interval for the next curve
          * @return The builder instance
          */
         public B intervalForCurve(float intervalForCurve) {
@@ -218,33 +246,54 @@ public class BezierCurveAnimator extends PathAnimatorBase {
             return self();
         }
 
-        /** Sets the rendering interval for all the Bézier curves
+        /**
+         * Set the interval to use when rendering the object along multiple curves.  This method is cumulative, each
+         * successive call configures one or more curves.  Any curves not configured will default to 0.0.  Curves with
+         * interval set to 0.0 will use the curve's step value.
          *
-         * @param interval The rendering interval
+         * @param intervalsForCurves The intervals for the next N curves
          * @return The builder instance
          */
-        public B intervalForAllCurves(int interval) {
-            this.intervalForAllCurves = interval;
-            return self();
-        }
-
-        /** Sets the rendering intervals for specific Bézier curves
-         *
-         * @param intervalsForCurves The rendering intervals for the specific Bézier curves
-         * @return The builder instance
-        */
         public B intervalsForCurves(List<Float> intervalsForCurves) {
             this.intervalsForCurves.addAll(intervalsForCurves);
             return self();
         }
 
-        /** The animation trimming for the Bézier curve path-animator
+        /**
+         * Set the interval to use on every curve.  This method is not cumulative; repeated calls will overwrite the
+         * value.
+         * <p>
+         * Note: This will take priority over individual curves set in {@link #intervalForCurve(float)} or
+         * {@link #intervalsForCurves(List)}.  If all curves but one need the same value, you must use those two
+         * methods to configure values in the proper order.
+         *
+         * @param interval The interval for every curve
+         * @return The builder instance
+         */
+        public B intervalForAllCurves(float interval) {
+            this.intervalForAllCurves = interval;
+            return self();
+        }
+
+        /**
+         * Set the animation trimming for the Bézier curve path-animator.  The acceptable range is from 0 to 1,
+         * inclusive, which represents the t-value used when computing each point on the curves.  All curves will trim
+         * using the same settings.  The default is `[0.0, 1.0]`, which will cause every frame to be rendered.
          *
          * @param trimming The animation trimming
          * @return The builder instance
          */
         public B trimming(AnimationTrimming<Float> trimming) {
-            this.trimming = trimming;
+            if (trimming.getStart() < 0.0f || trimming.getStart() > 1.0f) {
+                throw new IllegalArgumentException("The start trim value must be between 0 and 1, inclusive");
+            }
+            if (trimming.getEnd() < 0.0f || trimming.getEnd() > 1.0f) {
+                throw new IllegalArgumentException("The end trim value must be between 0 and 1, inclusive");
+            }
+            if (trimming.getStart() > trimming.getEnd()) {
+                throw new IllegalArgumentException("The start trim value must be less than the end trim value");
+            }
+            this.trimming = new AnimationTrimming<>(trimming);
             return self();
         }
 
