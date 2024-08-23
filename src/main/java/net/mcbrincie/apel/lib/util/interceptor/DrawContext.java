@@ -119,7 +119,18 @@ public class DrawContext {
         return new Key<>(name) { };
     }
 
-    public static Key<ParticleObject<?>> particleObjectKey(String name) {
+    /**
+     * Create a Key that holds a ParticleObject.  Note that due to Java's generic handling, if a specific type of
+     * ParticleObject is needed, a specific method will be required, such as this:
+     * <pre>{@code
+     * public static Key<ParticleCircle> particleCircleKey(String name) {
+     *     return new Key<>(name) { };
+     * }
+     * }</pre>
+     * @param name The name of the key
+     * @return The Key instance, equal to all other Key instances with the same name and referring to the same type
+     */
+    public static Key<ParticleObject<? extends ParticleObject<?>>> particleObjectKey(String name) {
         return new Key<>(name) { };
     }
 
