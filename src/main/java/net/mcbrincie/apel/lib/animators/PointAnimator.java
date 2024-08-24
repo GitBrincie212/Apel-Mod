@@ -3,12 +3,8 @@ package net.mcbrincie.apel.lib.animators;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.server.world.ServerWorld;
+import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 
 /** The most simple path animator out of all. It is used to animate the object in one certain place
@@ -16,11 +12,8 @@ import java.util.Optional;
  * and is commonly used for simple animations or to make certain objects stay in place
 */
 @SuppressWarnings("unused")
-public class PointAnimator extends PathAnimatorBase {
+public class PointAnimator extends PathAnimatorBase<PointAnimator> {
     protected Vector3f point;
-    protected OldInterceptors<PointAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
-
-    public enum OnRenderStep {SHOULD_DRAW_STEP}
 
     public static <B extends Builder<B>> Builder<B> builder() { return new Builder<>(); }
 
@@ -30,7 +23,7 @@ public class PointAnimator extends PathAnimatorBase {
     }
 
     /**
-     * Constructor for the point animator. This constructor is
+     * Copy constructor for the point animator. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * point base animator instance with all of its parameters regardless
      * of their visibility (this means protected & private params are copied)
@@ -40,7 +33,6 @@ public class PointAnimator extends PathAnimatorBase {
     public PointAnimator(PointAnimator animator) {
         super(animator);
         this.point = animator.point;
-        this.duringRenderingSteps = animator.duringRenderingSteps;
     }
 
     /** Gets the origin point. Which is where the particle animation plays at
@@ -71,31 +63,12 @@ public class PointAnimator extends PathAnimatorBase {
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         this.allocateToScheduler();
         for (int i = 0; i < this.renderingSteps; i++) {
-            InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), i);
-            if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
-                continue;
-            }
-            this.handleDrawingStep(renderer, i, this.point);
+            Vector3f renderPoint = new Vector3f(this.point);
+            AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPoint);
+            this.beforeRender.apply(animationContext, this);
+            Vector3f actualPoint = animationContext.getPosition();
+            this.handleDrawingStep(renderer, i, actualPoint);
         }
-    }
-
-    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the current step number. As far as it goes for metadata,
-     * there will only be a boolean value that dictates if it should draw on this step
-     *
-     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
-     */
-    public void setDuringRenderingSteps(OldInterceptors<PointAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
-    }
-
-    protected InterceptData<OnRenderStep> doBeforeStep(ServerWorld world, int currStep) {
-        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
-                world, null, currStep, OnRenderStep.class
-        );
-        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
-        this.duringRenderingSteps.apply(interceptData, this);
-        return interceptData;
     }
 
     /** This is the point path animator builder used for setting up a new point path animator instance.

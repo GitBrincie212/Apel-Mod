@@ -3,17 +3,12 @@ package net.mcbrincie.apel.lib.animators;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
+import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
-import net.minecraft.server.world.ServerWorld;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 
 /** The parallel path animator. Which provides an interface for controlling multiple
@@ -23,13 +18,9 @@ import java.util.Optional;
  * versatile compared to the other easier ones
  */
 @SuppressWarnings("unused")
-public class SequentialAnimator extends PathAnimatorBase implements TreePathAnimator<PathAnimatorBase> {
-    protected List<PathAnimatorBase> animators;
+public class SequentialAnimator extends PathAnimatorBase<SequentialAnimator> implements TreePathAnimator {
+    protected List<PathAnimatorBase<? extends PathAnimatorBase<?>>> animators;
     protected List<Integer> animatorDelays;
-
-    protected OldInterceptors<SequentialAnimator, OnRenderPathAnimator> onAnimatorRendering = OldInterceptors.identity();
-
-    public enum OnRenderPathAnimator {PATH_ANIMATOR, SHOULD_RENDER_ANIMATOR, DELAY}
 
     public static <B extends Builder<B>> Builder<B> builder() {
         return new Builder<>();
@@ -49,7 +40,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
      * @param animator The path animator to append
     */
     @Override
-    public void addAnimatorPath(PathAnimatorBase animator) {
+    public void addAnimatorPath(PathAnimatorBase<? extends PathAnimatorBase<?>> animator) {
         this.animators.add(animator);
     }
 
@@ -59,39 +50,18 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
      * @param animator The path animator to remove
     */
     @Override
-    public void removeAnimatorPath(PathAnimatorBase animator) {
+    public void removeAnimatorPath(PathAnimatorBase<? extends PathAnimatorBase<?>> animator) {
         this.animators.remove(animator);
     }
 
     @Override
-    public List<PathAnimatorBase> getPathAnimators() {
+    public List<PathAnimatorBase<? extends PathAnimatorBase<?>>> getPathAnimators() {
         return this.animators;
     }
 
     @Override
-    public PathAnimatorBase getPathAnimator(int index) {
+    public PathAnimatorBase<? extends PathAnimatorBase<?>> getPathAnimator(int index) {
         return this.animators.get(index);
-    }
-
-    /** This method is DEPRECATED and SHOULD NOT BE USED */
-    @Override
-    @Deprecated
-    public int setRenderingSteps(int steps) {
-        throw new UnsupportedOperationException("Sequential Animators cannot set rendering steps");
-    }
-
-    /** This method is DEPRECATED and SHOULD NOT BE USED */
-    @Deprecated
-    @Override
-    public ParticleObject<? extends ParticleObject<?>> setParticleObject(@NotNull ParticleObject<? extends ParticleObject<?>> object) {
-        throw new UnsupportedOperationException("Sequential Animators cannot set an individual particle object");
-    }
-
-    /** This method is DEPRECATED and SHOULD NOT BE USED */
-    @Override
-    @Deprecated
-    public float setRenderingInterval(float interval) {
-        throw new UnsupportedOperationException("Sequential Animators cannot set rendering interval");
     }
 
     @Override
@@ -104,7 +74,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
         int totalDuration = this.delay;
         for (int index = 0; index < this.animators.size(); index++) {
             int childAnimatorDelay = this.animatorDelays.get(index);
-            PathAnimatorBase childAnimator = this.animators.get(index);
+            PathAnimatorBase<?> childAnimator = this.animators.get(index);
             totalDuration += childAnimatorDelay + childAnimator.calculateDuration();
         }
         return totalDuration;
@@ -114,18 +84,21 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         int totalDelay = this.delay;
         for (int index = 0; index < this.animators.size(); index++) {
-            PathAnimatorBase animator = this.animators.get(index);
+            PathAnimatorBase<?> animator = this.animators.get(index);
             int animatorDelay = this.animatorDelays.get(index);
 
-            InterceptData<OnRenderPathAnimator> interceptData =
-                    this.doBeforeAnimator(renderer.getServerWorld(), animator, animatorDelay);
-            if (!interceptData.getMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR, true)) {
+            AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), null);
+            animationContext.addMetadata(PATH_ANIMATOR, animator);
+            animationContext.addMetadata(DELAY, animatorDelay);
+            this.beforeRender.apply(animationContext, this);
+
+            if (!animationContext.shouldRender()) {
                 continue;
             }
 
             // Effectively final variables for the lambda
-            PathAnimatorBase animatorToSchedule = interceptData.getMetadata(OnRenderPathAnimator.PATH_ANIMATOR, animator);
-            int delayForAnimator = interceptData.getMetadata(OnRenderPathAnimator.DELAY, animatorDelay);
+            PathAnimatorBase<?> animatorToSchedule = animationContext.getMetadata(PATH_ANIMATOR, animator);
+            int delayForAnimator = animationContext.getMetadata(DELAY, animatorDelay);
             Runnable func = () -> animatorToSchedule.beginAnimation(renderer);
 
             if (this.delay + delayForAnimator == 0) {
@@ -141,30 +114,6 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
         }
     }
 
-    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the current step number. As far as it goes for the metadata, you
-     * have access to the path animator that will be drawn, the delay of the path animator before rendering and a
-     * boolean value dictating if the path animator should render at all
-     *
-     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
-     */
-    public void setOnAnimatorRendering(OldInterceptors<SequentialAnimator, OnRenderPathAnimator> duringRenderingSteps) {
-        this.onAnimatorRendering = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
-    }
-
-    protected InterceptData<OnRenderPathAnimator> doBeforeAnimator(
-            ServerWorld world, PathAnimatorBase pathAnimatorBase, int delay
-    ) {
-        InterceptData<OnRenderPathAnimator> interceptData = new InterceptData<>(
-                world, null, -1, OnRenderPathAnimator.class
-        );
-        interceptData.addMetadata(OnRenderPathAnimator.PATH_ANIMATOR, pathAnimatorBase);
-        interceptData.addMetadata(OnRenderPathAnimator.DELAY, delay);
-        interceptData.addMetadata(OnRenderPathAnimator.SHOULD_RENDER_ANIMATOR, true);
-        this.onAnimatorRendering.apply(interceptData, this);
-        return interceptData;
-    }
-
     /** This is the sequential path-animator builder used for setting up a new sequential path-animator instance.
      * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
      * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
@@ -172,7 +121,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
      * @param <B> The builder type itself
      */
     public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, SequentialAnimator> {
-        protected List<PathAnimatorBase> childAnimators = new ArrayList<>();
+        protected List<PathAnimatorBase<? extends PathAnimatorBase<?>>> childAnimators = new ArrayList<>();
         protected List<Integer> childAnimatorDelays = new ArrayList<>();
 
         private Builder () {}
@@ -182,7 +131,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
          * @param animator The path-animator instance
          * @return The builder instance
          */
-        public B animator(PathAnimatorBase animator) {
+        public B animator(PathAnimatorBase<? extends PathAnimatorBase<?>> animator) {
             this.childAnimators.add(animator);
             return self();
         }
@@ -193,7 +142,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
          * @param delay The delay for the path-animator
          * @return The builder instance
          */
-        public B animator(PathAnimatorBase animator, int delay) {
+        public B animator(PathAnimatorBase<? extends PathAnimatorBase<?>> animator, int delay) {
             this.childAnimators.add(animator);
             this.childAnimatorDelays.add(delay);
             return self();
@@ -204,7 +153,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
          * @param animators The path-animator instance
          * @return The builder instance
         */
-        public B animators(List<PathAnimatorBase> animators) {
+        public B animators(List<PathAnimatorBase<? extends PathAnimatorBase<?>>> animators) {
             this.childAnimators.addAll(animators);
             return self();
         }
@@ -216,7 +165,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
          * @param delays The delays of each path-animator
          * @return The builder instance
         */
-        public B animators(List<PathAnimatorBase> animators, List<Integer> delays) {
+        public B animators(List<PathAnimatorBase<? extends PathAnimatorBase<?>>> animators, List<Integer> delays) {
             this.childAnimators.addAll(animators);
             this.childAnimatorDelays.addAll(delays);
             return self();

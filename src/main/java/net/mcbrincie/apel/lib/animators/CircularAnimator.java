@@ -5,13 +5,10 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.server.world.ServerWorld;
+import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
-import java.util.Optional;
 import java.util.function.Predicate;
 
 /**
@@ -66,17 +63,13 @@ import java.util.function.Predicate;
  * </pre>
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class CircularAnimator extends PathAnimatorBase {
+public class CircularAnimator extends PathAnimatorBase<CircularAnimator> {
     protected float radius;
     protected Vector3f center;
     protected Vector3f rotation;
     protected int revolutions;
     protected AnimationTrimming<Float> trimming;
     protected boolean clockwise;
-
-    protected OldInterceptors<CircularAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
-
-    public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
 
     public static <B extends Builder<B>> Builder<B> builder() {
         return new Builder<>();
@@ -93,7 +86,7 @@ public class CircularAnimator extends PathAnimatorBase {
     }
 
     /**
-     * Constructor for the circular animator. This constructor is
+     * Copy constructor for the circular animator. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * circular animator instance with all of its parameters regardless
      * of their visibility (this means protected & private params are copied)
@@ -102,11 +95,10 @@ public class CircularAnimator extends PathAnimatorBase {
     */
     public CircularAnimator(CircularAnimator animator) {
         super(animator);
-        this.rotation = animator.rotation;
         this.center = animator.center;
         this.radius = animator.radius;
+        this.rotation = animator.rotation;
         this.revolutions = animator.revolutions;
-        this.duringRenderingSteps = animator.duringRenderingSteps;
         this.clockwise = animator.clockwise;
         this.trimming = animator.trimming;
     }
@@ -261,13 +253,11 @@ public class CircularAnimator extends PathAnimatorBase {
                 if (isTrimmed.test(currAngle)) {
                     continue;
                 }
-                Vector3f pos = calculatePoint(currAngle);
-                InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
-                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
-                    continue;
-                }
-                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
-                this.handleDrawingStep(renderer, step, pos);
+                Vector3f renderPosition = calculatePoint(currAngle);
+                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition);
+                this.beforeRender.apply(animationContext, this);
+                Vector3f actualPosition = animationContext.getPosition();
+                this.handleDrawingStep(renderer, step, actualPosition);
             }
         }
     }
@@ -295,29 +285,6 @@ public class CircularAnimator extends PathAnimatorBase {
         );
         pos = pos.rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         return pos.add(this.center);
-    }
-
-    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the current step number. As far as it goes for metadata,
-     * there will be a boolean value that dictates if it should draw on this step and the rendering position of the
-     * point that lives in the circle
-     *
-     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
-     */
-    public void setDuringRenderingSteps(OldInterceptors<CircularAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
-    }
-
-    protected InterceptData<OnRenderStep> doBeforeStep(
-            ServerWorld world, Vector3f position, int currStep
-    ) {
-        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
-                world, null, currStep, OnRenderStep.class
-        );
-        interceptData.addMetadata(OnRenderStep.RENDERING_POSITION, position);
-        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
-        this.duringRenderingSteps.apply(interceptData, this);
-        return interceptData;
     }
 
     /** This is the Circular path-animator builder used for setting up a new Circular path-animator instance.
