@@ -89,7 +89,7 @@ public class ParallelAnimator extends PathAnimatorBase<ParallelAnimator> impleme
             PathAnimatorBase<?> animator = this.animators.get(index);
             int totalDelay = this.delay + this.animatorDelays.get(index);
 
-            AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), null);
+            AnimationContext animationContext = new AnimationContext(renderer.getServerWorld());
             animationContext.addMetadata(PATH_ANIMATOR, animator);
             animationContext.addMetadata(DELAY, totalDelay);
             this.beforeRender.apply(animationContext, this);

@@ -62,12 +62,12 @@ public class PointAnimator extends PathAnimatorBase<PointAnimator> {
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
         this.allocateToScheduler();
-        for (int i = 0; i < this.renderingSteps; i++) {
+        for (int step = 0; step < this.renderingSteps; step++) {
             Vector3f renderPoint = new Vector3f(this.point);
-            AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPoint);
+            AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPoint, step);
             this.beforeRender.apply(animationContext, this);
             Vector3f actualPoint = animationContext.getPosition();
-            this.handleDrawingStep(renderer, i, actualPoint);
+            this.handleDrawingStep(renderer, step, actualPoint);
         }
     }
 

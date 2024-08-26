@@ -78,7 +78,7 @@ public class LinearAnimator extends PathAnimatorBase<LinearAnimator> {
                     break;
                 }
                 Vector3f renderPosition = new Vector3f(segmentDelta).mul(i).add(segmentStart);
-                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition);
+                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
                 animationContext.addMetadata(CURRENT_ENDPOINT_INDEX, segmentIndex);
                 this.beforeRender.apply(animationContext, this);
                 Vector3f actualPosition = animationContext.getPosition();

@@ -236,7 +236,7 @@ public class EllipseAnimator extends PathAnimatorBase<EllipseAnimator> {
                     continue;
                 }
                 Vector3f renderPosition = calculatePoint(currAngle);
-                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition);
+                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
                 this.beforeRender.apply(animationContext, this);
                 Vector3f actualPosition = animationContext.getPosition();
                 this.handleDrawingStep(renderer, step, actualPosition);

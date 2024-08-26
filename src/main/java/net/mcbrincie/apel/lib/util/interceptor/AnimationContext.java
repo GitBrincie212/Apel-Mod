@@ -13,12 +13,31 @@ public class AnimationContext {
     private final ServerWorld world;
 
     private final Vector3f position;
+    private final int currentStep;
     private boolean shouldRender;
     private final Map<DrawContext.Key<?>, Object> metadata;
 
-    public AnimationContext(ServerWorld world, Vector3f position) {
+    /**
+     * Creates an AnimationContext with no position or step number.  Useful for composite animators that do not render
+     * objects directly.
+     *
+     * @param world The Minecraft ServerWorld instance
+     */
+    public AnimationContext(ServerWorld world) {
+        this(world, null, 0);
+    }
+
+    /**
+     * Creates an AnimationContext for use by animators that directly render objects.
+     *
+     * @param world The Minecraft ServerWorld instance
+     * @param position The position along the animation path
+     * @param currentStep The step number of the current animator
+     */
+    public AnimationContext(ServerWorld world, Vector3f position, int currentStep) {
         this.world = world;
         this.position = position;
+        this.currentStep = currentStep;
         this.metadata = new HashMap<>();
         this.shouldRender = true;
     }
@@ -36,11 +55,24 @@ public class AnimationContext {
      * Get the position from which the current shape's rendering is computed.  It is considered the origin from which
      * any particle objects render themselves.  This value may be modified in-place, but it will not live beyond the
      * current step.
+     * <p>
+     * Note that this value will be {@code null} for composite animations such as the {@code ParallelAnimator}.
      *
      * @return the position from which the current shape's rendering is computed
      */
     public Vector3f getPosition() {
         return position;
+    }
+
+    /**
+     * Get the current step number of the animation.  This starts from 0 and counts until the animation is complete,
+     * except when called on composite animators such as {@code ParallelAnimator}.  When called on composite animators,
+     * it always returns 0, since they do not have steps.
+     *
+     * @return The current step number of the animation
+     */
+    public int getCurrentStep() {
+        return currentStep;
     }
 
     /**

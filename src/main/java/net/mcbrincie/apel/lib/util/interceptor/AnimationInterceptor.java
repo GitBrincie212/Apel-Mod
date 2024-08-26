@@ -27,9 +27,9 @@ public interface AnimationInterceptor<T extends PathAnimatorBase<T>> {
      * Return values are sent via the {@code InterceptData}'s metadata map.
      *
      * @param data metadata useful within the interceptor
-     * @param obj the path animator being intercepted
+     * @param animator the path animator being intercepted
      */
-    void apply(AnimationContext data, T obj);
+    void apply(AnimationContext data, T animator);
 
     /** An identity interceptor that does nothing. May be used when clearing an
      * interceptor.

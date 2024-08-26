@@ -15,7 +15,7 @@ class AnimationContextTest {
     @Test
     void testAddingPrimitives() {
         // Given a DrawContext
-        AnimationContext context = new AnimationContext(NULL_WORLD, new Vector3f(0));
+        AnimationContext context = new AnimationContext(NULL_WORLD);
         DrawContext.Key<Integer> key = DrawContext.integerKey("foo");
 
         // When metadata is added, it does not throw
@@ -30,7 +30,7 @@ class AnimationContextTest {
     void testAddingWildcardGenerics() {
         // This mimics what ParticleCombiner would do with `OBJECT_IN_USE` using a ParticleObject<?>
         // Given a DrawContext
-        AnimationContext context = new AnimationContext(NULL_WORLD, new Vector3f(0));
+        AnimationContext context = new AnimationContext(NULL_WORLD);
         DrawContext.Key<ParticleObject<?>> objectInUse = DrawContext.particleObjectKey("objectInUse");
 
         // Given a ParticlePoint
@@ -47,7 +47,7 @@ class AnimationContextTest {
     @Test
     void testAddingArrays() {
         // Given a DrawContext
-        AnimationContext context = new AnimationContext(NULL_WORLD, new Vector3f(0));
+        AnimationContext context = new AnimationContext(NULL_WORLD);
         DrawContext.Key<Vector3f[]> verticesKey = DrawContext.vector3fArrayKey("vertices");
 
         // Given an array
@@ -64,7 +64,7 @@ class AnimationContextTest {
     @Test
     void testMultipleKeys() {
         // Given a DrawContext
-        AnimationContext context = new AnimationContext(NULL_WORLD, new Vector3f(0));
+        AnimationContext context = new AnimationContext(NULL_WORLD);
         DrawContext.Key<Integer> key = DrawContext.integerKey("foo");
         DrawContext.Key<Integer> key2 = DrawContext.integerKey("bar");
 

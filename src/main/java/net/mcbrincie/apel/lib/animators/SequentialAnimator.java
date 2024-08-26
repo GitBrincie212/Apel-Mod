@@ -87,7 +87,7 @@ public class SequentialAnimator extends PathAnimatorBase<SequentialAnimator> imp
             PathAnimatorBase<?> animator = this.animators.get(index);
             int animatorDelay = this.animatorDelays.get(index);
 
-            AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), null);
+            AnimationContext animationContext = new AnimationContext(renderer.getServerWorld());
             animationContext.addMetadata(PATH_ANIMATOR, animator);
             animationContext.addMetadata(DELAY, animatorDelay);
             this.beforeRender.apply(animationContext, this);
