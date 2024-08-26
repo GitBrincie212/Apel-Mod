@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.animators;
 
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 
 import java.util.List;
 
@@ -16,12 +16,12 @@ public interface TreePathAnimator {
     List<PathAnimatorBase<? extends PathAnimatorBase<?>>> getPathAnimators();
     PathAnimatorBase<? extends PathAnimatorBase<?>> getPathAnimator(int index);
 
-    static DrawContext.Key<PathAnimatorBase<? extends PathAnimatorBase<?>>> animatorKey(String name) {
-        return new DrawContext.Key<>(name) { };
+    static Key<PathAnimatorBase<? extends PathAnimatorBase<?>>> animatorKey(String name) {
+        return new Key<>(name) { };
     }
 
     // Shared keys
-    DrawContext.Key<PathAnimatorBase<? extends PathAnimatorBase<?>>> PATH_ANIMATOR = animatorKey("pathAnimator");
-    DrawContext.Key<Integer> DELAY = DrawContext.integerKey("delay");
+    Key<PathAnimatorBase<? extends PathAnimatorBase<?>>> PATH_ANIMATOR = animatorKey("pathAnimator");
+    Key<Integer> DELAY = Key.integerKey("delay");
 
 }

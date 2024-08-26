@@ -2,6 +2,7 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -44,7 +45,7 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
      *      0-------------3
      * </pre>
      */
-    public static final DrawContext.Key<Vector3f[]> VERTICES = DrawContext.vector3fArrayKey("vertices");
+    public static final Key<Vector3f[]> VERTICES = Key.vector3fArrayKey("vertices");
 
     public static Builder<?> builder() {
         return new Builder<>();

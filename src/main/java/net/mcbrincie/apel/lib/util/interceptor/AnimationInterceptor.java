@@ -14,8 +14,8 @@ import net.mcbrincie.apel.lib.animators.PathAnimatorBase;
  * an offset, changing a vertex, and so on. The {@link AnimationContext} parameter
  * will contain additional useful information for the point at which the intercept
  * occurs, and modifications to that information are also done in-place via its
- * {@link AnimationContext#getMetadata(DrawContext.Key, Object)} and
- * {@link AnimationContext#addMetadata(DrawContext.Key, Object)} methods to retrieve and
+ * {@link AnimationContext#getMetadata(Key, Object)} and
+ * {@link AnimationContext#addMetadata(Key, Object)} methods to retrieve and
  * update metadata values, respectively.
  *
  * @param <T> The Path Animator type being intercepted

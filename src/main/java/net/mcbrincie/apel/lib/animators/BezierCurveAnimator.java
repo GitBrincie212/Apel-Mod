@@ -5,7 +5,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import org.joml.Vector3f;
 
@@ -24,7 +24,7 @@ public class BezierCurveAnimator extends PathAnimatorBase<BezierCurveAnimator> {
     protected List<Integer> stepsForCurves;
     protected AnimationTrimming<Float> trimming;
 
-    public static final DrawContext.Key<Integer> CURRENT_CURVE_INDEX = DrawContext.integerKey("currentCurveIndex");
+    public static final Key<Integer> CURRENT_CURVE_INDEX = Key.integerKey("currentCurveIndex");
 
     public static <B extends Builder<B>> Builder<B> builder() {
         return new Builder<>();

@@ -18,23 +18,23 @@ import static java.util.Objects.requireNonNull;
  * <p>
  * <strong>Custom Metadata: </strong>Individual animators are free to add additional information that may be useful,
  * such as the segment number for animators that traverse a segment-based path (e.g., the {@code LinearAnimator}).
- * These additional fields should be exposed by using the {@link #addMetadata(DrawContext.Key, Object)} method so
+ * These additional fields should be exposed by using the {@link #addMetadata(Key, Object)} method so
  * interceptors can retrieve the value in a type-safe manner.
  * <p>
  * <strong>Modifications: </strong>Interceptors that wish to modify the values should retrieve the metadata with one
  * of the {@code getMetadata} methods.  If the modifications are in-place, such as those for {@code Vector3f} and other
  * JOML classes, no further interaction with the metadata is required.  If the changes require creating a new instance
- * or updating a primitive value, then interceptors should call {@link #addMetadata(DrawContext.Key, Object)} to place
+ * or updating a primitive value, then interceptors should call {@link #addMetadata(Key, Object)} to place
  * the updated value back in the metadata so the animator may retrieve the updated value.
  * <p>
- * <strong>Retrieving Values:</strong> Animators should retrieve values using {@link #getMetadata(DrawContext.Key)}.
+ * <strong>Retrieving Values:</strong> Animators should retrieve values using {@link #getMetadata(Key)}.
  * This is a generic, type-safe method that will return the value from the metadata map.  If a default value is desired,
- * or nothing was placed in the metadata, {@link #getMetadata(DrawContext.Key, Object)} will accept and return a
+ * or nothing was placed in the metadata, {@link #getMetadata(Key, Object)} will accept and return a
  * default value of the correct type.
  * <p>
  * <strong>Warning:</strong> Casting or auto-unboxing metadata values to primitive values may result in
  * {@code NullPointerException} if the given key does not have a value or has a null value.  It is strongly recommended
- * to use {@link #getMetadata(DrawContext.Key, Object)} when handling primitive types.
+ * to use {@link #getMetadata(Key, Object)} when handling primitive types.
  */
 public class AnimationContext {
     private final ServerWorld world;
@@ -42,7 +42,7 @@ public class AnimationContext {
     private final Vector3f position;
     private final int currentStep;
     private boolean shouldRender;
-    private final Map<DrawContext.Key<?>, Object> metadata;
+    private final Map<Key<?>, Object> metadata;
 
     /**
      * Creates an AnimationContext with no position or step number.  Useful for composite animators that do not render
@@ -127,7 +127,7 @@ public class AnimationContext {
      * @param value the value available to the interceptor
      * @param <T> the type of the key and new value
      */
-    public <T> void addMetadata(DrawContext.Key<T> key, T value) {
+    public <T> void addMetadata(Key<T> key, T value) {
         this.metadata.put(key, value);
     }
 
@@ -140,10 +140,10 @@ public class AnimationContext {
      * @param <T> the type of the key and existing value (if present)
      * @return the value associated with the key, if present, else null
      *
-     * @see DrawContext#getMetadata(DrawContext.Key, Object)
+     * @see DrawContext#getMetadata(Key, Object)
      */
     @SuppressWarnings({"unchecked"})
-    public <T> T getMetadata(DrawContext.Key<T> key) {
+    public <T> T getMetadata(Key<T> key) {
         // This cast is safe because `addMetadata` ensures the key and value types match at compile-time
         return (T) this.metadata.get(key);
     }
@@ -158,10 +158,10 @@ public class AnimationContext {
      * @param <T> the type of the key, existing value (if present), and default value
      * @return the value associated with the key, if present, else the default value
      *
-     * @see DrawContext#getMetadata(DrawContext.Key)
+     * @see DrawContext#getMetadata(Key)
      */
     @SuppressWarnings("unused")
-    public <T> T getMetadata(DrawContext.Key<T> key, T defaultValue) {
+    public <T> T getMetadata(Key<T> key, T defaultValue) {
         return Optional.ofNullable(this.getMetadata(key)).orElse(requireNonNull(defaultValue));
     }
 }

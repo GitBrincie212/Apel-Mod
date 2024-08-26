@@ -2,6 +2,7 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.models.ModelParserManager;
 import net.mcbrincie.apel.lib.util.models.ObjModel;
 import org.joml.Vector3f;
@@ -27,11 +28,11 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
     protected final ObjModel objModel;
     protected Vector3f scale;
 
-    public static DrawContext.Key<ObjModel> objectModelKey(String name) {
-        return new DrawContext.Key<>(name) { };
+    public static Key<ObjModel> objectModelKey(String name) {
+        return new Key<>(name) { };
     }
 
-    public static final DrawContext.Key<ObjModel> OBJECT_MODEL = objectModelKey("object_model");
+    public static final Key<ObjModel> OBJECT_MODEL = objectModelKey("object_model");
 
     public static <B extends Builder<B>> Builder<B> builder() {
         return new Builder<>();

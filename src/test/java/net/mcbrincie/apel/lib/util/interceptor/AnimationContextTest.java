@@ -16,7 +16,7 @@ class AnimationContextTest {
     void testAddingPrimitives() {
         // Given a DrawContext
         AnimationContext context = new AnimationContext(NULL_WORLD);
-        DrawContext.Key<Integer> key = DrawContext.integerKey("foo");
+        Key<Integer> key = Key.integerKey("foo");
 
         // When metadata is added, it does not throw
         context.addMetadata(key, 3);
@@ -31,7 +31,7 @@ class AnimationContextTest {
         // This mimics what ParticleCombiner would do with `OBJECT_IN_USE` using a ParticleObject<?>
         // Given a DrawContext
         AnimationContext context = new AnimationContext(NULL_WORLD);
-        DrawContext.Key<ParticleObject<?>> objectInUse = DrawContext.particleObjectKey("objectInUse");
+        Key<ParticleObject<?>> objectInUse = Key.particleObjectKey("objectInUse");
 
         // Given a ParticlePoint
         ParticlePoint particlePoint = ParticlePoint.builder().particleEffect(null).build();
@@ -48,7 +48,7 @@ class AnimationContextTest {
     void testAddingArrays() {
         // Given a DrawContext
         AnimationContext context = new AnimationContext(NULL_WORLD);
-        DrawContext.Key<Vector3f[]> verticesKey = DrawContext.vector3fArrayKey("vertices");
+        Key<Vector3f[]> verticesKey = Key.vector3fArrayKey("vertices");
 
         // Given an array
         Vector3f[] vertices = new Vector3f[8];
@@ -65,8 +65,8 @@ class AnimationContextTest {
     void testMultipleKeys() {
         // Given a DrawContext
         AnimationContext context = new AnimationContext(NULL_WORLD);
-        DrawContext.Key<Integer> key = DrawContext.integerKey("foo");
-        DrawContext.Key<Integer> key2 = DrawContext.integerKey("bar");
+        Key<Integer> key = Key.integerKey("foo");
+        Key<Integer> key2 = Key.integerKey("bar");
 
         // When metadata is added, it does not throw
         context.addMetadata(key, 3);

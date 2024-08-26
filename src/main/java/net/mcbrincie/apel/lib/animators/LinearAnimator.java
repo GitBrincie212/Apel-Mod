@@ -5,7 +5,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
 import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
@@ -22,7 +22,7 @@ public class LinearAnimator extends PathAnimatorBase<LinearAnimator> {
     protected List<Integer> stepsForSegments;
     protected AnimationTrimming<Integer> trimming;
 
-    public static final DrawContext.Key<Integer> CURRENT_ENDPOINT_INDEX = DrawContext.integerKey("currentEndpointIndex");
+    public static final Key<Integer> CURRENT_ENDPOINT_INDEX = Key.integerKey("currentEndpointIndex");
 
     public static <B extends Builder<B>> Builder<B> builder() {
         return new Builder<>();

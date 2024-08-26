@@ -1,6 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,7 @@ class DrawContextTest {
     void testAddingPrimitives() {
         // Given a DrawContext
         DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0);
-        DrawContext.Key<Integer> key = DrawContext.integerKey("foo");
+        Key<Integer> key = Key.integerKey("foo");
 
         // When metadata is added, it does not throw
         context.addMetadata(key, 3);
@@ -31,7 +32,7 @@ class DrawContextTest {
         // This mimics what ParticleCombiner would do with `OBJECT_IN_USE` using a ParticleObject<?>
         // Given a DrawContext
         DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0);
-        DrawContext.Key<ParticleObject<?>> objectInUse = DrawContext.particleObjectKey("objectInUse");
+        Key<ParticleObject<?>> objectInUse = Key.particleObjectKey("objectInUse");
 
         // Given a ParticlePoint
         ParticlePoint particlePoint = ParticlePoint.builder().particleEffect(null).build();
@@ -48,7 +49,7 @@ class DrawContextTest {
     void testAddingArrays() {
         // Given a DrawContext
         DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0);
-        DrawContext.Key<Vector3f[]> verticesKey = DrawContext.vector3fArrayKey("vertices");
+        Key<Vector3f[]> verticesKey = Key.vector3fArrayKey("vertices");
 
         // Given an array
         Vector3f[] vertices = new Vector3f[8];
@@ -65,8 +66,8 @@ class DrawContextTest {
     void testMultipleKeys() {
         // Given a DrawContext
         DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0);
-        DrawContext.Key<Integer> key = DrawContext.integerKey("foo");
-        DrawContext.Key<Integer> key2 = DrawContext.integerKey("bar");
+        Key<Integer> key = Key.integerKey("foo");
+        Key<Integer> key2 = Key.integerKey("bar");
 
         // When metadata is added, it does not throw
         context.addMetadata(key, 3);
@@ -82,11 +83,11 @@ class DrawContextTest {
     @Test
     void testEquals() {
         // Given four Keys, two of which should be equal, and two that vary on type or name
-        DrawContext.Key<Integer> key1 = DrawContext.integerKey("foo");
-        DrawContext.Key<Integer> key2 = DrawContext.integerKey("foo");
-        DrawContext.Key<Integer> keyWrongName = DrawContext.integerKey("bar");
-        DrawContext.Key<Integer> keyDifferentSource = new DrawContext.Key<>("foo") {};
-        DrawContext.Key<Boolean> keyWrongType = DrawContext.booleanKey("foo");
+        Key<Integer> key1 = Key.integerKey("foo");
+        Key<Integer> key2 = Key.integerKey("foo");
+        Key<Integer> keyWrongName = Key.integerKey("bar");
+        Key<Integer> keyDifferentSource = new Key<>("foo") {};
+        Key<Boolean> keyWrongType = Key.booleanKey("foo");
 
         // Then equality works
         assertEquals(key1, key2, "Keys of same type and name should be equal");

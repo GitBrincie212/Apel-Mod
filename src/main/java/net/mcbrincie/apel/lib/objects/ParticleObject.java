@@ -2,6 +2,7 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
@@ -207,7 +208,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     /**
      * Set the interceptor to run prior to drawing the object.  The interceptor will be provided with references to the
      * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation,
-     * and any metadata defined by {@link DrawContext.Key} defined in the specific subclass.
+     * and any metadata defined by {@link Key} defined in the specific subclass.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
@@ -220,7 +221,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     /**
      * Set the interceptor to run after drawing the object.  The interceptor will be provided with references to the
      * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation,
-     * and any metadata defined by {@link DrawContext.Key>}s defined in the specific subclass.
+     * and any metadata defined by {@link Key >}s defined in the specific subclass.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *

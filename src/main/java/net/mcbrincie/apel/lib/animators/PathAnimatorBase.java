@@ -6,7 +6,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.AnimationInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import net.minecraft.server.world.ServerWorld;
@@ -227,7 +227,7 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
     /**
      * Set the interceptor to run before rendering the step.  The interceptor will be provided with references to the
      * {@link ServerWorld}, the "origin" point from which the step will be rendered, whether to render during this step,
-     * and any metadata available via {@link DrawContext.Key}s defined in specific Animator subclasses.
+     * and any metadata available via {@link Key}s defined in specific Animator subclasses.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
