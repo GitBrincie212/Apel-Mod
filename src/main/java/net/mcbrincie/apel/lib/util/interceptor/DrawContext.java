@@ -3,46 +3,42 @@ package net.mcbrincie.apel.lib.util.interceptor;
 import com.google.common.reflect.TypeToken;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Pair;
 import org.joml.Vector3f;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * DrawContext is an extensible mechanism for providing information to the
- * {@code beforeDraw} and {@code afterDraw} interceptors defined on
- * {@link net.mcbrincie.apel.lib.objects.ParticleObject} subclasses.  It encapsulates
- * a few common reference points that may be useful when rendering particle-based
- * objects that need to vary over their animation duration.
- * <br><br>
- * These references are the {@link ServerWorld}, the reference point from which the
- * shape or particle is rendered, and the current animation step number.  Individual
- * subclasses are free to add additional information that may be useful, such as
- * vertices for polygonal or polyhedral shapes, whether child objects should be drawn
- * (as seen in {@link net.mcbrincie.apel.lib.objects.ParticleCombiner}), and any other
- * information they may wish to expose.  These additional fields should be exposed by
- * using the {@link #addMetadata(Key, Object)} method so interceptors can reference
- * them in a reasonably safe manner.
- * <br><br>
- * <b>Modifications:</b> Interceptors that wish to modify the values may do so by
- * retrieving the value of interest using {@link #getMetadata(Key)}.
- * If those changes are in-place, such as for Vector3f and other JOML classes, no further
- * interaction with the map is required.  If the changes produce a new value, then
- * interceptors should call {@link #addMetadata(Key, Object)} to place the updated
- * value in the map so that the particle shape will receive it.
- * <br><br>
- * <b>Retrieving Values:</b> Particle objects should retrieve values using
- * {@link #getMetadata(Key)}.  This is a generic method that will look for
- * the value, and if found, safely cast and return it.  If a default value is desired,
- * {@link #getMetadata(Key, Object)} accepts and returns a default value of the correct
- * type.
- * <br><br>
- * <b>Warning:</b> Casting or auto-unboxing metadata values to primitive types may result in
- * {@code NullPointerException} if the map does not have a value for the given key or
- * if the value of the given key is {@code null}.  It is strongly recommended to use
- * {@link #getMetadata(Key, Object)} when handling primitive types.
+ * DrawContext is an extensible mechanism for providing information to the {@code beforeDraw} and {@code afterDraw}
+ * interceptors defined on {@link net.mcbrincie.apel.lib.objects.ParticleObject} subclasses.  It encapsulates common
+ * information that is likely to be useful when rendering particle-based objects that need to vary over their animation
+ * duration. This common information is the {@link ServerWorld}, the reference point from which the shape or particle is
+ * rendered, and the current animation step number.
+ * <p>
+ * <strong>Custom Metadata: </strong>Individual subclasses are free to add additional information that may be useful,
+ * such as vertices for polygonal or polyhedral shapes, whether child objects should be drawn (as seen in
+ * {@link net.mcbrincie.apel.lib.objects.ParticleCombiner}), and any other information they may wish to expose.  These
+ * additional fields should be exposed by defining a {@link Key} with a name and data type, and then using the
+ * {@link #addMetadata(Key, Object)} method so interceptors can retrieve the value in a type-safe manner.
+ * <p>
+ * <strong>Modifications:</strong> Interceptors that wish to modify the values should retrieve the metadata with one
+ * of the {@code getMetadata} methods.  If the modifications are in-place, such as those for {@code Vector3f} and other
+ * JOML classes, no further interaction with the metadata is required.  If the changes require creating a new instance
+ * or updating a primitive value, then interceptors should call {@link #addMetadata(Key, Object)} to place the updated
+ * value back in the metadata so the particle object may retrieve the updated value.
+ * <p>
+ * <strong>Retrieving Values:</strong> Particle objects should retrieve values using {@link #getMetadata(Key)}.  This
+ * is a generic, type-safe method that will return the value from the metadata map.  If a default value is desired, or
+ * nothing was placed in the metadata, {@link #getMetadata(Key, Object)} will accept and return a default value of the
+ * correct type.
+ * <p>
+ * <strong>Warning:</strong> Casting or auto-unboxing metadata values to primitive types may result in
+ * {@code NullPointerException} if the given key does not have a value or has a null value.  It is strongly recommended
+ * to use {@link #getMetadata(Key, Object)} when handling primitive types.
  */
 public class DrawContext {
     private final int currentStep;

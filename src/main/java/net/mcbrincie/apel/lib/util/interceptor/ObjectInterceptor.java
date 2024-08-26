@@ -27,9 +27,9 @@ public interface ObjectInterceptor<T extends ParticleObject<T>> {
      * Return values are sent via the {@code InterceptData}'s metadata map.
      *
      * @param data metadata useful within the interceptor
-     * @param obj the object being intercepted
+     * @param object the object being intercepted
      */
-    void apply(DrawContext data, T obj);
+    void apply(DrawContext data, T object);
 
     /** An identity interceptor that does nothing.  May be used when clearing an
      * interceptor.

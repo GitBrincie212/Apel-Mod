@@ -9,6 +9,33 @@ import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 
+/**
+ * AnimationContext is an extensible collection of relevant information that may be used by the {@code beforeRender}
+ * interceptor defined on {@link net.mcbrincie.apel.lib.animators.PathAnimatorBase} subclasses.  It encapsulates
+ * common information that is likely to be useful when making adjustments to the animator and its path.  This common
+ * information is the {@link ServerWorld}, the point used as the current step's origin, and the current animation step
+ * number.
+ * <p>
+ * <strong>Custom Metadata: </strong>Individual animators are free to add additional information that may be useful,
+ * such as the segment number for animators that traverse a segment-based path (e.g., the {@code LinearAnimator}).
+ * These additional fields should be exposed by using the {@link #addMetadata(DrawContext.Key, Object)} method so
+ * interceptors can retrieve the value in a type-safe manner.
+ * <p>
+ * <strong>Modifications: </strong>Interceptors that wish to modify the values should retrieve the metadata with one
+ * of the {@code getMetadata} methods.  If the modifications are in-place, such as those for {@code Vector3f} and other
+ * JOML classes, no further interaction with the metadata is required.  If the changes require creating a new instance
+ * or updating a primitive value, then interceptors should call {@link #addMetadata(DrawContext.Key, Object)} to place
+ * the updated value back in the metadata so the animator may retrieve the updated value.
+ * <p>
+ * <strong>Retrieving Values:</strong> Animators should retrieve values using {@link #getMetadata(DrawContext.Key)}.
+ * This is a generic, type-safe method that will return the value from the metadata map.  If a default value is desired,
+ * or nothing was placed in the metadata, {@link #getMetadata(DrawContext.Key, Object)} will accept and return a
+ * default value of the correct type.
+ * <p>
+ * <strong>Warning:</strong> Casting or auto-unboxing metadata values to primitive values may result in
+ * {@code NullPointerException} if the given key does not have a value or has a null value.  It is strongly recommended
+ * to use {@link #getMetadata(DrawContext.Key, Object)} when handling primitive types.
+ */
 public class AnimationContext {
     private final ServerWorld world;
 
