@@ -2,6 +2,7 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import org.joml.Vector3f;
 import oshi.util.tuples.Pair;
@@ -19,8 +20,8 @@ public class ParticleBezierCurve extends ParticleObject<ParticleBezierCurve> {
     protected List<BezierCurve> bezierCurves;
     protected List<Integer> amounts;
 
-    public static final DrawContext.Key<BezierCurve> BEZIER_CURVE = new DrawContext.Key<>("bezierCurve") {};
-    public static final DrawContext.Key<Integer> AMOUNT = DrawContext.integerKey("amount");
+    public static final Key<BezierCurve> BEZIER_CURVE = new Key<>("bezierCurve") {};
+    public static final Key<Integer> AMOUNT = Key.integerKey("amount");
 
     public static Builder<?> builder() {
         return new Builder<>();

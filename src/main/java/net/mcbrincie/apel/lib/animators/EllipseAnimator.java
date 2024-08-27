@@ -4,13 +4,10 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.server.world.ServerWorld;
+import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
-import java.util.Optional;
 import java.util.function.Predicate;
 
 /** A slightly more complex animator than ellipse animator or linear animator because it deals with an ellipse.
@@ -20,19 +17,14 @@ import java.util.function.Predicate;
  * set to one revolution, which means it loops the ellipse once
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class EllipseAnimator extends PathAnimatorBase {
+public class EllipseAnimator extends PathAnimatorBase<EllipseAnimator> {
     protected float radius;
+    protected float stretch;
     protected Vector3f center;
     protected Vector3f rotation;
     protected int revolutions;
     protected AnimationTrimming<Float> trimming;
     protected boolean clockwise;
-    protected float stretch;
-
-    private float tempDiffStore;
-    private OldInterceptors<EllipseAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
-
-    public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
 
     public static <B extends Builder<B>> Builder<B> builder() {
         return new Builder<>();
@@ -59,13 +51,11 @@ public class EllipseAnimator extends PathAnimatorBase {
     */
     public EllipseAnimator(EllipseAnimator animator) {
         super(animator);
-        this.rotation = animator.rotation;
         this.center = animator.center;
         this.radius = animator.radius;
         this.stretch = animator.stretch;
-        this.tempDiffStore = animator.tempDiffStore;
+        this.rotation = animator.rotation;
         this.revolutions = animator.revolutions;
-        this.duringRenderingSteps = animator.duringRenderingSteps;
         this.clockwise = animator.clockwise;
         this.trimming = animator.trimming;
     }
@@ -143,16 +133,37 @@ public class EllipseAnimator extends PathAnimatorBase {
         return this.radius;
     }
 
-    /** Sets the animation trimming which accepts a start trim or
-     * an ending trim. The trim parts have to be float values
+    /**
+     * Sets the animation trimming.  This animator trims based on angle (in radians) such that any steps that occur
+     * between the start and end of the trim interval will render.
+     * <p>
+     * The maximum interval of the AnimationTrimming instance is 2&pi;<sup>-</sup> radians, so it can approach
+     * 2&pi;, but will never actually be 2&pi;.  If the trimming interval is greater than 2&pi;, it will be normalized
+     * such that its length is &lt; 2&pi;.  If the entire circle should render an object, the default trimming is
+     * {@code (0.0, 0.0)} which means "start at 0.0 and traverse the circle until reaching 0.0"; this results in
+     * rendering the object at all points on the circle.
      *
-     * @return The animation trimming that is used
+     * @return The previous animation trimming
      */
     public AnimationTrimming<Float> setTrimming(AnimationTrimming<Float> trimming) {
-        trimming.setStart((float) (trimming.getStart() % Math.TAU));
-        trimming.setEnd((float) (trimming.getEnd() % Math.TAU));
+        float start = trimming.getStart();
+        float end = trimming.getEnd();
+        // Ensure start is within [0, TAU)
+        while (start < 0) {
+            start += (float) Math.TAU;
+        }
+        while (start >= Math.TAU) {
+            start -= (float) Math.TAU;
+        }
+        // Ensure end is within [0, TAU)
+        while (end < 0) {
+            end += (float) Math.TAU;
+        }
+        while (end >= Math.TAU) {
+            end -= (float) Math.TAU;
+        }
         AnimationTrimming<Float> prevTrimming = this.trimming;
-        this.trimming = trimming;
+        this.trimming = new AnimationTrimming<>(start, end);
         return prevTrimming;
     }
 
@@ -187,7 +198,7 @@ public class EllipseAnimator extends PathAnimatorBase {
      */
     @Override
     public int convertIntervalToSteps() {
-        return (int) (Math.ceil(this.tempDiffStore / this.renderingInterval) + 1) * this.revolutions;
+        return (int) (Math.ceil(Math.TAU / this.renderingInterval) + 1) * this.revolutions;
     }
 
     /**
@@ -224,13 +235,11 @@ public class EllipseAnimator extends PathAnimatorBase {
                 if (isTrimmed.test(currAngle)) {
                     continue;
                 }
-                Vector3f pos = calculatePoint(currAngle);
-                InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, i);
-                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
-                    continue;
-                }
-                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
-                this.handleDrawingStep(renderer, step, pos);
+                Vector3f renderPosition = calculatePoint(currAngle);
+                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
+                this.beforeRender.apply(animationContext, this);
+                Vector3f actualPosition = animationContext.getPosition();
+                this.handleDrawingStep(renderer, step, actualPosition);
             }
         }
     }
@@ -250,40 +259,14 @@ public class EllipseAnimator extends PathAnimatorBase {
         return (Float angle) -> angle > startAngle && angle < endAngle;
     }
 
-    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the current step number. As far as it goes for metadata,
-     * there will be a boolean value that dictates if it should draw on this step and the rendering position of the
-     * point that lives in the ellipse
-     *
-     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
-     */
-    public void setDuringRenderingSteps(OldInterceptors<EllipseAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
-    }
-
     private Vector3f calculatePoint(float currAngle) {
         Vector3f pos = new Vector3f(
-                this.stretch * trigTable.getCosine(currAngle),
-                this.radius * trigTable.getSine(currAngle),
+                this.radius * trigTable.getCosine(currAngle),
+                this.stretch * trigTable.getSine(currAngle),
                 0
         );
-        pos = pos
-                .rotateZ(this.rotation.z)
-                .rotateY(this.rotation.y)
-                .rotateX(this.rotation.x);
+        pos = pos.rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         return pos.add(this.center);
-    }
-
-    protected InterceptData<OnRenderStep> doBeforeStep(
-            ServerWorld world, Vector3f position, int currStep
-    ) {
-        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
-                world, null, currStep, OnRenderStep.class
-        );
-        interceptData.addMetadata(OnRenderStep.RENDERING_POSITION, position);
-        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
-        this.duringRenderingSteps.apply(interceptData, this);
-        return interceptData;
     }
 
     /** This is the ellipse path-animator builder used for setting up a new ellipse path-animator instance.

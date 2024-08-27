@@ -5,14 +5,18 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.interceptor.AnimationInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
+import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 
 /** The abstract base class that all path animators inherit from. It
@@ -21,18 +25,19 @@ import java.util.List;
  * so the only thing they need to care is setting the logic
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public abstract class PathAnimatorBase {
-    protected float renderingInterval = 0.0f;
-    protected int renderingSteps = 0;
+public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
+    protected ParticleObject<? extends ParticleObject<?>> particleObject;
     protected int delay = 1;
     protected int processingSpeed = 1;
-    protected ParticleObject<? extends ParticleObject<?>> particleObject;
+    protected int renderingSteps = 0;
+    protected float renderingInterval = 0.0f;
+    protected AnimationInterceptor<T> beforeRender = AnimationInterceptor.identity();
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
 
-    protected static TrigTable trigTable = Apel.TRIG_TABLE;
+    protected static final TrigTable trigTable = Apel.TRIG_TABLE;
 
-    protected <B extends Builder<B, T>, T extends PathAnimatorBase> PathAnimatorBase(Builder<B, T> builder) {
+    protected <B extends Builder<B, T>> PathAnimatorBase(Builder<B, T> builder) {
         this.setParticleObject(builder.particleObject);
         this.setDelay(builder.delay);
         this.setProcessingSpeed(builder.processingSpeed);
@@ -40,13 +45,10 @@ public abstract class PathAnimatorBase {
             case UNSET -> {
                 // Take no action, since not all animators need these (e.g., Linear, BezierCurve)
             }
-            case RENDERING_STEPS -> {
-                this.setRenderingSteps(builder.renderingSteps);
-            }
-            case RENDERING_INTERVAL -> {
-                this.setRenderingInterval(builder.renderingInterval);
-            }
+            case RENDERING_STEPS -> this.setRenderingSteps(builder.renderingSteps);
+            case RENDERING_INTERVAL -> this.setRenderingInterval(builder.renderingInterval);
         }
+        this.setBeforeRender(builder.beforeRender);
     }
 
     /** This is an empty constructor meant as a placeholder */
@@ -61,18 +63,19 @@ public abstract class PathAnimatorBase {
      *
      * @param animator The animator to copy from
     */
-    public PathAnimatorBase(PathAnimatorBase animator) {
-        this.delay = animator.delay;
+    public PathAnimatorBase(PathAnimatorBase<T> animator) {
         this.particleObject = animator.particleObject;
+        this.delay = animator.delay;
+        this.processingSpeed = animator.processingSpeed;
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
-        this.processingSpeed = animator.processingSpeed;
+        this.beforeRender = animator.beforeRender;
         this.storedFuncsBuffer = new ArrayList<>();
     }
 
     /** Simplifies the process of scheduling a new sequence in the scheduler.
      *  Instead of checking if the delay isn't 0 and that there is no already allocated
-     *  sequence. The method does that for your convenience
+     *  sequence. The method does that for your convenience.
      */
     public void allocateToScheduler() {
         if (this.delay == 0) {
@@ -92,11 +95,13 @@ public abstract class PathAnimatorBase {
 
     /** Sets the rendering steps to a new value. It resets the rendering interval
      *  to 0.0f. And returns the previous rendering steps used
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param steps The new rendering steps to set
      * @return The previous rendering interval
      */
-    public int setRenderingSteps(int steps) {
+    public final int setRenderingSteps(int steps) {
         if (steps < 0) {
             throw new IllegalArgumentException("Rendering Steps must be non-negative");
         }
@@ -118,11 +123,13 @@ public abstract class PathAnimatorBase {
 
     /** Sets the rendering interval to a new value. It resets the rendering steps
      *  to 0. And returns the previous rendering interval used
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param interval The new rendering interval to set
      * @return The previous rendering interval
      */
-    public float setRenderingInterval(float interval) {
+    public final float setRenderingInterval(float interval) {
         if (interval < 0) {
             throw new IllegalArgumentException("Rendering Interval must be non-negative");
         }
@@ -145,11 +152,13 @@ public abstract class PathAnimatorBase {
 
     /** Sets the delay per rendering step to a new value. And
      * returns the previous delay per rendering step used
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @see PathAnimatorBase#setProcessingSpeed(int)
      * @return The previous amount of rendering steps
      */
-    public int setDelay(int delay) {
+    public final int setDelay(int delay) {
         if (delay < 0) {
             throw new IllegalArgumentException("Delay is not positive");
         }
@@ -170,10 +179,12 @@ public abstract class PathAnimatorBase {
 
     /** Sets the particle object to a new value. And returns the
      * previous particle object used in the animator
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @return The previous amount of rendering steps
      */
-    public ParticleObject<? extends ParticleObject<?>> setParticleObject(@NotNull ParticleObject<? extends ParticleObject<?>> object) {
+    public final ParticleObject<? extends ParticleObject<?>> setParticleObject(@NotNull ParticleObject<? extends ParticleObject<?>> object) {
         ParticleObject<?> particleObject = this.particleObject;
         this.particleObject = object;
         return particleObject;
@@ -196,19 +207,34 @@ public abstract class PathAnimatorBase {
      *  <br><br>
      *  Use this function when you want detailed animations to want to go faster (if delay 1 doesn't satisfy)
      *  <br><br>
-     *  <strong>note:</strong> when it is delay 0. Processing speed is completely ignored
+     *  <strong>Note:</strong> When delay is 0, processing speed is completely ignored.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @see PathAnimatorBase#setDelay(int)
      * @param speed The number of steps to execute per tick
      * @return The previous processing speed used
      */
-    public int setProcessingSpeed(int speed) {
+    public final int setProcessingSpeed(int speed) {
         if (speed < 1) {
             throw new IllegalArgumentException("Process speed cannot be below 1 rs/st");
         }
         int prevProcessSpeed = this.processingSpeed;
         this.processingSpeed = speed;
         return prevProcessSpeed;
+    }
+
+    /**
+     * Set the interceptor to run before rendering the step.  The interceptor will be provided with references to the
+     * {@link ServerWorld}, the "origin" point from which the step will be rendered, whether to render during this step,
+     * and any metadata available via {@link Key}s defined in specific Animator subclasses.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param beforeRender The new interceptor to execute prior to rendering the step
+     */
+    public final void setBeforeRender(AnimationInterceptor<T> beforeRender) {
+        this.beforeRender = Optional.ofNullable(beforeRender).orElse(AnimationInterceptor.identity());
     }
 
     /** Does the calculations to convert from an interval to rendering steps
@@ -298,12 +324,14 @@ public abstract class PathAnimatorBase {
      * @param <B> The builder type itself
      * @param <T> The path-animator instance that is building
      */
-    public static abstract class Builder<B extends Builder<B, T>, T extends PathAnimatorBase> {
+    public static abstract class Builder<B extends Builder<B, T>, T extends PathAnimatorBase<T>> {
         protected ParticleObject<? extends ParticleObject<?>> particleObject;
         protected int delay = 1;
         protected int processingSpeed = 1;
         protected int renderingSteps = 0;
         protected float renderingInterval = 0.0f;
+        protected AnimationInterceptor<T> beforeRender = AnimationInterceptor.identity();
+
         protected RenderCalculationMethod renderCalculationMethod = RenderCalculationMethod.UNSET;
 
         protected enum RenderCalculationMethod {
@@ -370,6 +398,17 @@ public abstract class PathAnimatorBase {
             }
             this.renderCalculationMethod = RenderCalculationMethod.RENDERING_INTERVAL;
             this.renderingInterval = renderingInterval;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before rendering.  This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see PathAnimatorBase#setBeforeRender(AnimationInterceptor)
+         */
+        public final B beforeRender(AnimationInterceptor<T> beforeRender) {
+            this.beforeRender = beforeRender;
             return self();
         }
 

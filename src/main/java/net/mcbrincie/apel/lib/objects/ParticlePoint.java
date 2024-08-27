@@ -2,6 +2,7 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import org.joml.Vector3f;
 
@@ -16,7 +17,7 @@ import org.joml.Vector3f;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticlePoint extends ParticleObject<ParticlePoint> {
 
-    public static final DrawContext.Key<Vector3f> DRAW_POSITION = DrawContext.vector3fKey("drawPosition");
+    public static final Key<Vector3f> DRAW_POSITION = Key.vector3fKey("drawPosition");
 
     public static Builder<?> builder() {
         return new Builder<>();

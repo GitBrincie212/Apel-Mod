@@ -4,15 +4,13 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
+import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /** The Bézier curve animator which is used for curved paths, it accepts two or multiple different bézier curves,
  * the curves are called endpoints unlike the linear animator, the Bézier curve path animator the curves one by one.
@@ -21,14 +19,12 @@ import java.util.Optional;
  * of a bézier curve nonetheless, it is very capable of creating beautiful complex curved paths
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class BezierCurveAnimator extends PathAnimatorBase {
+public class BezierCurveAnimator extends PathAnimatorBase<BezierCurveAnimator> {
     protected List<BezierCurve> bezierCurves;
     protected List<Integer> stepsForCurves;
     protected AnimationTrimming<Float> trimming;
 
-    protected OldInterceptors<BezierCurveAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
-
-    public enum OnRenderStep {SHOULD_DRAW_STEP, RENDERING_POSITION}
+    public static final Key<Integer> CURRENT_CURVE_INDEX = Key.integerKey("currentCurveIndex");
 
     public static <B extends Builder<B>> Builder<B> builder() {
         return new Builder<>();
@@ -42,7 +38,7 @@ public class BezierCurveAnimator extends PathAnimatorBase {
     }
 
     /**
-     * Constructor for the bézier animation. This constructor is
+     * Copy constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * bézier animator instance with all of its parameters regardless
      * of their visibility (this means protected & private params are copied)
@@ -54,7 +50,6 @@ public class BezierCurveAnimator extends PathAnimatorBase {
         this.bezierCurves = animator.bezierCurves;
         this.stepsForCurves = animator.stepsForCurves;
         this.trimming = animator.trimming;
-        this.duringRenderingSteps = animator.duringRenderingSteps;
     }
 
     /** Sets the animation trimming which accepts a start trim or
@@ -108,38 +103,13 @@ public class BezierCurveAnimator extends PathAnimatorBase {
                 if (t >= tEnd && tEnd != -1) {
                     break;
                 }
-                Vector3f pos = bezierCurve.compute(t);
-                InterceptData<OnRenderStep> interceptData = this.doBeforeStep(renderer.getServerWorld(), pos, step);
-                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
-                    continue;
-                }
-                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
-                this.handleDrawingStep(renderer, step, pos);
+                Vector3f renderPosition = bezierCurve.compute(t);
+                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
+                this.beforeRender.apply(animationContext, this);
+                Vector3f actualPosition = animationContext.getPosition();
+                this.handleDrawingStep(renderer, step, actualPosition);
             }
         }
-    }
-
-    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the current step number. As far as it goes for metadata,
-     * there will be a boolean value that dictates if it should draw on this step and the rendering position of the
-     * point that lives in the Bézier curve
-     *
-     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
-     */
-    public void setDuringRenderingSteps(OldInterceptors<BezierCurveAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
-    }
-
-    protected InterceptData<OnRenderStep> doBeforeStep(
-            ServerWorld world, Vector3f position, int currStep
-    ) {
-        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
-                world, null, currStep, OnRenderStep.class
-        );
-        interceptData.addMetadata(OnRenderStep.RENDERING_POSITION, position);
-        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
-        this.duringRenderingSteps.apply(interceptData, this);
-        return interceptData;
     }
 
     /** This is the Bézier Curve path-animator builder used for setting up a new Bézier Curve path-animator instance.

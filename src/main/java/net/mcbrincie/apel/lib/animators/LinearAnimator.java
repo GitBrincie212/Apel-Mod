@@ -4,14 +4,12 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.mcbrincie.apel.lib.util.interceptor.OldInterceptors;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.server.world.ServerWorld;
+import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
+import net.mcbrincie.apel.lib.util.interceptor.Key;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 /** The linear animator. Which is used for linear paths(a.k.a. paths that are drawn as a line). It
  * accepts 2 or multiple points which draw the line and are called endpoints, they draw lines from the
@@ -19,14 +17,12 @@ import java.util.Optional;
  * path animator but still capable of doing basic animations and is friendlier compared to other animators.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class LinearAnimator extends PathAnimatorBase {
+public class LinearAnimator extends PathAnimatorBase<LinearAnimator> {
     protected List<Vector3f> endpoints;
     protected List<Integer> stepsForSegments;
     protected AnimationTrimming<Integer> trimming;
 
-    protected OldInterceptors<LinearAnimator, OnRenderStep> duringRenderingSteps = OldInterceptors.identity();
-
-    public enum OnRenderStep {SHOULD_DRAW_STEP, CURRENT_ENDPOINT, RENDERING_POSITION}
+    public static final Key<Integer> CURRENT_ENDPOINT_INDEX = Key.integerKey("currentEndpointIndex");
 
     public static <B extends Builder<B>> Builder<B> builder() {
         return new Builder<>();
@@ -40,7 +36,7 @@ public class LinearAnimator extends PathAnimatorBase {
     }
 
     /**
-     * Constructor for the linear animation. This constructor is
+     * Copy constructor for the linear animation. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * linear animator instance with all of its parameters regardless
      * of their visibility (this means protected & private params are copied)
@@ -52,7 +48,6 @@ public class LinearAnimator extends PathAnimatorBase {
         this.endpoints = animator.endpoints;
         this.stepsForSegments = animator.stepsForSegments;
         this.trimming = animator.trimming;
-        this.duringRenderingSteps = animator.duringRenderingSteps;
     }
 
     @Override
@@ -82,40 +77,14 @@ public class LinearAnimator extends PathAnimatorBase {
                 if (i >= endStep && endStep != -1) {
                     break;
                 }
-                Vector3f pos = new Vector3f(segmentDelta).mul(i).add(segmentStart);
-                InterceptData<OnRenderStep> interceptData =
-                        this.doBeforeStep(renderer.getServerWorld(), segmentIndex, pos, step);
-                if (!interceptData.getMetadata(OnRenderStep.SHOULD_DRAW_STEP, true)) {
-                    continue;
-                }
-                pos = interceptData.getMetadata(OnRenderStep.RENDERING_POSITION, pos);
-                this.handleDrawingStep(renderer, step, pos);
+                Vector3f renderPosition = new Vector3f(segmentDelta).mul(i).add(segmentStart);
+                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
+                animationContext.addMetadata(CURRENT_ENDPOINT_INDEX, segmentIndex);
+                this.beforeRender.apply(animationContext, this);
+                Vector3f actualPosition = animationContext.getPosition();
+                this.handleDrawingStep(renderer, step, actualPosition);
             }
         }
-    }
-
-    /** Set the interceptor to run before the drawing of each individual rendering step. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the current step number. As far as it goes for metadata,
-     * there will be a boolean value that dictates if it should draw on this step, the rendering position of the
-     * point that lives in the line and the endpoint index (UNMODIFIABLE)
-     *
-     * @param duringRenderingSteps the new interceptor to execute before drawing the individual steps
-     */
-    public void setDuringRenderingSteps(OldInterceptors<LinearAnimator, OnRenderStep> duringRenderingSteps) {
-        this.duringRenderingSteps = Optional.ofNullable(duringRenderingSteps).orElse(OldInterceptors.identity());
-    }
-
-    protected InterceptData<OnRenderStep> doBeforeStep(
-            ServerWorld world, int currEndpointIndex, Vector3f position, int currStep
-    ) {
-        InterceptData<OnRenderStep> interceptData = new InterceptData<>(
-                world, null, currStep, OnRenderStep.class
-        );
-        interceptData.addMetadata(OnRenderStep.RENDERING_POSITION, position);
-        interceptData.addMetadata(OnRenderStep.CURRENT_ENDPOINT, currEndpointIndex);
-        interceptData.addMetadata(OnRenderStep.SHOULD_DRAW_STEP, true);
-        this.duringRenderingSteps.apply(interceptData, this);
-        return interceptData;
     }
 
     /** This is the linear path animator builder used for setting up a new linear path animator instance.
