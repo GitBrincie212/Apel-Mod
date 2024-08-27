@@ -11,17 +11,15 @@ to use in their own projects
 - [ ] Added the ability to stack interceptors
 - [ ] Added ``ParticleText`` for text rendering with particles
 - [ ] Added more markdown documentation on specific topics
-- [ ] Added the ability to allow for indefinite animations
-- [ ] Added the ability to allow for looping animations
 - [x] Added ``ParticleMirror`` for mirroring a particle object
-- [ ] Added ``ParticleArray`` for copying particle objects in an alternating pattern
+- [x] Added ``ParticleArray`` for copying particle objects in an alternating pattern
 - [ ] Added ``ParticleTrial`` for making a trial of particle objects
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
 
 ## Modifications
 - [x] Reworked the way **Particle Objects** are created by using the builder pattern
 - [x] Reworked the way **Path Animators** are created by using the builder pattern
-- [ ] Simplified the ``ParticleBezierCurve`` interface
+- [x] Simplified the ``ParticleBezierCurve`` interface
 - [ ] Reworked the internal system of **Path Animators** to make it easier to create new ones
 - [x] Reworked the handling of the metadata from interceptors
 
@@ -32,5 +30,4 @@ to use in their own projects
 ## Patches
 - [x] Fixed a bug where setting a vertex on ``ParticleTriangle`` wouldn't check if all of them are making up a triangle
 - [x] Fixed a bug where setting a vertex on ``ParticleTetrahedron`` wouldn't check if all of them are making up a tetrahedron
-- [ ] Fixed an unintended side effect of ``ParticleQuad`` 
 - [x] Fixed a bug where ``EllipseAnimator`` does squared the revolutions
