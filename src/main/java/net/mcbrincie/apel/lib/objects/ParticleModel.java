@@ -24,9 +24,9 @@ import java.util.List;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleModel extends ParticleObject<ParticleModel> {
-
     protected final ObjModel objModel;
     protected Vector3f scale;
+    protected float particle_interval = -1f;
 
     public static Key<ObjModel> objectModelKey(String name) {
         return new Key<>(name) { };
@@ -39,10 +39,19 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
     }
 
     private <B extends Builder<B>> ParticleModel(Builder<B> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
-                builder.afterDraw);
+        super();
+        this.setParticleEffect(builder.particleEffect);
+        this.setRotation(builder.rotation);
+        this.setOffset(builder.offset);
+        this.setBeforeDraw(builder.beforeDraw);
+        this.setAfterDraw(builder.afterDraw);
         this.objModel = builder.objectModel;
         this.setScale(builder.scale);
+        if (builder.interval != -1.0f) {
+            this.setInterval(builder.interval);
+            return;
+        }
+        this.setAmount(builder.amount);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -54,6 +63,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
         super(model);
         this.objModel = model.objModel;
         this.scale = model.scale;
+        this.particle_interval = model.particle_interval;
     }
 
     /**
@@ -80,6 +90,32 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
      */
     public Vector3f getScale() {return this.scale;}
 
+    /** Gets the interval of particles that are currently in use and returns it.
+     *
+     * @return The currently used number of particles
+     */
+    public float getInterval() {
+        return this.particle_interval;
+    }
+
+    /**
+     * Sets the interval of particles to use for rendering the model. This makes the model more detailed
+     * and saves the number of particles. It returns the previously used number of particles.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newInterval The new particle interval
+     * @return The previously used interval
+     */
+    public final float setInterval(float newInterval) {
+        if (newInterval <= 0) {
+            throw new IllegalArgumentException("Interval of particles has to be above 0");
+        }
+        float prevInterval = this.particle_interval;
+        this.particle_interval = newInterval;
+        return prevInterval;
+    }
+
     @Override
     protected void prepareContext(DrawContext drawContext) {
         drawContext.addMetadata(OBJECT_MODEL, this.objModel);
@@ -101,12 +137,27 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
 
             int step = drawContext.getCurrentStep();
             for (int i = 0; i < positions.size() - 1; i++) {
-                renderer.drawLine(this.particleEffect, step, objectDrawPos, positions.get(i), positions.get(i + 1),
-                        this.rotation, this.amount);
+                Vector3f vertex1 = positions.get(i);
+                Vector3f vertex2 = positions.get(i + 1);
+                int useAmount = this.amount;
+                if (this.particle_interval != -1.0f) {
+                    float dist = vertex1.distance(vertex2);
+                    useAmount = (int) Math.ceil(dist / this.particle_interval);
+                    // System.out.printf("%s %s%n", dist, useAmount);
+                }
+                renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex1, vertex2,
+                        this.rotation, useAmount);
             }
+            Vector3f vertex1 = positions.getLast();
+            Vector3f vertex2 = positions.getFirst();
             // Close the face
-            renderer.drawLine(this.particleEffect, step, objectDrawPos, positions.getLast(), positions.getFirst(),
-                    this.rotation, this.amount);
+            int useAmount = this.amount;
+            if (this.particle_interval != -1.0f) {
+                float dist = vertex1.distance(vertex2);
+                useAmount = (int) Math.ceil(dist / this.particle_interval);
+            }
+            renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex1, vertex2,
+                    this.rotation, useAmount);
         }
     }
 
@@ -120,6 +171,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
         private static final ModelParserManager MODEL_PARSER_MANAGER = new ModelParserManager();
         protected Vector3f scale = new Vector3f(1);
         protected String filename;
+        protected float interval = -1f;
         protected ObjModel objectModel;
 
         private Builder() {}
@@ -167,6 +219,15 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
          */
         public B model(ObjModel objectModel) {
             this.objectModel = objectModel;
+            return self();
+        }
+
+        /**
+         * Set the particle interval on the builder.  This method is not cumulative; repeated calls will overwrite the
+         * value. When an interval is supplied, it prioritizes that instead of steps
+         */
+        public final B interval(float interval) {
+            this.interval = interval;
             return self();
         }
 
