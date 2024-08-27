@@ -93,6 +93,9 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
         this.afterDraw = object.afterDraw;
     }
 
+    /** This is a placeholder constructor */
+    protected ParticleObject() {}
+
     /** Gets the particle which is currently in use and returns it.
      *
      * @return The currently used particle
