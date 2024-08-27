@@ -22,7 +22,7 @@ import java.util.List;
 public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     protected int sides;
     protected float size;
-    protected float roundness;
+    protected float curve;
     private final List<BezierCurve> bezierCurves = new ArrayList<>();
 
     protected HashMap<Integer, Vector3f[]> cachedShapes = new HashMap<>();
@@ -36,7 +36,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
               builder.afterDraw);
         this.setSides(builder.sides);
         this.setSize(builder.size);
-        this.setRoundness(builder.roundness);
+        this.setCurve(builder.curve);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -48,7 +48,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         super(polygon);
         this.sides = polygon.sides;
         this.size = polygon.size;
-        this.roundness = polygon.roundness;
+        this.curve = polygon.curve;
         this.cachedShapes = polygon.cachedShapes;
     }
 
@@ -106,23 +106,23 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     }
 
     /**
-     * Sets the roundness of the polygon to a new value and returns the previous roundness value used.
-     * The roundness is the distance of the control points that make up the Bézier curves. Values that
-     * are below 1 make the shape contract while values that are above 0 make the shape rounder
+     * Sets the curve of the polygon to a new value and returns the previous curve value used.
+     * The curve is the distance of the control points that make up the Bézier curves. Values that
+     * are below 1 make the shape contract while values that are above 0 make the shape more circular
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
-     * @param roundness The new roundness value
-     * @throws IllegalArgumentException If the roundness value
-     * @return The previous roundness value used
+     * @param curve The new curve value
+     * @throws IllegalArgumentException If the curve value
+     * @return The previous curve value used
      */
-    public final float setRoundness(float roundness) throws IllegalArgumentException {
-        if (roundness < -1 || roundness > 1) {
-            throw new IllegalArgumentException("Roundness value is out of bounds between [-1, 1]");
+    public final float setCurve(float curve) throws IllegalArgumentException {
+        if (curve < -1 || curve > 1) {
+            throw new IllegalArgumentException("Curve value is out of bounds between [-1, 1]");
         }
-        float prevRoundness = this.roundness - 1;
-        this.roundness = roundness + 1;
-        return prevRoundness;
+        float prevCurve = this.curve - 1;
+        this.curve = curve + 1;
+        return prevCurve;
     }
 
     /** Gets the roundness of the regular polygon
@@ -130,7 +130,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
      * @return The roundness of the regular polygon
      */
     public float getRoundness() {
-        return this.roundness;
+        return this.curve;
     }
 
     @Override
@@ -143,7 +143,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         for (int i = 0; i < vertices.length - 1; i++) {
             Vector3f currVertex = vertices[i];
             Vector3f nextVertex = vertices[i + 1];
-            if (this.roundness == 1.0f) {
+            if (this.curve == 1.0f) {
                 renderer.drawLine(
                     this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, vertices[i], vertices[i + 1],
                     this.rotation, particlesPerLine
@@ -158,7 +158,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
                         MathHelper.lerp(0.5f, currVertex.x, nextVertex.x),
                         MathHelper.lerp(0.5f, currVertex.y, nextVertex.y),
                         MathHelper.lerp(0.5f, currVertex.z, nextVertex.z)
-                ).mul(this.roundness);
+                ).mul(this.curve);
 
                 BezierCurve bezierCurve = this.bezierCurves.get(i);
                 bezierCurve.setStart(currVertex);
@@ -201,7 +201,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePolygon> {
         protected int sides;
         protected float size;
-        protected float roundness = 0f;
+        protected float curve = 0f;
 
         private Builder() {}
 
@@ -225,12 +225,12 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         }
 
         /**
-         * Set the roundness on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * Set the curve on the builder. This method is not cumulative; repeated calls will overwrite the value.
          *
-         * @see ParticlePolygon#setRoundness(float)
+         * @see ParticlePolygon#setCurve(float) (float)
          */
-        public B roundness(float roundness) {
-            this.roundness = roundness;
+        public B curve(float curve) {
+            this.curve = curve;
             return self();
         }
 
