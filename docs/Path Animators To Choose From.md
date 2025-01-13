@@ -39,8 +39,8 @@ ParticleCuboid particleCuboid = ParticleCuboid.builder()
     .particleEffect(ParticleTypes.END_ROD)
     .build();
 ```
-**Disclaimer:** There may be lag during those videos. This lag is caused by the video itself, we apologise for this inconvinience that may be caused
-<br><br>
+**Disclaimer:** There may be lag during those videos. This lag is caused by the video itself, we apologize
+for this inconvenience that may be caused<br><br>
 
 [Point Path Animator](../src/main/java/net/mcbrincie/apel/lib/animators/PointAnimator.java) the most beginner-friendly
 path animator out there, they define a point that the particle object is anchored to. They do not provide any motion to
