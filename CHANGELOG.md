@@ -15,6 +15,7 @@ to use in their own projects
 - [x] Added ``ParticleArray`` for copying particle objects in an alternating pattern
 - [ ] Added ``ParticleTrial`` for making a trial of particle objects
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
+- [ ] Support for 1.20.1 (due to its popularity)
 
 ## Modifications
 - [x] Reworked the way **Particle Objects** are created by using the builder pattern
