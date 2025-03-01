@@ -122,7 +122,7 @@ public class ParticleCylinder extends ParticleObject<ParticleCylinder> {
 
         @Override
         public ParticleCylinder build() {
-            return null;
+            return new ParticleCylinder(this);
         }
     }
 }
