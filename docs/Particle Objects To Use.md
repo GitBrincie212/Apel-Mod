@@ -42,8 +42,8 @@ and an ending point for the line
 ```java
 ParticleLine particleLine = ParticleLine.builder()
         .particleEffect(ParticleTypes.END_ROD)
-        .start(new Vector3f(0, -5, -5))
-        .end(new Vector3f(5, 5, 0))
+        .start(new Vector3f(0, -5, -5)) // Where does it start
+        .end(new Vector3f(5, 5, 0)) // Where does it end
         .amount(50)
         .build();
 ```
@@ -56,7 +56,7 @@ and APEL takes care of the rest
 ```java
 ParticleCircle particleCircle = ParticleCircle.builder()
     .particleEffect(ParticleTypes.END_ROD)
-    .radius(2)
+    .radius(2) // How large the area of the circle
     .amount(50)
     .build();
 ```
@@ -69,8 +69,8 @@ You define a radius and a stretch for the ellipse and APEL does the rendering
 ```java
 ParticleEllipse particleEllipse = ParticleEllipse.builder()
     .particleEffect(ParticleTypes.END_ROD)
-    .radius(5)
-    .stretch(3)
+    .radius(5) // Given a circle, how large as radius
+    .stretch(3) // Given the same circle, how much to stretch it
     .amount(80)
     .build();
 ```
@@ -82,9 +82,9 @@ passing 3 non-parallel points to form a triangle, it draws a triangle composed o
 ```java
 ParticleTriangle particleTriangle = ParticleTriangle.builder()
     .particleEffect(ParticleTypes.END_ROD)
-    .vertex1(new Vector3f(-5, 0, 0))
-    .vertex2(new Vector3f(5, 0, 0))
-    .vertex3(new Vector3f(0, 5, 0))
+    .vertex1(new Vector3f(-5, 0, 0)) // The first point?
+    .vertex2(new Vector3f(5, 0, 0)) // The second point?
+    .vertex3(new Vector3f(0, 5, 0)) // The third point?
     .amount(80)
     .build();
 ```
@@ -98,7 +98,7 @@ choose to whenever create a rectangle or any other four-sided polygons; for the 
 ```java
 ParticleQuad particleQuad = ParticleQuad.builder()
     .particleEffect(ParticleTypes.END_ROD)
-    .rectangle(5, 3)
+    .rectangle(5, 3) // Width(X), Height(Y)
     .amount(80)
     .build();
 ```
@@ -114,8 +114,8 @@ is recorded before the polygon bug fix**
 ```java
 ParticlePolygon particlePolygon = ParticlePolygon.builder()
     .particleEffect(ParticleTypes.END_ROD)
-    .sides(5)
-    .size(4)
+    .sides(5) // How many points does it have?
+    .size(4) // How large is the area?
     .amount(80)
     .build();
 ```
@@ -130,10 +130,10 @@ ParticleBezierCurve particleBezierCurve = ParticleBezierCurve.builder()
     .particleEffect(ParticleTypes.END_ROD)
     .bezierCurve(
             new CubicBezierCurve(
-                    new Vector3f(-5, -5, -5),
-                    new Vector3f(5, 5, 5),
-                    new Vector3f(3, 3, 3),
-                    new Vector3f(-10, -2, -6)
+                    new Vector3f(-5, -5, -5), // Starting Point
+                    new Vector3f(5, 5, 5), // Bend Point (A)
+                    new Vector3f(3, 3, 3), // Bend Point (B)
+                    new Vector3f(-10, -2, -6) // Ending Point
             )
     )
     .amounts(80)
@@ -141,3 +141,89 @@ ParticleBezierCurve particleBezierCurve = ParticleBezierCurve.builder()
 ```
 [![Video Title](https://img.youtube.com/vi/KSujqOWW28Y/0.jpg)](https://www.youtube.com/watch?v=KSujqOWW28Y)
 
+## All 3D Drawable Particle Objects
+Now for the 3-dimensional ones, these require a bit more parameters, even for the simpler ones such as a cuboid. 
+However, this also means there is a good amount of customization available for them. As per usual, we will start with the
+simplest ones and work our way to more intricate particle objects
+
+[Particle Sphere Object](../src/main/java/net/mcbrincie/apel/lib/objects/ParticleSphere.java) By far the simplest
+3D object, the parameters of the particle sphere are the same as from the 2D Particle Circle Object. It requires a radius
+which tells it how large its area will be
+```java
+ParticleSphere particleSphere = ParticleSphere.builder()
+    .amount(300)
+    .particleEffect(ParticleTypes.END_ROD)
+    .radius(3)
+    .build();
+```
+[![Video Title](https://img.youtube.com/vi/5HKNFiwOsUA/0.jpg)](https://www.youtube.com/watch?v=5HKNFiwOsUA)
+
+
+[Particle Cuboid Object](../src/main/java/net/mcbrincie/apel/lib/objects/ParticleCuboid.java) Another simple 3D object, 
+it is the equivalent of a 2D rectangle if it was extended in the third dimension.
+```java
+ParticleCuboid particleCuboid = ParticleCuboid.builder()
+    .amount(100)
+    .particleEffect(ParticleTypes.END_ROD)
+    .size(new Vector3f(9, 6, 3)) // Width(X), Height(Y), Depth(Z)
+    .build();
+```
+[![Video Title](https://img.youtube.com/vi/JHagc_XwhvM/0.jpg)](https://www.youtube.com/watch?v=JHagc_XwhvM)
+
+
+[Particle Cylinder Object](../src/main/java/net/mcbrincie/apel/lib/objects/ParticleCylinder.java) Cylinders are also quite
+easy to create as they require a height (how tall they are) and a radius (how wide they are).
+```java
+ParticleCylinder particleCylinder = ParticleCylinder.builder()
+    .amount(500)
+    .particleEffect(ParticleTypes.END_ROD)
+    .height(6.0f) // How tall is it(on Y)?
+    .radius(5.0f) // How wide is it(on both X and Z)?
+    .build();
+```
+[![Video Title](https://img.youtube.com/vi/FD1Bz0gf4gI/0.jpg)](https://www.youtube.com/watch?v=FD1Bz0gf4gI)
+
+
+[Particle Cone Object](../src/main/java/net/mcbrincie/apel/lib/objects/ParticleCone.java) Partice cones have exactly
+the same parameters as a cylinder. Although the height value stretches the cone as opposed to being linear around the
+shape
+```java
+ParticleCone particleCone = ParticleCone.builder()
+    .amount(500)
+    .particleEffect(ParticleTypes.END_ROD)
+    .height(6.0f) // How stretched is it(on Y)?
+    .radius(5.0f) // How wide is it(on both X and Z)?
+    .build();
+```
+[![Video Title](https://img.youtube.com/vi/c99d3t4WDAE/0.jpg)](https://www.youtube.com/watch?v=c99d3t4WDAE)
+
+
+[Particle Ellipsoid Object](../src/main/java/net/mcbrincie/apel/lib/objects/ParticleEllipsoid.java) Particle ellipsoids
+are more complicated than your typical ellipses, as now you have to take into account the third axis(Z), apart from that
+they are also easy to use
+```java
+ParticleEllipsoid particleEllipsoid = ParticleEllipsoid.builder()
+    .amount(500)
+    .particleEffect(ParticleTypes.END_ROD)
+    .xSemiAxis(3.0f) // How much to stretch the X axis?
+    .ySemiAxis(2.0f) // How much to stretch the Y axis?
+    .zSemiAxis(5.0f) // How much to stretch the Z axis?
+    .build();
+```
+[![Video Title](https://img.youtube.com/vi/NY4kQyKxfGQ/0.jpg)](https://www.youtube.com/watch?v=NY4kQyKxfGQ)
+
+
+[Particle Tetrahedron Object](../src/main/java/net/mcbrincie/apel/lib/objects/ParticleTetrahedron.java) By far the most complicated. 
+Even tho it involves passing four vertices, one has to make sure that they make a tetrahedron if any are co-planar the tetrahedron 
+doesn't exist. For this reason it is recommended to use something like [Desmos 3D](https://www.desmos.com/3d)
+```java
+ParticleTetrahedron particleTetrahedron = ParticleTetrahedron.builder()
+    .amount(200)
+    .particleEffect(ParticleTypes.END_ROD)
+    .vertex1(new Vector3f(1, 3, -3)) // The first vertex?
+    .vertex2(new Vector3f(-2, 0, -1)) // The second vertex?
+    .vertex3(new Vector3f(-4, 3, 3)) // The third vertex?
+    .vertex4(new Vector3f(2, 0, 2)) // The fourth vertex?
+    .build();
+```
+[![Video Title](https://img.youtube.com/vi/upfsU82eQgM/0.jpg)](https://www.youtube.com/watch?v=upfsU82eQgM)
