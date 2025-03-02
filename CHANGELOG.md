@@ -15,6 +15,7 @@ to use in their own projects
 - [x] Added ``ParticleArray`` for copying particle objects in an alternating pattern
 - [ ] Added ``ParticleTrial`` for making a trial of particle objects
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
+- [ ] Added ``scale`` to ParticleObject. Used for adjusting the scale(can also be negative)
 - [ ] Support for 1.20.1 (due to its popularity)
 - [ ] Support for 1.21.4
 
