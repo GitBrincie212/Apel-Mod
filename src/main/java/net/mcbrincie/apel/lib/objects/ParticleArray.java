@@ -107,7 +107,7 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext data) {
-        DrawContext childContext = new DrawContext(renderer.getServerWorld(), data.getPosition(), data.getCurrentStep());
+        DrawContext childContext = new DrawContext(renderer.getServerWorld(), data.getPosition(), data.getCurrentStep(), data.getNumberOfStep());
         this.particleObject.prepareContext(childContext);
         // Call interceptors once
         this.particleObject.beforeDraw.apply(childContext, this.particleObject);

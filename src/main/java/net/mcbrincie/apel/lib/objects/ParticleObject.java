@@ -255,8 +255,8 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      */
     public abstract void draw(ApelServerRenderer renderer, DrawContext data);
 
-    public final void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        DrawContext drawContext = new DrawContext(renderer.getServerWorld(), drawPos, step);
+    public final void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps) {
+        DrawContext drawContext = new DrawContext(renderer.getServerWorld(), drawPos, step, numberOfSteps);
         this.prepareContext(drawContext);
         //noinspection unchecked
         this.beforeDraw.apply(drawContext, (T) this);

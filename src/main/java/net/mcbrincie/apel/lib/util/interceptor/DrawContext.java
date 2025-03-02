@@ -39,6 +39,7 @@ import static java.util.Objects.requireNonNull;
  */
 public class DrawContext {
     private final int currentStep;
+    private final int numberOfSteps;
     private final Vector3f position;
     private final ServerWorld world;
     private final Map<Key<?>, Object> metadata;
@@ -49,11 +50,12 @@ public class DrawContext {
      * @param position the position at which drawing will occur
      * @param step the current animation step
      */
-    public DrawContext(ServerWorld world, Vector3f position, int step) {
+    public DrawContext(ServerWorld world, Vector3f position, int step, int numberOfSteps) {
         this.currentStep = step;
         this.position = position;
         this.world = world;
         this.metadata = new HashMap<>();
+        this.numberOfSteps = numberOfSteps;
     }
 
     /** Add metadata to the map for interceptors to use.
@@ -104,6 +106,14 @@ public class DrawContext {
      */
     public int getCurrentStep() {
         return currentStep;
+    }
+
+    /** Get the number of steps of the path animator.
+     *
+     * @return the number of steps the animation has
+     */
+    public int getNumberOfStep() {
+        return numberOfSteps;
     }
 
     /** Get the position from which the current shape's rendering is computed

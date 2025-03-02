@@ -136,7 +136,7 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         Vector3f position = drawContext.getPosition();
         if (this.distance == 0) {
-            this.target_object.doDraw(renderer, drawContext.getCurrentStep(), position);
+            this.target_object.doDraw(renderer, drawContext.getCurrentStep(), position, drawContext.getNumberOfStep());
             return;
         }
         Vector3f rotatedDirection = new Vector3f(0, 1, 0)
@@ -145,14 +145,14 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
                 .rotateX(this.rotation.x);
         Vector3f mirrored_pos = new Vector3f(position).add(rotatedDirection.mul(this.distance));
         Vector3f target_pos = (new Vector3f(position).mul(2)).sub(mirrored_pos);
-        this.target_object.doDraw(renderer, drawContext.getCurrentStep(), target_pos);
+        this.target_object.doDraw(renderer, drawContext.getCurrentStep(), target_pos, drawContext.getNumberOfStep());
         float pi = (float) Math.PI;
         float x = this.lockXAxis ? -pi : pi;
         float y = this.lockYAxis ? -pi : pi;
         float z = this.lockZAxis ? -pi : pi;
         Vector3f prevRot = this.target_object.getRotation();
         this.target_object.setRotation(new Vector3f(x, y, z).sub(prevRot));
-        this.target_object.doDraw(renderer, drawContext.getCurrentStep(), mirrored_pos);
+        this.target_object.doDraw(renderer, drawContext.getCurrentStep(), mirrored_pos, drawContext.getNumberOfStep());
         this.target_object.setRotation(prevRot);
     }
 

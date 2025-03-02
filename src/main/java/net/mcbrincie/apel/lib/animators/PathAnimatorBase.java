@@ -272,9 +272,10 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
      * @throws SeqMissingException When it finds that there is no sequence yet allocated
      */
     public void handleDrawingStep(ApelServerRenderer renderer, int step, Vector3f drawPosition) throws SeqMissingException {
+        int steps = this.renderingSteps == 0 ? convertIntervalToSteps() : this.renderingSteps;
         Runnable func = () -> {
             renderer.beforeFrame(step, drawPosition);
-            this.particleObject.doDraw(renderer, step, drawPosition);
+            this.particleObject.doDraw(renderer, step, drawPosition, steps);
             renderer.afterFrame(step, drawPosition);
         };
         if (this.delay == 0) {

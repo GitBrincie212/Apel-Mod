@@ -564,7 +564,7 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
             ParticleObject<?> childObject = drawContext.getMetadata(OBJECT_IN_USE);
             // Defensive copy before passing to a child object
             Vector3f childDrawPos = new Vector3f(drawContext.getPosition());
-            childObject.doDraw(renderer, drawContext.getCurrentStep(), childDrawPos);
+            childObject.doDraw(renderer, drawContext.getCurrentStep(), childDrawPos, drawContext.getNumberOfStep());
             this.afterChildDraw.apply(drawContext, this);
         }
     }
