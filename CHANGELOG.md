@@ -10,12 +10,13 @@ to use in their own projects
 - [x] Added animation interceptors for **Path Animators**
 - [ ] Added the ability to stack interceptors
 - [ ] Added ``ParticleText`` for text rendering with particles
-- [ ] Added more markdown documentation on specific topics
+- [x] Added more markdown documentation on specific topics
 - [x] Added ``ParticleMirror`` for mirroring a particle object
 - [x] Added ``ParticleArray`` for copying particle objects in an alternating pattern
 - [ ] Added ``ParticleTrial`` for making a trial of particle objects
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
 - [ ] Support for 1.20.1 (due to its popularity)
+- [ ] Support for 1.21.4
 
 ## Modifications
 - [x] Reworked the way **Particle Objects** are created by using the builder pattern
@@ -32,3 +33,4 @@ to use in their own projects
 - [x] Fixed a bug where setting a vertex on ``ParticleTriangle`` wouldn't check if all of them are making up a triangle
 - [x] Fixed a bug where setting a vertex on ``ParticleTetrahedron`` wouldn't check if all of them are making up a tetrahedron
 - [x] Fixed a bug where ``EllipseAnimator`` does squared the revolutions
+- [x] Fixed a small oversight where ``ParticleCylinder`` builder wouldn't create the ``ParticleCylinder`` and just return null
