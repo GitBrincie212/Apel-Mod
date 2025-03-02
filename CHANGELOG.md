@@ -15,7 +15,9 @@ to use in their own projects
 - [x] Added ``ParticleArray`` for copying particle objects in an alternating pattern
 - [ ] Added ``ParticleTrial`` for making a trial of particle objects
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
-- [ ] Added ``scale`` to ParticleObject. Used for adjusting the scale(can also be negative)
+- [ ] Added ``scale`` to ParticleObject. Used for adjusting the scale (can also be negative)
+- [ ] Added ``timeDiff`` to DrawContext, which is used for knowing the difference of time between the steps
+- [x] Added ``numberOfSteps`` to DrawContext, which is used for knowing the number of steps of the path animator
 - [ ] Support for 1.20.1 (due to its popularity)
 - [ ] Support for 1.21.4
 
