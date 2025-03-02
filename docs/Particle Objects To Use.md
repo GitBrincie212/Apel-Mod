@@ -227,3 +227,80 @@ ParticleTetrahedron particleTetrahedron = ParticleTetrahedron.builder()
     .build();
 ```
 [![Video Title](https://img.youtube.com/vi/upfsU82eQgM/0.jpg)](https://www.youtube.com/watch?v=upfsU82eQgM)
+
+## All Utility Particle Objects
+These by themselves do not render, they need the help of other particle object(s) in order for their functionality to be
+seen. There are few utility particle objects as of now; however, we are aiming to change that. As previously said, we will
+work from simplest to hardest
+
+**Note:** There will be more than 1 code block, only the last is the utility particle object. The rest are just other drawable
+test objects to see what the utility ones do
+
+[Particle Combiner Object](../src/main/java/net/mcbrincie/apel/lib/objects/ParticleTetrahedron.java) One of the simplest, its
+goal is to combine multiple particle objects as one particle object. We have two different test particle objects to demonstrate this,
+with the combiner you don't need to create new identical path animators for every particle object. You can just use one
+path animator and a combiner to achieve practically the same thing. Since the combiner is one object, you can manipulate its
+rotation, offset... etc. And it would ensue on all other particle objects
+```java
+ParticleCuboid particleCuboid = ParticleCuboid.builder()
+    .amount(100)
+    .particleEffect(ParticleTypes.END_ROD)
+    .size(new Vector3f(5, 5, 5))
+    .build();
+
+ParticleSphere particleSphere = ParticleSphere.builder()
+    .amount(800)
+    .particleEffect(ParticleTypes.END_ROD)
+    .radius(5)
+    .build();
+```
+```java
+ParticleCombiner particleCombiner = ParticleCombiner.builder()
+    .object(particleCuboid) // Add the cuboid particle object to the combiner
+    .object(particleSphere) // Add the sphere particle object to the combiner
+    .build();
+```
+[![Video Title](https://img.youtube.com/vi/xB8ZTTDjfYI/0.jpg)](https://www.youtube.com/watch?v=xB8ZTTDjfYI)
+
+[Particle Array Object](../src/main/java/net/mcbrincie/apel/lib/objects/ParticleArray.java) This particle objects basically
+repeats one particle object in a 3D grid. You can adjust its size (repetitions of the object) and its spacing between each
+particle object copied. <u>It should be noted, interceptors are triggered only once (i.e., before the grid is created and after)</u>
+```java
+// Some test particle object to use later
+ParticleCuboid particleCuboid = ParticleCuboid.builder()
+    .amount(20)
+    .particleEffect(ParticleTypes.END_ROD)
+    .size(new Vector3f(2, 2, 2))
+    .build();
+```
+```java
+// The ParticleCuboid is the particle object we are going to repeat over
+ParticleArray<ParticleCuboid> particleArray = ParticleArray.builder(particleCuboid)
+    .gridSize(new Vector3i(3, 3, 5)) // How many times to repeat in each axis?
+    .spacing(new Vector3f(2, 2, 2)) // How much is the spacing between each copy?
+    .build();
+```
+[![Video Title](https://img.youtube.com/vi/3G4XFKjF08Y/0.jpg)](https://www.youtube.com/watch?v=3G4XFKjF08Y)
+
+[Particle Mirror Object](../src/main/java/net/mcbrincie/apel/lib/objects/ParticleMirror.java) This particle object mirrors
+one particle object from one side to the other. The further the object is from the mirror, the further the copy is as well.
+The copy also reacts to the particle object. **We will use a quad to visualize the mirror in action, just note that
+there will be no quad on the mirror when using it yourself**, do note we will also use interceptors as well for this showcase
+```java
+ParticleCuboid particleCuboid = ParticleCuboid.builder()
+    .amount(100)
+    .particleEffect(ParticleTypes.END_ROD)
+    .size(new Vector3f(3, 3, 3))
+    .beforeDraw((data, object) -> {
+        object.setRotation(object.getRotation().add(new Vector3f(.005f, .005f, .005f)));
+    })
+    .build();
+```
+```java
+ParticleMirror particleMirror = ParticleMirror.builder()
+    .object(particleCuboid)
+    .distance(4f) // The distance between the mirror and the object
+    .lockY() // Lock the Y Axis (In terms of rotation)
+    .build();
+```
+[![Video Title](https://img.youtube.com/vi/lh4CO6nTQ9Q/0.jpg)](https://www.youtube.com/watch?v=lh4CO6nTQ9Q)
