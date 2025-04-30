@@ -2,6 +2,7 @@ package net.mcbrincie.apel.lib.util.image;
 
 import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleEffect;
+import net.minecraft.util.math.ColorHelper;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3f;
 
@@ -12,9 +13,6 @@ public class DustPalateGenerator implements PalateGenerator {
 
     @Override
     public ParticleEffect apply(int rgba, int x, int y, Vector3f position) {
-        return cache.computeIfAbsent(rgba, k -> {
-            Vector3f color = Vec3d.unpackRgb(rgba).toVector3f();
-            return new DustParticleEffect(color, 0.2f);
-        });
+        return cache.computeIfAbsent(rgba, k -> new DustParticleEffect(rgba, 0.2f));
     }
 }
