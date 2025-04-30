@@ -18,8 +18,7 @@ to use in their own projects
 - [ ] Added ``scale`` to ParticleObject. Used for adjusting the scale (can also be negative)
 - [ ] Added ``timeDiff`` to DrawContext, which is used for knowing the difference of time between the steps
 - [x] Added ``numberOfSteps`` to DrawContext, which is used for knowing the number of steps of the path animator
-- [ ] Support for 1.20.1 (due to its popularity)
-- [ ] Support for 1.21.4
+- [x] Support for 1.21.4
 
 ## Modifications
 - [x] Reworked the way **Particle Objects** are created by using the builder pattern
