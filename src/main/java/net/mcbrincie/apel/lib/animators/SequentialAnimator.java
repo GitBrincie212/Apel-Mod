@@ -11,9 +11,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-/** The parallel path animator. Which provides an interface for controlling multiple
- * concurrent path animators (they can also nest themselves) and can have an unlimited
- * number of path animators attached. They also can have delays for each path animator.
+/** The sequential path animator. Which provides an interface for controlling multiple
+ * path animators (they can also nest themselves) that execute one after the other and
+ * can have an unlimited number of path animators attached. They also can have delays for each path animator.
  * It is quite advanced but allows for easier management on multiple animators & is
  * versatile compared to the other easier ones
  */
