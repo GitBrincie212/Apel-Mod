@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.util.interceptor;
 
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
@@ -42,6 +43,7 @@ public class DrawContext {
     private final int numberOfSteps;
     private final Vector3f position;
     private final ServerWorld world;
+    private final float deltaTickTime;
     private final Map<Key<?>, Object> metadata;
 
     /** Constructs an InterceptorData object to pass to an interceptor
@@ -50,12 +52,32 @@ public class DrawContext {
      * @param position the position at which drawing will occur
      * @param step the current animation step
      */
-    public DrawContext(ServerWorld world, Vector3f position, int step, int numberOfSteps) {
+    public DrawContext(ServerWorld world, Vector3f position, int step, int numberOfSteps, float deltaTickTime) {
         this.currentStep = step;
         this.position = position;
         this.world = world;
         this.metadata = new HashMap<>();
         this.numberOfSteps = numberOfSteps;
+        this.deltaTickTime = deltaTickTime;
+    }
+
+    public DrawContext(DrawContext context) {
+        this.currentStep = context.currentStep;
+        this.position = context.position;
+        this.deltaTickTime = context.deltaTickTime;
+        this.numberOfSteps = context.numberOfSteps;
+        this.metadata = new HashMap<>();
+        this.world = context.world;
+    }
+
+    public DrawContext(ApelServerRenderer renderer, DrawContext context) {
+        this(
+                renderer.getServerWorld(),
+                context.getPosition(),
+                context.getCurrentStep(),
+                context.getNumberOfStep(),
+                context.getDeltaTickTime()
+        );
     }
 
     /** Add metadata to the map for interceptors to use.
@@ -130,5 +152,14 @@ public class DrawContext {
      */
     public ServerWorld getWorld() {
         return world;
+    }
+
+    /** Get the delta tick time. Which measures the time difference between the last and the current tick
+     *
+     * @return the delta tick time
+     */
+    @SuppressWarnings("unused")
+    public float getDeltaTickTime() {
+        return this.deltaTickTime;
     }
 }

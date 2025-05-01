@@ -239,7 +239,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      * step, and the drawing position.
      *
      * <p><b>The method should not be called directly.</b>  It will be called via
-     * {@link #doDraw(ApelServerRenderer, int, Vector3f)} by {@code PathAnimatorBase} subclasses to draw objects along
+     * {@link #doDraw(ApelServerRenderer, int, Vector3f, int, float)}  by {@code PathAnimatorBase} subclasses to draw objects along
      * the animation path or at an animation point.  These animators will provide the renderer and calculate the
      * current {@code step} and the {@code drawPos}.  The renderer will have access to the {@code ServerWorld}.
      * <p>
@@ -255,8 +255,8 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      */
     public abstract void draw(ApelServerRenderer renderer, DrawContext data);
 
-    public final void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps) {
-        DrawContext drawContext = new DrawContext(renderer.getServerWorld(), drawPos, step, numberOfSteps);
+    public final void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps, float deltaTickTime) {
+        DrawContext drawContext = new DrawContext(renderer.getServerWorld(), drawPos, step, numberOfSteps, deltaTickTime);
         this.prepareContext(drawContext);
         //noinspection unchecked
         this.beforeDraw.apply(drawContext, (T) this);

@@ -60,6 +60,7 @@ public class ParticleSphere extends ParticleObject<ParticleSphere> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+        System.out.println(drawContext.getDeltaTickTime());
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
         renderer.drawEllipsoid(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, this.radius,
                                this.radius, this.radius, this.rotation, this.amount

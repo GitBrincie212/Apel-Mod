@@ -5,6 +5,7 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ServerWorldAccess;
 import net.mcbrincie.apel.lib.util.interceptor.AnimationInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
@@ -275,7 +276,8 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
         int steps = this.renderingSteps == 0 ? convertIntervalToSteps() : this.renderingSteps;
         Runnable func = () -> {
             renderer.beforeFrame(step, drawPosition);
-            this.particleObject.doDraw(renderer, step, drawPosition, steps);
+            float deltaTickTime = ((ServerWorldAccess) renderer.getServerWorld()).APEL$getDeltaTickTime();
+            this.particleObject.doDraw(renderer, step, drawPosition, steps, deltaTickTime);
             renderer.afterFrame(step, drawPosition);
         };
         if (this.delay == 0) {
