@@ -18,8 +18,14 @@ public class ModItems {
             DebugParticleWand1::new
     );
 
+    public static final Item WAND_2 = registerWand(
+            "debug_particle_wand_2",
+            DebugParticleWand2::new
+    );
+
     public static void appendItems(FabricItemGroupEntries entries) {
         entries.add(WAND_1);
+        entries.add(WAND_2);
     }
 
     private static <T extends Item> T registerWand(String name, DebugParticleWandFactory<T> wandFactory) {
