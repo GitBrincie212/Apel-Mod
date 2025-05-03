@@ -4,16 +4,12 @@ unintended stuff. We always wanted and still want to expand upon the library and
 to use in their own projects
 
 ## Additions
-- [ ] Added new baking method with various options
-- [ ] Added full support for ``ParticleImage``
 - [ ] Added ``ParticleModel`` for 3D model compatibility
 - [x] Added animation interceptors for **Path Animators**
-- [ ] Added the ability to stack interceptors
-- [ ] Added ``ParticleText`` for text rendering with particles
 - [x] Added more markdown documentation on specific topics
 - [x] Added ``ParticleMirror`` for mirroring a particle object
 - [x] Added ``ParticleArray`` for copying particle objects in an alternating pattern
-- [ ] Added ``ParticleTrial`` for making a trial of particle objects
+- [ ] Added ``BranchAnimator`` which allows the rendering of branch fractal patterns
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
 - [ ] Added ``scale`` to ParticleObject. Used for adjusting the scale (can also be negative)
 - [x] Added ``deltaTimeTick`` to DrawContext, which is used for knowing the difference of time between the last tick and current tick
