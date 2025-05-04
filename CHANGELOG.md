@@ -22,6 +22,7 @@ to use in their own projects
 - [x] Simplified the ``ParticleBezierCurve`` interface
 - [ ] Reworked the internal system of **Path Animators** to make it easier to create new ones
 - [x] Reworked the handling of the metadata from interceptors
+- [x] Redesigned The APEL Logo into a more modern slick design(For The RadiantFrame Project)
 
 ## Removals
 - [x] Removed Listeners for **Path Animators**
