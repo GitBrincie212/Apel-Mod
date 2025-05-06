@@ -9,7 +9,7 @@ to use in their own projects
 - [x] Added more markdown documentation on specific topics
 - [x] Added ``ParticleMirror`` for mirroring a particle object
 - [x] Added ``ParticleArray`` for copying particle objects in an alternating pattern
-- [ ] Added ``BranchAnimator`` which allows the rendering of branch fractal patterns
+- [ ] Added ``ParticleBranchGen`` which allows the rendering of branch fractal patterns
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
 - [ ] Added ``scale`` to ParticleObject. Used for adjusting the scale (can also be negative)
 - [x] Added ``deltaTimeTick`` to DrawContext, which is used for knowing the difference of time between the last tick and current tick
