@@ -22,13 +22,14 @@ public class DebugParticleWand2 extends Item {
         if (world.isClient) return ActionResult.PASS;
 
         ParticleBranchGen particleBranchGen = ParticleBranchGen.builder()
-                .start(new Vector3f(0))
-                .end(new Vector3f(0, 8, 0))
-                .amount(100)
-                .particleEffect(ParticleTypes.SCULK_SOUL)
-                .minDimensions(new Vector3f(1, 1, 1))
-                .maxDimensions(new Vector3f(3, 3, 3))
-                .subDivisions(10)
+                .amount(20)
+                .particleEffect(ParticleTypes.ELECTRIC_SPARK)
+                .minimumAngle(new Vector3f(0))
+                .maximumAngle(new Vector3f((float) Math.PI / 12))
+                .constantLengthThreshold(2f)
+                .minimumBranchesPerDivision(4)
+                .maximumBranchesPerDivision(12)
+                .constantTotalBranches(4)
                 .build();
 
         PointAnimator pointAnimator = PointAnimator.builder()
