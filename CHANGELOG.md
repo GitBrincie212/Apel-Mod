@@ -1,7 +1,7 @@
-<h1 style="text-align: center;"> APEL - v0.2.0</h1><br>
-The first update for apel to ever receive, brings to the table new things as well as reworks and additionally patches
-unintended stuff. We always wanted and still want to expand upon the library and making it a better place for developers
-to use in their own projects
+<img src="./media/APEL_Changelog_Banner.png" alt="APEL Version 0.1.5 Release"/><br>
+The ***FIRST** ever update for _APEL_ to ever receive. It is a moderate update and brings to the table new things 
+as well as reworks while also patching unintended stuff. We always wanted and still want to expand upon the library and 
+create a better place for developers to use in their own projects
 
 ## Additions
 - [ ] Added ``ParticleModel`` for 3D model compatibility
