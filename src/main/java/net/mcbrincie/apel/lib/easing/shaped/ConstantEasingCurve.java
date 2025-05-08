@@ -1,5 +1,8 @@
-package net.mcbrincie.apel.lib.easing;
+package net.mcbrincie.apel.lib.easing.shaped;
 
+
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import org.joml.Vector3f;
 
 /** This is the ConstantEasingCurve, which acts as more of a wrapper and returns the same value regardless
  * of any t value picked. Due to its nature of being a horizontal line, it has no Ease Type since
@@ -9,11 +12,19 @@ package net.mcbrincie.apel.lib.easing;
  */
 @SuppressWarnings("unused")
 public class ConstantEasingCurve<T> extends EasingCurve<T> {
+    protected T value;
+
     public ConstantEasingCurve(T value) {
         super(value, value);
     }
 
-    protected float interpolate(float a, float b, float t) {
-        return a;
+    @Override
+    public T getValue(Vector3f t) {
+        return this.value;
+    }
+
+    @Override
+    protected float interpolate(float t) {
+        return 0;
     }
 }

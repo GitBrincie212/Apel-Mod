@@ -1,5 +1,6 @@
-package net.mcbrincie.apel.lib.easing;
+package net.mcbrincie.apel.lib.easing.shaped;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
 
 /** This is the LinearEasingCurve, which interpolates between the start and end linearly (hence lerp).
  * Due to its nature of being a line, it has no Ease Type since it doesn't change the computations which
@@ -12,8 +13,12 @@ public class LinearEasingCurve<T> extends EasingCurve<T> {
     public LinearEasingCurve(T start, T end) {
         super(start, end);
     }
+    public LinearEasingCurve(T start, T end, float easingProgressFactor)  {
+        super(start, end, easingProgressFactor);
+    }
 
-    protected float interpolate(float a, float b, float t) {
-        return ((1 - t) * a) + (t * b);
+    @Override
+    protected float interpolate(float t) {
+        return t;
     }
 }
