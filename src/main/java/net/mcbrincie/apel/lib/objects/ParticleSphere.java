@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.easing.ConstantEasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
@@ -73,7 +73,7 @@ public class ParticleSphere extends ParticleObject<ParticleSphere> {
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
         float t = (float) drawContext.getCurrentStep() / drawContext.getNumberOfStep();
-        float currRadius = this.radius.compute(t);
+        float currRadius = this.radius.getValue(t);
         renderer.drawEllipsoid(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currRadius,
                 currRadius, currRadius, this.rotation, this.amount
         );
