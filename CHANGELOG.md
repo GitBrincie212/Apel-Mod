@@ -4,6 +4,7 @@ as well as reworks while also patching unintended stuff. We always wanted and st
 create a better place for developers to use in their own projects
 
 ## Additions
+- [ ] Added ``EasingCurve<T>``, allowing easy smooth-based animation on a parameter without the use of interceptors
 - [ ] Added ``ParticleModel`` for 3D model compatibility
 - [x] Added animation interceptors for **Path Animators**
 - [x] Added more markdown documentation on specific topics
@@ -17,6 +18,7 @@ create a better place for developers to use in their own projects
 - [x] Support for 1.21.4
 
 ## Modifications
+- [ ] Reworked the parameters in such a way to make them able to use ease curves
 - [x] Reworked the way **Particle Objects** are created by using the builder pattern
 - [x] Reworked the way **Path Animators** are created by using the builder pattern
 - [x] Simplified the ``ParticleBezierCurve`` interface
