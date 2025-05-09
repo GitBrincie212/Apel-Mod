@@ -16,6 +16,7 @@ public class ConstantEasingCurve<T> extends EasingCurve<T> {
 
     public ConstantEasingCurve(T value) {
         super(value, value);
+        this.value = value;
     }
 
     @Override
