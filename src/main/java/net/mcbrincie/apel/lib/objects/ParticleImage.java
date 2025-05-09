@@ -1,6 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.Apel;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.image.DustPalateGenerator;
 import net.mcbrincie.apel.lib.util.image.PalateGenerator;
@@ -32,7 +33,9 @@ public class ParticleImage extends ParticleObject<ParticleImage> {
     private HashMap<Vector3f, ParticleEffect> positions;
 
     public ParticleImage(String filename, Vector3f rotation) {
-        super(null, rotation, new Vector3f(0), 1, ObjectInterceptor.identity(), ObjectInterceptor.identity());
+        super(null, new ConstantEasingCurve<>(rotation), new ConstantEasingCurve<>(new Vector3f(0)),
+                new ConstantEasingCurve<>(1), ObjectInterceptor.identity(), ObjectInterceptor.identity()
+        );
         this.setFilename(filename);
     }
 
