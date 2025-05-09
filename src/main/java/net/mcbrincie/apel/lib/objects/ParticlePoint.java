@@ -45,7 +45,9 @@ public class ParticlePoint extends ParticleObject<ParticlePoint> {
 
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         Vector3f objectDrawPosition = drawContext.getMetadata(DRAW_POSITION); //, drawContext.getPosition());
-        renderer.drawParticle(this.particleEffect, drawContext.getCurrentStep(), objectDrawPosition.add(this.offset));
+        renderer.drawParticle(this.particleEffect, drawContext.getCurrentStep(), objectDrawPosition.add(
+                drawContext.getComputedEasings().computedOffset
+        ));
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePoint> {
