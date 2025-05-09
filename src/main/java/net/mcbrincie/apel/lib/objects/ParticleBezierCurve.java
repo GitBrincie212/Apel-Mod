@@ -1,6 +1,8 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
@@ -112,7 +114,7 @@ public class ParticleBezierCurve extends ParticleObject<ParticleBezierCurve> {
      */
     @Override
     @Deprecated
-    public int getAmount() {
+    public EasingCurve<Integer> getAmount() {
         throw new UnsupportedOperationException("Each curve may have a different amount; use getAmounts()");
     }
 
@@ -166,7 +168,8 @@ public class ParticleBezierCurve extends ParticleObject<ParticleBezierCurve> {
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         // Compute total offset from origin
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
+        ComputedEasingPO computedEasings = drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);
 
         int curveCount = this.bezierCurves.size();
         for (int i = 0; i < curveCount; i++) {
@@ -177,7 +180,7 @@ public class ParticleBezierCurve extends ParticleObject<ParticleBezierCurve> {
             int amountForCurve = drawContext.getMetadata(AMOUNT, this.amounts.get(i));
 
             renderer.drawBezier(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, bezierCurve,
-                                this.rotation, amountForCurve
+                    computedEasings.computedRotation, amountForCurve
             );
         }
     }
