@@ -1,6 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import org.joml.Vector3f;
@@ -15,7 +18,7 @@ import org.joml.Vector3f;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleMirror extends ParticleObject<ParticleMirror> {
     protected ParticleObject<?> target_object;
-    protected float distance;
+    protected EasingCurve<Float> distance;
     protected boolean lockXAxis = false;
     protected boolean lockYAxis = false;
     protected boolean lockZAxis = false;
@@ -63,7 +66,7 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
      *
      * @return The distance between
      */
-    public float getDistance() {
+    public EasingCurve<Float> getDistance() {
         return this.distance;
     }
 
@@ -86,13 +89,25 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
     }
 
     /** Sets the distance between the target and mirrored particle object.
-     * Distance can be negative as well, so it doesn't really matter
+     * Distance can be negative as well, so it doesn't really matter.
+     * This method overload will set a constant value for the distance
      *
      * @param distance The new distance between the objects
      * @return The previous distance between the objects
      */
-    public float setDistance(float distance) {
-        float prevDist = this.distance;
+    public EasingCurve<Float> setDistance(float distance) {
+        return this.setDistance(new ConstantEasingCurve<>(distance));
+    }
+
+    /** Sets the distance between the target and mirrored particle object.
+     * Distance can be negative as well, so it doesn't really matter.
+     * This method overload will set an ease curve value for the distance
+     *
+     * @param distance The new distance between the objects
+     * @return The previous distance between the objects
+     */
+    public EasingCurve<Float> setDistance(EasingCurve<Float> distance) {
+        EasingCurve<Float> prevDist = this.distance;
         this.distance = distance;
         return prevDist;
     }
@@ -130,12 +145,17 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
         return prevLockAxis;
     }
 
-
+    @Override
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+        return container.addComputedField("distance", this.distance);
+    }
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+        ComputedEasingPO computedEasings = drawContext.getComputedEasings();
+        float dist = (float) computedEasings.getComputedField("distance");
         Vector3f position = drawContext.getPosition();
-        if (this.distance == 0) {
+        if (dist == 0) {
             this.target_object.doDraw(
                     renderer,
                     drawContext.getCurrentStep(),
@@ -146,10 +166,10 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
             return;
         }
         Vector3f rotatedDirection = new Vector3f(0, 1, 0)
-                .rotateZ(this.rotation.z)
-                .rotateY(this.rotation.y)
-                .rotateX(this.rotation.x);
-        Vector3f mirrored_pos = new Vector3f(position).add(rotatedDirection.mul(this.distance));
+                .rotateZ(computedEasings.computedRotation.z)
+                .rotateY(computedEasings.computedRotation.y)
+                .rotateX(computedEasings.computedRotation.x);
+        Vector3f mirrored_pos = new Vector3f(position).add(rotatedDirection.mul(dist));
         Vector3f target_pos = (new Vector3f(position).mul(2)).sub(mirrored_pos);
         this.target_object.doDraw(
                 renderer,
@@ -162,7 +182,9 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
         float x = this.lockXAxis ? -pi : pi;
         float y = this.lockYAxis ? -pi : pi;
         float z = this.lockZAxis ? -pi : pi;
-        Vector3f prevRot = this.target_object.getRotation();
+        Vector3f prevRot = this.target_object.getRotation().getValue(
+                (float) drawContext.getCurrentStep() / drawContext.getNumberOfStep()
+        );
         this.target_object.setRotation(new Vector3f(x, y, z).sub(prevRot));
         this.target_object.doDraw(
                 renderer,
@@ -176,7 +198,7 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleMirror> {
         protected ParticleObject<?> target_object;
-        protected float distance;
+        protected EasingCurve<Float> distance;
         protected boolean lockX = false;
         protected boolean lockY = false;
         protected boolean lockZ = false;
@@ -196,6 +218,15 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
          * method works in the fashion of last modification wins as such it isn't cumulative
         */
         public B distance(float distance) {
+            this.distance = new ConstantEasingCurve<>(distance);
+            this.isDistSet = true;
+            return self();
+        }
+
+        /** Sets the distance between the mirror, it also accepts negative distances. This
+         * method works in the fashion of last modification wins as such it isn't cumulative
+         */
+        public B distance(EasingCurve<Float> distance) {
             this.distance = distance;
             this.isDistSet = true;
             return self();
