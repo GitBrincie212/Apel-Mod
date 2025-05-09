@@ -1,6 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
@@ -21,8 +24,8 @@ import org.joml.Vector3i;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<ParticleArray<O>> {
     protected O particleObject;
-    protected Vector3i gridSize = new Vector3i(1);
-    protected Vector3f spacing = new Vector3f(4.0f);
+    protected EasingCurve<Vector3i> gridSize;
+    protected EasingCurve<Vector3f> spacing;
 
     public static <B extends Builder<B, T>, T extends ParticleObject<T>> Builder<B, T> builder(T particleObject) {
         return new Builder<>(particleObject);
@@ -65,19 +68,31 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
      *
      * @return The vector that represents the spacing between elements
      */
-    public Vector3f getSpacing() {
-        return new Vector3f(this.spacing);
+    public EasingCurve<Vector3f> getSpacing() {
+        return this.spacing;
     }
 
     /**
      * Set the spacing along each axis for the particle array. The spacing is the amount of space between elements.
+     * This method overload will set a constant value for the spacing
      *
      * @param spacing The new spacing between the elements
      * @return The previous spacing between the elements
      */
-    public Vector3f setSpacing(Vector3f spacing) {
-        Vector3f prevSpacings = this.spacing;
-        this.spacing = new Vector3f(spacing);
+    public EasingCurve<Vector3f> setSpacing(Vector3f spacing) {
+        return this.setSpacing(new ConstantEasingCurve<>(spacing));
+    }
+
+    /**
+     * Set the spacing along each axis for the particle array. The spacing is the amount of space between elements.
+     * This method overload will set an ease curve value for the spacing
+     *
+     * @param spacing The new spacing between the elements
+     * @return The previous spacing between the elements
+     */
+    public EasingCurve<Vector3f> setSpacing(EasingCurve<Vector3f> spacing) {
+        EasingCurve<Vector3f> prevSpacings = this.spacing;
+        this.spacing = spacing;
         return prevSpacings;
     }
 
@@ -86,39 +101,58 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
      *
      * @return the vector value representing the elements for this axis
      */
-    public Vector3i getGridSize() {
-        return new Vector3i(this.gridSize);
+    public EasingCurve<Vector3i> getGridSize() {
+        return this.gridSize;
     }
 
     /** Sets the sizing to use for different the axis values for the particle array
-     * to use. The sizing measures how many copies to place in each row
+     * to use. The sizing measures how many copies to place in each row. This method
+     * overload will set a constant value for the grid
      *
      * @param gridSize The new grid size
      * @return The previous grid size
      */
-    public Vector3i setGridSize(Vector3i gridSize) {
-        if (gridSize.x <= 0 || gridSize.y <= 0 || gridSize.z <= 0) {
-            throw new IllegalStateException("Grid size values must be positive");
-        }
-        Vector3i prevGridSize = this.gridSize;
-        this.gridSize = new Vector3i(gridSize);
+    public EasingCurve<Vector3i> setGridSize(Vector3i gridSize) {
+        return this.setGridSize(new ConstantEasingCurve<>(gridSize));
+    }
+
+    /** Sets the sizing to use for different the axis values for the particle array
+     * to use. The sizing measures how many copies to place in each row. This method
+     * overload will set a constant value for the grid
+     *
+     * @param gridSize The new grid size
+     * @return The previous grid size
+     */
+    public EasingCurve<Vector3i> setGridSize(EasingCurve<Vector3i> gridSize) {
+        EasingCurve<Vector3i> prevGridSize = this.gridSize;
+        this.gridSize = gridSize;
         return prevGridSize;
     }
 
     @Override
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+        return container.addComputedField("gridSize", this.gridSize)
+                .addComputedField("spacing", this.spacing);
+    }
+
+    @Override
     public void draw(ApelServerRenderer renderer, DrawContext data) {
-        DrawContext childContext = new DrawContext(renderer, data);
+        ComputedEasingPO mainComputedEasings = data.getComputedEasings();
+        ComputedEasingPO childComputedEasings = new ComputedEasingPO(this.particleObject, data.getCurrentStep(), data.getNumberOfStep());
+        DrawContext childContext = new DrawContext(renderer, data, childComputedEasings);
         this.particleObject.prepareContext(childContext);
         // Call interceptors once
         this.particleObject.beforeDraw.apply(childContext, this.particleObject);
+        Vector3i currGridSize = (Vector3i) mainComputedEasings.getComputedField("gridSize");
+        Vector3f currSpacing = (Vector3f) mainComputedEasings.getComputedField("spacing");
 
-        int xGaps = this.gridSize.x - 1;
-        int yGaps = this.gridSize.y - 1;
-        int zGaps = this.gridSize.z - 1;
+        int xGaps = currGridSize.x - 1;
+        int yGaps = currGridSize.y - 1;
+        int zGaps = currGridSize.z - 1;
         for (int x = -xGaps; x <= xGaps; x += 2) {
             for (int y = -yGaps; y <= yGaps; y += 2) {
                 for (int z = -zGaps; z <= zGaps; z += 2) {
-                    Vector3f arrayOffset = new Vector3f(x, y, z).mul(this.spacing).div(2f);
+                    Vector3f arrayOffset = new Vector3f(x, y, z).mul(currSpacing).div(2f);
                     // Debating between this and modifying the `particleObject` offset (for baking purposes)
                     childContext.getPosition().add(arrayOffset);
                     this.particleObject.draw(renderer, childContext);
@@ -132,11 +166,28 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
     // The 'T' here is deliberately different from the 'O' in the ParticleArray class.
     public static class Builder<B extends Builder<B, T>, T extends ParticleObject<T>> extends ParticleObject.Builder<B, ParticleArray<T>> {
         protected T particleObject;
-        protected Vector3f spacing = new Vector3f(1.0f);
-        protected Vector3i gridSize = new Vector3i(1);
+        protected EasingCurve<Vector3f> spacing;
+        protected EasingCurve<Vector3i> gridSize;
 
         private Builder(T particleObject) {
             this.particleObject = particleObject;
+        }
+
+        /**
+         * Set the distance between elements along each axis.  This method is not cumulative; repeated calls will
+         * overwrite the value.
+         */
+        public B spacing(EasingCurve<Vector3f> spacing) {
+            this.spacing = spacing;
+            return self();
+        }
+
+        /**
+         * Set the size of the grid.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B gridSize(EasingCurve<Vector3i> gridSize) {
+            this.gridSize = gridSize;
+            return self();
         }
 
         /**
@@ -152,7 +203,7 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
          * overwrite the value.
          */
         public B spacing(Vector3f spacing) {
-            this.spacing = spacing;
+            this.spacing = new ConstantEasingCurve<>(spacing);
             return self();
         }
 
@@ -160,7 +211,7 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
          * Set the size of the grid.  This method is not cumulative; repeated calls will overwrite the value.
          */
         public B gridSize(Vector3i gridSize) {
-            this.gridSize = gridSize;
+            this.gridSize = new ConstantEasingCurve<>(gridSize);
             return self();
         }
 
