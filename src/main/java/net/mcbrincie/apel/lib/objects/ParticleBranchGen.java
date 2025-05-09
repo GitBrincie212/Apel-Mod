@@ -1,6 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
@@ -20,14 +23,14 @@ import java.util.Optional;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
-    protected Vector3f minAngle;
-    protected Vector3f maxAngle;
-    protected float minLength;
-    protected float maxLength;
-    protected int maxTotalBranches;
-    protected int minTotalBranches;
-    protected int maxBranchesPerDivision;
-    protected int minBranchesPerDivision;
+    protected EasingCurve<Vector3f> minAngle;
+    protected EasingCurve<Vector3f> maxAngle;
+    protected EasingCurve<Float> minLength;
+    protected EasingCurve<Float> maxLength;
+    protected EasingCurve<Integer> maxTotalBranches;
+    protected EasingCurve<Integer> minTotalBranches;
+    protected EasingCurve<Integer> maxBranchesPerDivision;
+    protected EasingCurve<Integer> minBranchesPerDivision;
 
     private static final Random rand = Random.create();
 
@@ -65,8 +68,8 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
     */
     public ParticleBranchGen(ParticleBranchGen branchGen) {
         super(branchGen);
-        this.minAngle = new Vector3f(branchGen.minAngle);
-        this.maxAngle = new Vector3f(branchGen.maxAngle);
+        this.minAngle = branchGen.minAngle;
+        this.maxAngle = branchGen.maxAngle;
         this.minLength = branchGen.minLength;
         this.maxLength = branchGen.maxLength;
         this.maxBranchesPerDivision = branchGen.maxBranchesPerDivision;
@@ -81,7 +84,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      *
      * @return The minimum branch length threshold
      */
-    public float getMinLength() {
+    public EasingCurve<Float> getMinLength() {
         return this.minLength;
     }
 
@@ -89,15 +92,26 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      * Sets the minimum branch length threshold of the branch generator
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the minLength
      *
      * @param minLength The new minimum length threshold
      * @return The minimum length threshold
      */
-    public final float setMinLength(float minLength) {
-        if (minLength <= 0) {
-            throw new IllegalArgumentException("The minimum length value is lower than or equal to zero");
-        }
-        float prevLength = this.minLength;
+    public final EasingCurve<Float> setMinLength(float minLength) {
+        return this.setMinLength(new ConstantEasingCurve<>(minLength));
+    }
+
+    /**
+     * Sets the minimum branch length threshold of the branch generator
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the minLength
+     *
+     * @param minLength The new minimum length threshold
+     * @return The minimum length threshold
+     */
+    public final EasingCurve<Float> setMinLength(EasingCurve<Float> minLength) {
+        EasingCurve<Float> prevLength = this.minLength;
         this.minLength = minLength;
         return prevLength;
     }
@@ -106,7 +120,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      *
      * @return The maximum branch length threshold
      */
-    public float getMaxLength() {
+    public EasingCurve<Float> getMaxLength() {
         return this.maxLength;
     }
 
@@ -114,15 +128,26 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      * Sets the maximum branch length threshold of the branch generator
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the maxLength
      *
      * @param maxLength The new maximum length threshold
      * @return The previous minimum length threshold
      */
-    public final float setMaxLength(float maxLength) {
-        if (maxLength <= 0) {
-            throw new IllegalArgumentException("The maximum length's value is lower than or equal to zero");
-        }
-        float prevLength = this.maxLength;
+    public final EasingCurve<Float> setMaxLength(float maxLength) {
+        return this.setMaxLength(new ConstantEasingCurve<>(maxLength));
+    }
+
+    /**
+     * Sets the maximum branch length threshold of the branch generator
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the maxLength
+     *
+     * @param maxLength The new maximum length threshold
+     * @return The previous minimum length threshold
+     */
+    public final EasingCurve<Float> setMaxLength(EasingCurve<Float> maxLength) {
+        EasingCurve<Float> prevLength = this.maxLength;
         this.maxLength = maxLength;
         return prevLength;
     }
@@ -131,7 +156,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      *
      * @return The minimum angle threshold
      */
-    public Vector3f getMinAngle() {
+    public EasingCurve<Vector3f> getMinAngle() {
         return this.minAngle;
     }
 
@@ -139,12 +164,26 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      * Sets the minimum angle threshold of the branch generator
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the minAngle
      *
      * @param minAngle The new minimum angle threshold
      * @return The minimum angle threshold
      */
-    public final Vector3f setMinAngle(Vector3f minAngle) {
-        Vector3f prevAngle = this.minAngle;
+    public final EasingCurve<Vector3f> setMinAngle(Vector3f minAngle) {
+        return this.setMinAngle(new ConstantEasingCurve<>(minAngle));
+    }
+
+    /**
+     * Sets the minimum angle threshold of the branch generator
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the minAngle
+     *
+     * @param minAngle The new minimum angle threshold
+     * @return The minimum angle threshold
+     */
+    public final EasingCurve<Vector3f> setMinAngle(EasingCurve<Vector3f> minAngle) {
+        EasingCurve<Vector3f> prevAngle = this.minAngle;
         this.minAngle = minAngle;
         return prevAngle;
     }
@@ -153,7 +192,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      *
      * @return The maximum angle threshold
      */
-    public Vector3f getMaxDeviation() {
+    public EasingCurve<Vector3f> getMaxDeviation() {
         return this.maxAngle;
     }
 
@@ -161,12 +200,26 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      * Sets the maximum angle threshold of the branch generator
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the maxAngle
      *
      * @param maxAngle The new maximum angle threshold
      * @return The previous maximum angle threshold
      */
-    public final Vector3f setMaxAngle(Vector3f maxAngle) {
-        Vector3f prevAngle = this.maxAngle;
+    public final EasingCurve<Vector3f> setMaxAngle(Vector3f maxAngle) {
+        return this.setMaxAngle(new ConstantEasingCurve<>(maxAngle));
+    }
+
+    /**
+     * Sets the maximum angle threshold of the branch generator
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the maxAngle
+     *
+     * @param maxAngle The new maximum angle threshold
+     * @return The previous maximum angle threshold
+     */
+    public final EasingCurve<Vector3f> setMaxAngle(EasingCurve<Vector3f> maxAngle) {
+        EasingCurve<Vector3f> prevAngle = this.maxAngle;
         this.maxAngle = maxAngle;
         return prevAngle;
     }
@@ -175,7 +228,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      *
      * @return The maximum branch count per division
      */
-    public int getMaxBranchesPerDivision() {
+    public EasingCurve<Integer> getMaxBranchesPerDivision() {
         return this.maxBranchesPerDivision;
     }
 
@@ -183,15 +236,26 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      * Sets the maximum branches for the branch generator
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the branch per division count
      *
      * @param branchCount The new maximum branch count
      * @return The previous maximum branch count
      */
-    public final int setMaxBranchesPerDivision(int branchCount) {
-        if (branchCount <= 0) {
-            throw new IllegalArgumentException("Maximum Branch Count Per Division has to be positive and non-zero");
-        }
-        int prevBranchCount = this.maxBranchesPerDivision;
+    public final EasingCurve<Integer> setMaxBranchesPerDivision(int branchCount) {
+        return this.setMaxBranchesPerDivision(new ConstantEasingCurve<>(branchCount));
+    }
+
+    /**
+     * Sets the maximum branches for the branch generator
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the maximum branch per division count
+     *
+     * @param branchCount The new maximum branch count
+     * @return The previous maximum branch count
+     */
+    public final EasingCurve<Integer> setMaxBranchesPerDivision(EasingCurve<Integer> branchCount) {
+        EasingCurve<Integer> prevBranchCount = this.maxBranchesPerDivision;
         this.maxBranchesPerDivision = branchCount;
         return prevBranchCount;
     }
@@ -200,7 +264,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      *
      * @return The minimum branch count per division
      */
-    public int getMinimumBranchesPerDivision() {
+    public EasingCurve<Integer> getMinimumBranchesPerDivision() {
         return this.minBranchesPerDivision;
     }
 
@@ -208,15 +272,26 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      * Sets the minimum branches per division for the branch generator
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the minimum branch per division count
      *
      * @param branchCount The new minimum branch count per division
      * @return The previous minimum branch count per division
      */
-    public final int setMinBranchesPerDivsion(int branchCount) {
-        if (branchCount <= 0) {
-            throw new IllegalArgumentException("Minimum Branch Count Per Division has to be positive and non-zero");
-        }
-        int prevBranchCount = this.minBranchesPerDivision;
+    public final EasingCurve<Integer> setMinBranchesPerDivsion(int branchCount) {
+        return setMinBranchesPerDivsion(new ConstantEasingCurve<>(branchCount));
+    }
+
+    /**
+     * Sets the minimum branches per division for the branch generator
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the minimum branch per division count
+     *
+     * @param branchCount The new minimum branch count per division
+     * @return The previous minimum branch count per division
+     */
+    public final EasingCurve<Integer> setMinBranchesPerDivsion(EasingCurve<Integer> branchCount) {
+        EasingCurve<Integer> prevBranchCount = this.minBranchesPerDivision;
         this.minBranchesPerDivision = branchCount;
         return prevBranchCount;
     }
@@ -225,7 +300,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      *
      * @return The maximum branch count
      */
-    public int getMaxTotalBranches() {
+    public EasingCurve<Integer> getMaxTotalBranches() {
         return this.maxTotalBranches;
     }
 
@@ -233,15 +308,26 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      * Sets the maximum branches for the branch generator
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant for the maximum total branches count
      *
      * @param branchCount The new maximum branch count
      * @return The previous maximum branch count
      */
-    public final int setMaxTotalBranches(int branchCount) {
-        if (branchCount <= 0) {
-            throw new IllegalArgumentException("Maximum Total Branch Count has to be positive and non-zero");
-        }
-        int prevBranchCount = this.maxTotalBranches;
+    public final EasingCurve<Integer> setMaxTotalBranches(int branchCount) {
+        return this.setMaxTotalBranches(new ConstantEasingCurve<>(branchCount));
+    }
+
+    /**
+     * Sets the maximum branches for the branch generator
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the maximum total branches count
+     *
+     * @param branchCount The new maximum branch count
+     * @return The previous maximum branch count
+     */
+    public final EasingCurve<Integer> setMaxTotalBranches(EasingCurve<Integer> branchCount) {
+        EasingCurve<Integer> prevBranchCount = this.maxTotalBranches;
         this.maxTotalBranches = branchCount;
         return prevBranchCount;
     }
@@ -250,7 +336,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      *
      * @return The minimum branch count
      */
-    public int getMinTotalBranches() {
+    public EasingCurve<Integer> getMinTotalBranches() {
         return this.minTotalBranches;
     }
 
@@ -258,15 +344,26 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
      * Sets the minimum branches for the branch generator
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the minimum total branches count
      *
      * @param branchCount The new minimum branch count
      * @return The previous minimum branch count
      */
-    public final int setMinTotalBranches(int branchCount) {
-        if (branchCount <= 0) {
-            throw new IllegalArgumentException("Minimum Total Branch Count has to be positive and non-zero");
-        }
-        int prevBranchCount = this.minTotalBranches;
+    public final EasingCurve<Integer> setMinTotalBranches(int branchCount) {
+        return this.setMinTotalBranches(new ConstantEasingCurve<>(branchCount));
+    }
+
+    /**
+     * Sets the minimum branches for the branch generator
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an easing curve value for the minimum total branches count
+     *
+     * @param branchCount The new minimum branch count
+     * @return The previous minimum branch count
+     */
+    public final EasingCurve<Integer> setMinTotalBranches(EasingCurve<Integer> branchCount) {
+        EasingCurve<Integer> prevBranchCount = this.minTotalBranches;
         this.minTotalBranches = branchCount;
         return prevBranchCount;
     }
@@ -293,18 +390,47 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
         this.afterBranchDraw = Optional.ofNullable(afterBranchDrawIntercept).orElse(ObjectInterceptor.identity());
     }
 
+    @Override
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+        return container.addComputedField("minBranchesPerDivision", this.minBranchesPerDivision)
+                .addComputedField("maxBranchesPerDivision", this.maxBranchesPerDivision)
+                .addComputedField("minLength", this.minLength)
+                .addComputedField("maxLength", this.maxLength)
+                .addComputedField("minAngle", this.minAngle)
+                .addComputedField("maxAngle", this.maxAngle)
+                .addComputedField("minTotalBranches", this.minTotalBranches)
+                .addComputedField("maxTotalBranches", this.maxTotalBranches);
+    }
+
     private void generateFractal(
             ApelServerRenderer renderer,
             DrawContext drawContext,
             Vector3f start,
             int subdivs
     ) {
-        boolean surpassedMinimumWithOddsNotFavour = (subdivs >= this.minBranchesPerDivision && rand.nextBoolean());
-        if (subdivs == this.maxBranchesPerDivision || surpassedMinimumWithOddsNotFavour) return;
-        float currLength = MathHelper.nextFloat(rand, this.minLength, this.maxLength);
-        float currAngleX = MathHelper.nextFloat(rand, this.minAngle.x, this.maxAngle.x);
-        float currAngleY = MathHelper.nextFloat(rand, this.minAngle.y, this.maxAngle.y);
-        float currAngleZ = MathHelper.nextFloat(rand, this.minAngle.z, this.maxAngle.z);
+        ComputedEasingPO computedEasings = drawContext.getComputedEasings();
+        int currMinBranchesPerDivision = (int) computedEasings.getComputedField("minBranchesPerDivision");
+        int currMaxBranchesPerDivision = (int) computedEasings.getComputedField("maxBranchesPerDivision");
+        if (currMinBranchesPerDivision <= 0) {
+            throw new IllegalArgumentException("Minimum Branch Count Per Division has to be positive and non-zero");
+        } else if (currMaxBranchesPerDivision <= 0) {
+            throw new IllegalArgumentException("Maximum Branch Count Per Division has to be positive and non-zero");
+        }
+        float currMinLength = (float) computedEasings.getComputedField("minLength");
+        float currMaxLength = (float) computedEasings.getComputedField("maxLength");
+        if (currMinLength <= 0) {
+            throw new IllegalArgumentException("The minimum length's value is lower than or equal to zero");
+        } else if (currMaxLength <= 0) {
+            throw new IllegalArgumentException("The maximum length's value is lower than or equal to zero");
+        }
+        Vector3f currMinAngle = (Vector3f) computedEasings.getComputedField("minAngle");
+        Vector3f currMaxAngle = (Vector3f) computedEasings.getComputedField("maxAngle");
+        boolean surpassedMinimumWithOddsNotFavour = (subdivs >= currMinBranchesPerDivision && rand.nextBoolean());
+        if (subdivs == currMaxBranchesPerDivision || surpassedMinimumWithOddsNotFavour) return;
+        float currLength = MathHelper.nextFloat(rand, currMinLength, currMaxLength);
+        float currAngleX = MathHelper.nextFloat(rand, currMinAngle.x, currMaxAngle.x);
+        float currAngleY = MathHelper.nextFloat(rand, currMinAngle.y, currMaxAngle.y);
+        float currAngleZ = MathHelper.nextFloat(rand, currMinAngle.z, currMaxAngle.z);
         Vector3f end = new Vector3f(start).add(currLength, currLength, currLength);
         /*
         drawContext.addMetadata(SHOULD_RENDER, true);
@@ -322,8 +448,8 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
                 drawContext.getPosition(),
                 new Vector3f(start).add(drawContext.getPosition()),
                 end.add(drawContext.getPosition()),
-                this.rotation,
-                this.amount
+                computedEasings.computedRotation,
+                computedEasings.computedAmount
         );
         subdivs += 1;
         /*
@@ -341,7 +467,15 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        int totalCount = MathHelper.nextInt(rand, this.minTotalBranches, this.maxTotalBranches);
+        ComputedEasingPO computedEasings = drawContext.getComputedEasings();
+        int currMinTotalBranches = (int) computedEasings.getComputedField("minTotalBranches");
+        int currMaxTotalBranches = (int) computedEasings.getComputedField("maxTotalBranches");
+        if (currMinTotalBranches <= 0) {
+            throw new IllegalArgumentException("Minimum Total Branch Count has to be positive and non-zero");
+        } else if (currMaxTotalBranches <= 0) {
+            throw new IllegalArgumentException("Maximum Total Branch Count has to be positive and non-zero");
+        }
+        int totalCount = MathHelper.nextInt(rand, currMinTotalBranches, currMaxTotalBranches);
         this.beforeDraw.apply(drawContext, this);
         for (int i = 0; i < totalCount; i++) {
             generateFractal(renderer, drawContext, new Vector3f(0), 0);
@@ -350,14 +484,14 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleBranchGen> {
-        protected float minLengthThreshold;
-        protected float maxLengthThreshold;
-        protected int maxTotalBranches = 1;
-        protected int minTotalBranches = 1;
-        protected int maxBranchesPerDivision = 1;
-        protected int minBranchesPerDivision = 1;
-        protected Vector3f minAngle;
-        protected Vector3f maxAngle;
+        protected EasingCurve<Float> minLengthThreshold;
+        protected EasingCurve<Float> maxLengthThreshold;
+        protected EasingCurve<Integer>  maxTotalBranches = new ConstantEasingCurve<>(1);
+        protected EasingCurve<Integer> minTotalBranches = new ConstantEasingCurve<>(1);
+        protected EasingCurve<Integer> maxBranchesPerDivision = new ConstantEasingCurve<>(1);
+        protected EasingCurve<Integer> minBranchesPerDivision = new ConstantEasingCurve<>(1);
+        protected EasingCurve<Vector3f> minAngle;
+        protected EasingCurve<Vector3f> maxAngle;
         protected ObjectInterceptor<ParticleBranchGen> afterBranchDraw;
         protected ObjectInterceptor<ParticleBranchGen> beforeBranchDraw;
 
@@ -367,10 +501,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set the number of maximum branches per division on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B maximumBranchesPerDivision(int maxBranches) {
-            if (maxBranches <= 0) {
-                throw new IllegalArgumentException("The Argument maxBranches is negative or equal to zero");
-            }
+        public B maximumBranchesPerDivision(EasingCurve<Integer> maxBranches) {
             this.maxBranchesPerDivision = maxBranches;
             return self();
         }
@@ -379,10 +510,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set the number of minimum branches per division on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B minimumBranchesPerDivision(int minBranches) {
-            if (minBranches <= 0) {
-                throw new IllegalArgumentException("The Argument minBranches is negative or equal to zero");
-            }
+        public B minimumBranchesPerDivision(EasingCurve<Integer> minBranches) {
             this.minBranchesPerDivision = minBranches;
             return self();
         }
@@ -391,10 +519,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set the number of maximum total branches on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B maximumTotalBranches(int maxTotalBranches) {
-            if (maxTotalBranches <= 0) {
-                throw new IllegalArgumentException("The Argument maxTotalBranches is negative or equal to zero");
-            }
+        public B maximumTotalBranches(EasingCurve<Integer> maxTotalBranches) {
             this.maxTotalBranches = maxTotalBranches;
             return self();
         }
@@ -403,10 +528,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set the number of minimum total branches on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B minimumTotalBranches(int minTotalBranches) {
-            if (minTotalBranches <= 0) {
-                throw new IllegalArgumentException("The Argument minTotalBranches is negative or equal to zero");
-            }
+        public B minimumTotalBranches(EasingCurve<Integer> minTotalBranches) {
             this.minTotalBranches = minTotalBranches;
             return self();
         }
@@ -415,7 +537,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set the minimum branch angle on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B minimumAngle(Vector3f minAngle) {
+        public B minimumAngle(EasingCurve<Vector3f> minAngle) {
             this.minAngle = minAngle;
             return self();
         }
@@ -424,7 +546,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set the maximum branch angle on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B maximumAngle(Vector3f maxAngle) {
+        public B maximumAngle(EasingCurve<Vector3f> maxAngle) {
             this.maxAngle = maxAngle;
             return self();
         }
@@ -433,7 +555,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set the minimum branch length the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B minLengthThreshold(float minLength) {
+        public B minLengthThreshold(EasingCurve<Float> minLength) {
             this.minLengthThreshold = minLength;
             return self();
         }
@@ -442,7 +564,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set the maximum branch length on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B maxLengthThreshold(float maxLength) {
+        public B maxLengthThreshold(EasingCurve<Float> maxLength) {
             this.maxLengthThreshold = maxLength;
             return self();
         }
@@ -451,7 +573,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set a constant branch length on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B constantLengthThreshold(float length) {
+        public B constantLengthThreshold(EasingCurve<Float> length) {
             this.maxLengthThreshold = length;
             this.minLengthThreshold = length;
             return self();
@@ -461,7 +583,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set a constant branch angle on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B constantAngle(Vector3f angle) {
+        public B constantAngle(EasingCurve<Vector3f> angle) {
             this.maxAngle = angle;
             this.minAngle = angle;
             return self();
@@ -471,7 +593,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set a constant number of branches per division on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B constantBranchesPerDivision(int branchCount) {
+        public B constantBranchesPerDivision(EasingCurve<Integer> branchCount) {
             this.maxBranchesPerDivision = branchCount;
             this.minBranchesPerDivision = branchCount;
             return self();
@@ -481,9 +603,121 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
          * Set a constant number of total branches on the builder. This method is not cumulative;
          * repeated calls will overwrite the value.
          */
-        public B constantTotalBranches(int branchCount) {
+        public B constantTotalBranches(EasingCurve<Integer> branchCount) {
             this.maxTotalBranches = branchCount;
             this.minTotalBranches = branchCount;
+            return self();
+        }
+
+        /**
+         * Set the number of maximum branches per division on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B maximumBranchesPerDivision(int maxBranches) {
+            this.maxBranchesPerDivision = new ConstantEasingCurve<>(maxBranches);
+            return self();
+        }
+
+        /**
+         * Set the number of minimum branches per division on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B minimumBranchesPerDivision(int minBranches) {
+            this.minBranchesPerDivision = new ConstantEasingCurve<>(minBranches);
+            return self();
+        }
+
+        /**
+         * Set the number of maximum total branches on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B maximumTotalBranches(int maxTotalBranches) {
+            this.maxTotalBranches = new ConstantEasingCurve<>(maxTotalBranches);
+            return self();
+        }
+
+        /**
+         * Set the number of minimum total branches on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B minimumTotalBranches(int minTotalBranches) {
+            this.minTotalBranches = new ConstantEasingCurve<>(minTotalBranches);
+            return self();
+        }
+
+        /**
+         * Set the minimum branch angle on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B minimumAngle(Vector3f minAngle) {
+            this.minAngle = new ConstantEasingCurve<>(minAngle);
+            return self();
+        }
+
+        /**
+         * Set the maximum branch angle on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B maximumAngle(Vector3f maxAngle) {
+            this.maxAngle = new ConstantEasingCurve<>(maxAngle);
+            return self();
+        }
+
+        /**
+         * Set the minimum branch length the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B minLengthThreshold(float minLength) {
+            this.minLengthThreshold = new ConstantEasingCurve<>(minLength);
+            return self();
+        }
+
+        /**
+         * Set the maximum branch length on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B maxLengthThreshold(float maxLength) {
+            this.maxLengthThreshold = new ConstantEasingCurve<>(maxLength);
+            return self();
+        }
+
+        /**
+         * Set a constant branch length on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B constantLengthThreshold(float length) {
+            this.maxLengthThreshold = new ConstantEasingCurve<>(length);
+            this.minLengthThreshold = new ConstantEasingCurve<>(length);
+            return self();
+        }
+
+        /**
+         * Set a constant branch angle on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B constantAngle(Vector3f angle) {
+            this.maxAngle = new ConstantEasingCurve<>(angle);
+            this.minAngle = new ConstantEasingCurve<>(angle);
+            return self();
+        }
+
+        /**
+         * Set a constant number of branches per division on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B constantBranchesPerDivision(int branchCount) {
+            this.maxBranchesPerDivision = new ConstantEasingCurve<>(branchCount);
+            this.minBranchesPerDivision = new ConstantEasingCurve<>(branchCount);
+            return self();
+        }
+
+        /**
+         * Set a constant number of total branches on the builder. This method is not cumulative;
+         * repeated calls will overwrite the value.
+         */
+        public B constantTotalBranches(int branchCount) {
+            this.maxTotalBranches = new ConstantEasingCurve<>(branchCount);
+            this.minTotalBranches = new ConstantEasingCurve<>(branchCount);
             return self();
         }
 
