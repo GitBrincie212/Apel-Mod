@@ -1,6 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import org.joml.Vector3f;
 
@@ -10,10 +13,10 @@ import org.joml.Vector3f;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
-    protected Vector3f vertex1;
-    protected Vector3f vertex2;
-    protected Vector3f vertex3;
-    protected Vector3f vertex4;
+    protected EasingCurve<Vector3f> vertex1;
+    protected EasingCurve<Vector3f> vertex2;
+    protected EasingCurve<Vector3f> vertex3;
+    protected EasingCurve<Vector3f> vertex4;
 
     public static Builder<?> builder() {
         return new Builder<>();
@@ -32,10 +35,10 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
     */
     public ParticleTetrahedron(ParticleTetrahedron tetrahedron) {
         super(tetrahedron);
-        this.vertex1 = new Vector3f(tetrahedron.vertex1);
-        this.vertex2 = new Vector3f(tetrahedron.vertex2);
-        this.vertex3 = new Vector3f(tetrahedron.vertex3);
-        this.vertex4 = new Vector3f(tetrahedron.vertex4);
+        this.vertex1 = tetrahedron.vertex1;
+        this.vertex2 = tetrahedron.vertex2;
+        this.vertex3 = tetrahedron.vertex3;
+        this.vertex4 = tetrahedron.vertex4;
     }
 
     private void checkValidTetrahedron(Vector3f vertex1, Vector3f vertex2, Vector3f vertex3, Vector3f vertex4) {
@@ -61,83 +64,165 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
 
     /**
      * Sets the first individual vertex, it returns the previous vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}.
+     * vertices at once then use {@code setVertices}. This method overload will set a constant value
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param newVertex The new vertex
      * @return The previous vertex
      *
-     * @see ParticleTetrahedron#setVertices(Vector3f...)
+     * @see ParticleQuad#setVertices(Vector3f[])
      */
-    public Vector3f setVertex1(Vector3f newVertex) {
-        this.checkValidTetrahedron(newVertex, this.vertex2, this.vertex3, this.vertex4);
-        Vector3f prevVertex1 = this.vertex1;
+    public final EasingCurve<Vector3f> setVertex1(Vector3f newVertex) {
+        return this.setVertex1(new ConstantEasingCurve<>(newVertex));
+    }
+
+    /**
+     * Sets the first individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set an ease curve value
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleQuad#setVertices(Vector3f[])
+     */
+    public final EasingCurve<Vector3f> setVertex1(EasingCurve<Vector3f> newVertex) {
+        EasingCurve<Vector3f> prevVertex = this.vertex1;
         this.vertex1 = newVertex;
-        return prevVertex1;
+        return prevVertex;
     }
 
     /**
      * Sets the second individual vertex, it returns the previous vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}.
-     *
-     * @param newVertex The new vertex
-     * @return The previous vertex
-     *
-     * @see ParticleTetrahedron#setVertices(Vector3f...)
-     */
-    public Vector3f setVertex2(Vector3f newVertex) {
-        this.checkValidTetrahedron(this.vertex1, newVertex, this.vertex3, this.vertex4);
-        Vector3f prevVertex2 = this.vertex2;
-        this.vertex2 = newVertex;
-        return prevVertex2;
-    }
-
-    /**
-     * Sets the third individual vertex, it returns the previous vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}.
-     *
-     * @param newVertex The new vertex
-     * @return The previous vertex
-     *
-     * @see ParticleTetrahedron#setVertices(Vector3f...)
-     */
-    public Vector3f setVertex3(Vector3f newVertex) {
-        this.checkValidTetrahedron(this.vertex1, this.vertex2, newVertex, this.vertex4);
-        Vector3f prevVertex3 = this.vertex3;
-        this.vertex3 = newVertex;
-        return prevVertex3;
-    }
-
-    /**
-     * Sets the third individual vertex, it returns the previous vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}.
-     *
-     * @param newVertex The new vertex
-     * @return The previous vertex
-     *
-     * @see ParticleTetrahedron#setVertices(Vector3f...)
-    */
-    public Vector3f setVertex4(Vector3f newVertex) {
-        this.checkValidTetrahedron(this.vertex1, this.vertex2, this.vertex3, newVertex);
-        Vector3f prevVertex4 = this.vertex4;
-        this.vertex4 = newVertex;
-        return prevVertex4;
-    }
-
-    /**
-     * Sets all vertices at once.  If you want to set one vertex at a time, use individual setters such as
-     * {@link #setVertex1(Vector3f)}.  Returns nothing.
+     * vertices at once then use {@code setVertices}. This method overload will set a constant value
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleQuad#setVertices(Vector3f[])
+     */
+    public final EasingCurve<Vector3f> setVertex2(Vector3f newVertex) {
+        return this.setVertex2(new ConstantEasingCurve<>(newVertex));
+    }
+
+    /**
+     * Sets the second individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set an ease curve value
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleTetrahedron#setVertices(Vector3f[])
+     */
+    public final EasingCurve<Vector3f> setVertex2(EasingCurve<Vector3f> newVertex) {
+        EasingCurve<Vector3f> prevVertex = this.vertex2;
+        this.vertex2 = newVertex;
+        return prevVertex;
+    }
+
+    /**
+     * Sets the third individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set a constant value
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleTetrahedron#setVertices(Vector3f[])
+     */
+    public final EasingCurve<Vector3f> setVertex3(Vector3f newVertex) {
+        return this.setVertex3(new ConstantEasingCurve<>(newVertex));
+    }
+
+    /**
+     * Sets the third individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set a constant value
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleTetrahedron#setVertices(Vector3f[])
+     */
+    public final EasingCurve<Vector3f> setVertex3(EasingCurve<Vector3f> newVertex) {
+        EasingCurve<Vector3f> prevVertex = this.vertex3;
+        this.vertex3 = newVertex;
+        return prevVertex;
+    }
+
+    /**
+     * Sets the fourth individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set a constant value
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleTetrahedron#setVertices(Vector3f[])
+     */
+    public final EasingCurve<Vector3f> setVertex4(Vector3f newVertex) {
+        return this.setVertex4(new ConstantEasingCurve<>(newVertex));
+    }
+
+    /**
+     * Sets the fourth individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set an ease curve value
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleTetrahedron#setVertices(Vector3f[])
+     */
+    public final EasingCurve<Vector3f> setVertex4(EasingCurve<Vector3f> newVertex) {
+        EasingCurve<Vector3f> prevVertex = this.vertex4;
+        this.vertex4 = newVertex;
+        return prevVertex;
+    }
+
+    /** Sets all vertices at once instead of one at a time.
+     * If you want to set one vertex at a time, then its recommend to use
+     * the methods {@link #setVertex1(Vector3f)}, etc. This method overload
+     * sets a constant value for each vertex
      *
      * @param vertices The vertices to modify
      *
      * @throws IllegalArgumentException if the number of vertices supplied isn't equal to 4
-    */
-    public final void setVertices(Vector3f... vertices) {
+     */
+    public final void setVertices(Vector3f ...vertices) throws IllegalArgumentException {
         if (vertices.length != 4) {
-            throw new IllegalArgumentException("Unbalanced vertices, there must be only 4 vertices");
+            throw new IllegalArgumentException("The amount of vertices must be 4");
         }
-        this.checkValidTetrahedron(vertices);
+        this.vertex1 = new ConstantEasingCurve<>(vertices[0]);
+        this.vertex2 = new ConstantEasingCurve<>(vertices[1]);
+        this.vertex3 = new ConstantEasingCurve<>(vertices[2]);
+        this.vertex4 = new ConstantEasingCurve<>(vertices[3]);
+    }
+
+    /** Sets all vertices at once instead of one at a time.
+     * If you want to set one vertex at a time, then its recommend to use
+     * the methods {@link #setVertex1(Vector3f)}, etc. This method overload
+     * sets an easing curve value for each vertex
+     *
+     * @param vertices The vertices to modify
+     *
+     * @throws IllegalArgumentException if the number of vertices supplied isn't equal to 4
+     */
+    @SafeVarargs
+    public final void setVertices(EasingCurve<Vector3f>... vertices) throws IllegalArgumentException {
+        if (vertices.length != 4) {
+            throw new IllegalArgumentException("The amount of vertices must be 4");
+        }
         this.vertex1 = vertices[0];
         this.vertex2 = vertices[1];
         this.vertex3 = vertices[2];
@@ -148,7 +233,7 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
      *
      * @return The first individual vertex
     */
-    public Vector3f getVertex1() {
+    public EasingCurve<Vector3f> getVertex1() {
         return this.vertex1;
     }
 
@@ -156,7 +241,7 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
      *
      * @return The second individual vertex
     */
-    public Vector3f getVertex2() {
+    public EasingCurve<Vector3f> getVertex2() {
         return this.vertex2;
     }
 
@@ -164,7 +249,7 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
      *
      * @return The third individual vertex
     */
-    public Vector3f getVertex3() {
+    public EasingCurve<Vector3f> getVertex3() {
         return this.vertex3;
     }
 
@@ -172,36 +257,52 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
      *
      * @return The fourth individual vertex
     */
-    public Vector3f getVertex4() {
+    public EasingCurve<Vector3f> getVertex4() {
         return this.vertex4;
+    }
+
+    @Override
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+        return container.addComputedField("vertex1", this.vertex1)
+                .addComputedField("vertex2", this.vertex2)
+                .addComputedField("vertex3", this.vertex3)
+                .addComputedField("vertex4", this.vertex4);
     }
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         // Defensive copy of `drawPos`
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
+        ComputedEasingPO computedEasing = drawContext.getComputedEasings();
+        Vector3f currVertex1 = (Vector3f) computedEasing.getComputedField("vertex1");
+        Vector3f currVertex2 = (Vector3f) computedEasing.getComputedField("vertex2");
+        Vector3f currVertex3 = (Vector3f) computedEasing.getComputedField("vertex3");
+        Vector3f currVertex4 = (Vector3f) computedEasing.getComputedField("vertex4");
+        checkValidTetrahedron(currVertex1, currVertex2, currVertex3, currVertex4);
+        Vector3f computedRotation = computedEasing.computedRotation;
+        int computedAmount = computedEasing.computedAmount;
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasing.computedOffset);
 
         int step = drawContext.getCurrentStep();
-        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex1, this.vertex2, this.rotation, this.amount);
-        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex1, this.vertex3, this.rotation, this.amount);
-        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex1, this.vertex4, this.rotation, this.amount);
-        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex2, this.vertex3, this.rotation, this.amount);
-        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex2, this.vertex4, this.rotation, this.amount);
-        renderer.drawLine(this.particleEffect, step, objectDrawPos, this.vertex3, this.vertex4, this.rotation, this.amount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex1, currVertex2, computedRotation, computedAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex1, currVertex3, computedRotation, computedAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex1, currVertex4, computedRotation, computedAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex2, currVertex3, computedRotation, computedAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex2, currVertex4, computedRotation, computedAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex3, currVertex4, computedRotation, computedAmount);
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleTetrahedron> {
-        protected Vector3f vertex1;
-        protected Vector3f vertex2;
-        protected Vector3f vertex3;
-        protected Vector3f vertex4;
+        protected EasingCurve<Vector3f> vertex1;
+        protected EasingCurve<Vector3f> vertex2;
+        protected EasingCurve<Vector3f> vertex3;
+        protected EasingCurve<Vector3f> vertex4;
 
         private Builder() {}
 
         /**
          * Set vertex1 on the builder.  This method is not cumulative; repeated calls will overwrite the value.
          */
-        public B vertex1(Vector3f vertex1) {
+        public B vertex1(EasingCurve<Vector3f> vertex1) {
             this.vertex1 = vertex1;
             return self();
         }
@@ -209,7 +310,7 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
         /**
          * Set vertex2 on the builder.  This method is not cumulative; repeated calls will overwrite the value.
          */
-        public B vertex2(Vector3f vertex2) {
+        public B vertex2(EasingCurve<Vector3f> vertex2) {
             this.vertex2 = vertex2;
             return self();
         }
@@ -217,7 +318,7 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
         /**
          * Set vertex3 on the builder.  This method is not cumulative; repeated calls will overwrite the value.
          */
-        public B vertex3(Vector3f vertex3) {
+        public B vertex3(EasingCurve<Vector3f> vertex3) {
             this.vertex3 = vertex3;
             return self();
         }
@@ -225,8 +326,40 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
         /**
          * Set vertex4 on the builder.  This method is not cumulative; repeated calls will overwrite the value.
          */
-        public B vertex4(Vector3f vertex4) {
+        public B vertex4(EasingCurve<Vector3f> vertex4) {
             this.vertex4 = vertex4;
+            return self();
+        }
+
+        /**
+         * Set vertex1 on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B vertex1(Vector3f vertex1) {
+            this.vertex1 = new ConstantEasingCurve<>(vertex1);
+            return self();
+        }
+
+        /**
+         * Set vertex2 on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B vertex2(Vector3f vertex2) {
+            this.vertex2 = new ConstantEasingCurve<>(vertex2);
+            return self();
+        }
+
+        /**
+         * Set vertex3 on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B vertex3(Vector3f vertex3) {
+            this.vertex3 = new ConstantEasingCurve<>(vertex3);
+            return self();
+        }
+
+        /**
+         * Set vertex4 on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B vertex4(Vector3f vertex4) {
+            this.vertex4 = new ConstantEasingCurve<>(vertex4);
             return self();
         }
 
