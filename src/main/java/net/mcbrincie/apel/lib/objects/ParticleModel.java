@@ -1,6 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.models.ModelParserManager;
@@ -25,8 +28,8 @@ import java.util.List;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleModel extends ParticleObject<ParticleModel> {
     protected final ObjModel objModel;
-    protected Vector3f scale;
-    protected float particle_interval = -1f;
+    protected EasingCurve<Vector3f> scale;
+    protected EasingCurve<Float> particle_interval = null;
 
     public static Key<ObjModel> objectModelKey(String name) {
         return new Key<>(name) { };
@@ -47,7 +50,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
         this.setAfterDraw(builder.afterDraw);
         this.objModel = builder.objectModel;
         this.setScale(builder.scale);
-        if (builder.interval != -1.0f) {
+        if (builder.interval != null) {
             this.setInterval(builder.interval);
             return;
         }
@@ -71,15 +74,27 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
      * Negative scaling will invert the corresponding axis.  Zero scaling is not allowed.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the scale
      *
      * @param newScale the new scale
      * @return the previously used scale
     */
-    public final Vector3f setScale(Vector3f newScale) {
-        if (newScale.x == 0 || newScale.y == 0 || newScale.z == 0) {
-            throw new IllegalArgumentException("Scale must non-zero");
-        }
-        Vector3f prevScale = this.scale;
+    public final EasingCurve<Vector3f> setScale(Vector3f newScale) {
+        return this.setScale(new ConstantEasingCurve<>(newScale));
+    }
+
+    /**
+     * Set the scale of this ParticleModel and returns the previous scaling that was used.
+     * Negative scaling will invert the corresponding axis. Zero scaling is not allowed.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the scale
+     *
+     * @param newScale the new scale
+     * @return the previously used scale
+     */
+    public final EasingCurve<Vector3f> setScale(EasingCurve<Vector3f> newScale) {
+        EasingCurve<Vector3f> prevScale = this.scale;
         this.scale = newScale;
         return prevScale;
     }
@@ -88,13 +103,13 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
      *
      * @return the scale of the ParticleModel
      */
-    public Vector3f getScale() {return this.scale;}
+    public EasingCurve<Vector3f> getScale() {return this.scale;}
 
     /** Gets the interval of particles that are currently in use and returns it.
      *
      * @return The currently used number of particles
      */
-    public float getInterval() {
+    public EasingCurve<Float> getInterval() {
         return this.particle_interval;
     }
 
@@ -107,11 +122,21 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
      * @param newInterval The new particle interval
      * @return The previously used interval
      */
-    public final float setInterval(float newInterval) {
-        if (newInterval <= 0) {
-            throw new IllegalArgumentException("Interval of particles has to be above 0");
-        }
-        float prevInterval = this.particle_interval;
+    public final EasingCurve<Float> setInterval(float newInterval) {
+        return this.setInterval(new ConstantEasingCurve<>(newInterval));
+    }
+
+    /**
+     * Sets the interval of particles to use for rendering the model. This makes the model more detailed
+     * and saves the number of particles. It returns the previously used number of particles.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newInterval The new particle interval
+     * @return The previously used interval
+     */
+    public final EasingCurve<Float> setInterval(EasingCurve<Float> newInterval) {
+        EasingCurve<Float> prevInterval = this.particle_interval;
         this.particle_interval = newInterval;
         return prevInterval;
     }
@@ -122,8 +147,18 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
     }
 
     @Override
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+        if (this.particle_interval != null) {
+            container.addComputedField("interval", this.particle_interval);
+        }
+        return container.addComputedField("scale", this.scale);
+    }
+
+    @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
+        ComputedEasingPO computedEasingPO = drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
+        Vector3f computedScale = (Vector3f) computedEasingPO.getComputedField("scale");
 
         ObjModel objectModel = drawContext.getMetadata(OBJECT_MODEL, this.objModel);
         for (ObjModel.Face face : objectModel.faces()) {
@@ -132,32 +167,34 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
 
             for (ObjModel.Vertex vertex : face.vertices()) {
                 // Defensive copies of internal vertices
-                positions.add(new Vector3f(vertex.position()).mul(this.scale));
+                positions.add(new Vector3f(vertex.position()).mul(computedScale));
             }
 
             int step = drawContext.getCurrentStep();
             for (int i = 0; i < positions.size() - 1; i++) {
                 Vector3f vertex1 = positions.get(i);
                 Vector3f vertex2 = positions.get(i + 1);
-                int useAmount = this.amount;
-                if (this.particle_interval != -1.0f) {
+                int useAmount = computedEasingPO.computedAmount;
+                if (this.particle_interval != null) {
+                    float particleInterval = (float) computedEasingPO.getComputedField("interval");
                     float dist = vertex1.distance(vertex2);
-                    useAmount = (int) Math.ceil(dist / this.particle_interval);
+                    useAmount = (int) Math.ceil(dist / particleInterval);
                     // System.out.printf("%s %s%n", dist, useAmount);
                 }
                 renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex1, vertex2,
-                        this.rotation, useAmount);
+                        computedEasingPO.computedRotation, useAmount);
             }
             Vector3f vertex1 = positions.getLast();
             Vector3f vertex2 = positions.getFirst();
             // Close the face
-            int useAmount = this.amount;
-            if (this.particle_interval != -1.0f) {
+            int useAmount = computedEasingPO.computedAmount;
+            if (this.particle_interval != null) {
+                float particleInterval = (float) computedEasingPO.getComputedField("interval");
                 float dist = vertex1.distance(vertex2);
-                useAmount = (int) Math.ceil(dist / this.particle_interval);
+                useAmount = (int) Math.ceil(dist / particleInterval);
             }
             renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex1, vertex2,
-                    this.rotation, useAmount);
+                    computedEasingPO.computedRotation, useAmount);
         }
     }
 
@@ -169,9 +206,9 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
     */
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleModel> {
         private static final ModelParserManager MODEL_PARSER_MANAGER = new ModelParserManager();
-        protected Vector3f scale = new Vector3f(1);
+        protected EasingCurve<Vector3f> scale = new ConstantEasingCurve<>(new Vector3f(1));
         protected String filename;
-        protected float interval = -1f;
+        protected EasingCurve<Float> interval;
         protected ObjModel objectModel;
 
         private Builder() {}
@@ -185,7 +222,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
          * @return The builder instance
         */
         public B scale(Vector3f scale) {
-            this.scale = scale;
+            this.scale = new ConstantEasingCurve<>(scale);
             return self();
         }
 
@@ -197,7 +234,20 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
          * @return The builder instance
         */
         public B scale(float scale) {
-            this.scale = new Vector3f(scale);
+            this.scale = new ConstantEasingCurve<>(new Vector3f(scale));
+            return self();
+        }
+
+        /**
+         * Scale the particle model by distinct values per axis.  This method is not cumulative; repeated calls will
+         * overwrite values.  To scale uniformly, see {@link #scale(float)}, which shares overwrite behavior with this
+         * method.
+         *
+         * @param scale The scale per axis xyz
+         * @return The builder instance
+         */
+        public B scale(EasingCurve<Vector3f> scale) {
+            this.scale = scale;
             return self();
         }
 
@@ -227,6 +277,15 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
          * value. When an interval is supplied, it prioritizes that instead of steps
          */
         public final B interval(float interval) {
+            this.interval = new ConstantEasingCurve<>(interval);
+            return self();
+        }
+
+        /**
+         * Set the particle interval on the builder.  This method is not cumulative; repeated calls will overwrite the
+         * value. When an interval is supplied, it prioritizes that instead of steps
+         */
+        public final B interval(EasingCurve<Float> interval) {
             this.interval = interval;
             return self();
         }
