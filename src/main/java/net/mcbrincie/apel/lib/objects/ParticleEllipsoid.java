@@ -1,6 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import org.joml.Vector3f;
 
@@ -12,9 +15,9 @@ import org.joml.Vector3f;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
     public static final double SQRT_5_PLUS_1 = 3.23606;
-    protected float xSemiAxis;
-    protected float ySemiAxis;
-    protected float zSemiAxis;
+    protected EasingCurve<Float> xSemiAxis;
+    protected EasingCurve<Float> ySemiAxis;
+    protected EasingCurve<Float> zSemiAxis;
 
     public static Builder<?> builder() {
         return new Builder<>();
@@ -46,7 +49,7 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
      *
      * @return the length of the X semi-axis
      */
-    public float getXSemiAxis() {
+    public EasingCurve<Float> getXSemiAxis() {
         return this.xSemiAxis;
     }
 
@@ -54,15 +57,26 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
      * Sets length of the X semi-axis.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the xSemiAxis
      *
      * @param xSemiAxis The length of the X semi-axis
      * @return The previous length of the X semi-axis
      */
-    public final float setXSemiAxis(float xSemiAxis) {
-        if (xSemiAxis <= 0) {
-            throw new IllegalArgumentException("Length of X semi-axis cannot be below or equal to 0");
-        }
-        float prevXSemiAxis = this.xSemiAxis;
+    public final EasingCurve<Float> setXSemiAxis(float xSemiAxis) {
+        return this.setXSemiAxis(new ConstantEasingCurve<>(xSemiAxis));
+    }
+
+    /**
+     * Sets length of the X semi-axis.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the xSemiAxis
+     *
+     * @param xSemiAxis The length of the X semi-axis
+     * @return The previous length of the X semi-axis
+     */
+    public final EasingCurve<Float> setXSemiAxis(EasingCurve<Float> xSemiAxis) {
+        EasingCurve<Float> prevXSemiAxis = this.xSemiAxis;
         this.xSemiAxis = xSemiAxis;
         return prevXSemiAxis;
     }
@@ -72,7 +86,7 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
      *
      * @return the length of the Y semi-axis
      */
-    public float getYSemiAxis() {
+    public EasingCurve<Float> getYSemiAxis() {
         return this.ySemiAxis;
     }
 
@@ -80,15 +94,26 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
      * Sets length of the Y semi-axis.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the ySemiAxis
      *
      * @param ySemiAxis The length of the Y semi-axis
      * @return The previous length of the Y semi-axis
      */
-    public final float setYSemiAxis(float ySemiAxis) {
-        if (ySemiAxis <= 0) {
-            throw new IllegalArgumentException("Length of Y semi-axis cannot be below or equal to 0");
-        }
-        float prevYSemiAxis = this.ySemiAxis;
+    public final EasingCurve<Float> setYSemiAxis(float ySemiAxis) {
+        return this.setYSemiAxis(new ConstantEasingCurve<>(ySemiAxis));
+    }
+
+    /**
+     * Sets length of the Y semi-axis.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the ySemiAxis
+     *
+     * @param ySemiAxis The length of the Y semi-axis
+     * @return The previous length of the Y semi-axis
+     */
+    public final EasingCurve<Float> setYSemiAxis(EasingCurve<Float> ySemiAxis) {
+        EasingCurve<Float> prevYSemiAxis = this.ySemiAxis;
         this.ySemiAxis = ySemiAxis;
         return prevYSemiAxis;
     }
@@ -98,7 +123,7 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
      *
      * @return the length of the Z semi-axis
      */
-    public float getZSemiAxis() {
+    public EasingCurve<Float> getZSemiAxis() {
         return this.zSemiAxis;
     }
 
@@ -106,31 +131,56 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
      * Sets length of the Z semi-axis.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the zSemiAxis
      *
      * @param zSemiAxis The length of the Z semi-axis
      * @return The previous length of the Z semi-axis
      */
-    public final float setZSemiAxis(float zSemiAxis) {
-        if (zSemiAxis <= 0) {
-            throw new IllegalArgumentException("Length of Z semi-axis cannot be below or equal to 0");
-        }
-        float prevZSemiAxis = this.zSemiAxis;
+    public final EasingCurve<Float> setZSemiAxis(float zSemiAxis) {
+        return this.setZSemiAxis(new ConstantEasingCurve<>(zSemiAxis));
+    }
+
+    /**
+     * Sets length of the Z semi-axis.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the zSemiAxis
+     *
+     * @param zSemiAxis The length of the Z semi-axis
+     * @return The previous length of the Z semi-axis
+     */
+    public final EasingCurve<Float> setZSemiAxis(EasingCurve<Float> zSemiAxis) {
+        EasingCurve<Float> prevZSemiAxis = this.zSemiAxis;
         this.zSemiAxis = zSemiAxis;
         return prevZSemiAxis;
     }
 
     @Override
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+        return container.addComputedField("xSemiAxis", this.xSemiAxis)
+                .addComputedField("ySemiAxis", this.ySemiAxis)
+                .addComputedField("zSemiAxis", this.zSemiAxis);
+    }
+
+    @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
-        renderer.drawEllipsoid(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, this.xSemiAxis,
-                               this.ySemiAxis, this.zSemiAxis, this.rotation, this.amount
+        ComputedEasingPO computedEasings = drawContext.getComputedEasings();
+        float xSemiAxis = (float) computedEasings.getComputedField("xSemiAxis");
+        float ySemiAxis = (float) computedEasings.getComputedField("ySemiAxis");
+        float zSemiAxis = (float) computedEasings.getComputedField("zSemiAxis");
+        if (xSemiAxis <= 0 || ySemiAxis <= 0 || zSemiAxis <= 0) {
+            throw new RuntimeException("One of the semi axis values is negative or zero");
+        }
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);
+        renderer.drawEllipsoid(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, xSemiAxis,
+                ySemiAxis, zSemiAxis, computedEasings.computedRotation, computedEasings.computedAmount
         );
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleEllipsoid> {
-        protected float xSemiAxis;
-        protected float ySemiAxis;
-        protected float zSemiAxis;
+        protected EasingCurve<Float> xSemiAxis;
+        protected EasingCurve<Float> ySemiAxis;
+        protected EasingCurve<Float> zSemiAxis;
 
         private Builder() {}
 
@@ -138,7 +188,7 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
          * Set the X semi-axis on the builder.  This method is not cumulative; repeated calls will overwrite the value.
          */
         public B xSemiAxis(float xSemiAxis) {
-            this.xSemiAxis = xSemiAxis;
+            this.xSemiAxis = new ConstantEasingCurve<>(xSemiAxis);
             return self();
         }
 
@@ -146,7 +196,7 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
          * Set the Y semi-axis on the builder.  This method is not cumulative; repeated calls will overwrite the value.
          */
         public B ySemiAxis(float ySemiAxis) {
-            this.ySemiAxis = ySemiAxis;
+            this.ySemiAxis = new ConstantEasingCurve<>(ySemiAxis);
             return self();
         }
 
@@ -154,6 +204,30 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
          * Set the Z semi-axis on the builder.  This method is not cumulative; repeated calls will overwrite the value.
          */
         public B zSemiAxis(float zSemiAxis) {
+            this.zSemiAxis = new ConstantEasingCurve<>(zSemiAxis);
+            return self();
+        }
+
+        /**
+         * Set the X semi-axis on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B xSemiAxis(EasingCurve<Float> xSemiAxis) {
+            this.xSemiAxis = xSemiAxis;
+            return self();
+        }
+
+        /**
+         * Set the Y semi-axis on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B ySemiAxis(EasingCurve<Float> ySemiAxis) {
+            this.ySemiAxis = ySemiAxis;
+            return self();
+        }
+
+        /**
+         * Set the Z semi-axis on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B zSemiAxis(EasingCurve<Float> zSemiAxis) {
             this.zSemiAxis = zSemiAxis;
             return self();
         }
