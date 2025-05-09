@@ -1,6 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import org.joml.Vector3f;
 
@@ -19,8 +22,8 @@ import org.joml.Vector3f;
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleLine extends ParticleObject<ParticleLine> {
-    protected Vector3f start;
-    protected Vector3f end;
+    protected EasingCurve<Vector3f> start;
+    protected EasingCurve<Vector3f> end;
 
     public static Builder<?> builder() {
         return new Builder<>();
@@ -41,15 +44,15 @@ public class ParticleLine extends ParticleObject<ParticleLine> {
     */
     public ParticleLine(ParticleLine line) {
         super(line);
-        this.start = new Vector3f(line.start);
-        this.end = new Vector3f(line.end);
+        this.start = line.start;
+        this.end = line.end;
     }
 
     /** Gets the starting endpoint
      *
      * @return The starting endpoint
      */
-    public Vector3f getStart() {
+    public EasingCurve<Vector3f> getStart() {
         return this.start;
     }
 
@@ -57,15 +60,28 @@ public class ParticleLine extends ParticleObject<ParticleLine> {
      * Sets the starting point of the line.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This is an overload for specifying a constant value for the start
      *
      * @param start The new starting point of the line
      * @return The previous starting point
     */
-    public final Vector3f setStart(Vector3f start) {
-        if (start.equals(this.end)) {
-            throw new IllegalArgumentException("Endpoints must not be equal");
-        }
-        Vector3f prevStart = this.start;
+    public final EasingCurve<Vector3f> setStart(Vector3f start) {
+        EasingCurve<Vector3f> prevStart = this.start;
+        this.start = new ConstantEasingCurve<>(start);
+        return prevStart;
+    }
+
+    /**
+     * Sets the starting point of the line.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This is an overload for specifying an easing curve for the start
+     *
+     * @param start The new starting point of the line
+     * @return The previous starting point
+     */
+    public final EasingCurve<Vector3f> setStart(EasingCurve<Vector3f> start) {
+        EasingCurve<Vector3f> prevStart = this.start;
         this.start = start;
         return prevStart;
     }
@@ -74,7 +90,7 @@ public class ParticleLine extends ParticleObject<ParticleLine> {
      *
      * @return The ending endpoint
      */
-    public Vector3f getEnd() {
+    public EasingCurve<Vector3f> getEnd() {
         return this.end;
     }
 
@@ -82,43 +98,91 @@ public class ParticleLine extends ParticleObject<ParticleLine> {
      * Sets the ending point of the line.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This is an overload for specifying an easing curve for the end
      *
      * @param end The new ending point of the line
      * @return The previous ending point
-    */
-    public final Vector3f setEnd(Vector3f end) {
-        if (end.equals(this.start)) {
-            throw new IllegalArgumentException("Endpoints must not be equal");
-        }
-        Vector3f prevEnd = this.end;
+     */
+    public final EasingCurve<Vector3f> setEnd(EasingCurve<Vector3f> end) {
+        EasingCurve<Vector3f> prevEnd = this.end;
         this.end = end;
         return prevEnd;
     }
 
+    /**
+     * Sets the ending point of the line.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This is an overload for specifying a constant value for the end
+     *
+     * @param end The new ending point of the line
+     * @return The previous ending point
+    */
+    public final EasingCurve<Vector3f> setEnd(Vector3f end) {
+        EasingCurve<Vector3f> prevEnd = this.end;
+        this.end = new ConstantEasingCurve<>(end);
+        return prevEnd;
+    }
+
+    @Override
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+        return container
+                .addComputedField("start", this.start)
+                .addComputedField("end", this.end);
+    }
+
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
-        renderer.drawLine(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, this.start, this.end, this.rotation, this.amount);
+        Vector3f currOffset = drawContext.getComputedEasings().computedOffset;
+        int currAmount = drawContext.getComputedEasings().computedAmount;
+        Vector3f currRotation = drawContext.getComputedEasings().computedRotation;
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(currOffset);
+        Vector3f currStart = (Vector3f) drawContext.getComputedEasings().getComputedField("start");
+        Vector3f currEnd = (Vector3f) drawContext.getComputedEasings().getComputedField("end");
+        if (currStart.equals(currEnd)) {
+            throw new IllegalArgumentException("Endpoints must not be equal");
+        }
+        renderer.drawLine(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currStart, currEnd, currRotation, currAmount);
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleLine> {
-        protected Vector3f start = new Vector3f();
-        protected Vector3f end = new Vector3f();
+        protected EasingCurve<Vector3f> start = new ConstantEasingCurve<>(new Vector3f());
+        protected EasingCurve<Vector3f> end = new ConstantEasingCurve<>(new Vector3f());
 
         private Builder() {}
 
         /**
-         * Set the start point on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         * Set the start point on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This overload sets a constant value of the start point
          */
         public B start(Vector3f start) {
+            this.start = new ConstantEasingCurve<>(start);
+            return self();
+        }
+
+        /**
+         * Set the end point on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         * This overload sets a constant value of the end point
+         */
+        public B end(Vector3f end) {
+            this.end = new ConstantEasingCurve<>(end);
+            return self();
+        }
+
+        /**
+         * Set the start point on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         * This overload sets an easing curve value of the start point
+         */
+        public B start(EasingCurve<Vector3f> start) {
             this.start = start;
             return self();
         }
 
         /**
          * Set the end point on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         * This overload sets an easing curve value of the end point
          */
-        public B end(Vector3f end) {
+        public B end(EasingCurve<Vector3f> end) {
             this.end = end;
             return self();
         }
