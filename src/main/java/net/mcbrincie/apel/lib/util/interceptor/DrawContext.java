@@ -1,6 +1,7 @@
 package net.mcbrincie.apel.lib.util.interceptor;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
@@ -45,6 +46,7 @@ public class DrawContext {
     private final ServerWorld world;
     private final float deltaTickTime;
     private final Map<Key<?>, Object> metadata;
+    private final ComputedEasingPO computedEasingPO;
 
     /** Constructs an InterceptorData object to pass to an interceptor
      *
@@ -52,12 +54,13 @@ public class DrawContext {
      * @param position the position at which drawing will occur
      * @param step the current animation step
      */
-    public DrawContext(ServerWorld world, Vector3f position, int step, int numberOfSteps, float deltaTickTime) {
+    public DrawContext(ServerWorld world, Vector3f position, int step, int numberOfSteps, float deltaTickTime, ComputedEasingPO computedEasingPO) {
         this.currentStep = step;
         this.position = position;
         this.world = world;
         this.metadata = new HashMap<>();
         this.numberOfSteps = numberOfSteps;
+        this.computedEasingPO = computedEasingPO;
         this.deltaTickTime = deltaTickTime;
     }
 
@@ -68,15 +71,17 @@ public class DrawContext {
         this.numberOfSteps = context.numberOfSteps;
         this.metadata = new HashMap<>();
         this.world = context.world;
+        this.computedEasingPO = context.computedEasingPO;
     }
 
-    public DrawContext(ApelServerRenderer renderer, DrawContext context) {
+    public DrawContext(ApelServerRenderer renderer, DrawContext context, ComputedEasingPO computedEasingPO) {
         this(
                 renderer.getServerWorld(),
                 context.getPosition(),
                 context.getCurrentStep(),
                 context.getNumberOfStep(),
-                context.getDeltaTickTime()
+                context.getDeltaTickTime(),
+                computedEasingPO
         );
     }
 
@@ -128,6 +133,14 @@ public class DrawContext {
      */
     public int getCurrentStep() {
         return currentStep;
+    }
+
+    /** Get the computed easing of the particle object (rotation, offset and amount specifically)
+     *
+     * @return a collection of the computed easings
+     */
+    public ComputedEasingPO getComputedEasings() {
+        return computedEasingPO;
     }
 
     /** Get the number of steps of the path animator.
