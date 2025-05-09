@@ -110,9 +110,9 @@ class ParticleCombinerTest {
         combiner.setRotations(rotation, 0.1f, 0.2f, 0.3f);
 
         // Then each child object has the same rotation
-        assertVector3fEquals(rotation, combiner.getObject(0).getRotation());
-        assertVector3fEquals(new Vector3f(0.2f, 0.3f, 0.4f), combiner.getObject(1).getRotation());
-        assertVector3fEquals(new Vector3f(0.3f, 0.5f, 0.7f), combiner.getObject(2).getRotation());
+        assertVector3fEquals(rotation, combiner.getObject(0).getRotation().getValue(0f));
+        assertVector3fEquals(new Vector3f(0.2f, 0.3f, 0.4f), combiner.getObject(1).getRotation().getValue(0f));
+        assertVector3fEquals(new Vector3f(0.3f, 0.5f, 0.7f), combiner.getObject(2).getRotation().getValue(0f));
     }
 
     private static void assertVector3fEquals(Vector3f expected, Vector3f actual) {

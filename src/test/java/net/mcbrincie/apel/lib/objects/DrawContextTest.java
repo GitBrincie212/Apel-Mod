@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.minecraft.server.world.ServerWorld;
@@ -12,11 +13,12 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 class DrawContextTest {
     // Declaring a null to avoid mocking and needing the Minecraft startup
     private static final ServerWorld NULL_WORLD = null;
+    private static final ComputedEasingPO NULL_COMPUTED_EASINGS = null;
 
     @Test
     void testAddingPrimitives() {
         // Given a DrawContext
-        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0);
+        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
         Key<Integer> key = Key.integerKey("foo");
 
         // When metadata is added, it does not throw
@@ -31,7 +33,7 @@ class DrawContextTest {
     void testAddingWildcardGenerics() {
         // This mimics what ParticleCombiner would do with `OBJECT_IN_USE` using a ParticleObject<?>
         // Given a DrawContext
-        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0);
+        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
         Key<ParticleObject<?>> objectInUse = Key.particleObjectKey("objectInUse");
 
         // Given a ParticlePoint
@@ -48,7 +50,7 @@ class DrawContextTest {
     @Test
     void testAddingArrays() {
         // Given a DrawContext
-        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0);
+        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
         Key<Vector3f[]> verticesKey = Key.vector3fArrayKey("vertices");
 
         // Given an array
@@ -65,7 +67,7 @@ class DrawContextTest {
     @Test
     void testMultipleKeys() {
         // Given a DrawContext
-        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0);
+        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
         Key<Integer> key = Key.integerKey("foo");
         Key<Integer> key2 = Key.integerKey("bar");
 

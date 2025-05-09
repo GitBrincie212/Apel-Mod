@@ -17,7 +17,7 @@ class ParticleCuboidTest {
         ParticleCuboid cuboid = builder.build();
 
         // Then the amount is a vector with components equal to the integer
-        assertEquals(new Vector3i(amount), cuboid.getAmounts());
+        assertEquals(new Vector3i(amount), cuboid.getAmounts().getValue(0f));
     }
 
 }
