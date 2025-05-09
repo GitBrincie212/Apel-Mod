@@ -1,6 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import org.joml.Vector3f;
 
@@ -13,7 +16,7 @@ import org.joml.Vector3f;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleCircle extends ParticleObject<ParticleCircle> {
-    protected float radius;
+    protected EasingCurve<Float> radius;
 
     public static Builder<?> builder() {
         return new Builder<>();
@@ -39,7 +42,7 @@ public class ParticleCircle extends ParticleObject<ParticleCircle> {
      *
      * @return the radius of the ParticleCircle
      */
-    public float getRadius() {
+    public EasingCurve<Float> getRadius() {
         return radius;
     }
 
@@ -47,37 +50,71 @@ public class ParticleCircle extends ParticleObject<ParticleCircle> {
      * Set the radius of this ParticleCircle and returns the previous radius that was used.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This overload will set a constant value for the radius
      *
      * @param radius the new radius
      * @return the previously used radius
      */
-    public final float setRadius(float radius) {
-        if (radius < 0) {
-            throw new IllegalArgumentException("Radius cannot be negative");
-        }
-        float prevRadius = this.radius;
+    public final EasingCurve<Float> setRadius(float radius) {
+        EasingCurve<Float> prevRadius = this.radius;
+        this.radius = new ConstantEasingCurve<>(radius);
+        return prevRadius;
+    }
+
+    /**
+     * Set the radius of this ParticleCircle and returns the previous radius that was used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This overload will set a constant value for the radius
+     *
+     * @param radius the new radius
+     * @return the previously used radius
+     */
+    public final EasingCurve<Float> setRadius(EasingCurve<Float> radius) {
+        EasingCurve<Float> prevRadius = this.radius;
         this.radius = radius;
         return prevRadius;
     }
 
     @Override
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+        return container
+                .addComputedField("radius", this.radius);
+    }
+
+    @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(this.offset);
+        ComputedEasingPO computedEasingPO = drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
+        float currRadius = (float) computedEasingPO.getComputedField("radius");
+        if (currRadius <= 0) {
+            throw new RuntimeException("The radius must be positive and non-zero");
+        }
         renderer.drawEllipse(
-                this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, this.radius, this.radius,
-                this.rotation, this.amount
+                this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currRadius, currRadius,
+                computedEasingPO.computedRotation, computedEasingPO.computedAmount
         );
     }
 
     public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCircle> {
-        protected float radius;
+        protected EasingCurve<Float> radius;
 
         private Builder() {}
 
         /**
-         * Set the radius on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         * Set the radius on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set a constant value for the radius
          */
         public B radius(float radius) {
+            this.radius = new ConstantEasingCurve<>(radius);
+            return self();
+        }
+
+        /**
+         * Set the radius on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set a constant value for the radius
+         */
+        public B radius(EasingCurve<Float> radius) {
             this.radius = radius;
             return self();
         }
