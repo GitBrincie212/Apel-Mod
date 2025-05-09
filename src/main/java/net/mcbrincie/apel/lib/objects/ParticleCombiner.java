@@ -1,5 +1,7 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.Key;
@@ -96,8 +98,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @see ParticleCombiner#setRotations(Vector3f, float, float, float)
      * @see ParticleCombiner#setRotations(Vector3f, Vector3f)
      */
-    public List<Vector3f> setRotations(Vector3f rotation) {
-        List<Vector3f> prevRotations = new ArrayList<>(this.objects.size());
+    public List<EasingCurve<Vector3f>> setRotations(Vector3f rotation) {
+        List<EasingCurve<Vector3f>> prevRotations = new ArrayList<>(this.objects.size());
         for (ParticleObject<?> object : this.objects) {
             // Defensive copy happens in superclass method
             prevRotations.add(object.setRotation(rotation));
@@ -122,8 +124,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @see ParticleCombiner#setRotations(Vector3f)
      * @see ParticleCombiner#setRotations(Vector3f, Vector3f)
      */
-    public List<Vector3f> setRotations(Vector3f rotation, float offsetX, float offsetY, float offsetZ) {
-        List<Vector3f> prevRotations = new ArrayList<>(this.objects.size());
+    public List<EasingCurve<Vector3f>> setRotations(Vector3f rotation, float offsetX, float offsetY, float offsetZ) {
+        List<EasingCurve<Vector3f>> prevRotations = new ArrayList<>(this.objects.size());
         Vector3f baseRotation = new Vector3f(rotation);
         if (!this.objects.isEmpty()) {
             // Defensive copy happens in ParticleObject#setRotation
@@ -152,7 +154,7 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @see ParticleCombiner#setRotations(Vector3f)
      * @see ParticleCombiner#setRotations(Vector3f, float, float, float)
      */
-    public List<Vector3f> setRotations(Vector3f rotation, Vector3f offset) {
+    public List<EasingCurve<Vector3f>> setRotations(Vector3f rotation, Vector3f offset) {
         return this.setRotations(rotation, offset.x, offset.y, offset.z);
     }
 
@@ -202,8 +204,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      *
      * @return The list of offsets per object
      */
-    public List<Vector3f> getOffsets() {
-        List<Vector3f> offsets = new ArrayList<>(this.objects.size());
+    public List<EasingCurve<Vector3f>> getOffsets() {
+        List<EasingCurve<Vector3f>> offsets = new ArrayList<>(this.objects.size());
         for (ParticleObject<?> obj : this.objects) {
             offsets.add(obj.getOffset());
         }
@@ -215,7 +217,7 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @param index The index of the object
      * @return The offset of the object at the given index
      */
-    public Vector3f getOffset(int index) {
+    public EasingCurve<Vector3f> getOffset(int index) {
         return this.objects.get(index).getOffset();
     }
 
@@ -226,11 +228,11 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @param offsets The offsets for each object (corresponding on each index)
      * @return The previous offsets
      */
-    public List<Vector3f> setOffsets(Vector3f... offsets) {
+    public List<EasingCurve<Vector3f>> setOffsets(Vector3f... offsets) {
         if (offsets.length != this.objects.size()) {
             throw new IllegalArgumentException("Must provide an offset for every object");
         }
-        List<Vector3f> prevOffsets = new ArrayList<>(this.objects.size());
+        List<EasingCurve<Vector3f>> prevOffsets = new ArrayList<>(this.objects.size());
         for (int i = 0; i < this.objects.size(); i++) {
             Vector3f newOffset = Optional.ofNullable(offsets[i]).orElse(new Vector3f());
             prevOffsets.add(this.setOffset(i, newOffset));
@@ -246,12 +248,12 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @param offset The offsets for all the objects
      * @return The previous offsets
      */
-    public List<Vector3f> setOffsets(Vector3f offset) {
-        List<Vector3f> prevOffsets = new ArrayList<>(this.objects.size());
+    public List<EasingCurve<Vector3f>> setOffsets(Vector3f offset) {
+        List<EasingCurve<Vector3f>> prevOffsets = new ArrayList<>(this.objects.size());
         Vector3f newOffset = Optional.ofNullable(offset).orElse(new Vector3f());
         for (ParticleObject<?> object : this.objects) {
             // Ensure every offset has a unique reference, so a future modification doesn't impact all of them
-            prevOffsets.add(object.setOffset(new Vector3f(newOffset)));
+            prevOffsets.add(object.setOffset(new ConstantEasingCurve<>(new Vector3f(newOffset))));
         }
         return prevOffsets;
     }
@@ -262,8 +264,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @param offset The offsets for the indexed object
      * @return The previous offset
      */
-    public Vector3f setOffset(int index, Vector3f offset) {
-        return this.objects.get(index).setOffset(new Vector3f(offset));
+    public EasingCurve<Vector3f> setOffset(int index, Vector3f offset) {
+        return this.objects.get(index).setOffset(new ConstantEasingCurve<>(new Vector3f(offset)));
     }
 
     /** Sets the offset position for the individual object by supplying the object and the
@@ -272,7 +274,7 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @param offset The offsets for the individual object
      * @return The previous offset
      */
-    public Vector3f setOffset(ParticleObject<?> object, Vector3f offset) {
+    public EasingCurve<Vector3f> setOffset(ParticleObject<?> object, Vector3f offset) {
         int index = this.objects.indexOf(object);
         if (index == -1) {
             return null;
@@ -367,8 +369,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @see ParticleCombiner#setAmountsRecursively(int, int, int)
      * @see ParticleCombiner#setAmount(int)
      */
-    public List<Integer> setAmounts(int amount) {
-        List<Integer> prevAmounts = new ArrayList<>(this.objects.size());
+    public List<EasingCurve<Integer>> setAmounts(int amount) {
+        List<EasingCurve<Integer>> prevAmounts = new ArrayList<>(this.objects.size());
         for (ParticleObject<?> object : this.objects) {
             prevAmounts.add(object.setAmount(amount));
         }
@@ -392,8 +394,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @see ParticleCombiner#setAmountsRecursively(int, int, int)
      * @see ParticleCombiner#setAmount(int)
      */
-    public List<Integer> setAmounts(int amount, int offset) {
-        List<Integer> prevAmounts = new ArrayList<>(this.objects.size());
+    public List<EasingCurve<Integer>> setAmounts(int amount, int offset) {
+        List<EasingCurve<Integer>> prevAmounts = new ArrayList<>(this.objects.size());
         int baseOffset = 0;
         if (!this.objects.isEmpty()) {
             prevAmounts.add(this.objects.getFirst().setAmount(amount));
