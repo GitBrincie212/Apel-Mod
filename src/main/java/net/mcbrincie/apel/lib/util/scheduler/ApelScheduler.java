@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
 @SuppressWarnings("unused")
 public class ApelScheduler {
     private final List<ScheduledSequence> scheduledTasks = new ArrayList<>();
-    private final List<PathAnimatorBase> animators = new ArrayList<>();
+    private final List<PathAnimatorBase<?>> animators = new ArrayList<>();
 
     private final ExecutorService SchedulerThread = Executors.newSingleThreadExecutor();
 
@@ -27,7 +27,7 @@ public class ApelScheduler {
      *  than one sequence chunk
      *
      */
-    public void allocateNewSequence(PathAnimatorBase object) throws SeqDuplicateException {
+    public void allocateNewSequence(PathAnimatorBase<?> object) throws SeqDuplicateException {
         this.scheduledTasks.add(new ScheduledSequence());
         this.animators.add(object);
     }
@@ -36,7 +36,7 @@ public class ApelScheduler {
      * If the method finds that the object hasn't allocated a sequence chunk, then it throws
      * a {@link SeqMissingException}. The allocated step gets deleted once it is executed
      */
-    public void allocateNewStep(PathAnimatorBase object, ScheduledStep step) throws SeqMissingException {
+    public void allocateNewStep(PathAnimatorBase<?> object, ScheduledStep step) throws SeqMissingException {
         int index = this.animators.indexOf(object);
         if (index == -1) {
             throw new SeqMissingException("No sequence chunk is found belonging to this path animator");
