@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -174,7 +175,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
     }
 
     @Override
-    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
         return container.addComputedField("sides", this.sides)
                 .addComputedField("size", this.size)
                 .addComputedField("curve", this.curve);

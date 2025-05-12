@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
@@ -130,7 +131,7 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
     }
 
     @Override
-    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
         return container.addComputedField("gridSize", this.gridSize)
                 .addComputedField("spacing", this.spacing);
     }

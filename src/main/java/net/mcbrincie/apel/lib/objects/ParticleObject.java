@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
@@ -7,7 +8,6 @@ import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
-import net.mcbrincie.apel.lib.util.math.ApelMath;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
@@ -294,13 +294,13 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     /** Computes some additional easing properties.
      *
      */
-    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
         return container;
     }
 
     public final void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps, float deltaTickTime) {
         ComputedEasingPO computedEasingPO = new ComputedEasingPO(this, step, numberOfSteps);
-        computedEasingPO = this.computeAdditionalEasings(computedEasingPO);
+        computedEasingPO = (ComputedEasingPO) this.computeAdditionalEasings(computedEasingPO);
         DrawContext drawContext = new DrawContext(
                 renderer.getServerWorld(), drawPos,
                 step, numberOfSteps, deltaTickTime,

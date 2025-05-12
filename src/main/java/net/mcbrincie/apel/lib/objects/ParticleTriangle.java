@@ -1,9 +1,11 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
+import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import org.joml.Vector3f;
 
@@ -212,7 +214,7 @@ public class ParticleTriangle extends ParticleObject<ParticleTriangle> {
     }
 
     @Override
-    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
         return container
                 .addComputedField("vertex1", this.vertex1)
                 .addComputedField("vertex2", this.vertex2)
