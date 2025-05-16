@@ -27,14 +27,14 @@ public class ChainedEasingCurve<T> extends EasingCurve<T> {
     @Override
     public float[] compute(float[] t) {
         float[] tCopy = new float[t.length];
-        for (float t2 : t) {
-            t2 = computeValueT(t2);
+        for (int i = 0; i < t.length; i++) {
+            float t2 = computeValueT(t[i]);
             float prevEnd = 0;
             boolean hasComputed = false;
             for (ChainedEaseCurveEntry<T> chainedEaseCurveEntry : this.easingCurves) {
                 if (t2 > prevEnd && t2 <= chainedEaseCurveEntry.end()) {
                     hasComputed = true;
-                    chainedEaseCurveEntry.easingCurve().compute(t2);
+                    tCopy[i] = chainedEaseCurveEntry.easingCurve().compute(t2);
                 }
                 prevEnd = chainedEaseCurveEntry.end();
             }
