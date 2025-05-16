@@ -65,6 +65,7 @@ public abstract class EasingCurve<T> {
         this.easeProgressFactor = easeProgressFactor;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected boolean isVector2D(T val) {
         return val instanceof Vector2f
                 || val instanceof Vector2d
@@ -139,7 +140,7 @@ public abstract class EasingCurve<T> {
 
             case Vector2L castedStart -> {
                 Vector2L castedEnd = (Vector2L) val2;
-                yield (T) new Vector2i(
+                yield (T) new Vector2L(
                         Math.round(func.apply((float) castedStart.x, (float) castedEnd.x, 0)),
                         Math.round(func.apply((float) castedStart.y, (float) castedEnd.y, 1))
                 );
@@ -147,7 +148,7 @@ public abstract class EasingCurve<T> {
 
             case Vector3L castedStart -> {
                 Vector3L castedEnd = (Vector3L) val2;
-                yield (T) new Vector3i(
+                yield (T) new Vector3L(
                         Math.round(func.apply((float) castedStart.x, (float) castedEnd.x, 0)),
                         Math.round(func.apply((float) castedStart.y, (float) castedEnd.y, 1)),
                         Math.round(func.apply((float) castedStart.z, (float) castedEnd.z, 2))
@@ -156,7 +157,7 @@ public abstract class EasingCurve<T> {
 
             case Vector2d castedStart -> {
                 Vector2d castedEnd = (Vector2d) val2;
-                yield (T) new Vector2i(
+                yield (T) new Vector2d(
                         Math.round(func.apply((float) castedStart.x, (float) castedEnd.x, 0)),
                         Math.round(func.apply((float) castedStart.y, (float) castedEnd.y, 1))
                 );
@@ -172,22 +173,22 @@ public abstract class EasingCurve<T> {
             }
 
             case Float castedStart -> {
-                float castedEnd = (float) val2;
+                float castedEnd = ((Number) val2).floatValue();
                 yield (T) (Number) func.apply(castedStart, castedEnd, 0);
             }
 
             case Integer castedStart -> {
-                int castedEnd = (int) val2;
-                yield (T) (Integer) Math.round(func.apply((float) castedStart, (float) castedEnd, 0));
+                float castedEnd = ((Number) val2).floatValue();
+                yield (T) (Integer) Math.round(func.apply((float) castedStart, castedEnd, 0));
             }
 
             case Long castedStart -> {
-                long castedEnd = (long) val2;
-                yield (T) (Long) (long) Math.round(func.apply((float) castedStart, (float) castedEnd, 0));
+                float castedEnd = ((Number) val2).floatValue();
+                yield (T) (Long) (long) Math.round(func.apply((float) castedStart, castedEnd, 0));
             }
 
             case Double castedStart -> {
-                float castedEnd = (float) val2;
+                float castedEnd = ((Number) val2).floatValue();
                 yield (T) (Number) func.apply(castedStart.floatValue(), castedEnd, 0);
             }
 
