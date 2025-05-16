@@ -22,7 +22,7 @@ public class Apel implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        LOGGER.info("Library Mod Initializing");
+        LOGGER.info("APEL Mod Is Initializing");
         ModItems.initItems();
         // TODO: This uses Fabric's networking wrappers, which I'm not convinced are necessary.
         PayloadTypeRegistry.playS2C().register(ApelFramePayload.ID, ApelFramePayload.PACKET_CODEC);
