@@ -65,6 +65,14 @@ public abstract class EasingCurve<T> {
         this.easeProgressFactor = easeProgressFactor;
     }
 
+    public T getEnd() {
+        return this.end;
+    }
+
+    public T getStart() {
+        return this.start;
+    }
+
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected boolean isVector2D(T val) {
         return val instanceof Vector2f
