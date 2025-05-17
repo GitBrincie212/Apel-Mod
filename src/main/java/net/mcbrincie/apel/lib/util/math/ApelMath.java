@@ -17,4 +17,21 @@ public class ApelMath {
         float z = (float) (rotation.z % Math.TAU);
         return new Vector3f(x, y, z);
     }
+
+    /**
+     * Gets from a 3D vector the axis value that corresponds to an index. For example, the x-axis
+     * has an index of 0, the index value must be either 0, 1 or 2
+     *
+     * @param vec The vector to use
+     * @param index What axis to access
+     * @return The value that corresponds to the index
+     */
+    public static float getAxisFromIndex(Vector3f vec, int index) {
+        return switch (index) {
+            case 0 -> vec.x;
+            case 1 -> vec.y;
+            case 2 -> vec.z;
+            default -> throw new IllegalArgumentException("The index value is not 1, 2 or even 3");
+        };
+    }
 }
