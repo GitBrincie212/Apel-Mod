@@ -121,7 +121,7 @@ public class ParticleCone extends RenderableParticleObject<ParticleCone> {
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         ComputedEasingRPO computedEasingRPO = (ComputedEasingRPO) drawContext.getComputedEasings();
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingRPO.computedOffset);
         float currRadius = (float) computedEasingRPO.getComputedField("radius");
         float currHeight = (float) computedEasingRPO.getComputedField("height");
         if (currRadius <= 0) {
