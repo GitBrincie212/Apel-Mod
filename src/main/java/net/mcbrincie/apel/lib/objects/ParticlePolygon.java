@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
@@ -23,7 +24,7 @@ import java.util.List;
  * will have.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
+public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
     protected EasingCurve<Integer> sides;
     protected EasingCurve<Float> size;
     protected EasingCurve<Float> curve;
@@ -183,7 +184,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingPO computedEasingPO = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasingPO = (ComputedEasingRPO) drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
 
         // Divide the particles evenly among sides
@@ -261,7 +262,7 @@ public class ParticlePolygon extends ParticleObject<ParticlePolygon> {
         return verticesCopy;
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePolygon> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticlePolygon> {
         protected EasingCurve<Integer> sides;
         protected EasingCurve<Float> size;
         protected EasingCurve<Float> curve = new ConstantEasingCurve<>(0f);

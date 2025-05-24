@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -27,7 +28,7 @@ import java.util.List;
  * </ul>
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleModel extends ParticleObject<ParticleModel> {
+public class ParticleModel extends RenderableParticleObject<ParticleModel> {
     protected final ObjModel objModel;
     protected EasingCurve<Vector3f> scale;
     protected EasingCurve<Float> particle_interval = null;
@@ -157,7 +158,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingPO computedEasingPO = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasingPO = (ComputedEasingRPO) drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
         Vector3f computedScale = (Vector3f) computedEasingPO.getComputedField("scale");
 
@@ -205,7 +206,7 @@ public class ParticleModel extends ParticleObject<ParticleModel> {
      *
      * @param <B> The builder type itself
     */
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleModel> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleModel> {
         private static final ModelParserManager MODEL_PARSER_MANAGER = new ModelParserManager();
         protected EasingCurve<Vector3f> scale = new ConstantEasingCurve<>(new Vector3f(1));
         protected String filename;

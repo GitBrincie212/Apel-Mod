@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -13,7 +14,7 @@ import org.joml.Vector3f;
  * the maximum radius, it also accepts rotation for the cone
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCone extends ParticleObject<ParticleCone> {
+public class ParticleCone extends RenderableParticleObject<ParticleCone> {
     protected EasingCurve<Float> height;
     protected EasingCurve<Float> radius;
 
@@ -119,10 +120,10 @@ public class ParticleCone extends ParticleObject<ParticleCone> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingPO computedEasingPO = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasingRPO = (ComputedEasingRPO) drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
-        float currRadius = (float) computedEasingPO.getComputedField("radius");
-        float currHeight = (float) computedEasingPO.getComputedField("height");
+        float currRadius = (float) computedEasingRPO.getComputedField("radius");
+        float currHeight = (float) computedEasingRPO.getComputedField("height");
         if (currRadius <= 0) {
             throw new RuntimeException("The cone's radius is below or equal to zero");
         } else if (currHeight <= 0) {
@@ -130,11 +131,11 @@ public class ParticleCone extends ParticleObject<ParticleCone> {
         }
         renderer.drawCone(
                 this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currHeight, currRadius,
-                computedEasingPO.computedRotation, computedEasingPO.computedAmount
+                computedEasingRPO.computedRotation, computedEasingRPO.computedAmount
         );
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCone> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleCone> {
         protected EasingCurve<Float> height;
         protected EasingCurve<Float> radius;
 

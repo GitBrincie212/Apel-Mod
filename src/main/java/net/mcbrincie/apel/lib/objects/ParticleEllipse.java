@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -16,7 +17,7 @@ import org.joml.Vector3f;
  * drawn on the xy-plane by default, though rotations can move it around.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleEllipse extends ParticleObject<ParticleEllipse> {
+public class ParticleEllipse extends RenderableParticleObject<ParticleEllipse> {
     protected EasingCurve<Float> radius;
     protected EasingCurve<Float> stretch;
 
@@ -127,7 +128,7 @@ public class ParticleEllipse extends ParticleObject<ParticleEllipse> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingPO computedEasingPO = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasingPO = (ComputedEasingRPO) drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
         float currRadius = (float) computedEasingPO.getComputedField("radius");
         float currStretch = (float) computedEasingPO.getComputedField("stretch");
@@ -142,7 +143,7 @@ public class ParticleEllipse extends ParticleObject<ParticleEllipse> {
         );
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleEllipse> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleEllipse> {
         protected EasingCurve<Float> radius;
         protected EasingCurve<Float> stretch;
 

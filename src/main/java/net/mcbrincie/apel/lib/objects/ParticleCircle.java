@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -16,7 +17,7 @@ import org.joml.Vector3f;
  * angles for rotation.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCircle extends ParticleObject<ParticleCircle> {
+public class ParticleCircle extends RenderableParticleObject<ParticleCircle> {
     protected EasingCurve<Float> radius;
 
     public static Builder<?> builder() {
@@ -85,19 +86,19 @@ public class ParticleCircle extends ParticleObject<ParticleCircle> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingPO computedEasingPO = drawContext.getComputedEasings();
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
-        float currRadius = (float) computedEasingPO.getComputedField("radius");
+        ComputedEasingRPO computedEasingRPO = (ComputedEasingRPO) drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingRPO.computedOffset);
+        float currRadius = (float) computedEasingRPO.getComputedField("radius");
         if (currRadius <= 0) {
             throw new RuntimeException("The radius must be positive and non-zero");
         }
         renderer.drawEllipse(
                 this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currRadius, currRadius,
-                computedEasingPO.computedRotation, computedEasingPO.computedAmount
+                computedEasingRPO.computedRotation, computedEasingRPO.computedAmount
         );
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCircle> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleCircle> {
         protected EasingCurve<Float> radius;
 
         private Builder() {}

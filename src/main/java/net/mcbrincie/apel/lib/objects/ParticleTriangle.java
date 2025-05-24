@@ -1,11 +1,11 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import org.joml.Vector3f;
 
@@ -14,7 +14,7 @@ import org.joml.Vector3f;
  * The vertices can be set individually or by supplying a list of three vertices.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleTriangle extends ParticleObject<ParticleTriangle> {
+public class ParticleTriangle extends RenderableParticleObject<ParticleTriangle> {
     protected EasingCurve<Vector3f> vertex1;
     protected EasingCurve<Vector3f> vertex2;
     protected EasingCurve<Vector3f> vertex3;
@@ -224,7 +224,7 @@ public class ParticleTriangle extends ParticleObject<ParticleTriangle> {
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         // Defensive copy of `drawPos`
-        ComputedEasingPO computedEasingPO = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasingPO = (ComputedEasingRPO) drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
         Vector3f currVertex1 = (Vector3f) computedEasingPO.getComputedField("vertex1");
         Vector3f currVertex2 = (Vector3f) computedEasingPO.getComputedField("vertex2");
@@ -240,7 +240,7 @@ public class ParticleTriangle extends ParticleObject<ParticleTriangle> {
         renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex3, currVertex1, computedRotation, computedAmount);
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleTriangle> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleTriangle> {
         protected EasingCurve<Vector3f> vertex1;
         protected EasingCurve<Vector3f> vertex2;
         protected EasingCurve<Vector3f> vertex3;

@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -23,7 +24,7 @@ import org.joml.Vector3f;
  * </pre>
  */
 @SuppressWarnings("unused")
-public class ParticleQuad extends ParticleObject<ParticleQuad> {
+public class ParticleQuad extends RenderableParticleObject<ParticleQuad> {
     protected EasingCurve<Vector3f> vertex1;
     protected EasingCurve<Vector3f> vertex2;
     protected EasingCurve<Vector3f> vertex3;
@@ -263,7 +264,7 @@ public class ParticleQuad extends ParticleObject<ParticleQuad> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingPO computedEasing = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasing = (ComputedEasingRPO) drawContext.getComputedEasings();
 
         // Defensive copy of `drawPos`
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasing.computedOffset);
@@ -281,7 +282,7 @@ public class ParticleQuad extends ParticleObject<ParticleQuad> {
         renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex4, currVertex1, computedRotation, computedAmount);
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleQuad> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleQuad> {
         protected Vector3f vertex1;
         protected Vector3f vertex2;
         protected Vector3f vertex3;

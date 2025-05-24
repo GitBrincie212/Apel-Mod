@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
@@ -19,7 +18,7 @@ import java.util.List;
  * its shape. Bézier curves can be linear, but it is recommended to use {@code ParticleLine} if a line is desired.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleBezierCurve extends ParticleObject<ParticleBezierCurve> {
+public class ParticleBezierCurve extends RenderableParticleObject<ParticleBezierCurve> {
     protected List<BezierCurve> bezierCurves;
     protected List<Integer> amounts;
 
@@ -186,7 +185,7 @@ public class ParticleBezierCurve extends ParticleObject<ParticleBezierCurve> {
         }
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleBezierCurve> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleBezierCurve> {
         protected List<BezierCurve> bezierCurves = new ArrayList<>();
         protected List<Integer> amounts = new ArrayList<>();
 

@@ -8,7 +8,6 @@ import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.Key;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
@@ -17,14 +16,11 @@ import java.util.Optional;
 /**
  * ParticleObject is the base class for all particle-based constructions that are animated by APEL.  Particle objects
  * are rendered in the client using particles registered with the particle registry.  APEL provides several common
- * 2D and 3D shapes that are ready for immediate use.
+ * 2D and 3D shapes as well as utility ones that are ready for immediate use.
  *
- * <p>All particle objects share some common properties, and those are provided on the base class.  The
- * {@link #particleEffect} is used to render all particles in the object.  All objects allow for specifying a
+ * <p>All particle objects share some common properties, and those are provided on the base class. The
  * {@link #rotation} and {@link #offset}. These will be applied before translating the object to the {@code drawPos}
- * passed to {@link #draw(ApelServerRenderer, DrawContext)}. Objects also have an {@link #amount} that indicates
- * the number of particles to render. APEL native objects will spread these particles evenly throughout the shape
- * unless otherwise indicated on specific shapes.
+ * passed to {@link #draw(ApelServerRenderer, DrawContext)}
  *
  * <p>The provided subclasses include interceptors that allow for modification before and after each call to
  * {@code draw}.
@@ -53,32 +49,24 @@ import java.util.Optional;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class ParticleObject<T extends ParticleObject<T>> {
-    protected ParticleEffect particleEffect;
     protected EasingCurve<Vector3f> rotation;
     protected EasingCurve<Vector3f> offset = new ConstantEasingCurve<>(new Vector3f(0, 0, 0));
-    protected EasingCurve<Integer> amount = new ConstantEasingCurve<>(1);
     protected ObjectInterceptor<T> afterDraw = ObjectInterceptor.identity();
     protected ObjectInterceptor<T> beforeDraw = ObjectInterceptor.identity();
 
     /**
      * Used by subclasses to when constructing themselves to set the properties shared by all ParticleObjects.
      *
-     * @param particleEffect The particle effect to use
      * @param rotation The rotation to apply
      * @param offset The offset to apply
-     * @param amount The amount of particles to use when rendering the object (subject to specific subclass
-     *         usage)
      * @param beforeDraw The interceptor to call before drawing the object
      * @param afterDraw The interceptor to call after drawing the object
      */
-    protected ParticleObject(ParticleEffect particleEffect, EasingCurve<Vector3f> rotation,
-                             EasingCurve<Vector3f> offset, EasingCurve<Integer> amount,
+    protected ParticleObject(EasingCurve<Vector3f> rotation, EasingCurve<Vector3f> offset,
                              ObjectInterceptor<T> beforeDraw, ObjectInterceptor<T> afterDraw
     ) {
-        this.setParticleEffect(particleEffect);
         this.setRotation(rotation);
         this.setOffset(offset);
-        this.setAmount(amount);
         this.setBeforeDraw(beforeDraw);
         this.setAfterDraw(afterDraw);
     }
@@ -90,38 +78,14 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      * @param object The particle object to copy from
      */
     protected ParticleObject(ParticleObject<T> object) {
-        this.particleEffect = object.particleEffect;
         this.rotation = object.rotation;
         this.offset = object.offset;
-        this.amount = object.amount;
         this.beforeDraw = object.beforeDraw;
         this.afterDraw = object.afterDraw;
     }
 
     /** This is a placeholder constructor */
     protected ParticleObject() {}
-
-    /** Gets the particle which is currently in use and returns it.
-     *
-     * @return The currently used particle
-     */
-    public ParticleEffect getParticleEffect() {
-        return this.particleEffect;
-    }
-
-    /**
-     * Sets the particle to use to a new value and returns the previous particle that was used.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param particle The new particle
-     * @return The previously used particle
-     */
-    public final ParticleEffect setParticleEffect(ParticleEffect particle) {
-        ParticleEffect prevParticle = this.particleEffect;
-        this.particleEffect = particle;
-        return prevParticle;
-    }
 
     /** Gets the rotation which is currently in use and returns it.
      *
@@ -205,44 +169,6 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
         return prevOffset;
     }
 
-    /** Gets the number of particles that are currently in use and returns it.
-     *
-     * @return The currently used number of particles
-     */
-    public EasingCurve<Integer> getAmount() {
-        return this.amount;
-    }
-
-    /**
-     * Sets the number of particles to use for rendering the object. This has no effect on this class, but on shapes it
-     * does have an effect. It returns the previously used number of particles.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     * This method overload sets a constant value for the amount
-     *
-     * @param amount The new particle
-     * @return The previously used amount
-     */
-    public final EasingCurve<Integer> setAmount(int amount) {
-        return this.setAmount(new ConstantEasingCurve<>(amount));
-    }
-
-    /**
-     * Sets the number of particles to use for rendering the object. This has no effect on this class, but on shapes it
-     * does have an effect. It returns the previously used number of particles.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     * This method overload sets an ease curve value for the amount
-     *
-     * @param amount The new particle
-     * @return The previously used amount
-     */
-    public final EasingCurve<Integer> setAmount(EasingCurve<Integer> amount) {
-        EasingCurve<Integer> prevAmount = this.amount;
-        this.amount = amount;
-        return prevAmount;
-    }
-
     /**
      * Set the interceptor to run prior to drawing the object.  The interceptor will be provided with references to the
      * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation,
@@ -250,7 +176,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
-     * @param beforeDraw the new interceptor to execute prior to drawing each particle
+     * @param beforeDraw the new interceptor to execute before drawing each particle
      */
     public final void setBeforeDraw(ObjectInterceptor<T> beforeDraw) {
         this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(ObjectInterceptor.identity());
@@ -298,7 +224,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
         return container;
     }
 
-    public final void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps, float deltaTickTime) {
+    public void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps, float deltaTickTime) {
         ComputedEasingPO computedEasingPO = new ComputedEasingPO(this, step, numberOfSteps);
         computedEasingPO = (ComputedEasingPO) this.computeAdditionalEasings(computedEasingPO);
         DrawContext drawContext = new DrawContext(
@@ -336,25 +262,14 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      * @param <B> the type being built, uses the curiously recurring type pattern
      */
     public static abstract class Builder<B extends Builder<B, T>, T extends ParticleObject<T>> {
-        protected ParticleEffect particleEffect;
         protected EasingCurve<Vector3f> rotation = new ConstantEasingCurve<>(new Vector3f(0));
         protected EasingCurve<Vector3f> offset = new ConstantEasingCurve<>(new Vector3f(0));
-        protected EasingCurve<Integer> amount = new ConstantEasingCurve<>(1);
         protected ObjectInterceptor<T> beforeDraw;
         protected ObjectInterceptor<T> afterDraw;
 
         @SuppressWarnings({"unchecked"})
         public final B self() {
             return (B) this;
-        }
-
-        /**
-         * Set the particle effect on the builder.  This method is not cumulative; repeated calls will overwrite the
-         * value.
-         */
-        public final B particleEffect(ParticleEffect particleEffect) {
-            this.particleEffect = particleEffect;
-            return self();
         }
 
         /**
@@ -390,26 +305,6 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
          */
         public final B offset(EasingCurve<Vector3f> offset) {
             this.offset = offset;
-            return self();
-        }
-
-        /**
-         * Set a constant particle amount on the builder.
-         * This method is not cumulative; repeated calls will overwrite the
-         * value.
-         */
-        public final B amount(int amount) {
-            this.amount = new ConstantEasingCurve<>(amount);
-            return self();
-        }
-
-        /**
-         * Set an easing function for the particle amount on the builder.
-         * This method is not cumulative; repeated calls will overwrite the
-         * value.
-         */
-        public final B amount(EasingCurve<Integer> amount) {
-            this.amount = amount;
             return self();
         }
 

@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
@@ -13,7 +14,7 @@ import org.joml.Vector3f;
  * on to the sphere to distribute particles evenly across the surface.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleSphere extends ParticleObject<ParticleSphere> {
+public class ParticleSphere extends RenderableParticleObject<ParticleSphere> {
     public static final double SQRT_5_PLUS_1 = 3.23606;
     protected EasingCurve<Float> radius;
 
@@ -73,16 +74,16 @@ public class ParticleSphere extends ParticleObject<ParticleSphere> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingPO computedEasingPO = drawContext.getComputedEasings();
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
+        ComputedEasingRPO computedEasingRPO = (ComputedEasingRPO) drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingRPO.computedOffset);
         float t = (float) drawContext.getCurrentStep() / drawContext.getNumberOfStep();
         float currRadius = this.radius.getValue(t);
         renderer.drawEllipsoid(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currRadius,
-                currRadius, currRadius, computedEasingPO.computedRotation, computedEasingPO.computedAmount
+                currRadius, currRadius, computedEasingRPO.computedRotation, computedEasingRPO.computedAmount
         );
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleSphere> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleSphere> {
         protected EasingCurve<Float> radius;
 
         private Builder() {}

@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -23,7 +24,7 @@ import java.util.Optional;
  * setters after construction, or during interceptor calls.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
+public class ParticleBranchGen extends RenderableParticleObject<ParticleBranchGen> {
     protected EasingCurve<Vector3f> minAngle;
     protected EasingCurve<Vector3f> maxAngle;
     protected EasingCurve<Float> minLength;
@@ -409,7 +410,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
             Vector3f start,
             int subdivs
     ) {
-        ComputedEasingPO computedEasings = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasings = (ComputedEasingRPO) drawContext.getComputedEasings();
         int currMinBranchesPerDivision = (int) computedEasings.getComputedField("minBranchesPerDivision");
         int currMaxBranchesPerDivision = (int) computedEasings.getComputedField("maxBranchesPerDivision");
         if (currMinBranchesPerDivision <= 0) {
@@ -484,7 +485,7 @@ public class ParticleBranchGen extends ParticleObject<ParticleBranchGen> {
         this.afterDraw.apply(drawContext, this);
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleBranchGen> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleBranchGen> {
         protected EasingCurve<Float> minLengthThreshold;
         protected EasingCurve<Float> maxLengthThreshold;
         protected EasingCurve<Integer>  maxTotalBranches = new ConstantEasingCurve<>(1);

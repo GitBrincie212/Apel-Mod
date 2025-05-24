@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -17,7 +18,7 @@ import org.joml.Vector3f;
  * x-axis will achieve that.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCylinder extends ParticleObject<ParticleCylinder> {
+public class ParticleCylinder extends RenderableParticleObject<ParticleCylinder> {
     protected EasingCurve<Float> radius;
     protected EasingCurve<Float> height;
 
@@ -123,7 +124,7 @@ public class ParticleCylinder extends ParticleObject<ParticleCylinder> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingPO computedEasings = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasings = (ComputedEasingRPO) drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);
         float currRadius = (float) computedEasings.getComputedField("radius");
         float currHeight = (float) computedEasings.getComputedField("height");
@@ -138,7 +139,7 @@ public class ParticleCylinder extends ParticleObject<ParticleCylinder> {
         );
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCylinder> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleCylinder> {
         protected EasingCurve<Float> radius;
         protected EasingCurve<Float> height;
 

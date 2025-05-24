@@ -16,7 +16,7 @@ import org.joml.Vector3f;
  * using {@link #setOffset(Vector3f)}.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticlePoint extends ParticleObject<ParticlePoint> {
+public class ParticlePoint extends RenderableParticleObject<ParticlePoint> {
 
     public static final Key<Vector3f> DRAW_POSITION = Key.vector3fKey("drawPosition");
 
@@ -51,7 +51,7 @@ public class ParticlePoint extends ParticleObject<ParticlePoint> {
         ));
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticlePoint> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticlePoint> {
         protected ObjectInterceptor<ParticlePoint> afterDraw;
         protected ObjectInterceptor<ParticlePoint> beforeDraw;
 

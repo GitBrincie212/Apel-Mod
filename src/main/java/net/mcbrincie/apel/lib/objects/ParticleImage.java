@@ -1,6 +1,5 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
@@ -34,8 +33,8 @@ public class ParticleImage extends ParticleObject<ParticleImage> {
     private HashMap<Vector3f, ParticleEffect> positions;
 
     public ParticleImage(String filename, Vector3f rotation) {
-        super(null, new ConstantEasingCurve<>(rotation), new ConstantEasingCurve<>(new Vector3f(0)),
-                new ConstantEasingCurve<>(1), ObjectInterceptor.identity(), ObjectInterceptor.identity()
+        super(new ConstantEasingCurve<>(rotation), new ConstantEasingCurve<>(new Vector3f(0)),
+                ObjectInterceptor.identity(), ObjectInterceptor.identity()
         );
         this.setFilename(filename);
     }
@@ -86,13 +85,6 @@ public class ParticleImage extends ParticleObject<ParticleImage> {
     public PalateGenerator getPalateGenerator() {return this.palateGenerator;}
 
     public String getFilename() {return filename;}
-
-    /** THIS METHOD SHOULD NOT BE USED */
-    @Override
-    @Deprecated
-    public ParticleEffect getParticleEffect() {
-        throw new UnsupportedOperationException("ParticleImage doesn't support getting a particle effect.");
-    }
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {

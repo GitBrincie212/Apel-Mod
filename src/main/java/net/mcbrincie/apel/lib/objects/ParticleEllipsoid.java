@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -14,7 +15,7 @@ import org.joml.Vector3f;
  * on to the ellipsoid to distribute particles evenly across the surface.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
+public class ParticleEllipsoid extends RenderableParticleObject<ParticleEllipsoid> {
     public static final double SQRT_5_PLUS_1 = 3.23606;
     protected EasingCurve<Float> xSemiAxis;
     protected EasingCurve<Float> ySemiAxis;
@@ -165,7 +166,7 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingPO computedEasings = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasings = (ComputedEasingRPO) drawContext.getComputedEasings();
         float xSemiAxis = (float) computedEasings.getComputedField("xSemiAxis");
         float ySemiAxis = (float) computedEasings.getComputedField("ySemiAxis");
         float zSemiAxis = (float) computedEasings.getComputedField("zSemiAxis");
@@ -178,7 +179,7 @@ public class ParticleEllipsoid extends ParticleObject<ParticleEllipsoid> {
         );
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleEllipsoid> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleEllipsoid> {
         protected EasingCurve<Float> xSemiAxis;
         protected EasingCurve<Float> ySemiAxis;
         protected EasingCurve<Float> zSemiAxis;

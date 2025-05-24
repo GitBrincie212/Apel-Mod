@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -22,7 +23,7 @@ import org.joml.Vector3f;
  * </p>
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleLine extends ParticleObject<ParticleLine> {
+public class ParticleLine extends RenderableParticleObject<ParticleLine> {
     protected EasingCurve<Vector3f> start;
     protected EasingCurve<Vector3f> end;
 
@@ -134,10 +135,10 @@ public class ParticleLine extends ParticleObject<ParticleLine> {
 
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        Vector3f currOffset = drawContext.getComputedEasings().computedOffset;
-        int currAmount = drawContext.getComputedEasings().computedAmount;
+        ComputedEasingRPO computedEasings = (ComputedEasingRPO) drawContext.getComputedEasings();
+        int currAmount = computedEasings.computedAmount;
         Vector3f currRotation = drawContext.getComputedEasings().computedRotation;
-        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(currOffset);
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);
         Vector3f currStart = (Vector3f) drawContext.getComputedEasings().getComputedField("start");
         Vector3f currEnd = (Vector3f) drawContext.getComputedEasings().getComputedField("end");
         if (currStart.equals(currEnd)) {
@@ -146,7 +147,7 @@ public class ParticleLine extends ParticleObject<ParticleLine> {
         renderer.drawLine(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currStart, currEnd, currRotation, currAmount);
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleLine> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleLine> {
         protected EasingCurve<Vector3f> start = new ConstantEasingCurve<>(new Vector3f());
         protected EasingCurve<Vector3f> end = new ConstantEasingCurve<>(new Vector3f());
 

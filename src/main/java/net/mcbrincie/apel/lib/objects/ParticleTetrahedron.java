@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -13,7 +14,7 @@ import org.joml.Vector3f;
  *  The vertices can be set individually or by supplying a list of four vertices.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
+public class ParticleTetrahedron extends RenderableParticleObject<ParticleTetrahedron> {
     protected EasingCurve<Vector3f> vertex1;
     protected EasingCurve<Vector3f> vertex2;
     protected EasingCurve<Vector3f> vertex3;
@@ -273,7 +274,7 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
     @Override
     public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
         // Defensive copy of `drawPos`
-        ComputedEasingPO computedEasing = drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasing = (ComputedEasingRPO) drawContext.getComputedEasings();
         Vector3f currVertex1 = (Vector3f) computedEasing.getComputedField("vertex1");
         Vector3f currVertex2 = (Vector3f) computedEasing.getComputedField("vertex2");
         Vector3f currVertex3 = (Vector3f) computedEasing.getComputedField("vertex3");
@@ -292,7 +293,7 @@ public class ParticleTetrahedron extends ParticleObject<ParticleTetrahedron> {
         renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex3, currVertex4, computedRotation, computedAmount);
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleTetrahedron> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleTetrahedron> {
         protected EasingCurve<Vector3f> vertex1;
         protected EasingCurve<Vector3f> vertex2;
         protected EasingCurve<Vector3f> vertex3;

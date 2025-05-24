@@ -20,7 +20,7 @@ import org.joml.Vector3i;
  * as well.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
+public class ParticleCuboid extends RenderableParticleObject<ParticleCuboid> {
     protected EasingCurve<Vector3f> size = new ConstantEasingCurve<>(new Vector3f());
     protected EasingCurve<Vector3i> amounts = new ConstantEasingCurve<>(new Vector3i());
 
@@ -239,7 +239,7 @@ public class ParticleCuboid extends ParticleObject<ParticleCuboid> {
         renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex3, vertex7, computedEasings.computedRotation, yAmount);
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleCuboid> {
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleCuboid> {
         protected EasingCurve<Vector3f> size = new ConstantEasingCurve<>(new Vector3f());
         protected EasingCurve<Vector3i> amounts;
 
