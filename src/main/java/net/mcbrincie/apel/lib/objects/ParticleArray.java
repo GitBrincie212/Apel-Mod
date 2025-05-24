@@ -23,45 +23,20 @@ import org.joml.Vector3i;
  * will be rotated consistently per the object's {@code rotation} value.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<ParticleArray<O>> {
+public class ParticleArray<O extends ParticleObject<O>> extends UtilityParticleObject<ParticleArray<O>, O> {
     protected O particleObject;
     protected EasingCurve<Vector3i> gridSize;
     protected EasingCurve<Vector3f> spacing;
 
-    public static <B extends Builder<B, T>, T extends ParticleObject<T>> Builder<B, T> builder(T particleObject) {
-        return new Builder<>(particleObject);
+    public static <B extends Builder<B, T>, T extends ParticleObject<T>> Builder<B, T> builder() {
+        return new Builder<>();
     }
 
     private <B extends Builder<B, O>> ParticleArray(Builder<B, O> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
-              builder.afterDraw);
-        this.setParticleObject(builder.particleObject);
+        super(builder.particleObject, builder.rotation, builder.offset,
+                builder.beforeDraw, builder.afterDraw);
         this.setSpacing(builder.spacing);
         this.setGridSize(builder.gridSize);
-    }
-
-    /**
-     * Gets the particle object that is used
-     *
-     * @return The particle object
-     */
-    public ParticleObject<O> getParticleObject() {
-        return this.particleObject;
-    }
-
-    /**
-     * Sets the target object
-     *
-     * @param newObject The new particle object pattern
-     * @return The previous particle object pattern
-     */
-    public ParticleObject<O> setParticleObject(O newObject) {
-        if (newObject == null) {
-            throw new NullPointerException("The provided particle object is null");
-        }
-        ParticleObject<O> prevParticleObj = this.particleObject;
-        this.particleObject = newObject;
-        return prevParticleObj;
     }
 
     /**
@@ -165,14 +140,12 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
     }
 
     // The 'T' here is deliberately different from the 'O' in the ParticleArray class.
-    public static class Builder<B extends Builder<B, T>, T extends ParticleObject<T>> extends ParticleObject.Builder<B, ParticleArray<T>> {
-        protected T particleObject;
+    public static class Builder<B extends Builder<B, T>, T extends ParticleObject<T>>
+            extends UtilityParticleObject.Builder<B, ParticleArray<T>, T> {
         protected EasingCurve<Vector3f> spacing;
         protected EasingCurve<Vector3i> gridSize;
 
-        private Builder(T particleObject) {
-            this.particleObject = particleObject;
-        }
+        private Builder() {}
 
         /**
          * Set the distance between elements along each axis.  This method is not cumulative; repeated calls will
@@ -188,14 +161,6 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
          */
         public B gridSize(EasingCurve<Vector3i> gridSize) {
             this.gridSize = gridSize;
-            return self();
-        }
-
-        /**
-         * Set the particle object to repeat.  This method is not cumulative; repeated calls will overwrite the value.
-         */
-        public B particleObject(T object) {
-            this.particleObject = object;
             return self();
         }
 
@@ -218,14 +183,12 @@ public class ParticleArray<O extends ParticleObject<O>> extends ParticleObject<P
 
         @Override
         public ParticleArray<T> build() {
+            super.build();
             if (this.gridSize == null) {
                 throw new IllegalStateException("GridSize must be provided");
             }
             if (this.spacing == null) {
                 throw new IllegalStateException("Spacing must be provided");
-            }
-            if (this.particleObject == null) {
-                throw new IllegalStateException("Particle Object must be provided");
             }
             return new ParticleArray<>(this);
         }
