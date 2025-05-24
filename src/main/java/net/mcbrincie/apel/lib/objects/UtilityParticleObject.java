@@ -109,21 +109,20 @@ public abstract class UtilityParticleObject<T extends UtilityParticleObject<T, O
      *
      * @param <B> the type being built, uses the curiously recurring type pattern
      */
-    public static abstract class Builder<B extends Builder<B, T, T2>,
-            T extends UtilityParticleObject<T, T2>,
-            T2 extends ParticleObject<T2>> extends ParticleObject.Builder<B, T> {
-        protected T2 particleObject;
+    public static abstract class Builder<B extends Builder<B, T, O>,
+            T extends UtilityParticleObject<T, O>, O extends ParticleObject<O>> extends ParticleObject.Builder<B, T> {
+        protected O particleObject;
 
         /**
          * Set the particle object on the builder.  This method is not cumulative; repeated calls will overwrite the
          * value.
          */
-        public final B particleObject(T2 particleObject) {
+        public final B particleObject(O particleObject) {
             this.particleObject = particleObject;
             return self();
         }
 
-        public UtilityParticleObject<T, T2> build() {
+        public UtilityParticleObject<T, O> build() {
             if (this.particleObject == null) {
                 throw new IllegalStateException("Particle Object must be provided");
             }
