@@ -21,22 +21,13 @@ import net.mcbrincie.apel.lib.animators.PathAnimatorBase;
  * @param <T> The Path Animator type being intercepted
  */
 @FunctionalInterface
-public interface AnimationInterceptor<T extends PathAnimatorBase<T>> {
-    /** Apply the interceptor.
+public interface AnimationInterceptor<T extends PathAnimatorBase<T>> extends BaseInterceptor<AnimationContext, T> {
+    /** Apply the animator interceptor (which basically is computing the animator interceptor).
      * <br><br>
-     * Return values are sent via the {@code InterceptData}'s metadata map.
+     * There are no results returned
      *
-     * @param data metadata useful within the interceptor
-     * @param animator the path animator being intercepted
+     * @param data metadata useful within the animator interceptor
+     * @param animator the path animator to intercept
      */
     void apply(AnimationContext data, T animator);
-
-    /** An identity interceptor that does nothing. May be used when clearing an
-     * interceptor.
-     * @return the identity interceptor
-     * @param <T> The type being intercepted
-     */
-    static <T extends PathAnimatorBase<T>> AnimationInterceptor<T> identity() {
-        return (data, object) -> {};
-    }
 }

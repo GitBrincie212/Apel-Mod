@@ -21,22 +21,13 @@ import net.mcbrincie.apel.lib.objects.ParticleObject;
  * @param <T> The ParticleObject type being intercepted
  */
 @FunctionalInterface
-public interface ObjectInterceptor<T extends ParticleObject<T>> {
-    /** Apply the interceptor.
+public interface ObjectInterceptor<T extends ParticleObject<T>> extends BaseInterceptor<DrawContext, T> {
+    /** Apply the particle object interceptor (which basically is computing the particle object interceptor).
      * <br><br>
-     * Return values are sent via the {@code InterceptData}'s metadata map.
+     * There are no results returned
      *
-     * @param data metadata useful within the interceptor
-     * @param object the object being intercepted
+     * @param data metadata useful within the animator interceptor
+     * @param object the particle object to intercept
      */
     void apply(DrawContext data, T object);
-
-    /** An identity interceptor that does nothing.  May be used when clearing an
-     * interceptor.
-     * @return the identity interceptor
-     * @param <T> The type being intercepted
-     */
-    static <T extends ParticleObject<T>> ObjectInterceptor<T> identity() {
-        return (data, object) -> {};
-    }
 }
