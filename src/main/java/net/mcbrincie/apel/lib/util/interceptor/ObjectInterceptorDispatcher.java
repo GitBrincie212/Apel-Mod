@@ -2,8 +2,6 @@ package net.mcbrincie.apel.lib.util.interceptor;
 
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 
-import java.util.*;
-
 /** This is a dispatcher where it can host multiple {@link ObjectInterceptor} to be executed on a specific code section,
  * it executes the interceptors based on their priority whereby interceptors with higher priority will be executed earlier
  * than those with lower priority. If in any case, there are interceptors that happen to have the same priority, the interceptor
@@ -18,15 +16,15 @@ import java.util.*;
  * <br /> <br />
  *
  * When it is time to execute the interceptors {@link #compute(ParticleObject, DrawContext)} may be called which takes
- * care of the rest. <strong>Keep in mind that the DrawContext and ParticleObject will be modified on the compute method</strong>
+ * care of the rest. <strong>Keep in mind that the {@link DrawContext} and {@link ParticleObject} will be modified on the compute method</strong>
  *
  * @param <T> The particle object which the interceptors will modify
  */
 @SuppressWarnings("unused")
-public class ObjectInterceptorDispatcher<T extends ParticleObject<T>> {
-    private final Map<Integer, List<ObjectInterceptor<T>>> priorityMap = new HashMap<>();
-    private int priorityCounter;
-    private final PriorityQueue<Integer> prioritiesQueue = new PriorityQueue<>();
+public class ObjectInterceptorDispatcher<T extends ParticleObject<T>>
+        extends InterceptorDispatcher<T, DrawContext, ObjectInterceptor<T>> {
+
+    public ObjectInterceptorDispatcher() {}
 
     /** Add a particle object interceptor without any predefined priority to the dispatcher
      *
@@ -34,10 +32,7 @@ public class ObjectInterceptorDispatcher<T extends ParticleObject<T>> {
      * @return The priority assigned to the object interceptor
      */
     public int addInterceptor(ObjectInterceptor<T> objectInterceptor) {
-        this.priorityMap.put(this.priorityCounter, new ArrayList<>(List.of(objectInterceptor)));
-        prioritiesQueue.add(this.priorityCounter);
-        this.priorityCounter += 1;
-        return this.priorityCounter - 1;
+        return super.addInterceptor(objectInterceptor);
     }
 
     /** Add a particle object interceptor with a predefined priority to the dispatcher
@@ -48,32 +43,7 @@ public class ObjectInterceptorDispatcher<T extends ParticleObject<T>> {
      * @return If there were any other interceptors in that priority
      */
     public boolean addInterceptor(int priority, ObjectInterceptor<T> objectInterceptor) {
-        if (this.priorityMap.containsKey(priority)) {
-            List<ObjectInterceptor<T>> objectInterceptorList = this.priorityMap.get(priority);
-            objectInterceptorList.add(objectInterceptor);
-            this.priorityMap.replace(priority, objectInterceptorList);
-            return true;
-        }
-        this.priorityMap.put(priority, new ArrayList<>(List.of(objectInterceptor)));
-        prioritiesQueue.add(priority);
-        if (this.priorityCounter < priority) {
-            this.priorityCounter = priority;
-        }
-        return false;
-    }
-
-    /** Erase a priority entry in the dispatcher
-     *
-     * @param priority The priority to erase on the dispatcher
-     * @return The object interceptors that lived on the priority entry
-     */
-    public List<ObjectInterceptor<T>> erasePriority(int priority) {
-        List<ObjectInterceptor<T>> objectInterceptors = this.priorityMap.remove(priority);
-        this.prioritiesQueue.remove(priority);
-        if (this.priorityCounter < priority) {
-            this.priorityCounter = priority;
-        }
-        return objectInterceptors;
+        return super.addInterceptor(priority, objectInterceptor);
     }
 
     /** Trigger a computation in the dispatcher whereby the interceptors with the highest priority will be executed
@@ -84,12 +54,6 @@ public class ObjectInterceptorDispatcher<T extends ParticleObject<T>> {
      * @param drawContext The draw context to use in the computations
      */
     public void compute(T object, DrawContext drawContext) {
-        while (!prioritiesQueue.isEmpty()) {
-            int priorityNum = prioritiesQueue.peek();
-            List<ObjectInterceptor<T>> objectInterceptors = this.priorityMap.get(priorityNum);
-            for (ObjectInterceptor<T> interceptor : objectInterceptors) {
-                interceptor.apply(drawContext, object);
-            }
-        }
+        super.compute(object, drawContext);
     }
 }
