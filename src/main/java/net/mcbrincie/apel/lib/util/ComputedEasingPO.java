@@ -3,7 +3,7 @@ package net.mcbrincie.apel.lib.util;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import org.joml.Vector3f;
 
-public class ComputedEasingPO extends ComputedEasings {
+public class ComputedEasingPO extends ComputedEasings<ComputedEasingPO> {
     public final Vector3f computedRotation;
     public final Vector3f computedOffset;
 

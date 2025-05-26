@@ -4,7 +4,7 @@ import net.mcbrincie.apel.lib.easing.EasingCurve;
 
 import java.util.HashMap;
 
-public class ComputedEasings {
+public class ComputedEasings<E extends ComputedEasings<E>> {
     protected final float tVal;
     protected HashMap<String, Object> computedFields = new HashMap<>();
 
@@ -12,9 +12,9 @@ public class ComputedEasings {
         this.tVal = currStep / numberOfSteps;
     }
 
-    public <T> ComputedEasings addComputedField(String name, EasingCurve<T> value) {
+    public <T> E addComputedField(String name, EasingCurve<T> value) {
         this.computedFields.put(name, value.getValue(this.tVal));
-        return this;
+        return (E) this;
     }
 
     public Object getComputedField(String name) {
