@@ -110,7 +110,7 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         if (this.particle_interval != null) {
             container.addComputedField("interval", this.particle_interval);
         }

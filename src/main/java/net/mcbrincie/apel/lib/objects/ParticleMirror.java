@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -122,7 +123,7 @@ public class ParticleMirror<O extends ParticleObject<O>> extends UtilityParticle
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
         return container.addComputedField("distance", this.distance);
     }
 

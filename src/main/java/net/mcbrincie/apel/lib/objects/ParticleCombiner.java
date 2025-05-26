@@ -132,7 +132,7 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
             prevRotations.add(this.objects.getFirst().setRotation(rotation));
         }
         for (int i = 1; i < this.objects.size(); i++) {
-            baseRotation.add(offsetX, offsetY, offsetZ);
+            baseRotation = new Vector3f(rotation.x + offsetX * i, rotation.y + offsetY * i, rotation.z + offsetZ * i);
             // Defensive copy happens in ParticleObject#setRotation
             prevRotations.add(this.objects.get(i).setRotation(baseRotation));
         }

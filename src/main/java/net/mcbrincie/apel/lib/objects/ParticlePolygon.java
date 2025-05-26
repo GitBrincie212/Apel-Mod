@@ -176,7 +176,7 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container.addComputedField("sides", this.sides)
                 .addComputedField("size", this.size)
                 .addComputedField("curve", this.curve);

@@ -3,6 +3,7 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
@@ -146,20 +147,14 @@ public abstract class RenderableParticleObject<T extends RenderableParticleObjec
         return prevAmount;
     }
 
+    /** Computes some additional easing properties. */
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
+        return container;
+    }
+
     public final void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps, float deltaTickTime) {
-        ComputedEasingRPO computedEasingRPO = new ComputedEasingRPO(this, step, numberOfSteps);
-        computedEasingRPO = (ComputedEasingRPO) this.computeAdditionalEasings(computedEasingRPO);
-        DrawContext drawContext = new DrawContext(
-                renderer.getServerWorld(), drawPos,
-                step, numberOfSteps, deltaTickTime,
-                computedEasingRPO
-        );
-        this.prepareContext(drawContext);
-        //noinspection unchecked
-        this.beforeDraw.apply(drawContext, (T) this);
-        this.draw(renderer, drawContext);
-        //noinspection unchecked
-        this.afterDraw.apply(drawContext, (T) this);
+        super.doDraw(() -> new ComputedEasingRPO(this, step, numberOfSteps), this::computeAdditionalEasings,
+                renderer, step, drawPos, numberOfSteps, deltaTickTime);
     }
 
     /**
@@ -216,7 +211,7 @@ public abstract class RenderableParticleObject<T extends RenderableParticleObjec
          * This method is not cumulative; repeated calls will overwrite the
          * value.
          */
-        public final B amount(int amount) {
+        public B amount(int amount) {
             this.amount = new ConstantEasingCurve<>(amount);
             return self();
         }
@@ -226,7 +221,7 @@ public abstract class RenderableParticleObject<T extends RenderableParticleObjec
          * This method is not cumulative; repeated calls will overwrite the
          * value.
          */
-        public final B amount(EasingCurve<Integer> amount) {
+        public B amount(EasingCurve<Integer> amount) {
             this.amount = amount;
             return self();
         }

@@ -120,7 +120,7 @@ public class ParticleEllipse extends RenderableParticleObject<ParticleEllipse> {
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container
                 .addComputedField("radius", this.radius)
                 .addComputedField("stretch", this.stretch);

@@ -214,7 +214,7 @@ public class ParticleTriangle extends RenderableParticleObject<ParticleTriangle>
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container
                 .addComputedField("vertex1", this.vertex1)
                 .addComputedField("vertex2", this.vertex2)

@@ -255,7 +255,7 @@ public class ParticleQuad extends RenderableParticleObject<ParticleQuad> {
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container.addComputedField("vertex1", this.vertex1)
                 .addComputedField("vertex2", this.vertex2)
                 .addComputedField("vertex3", this.vertex3)

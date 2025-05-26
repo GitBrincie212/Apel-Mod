@@ -127,7 +127,7 @@ public class ParticleLine extends RenderableParticleObject<ParticleLine> {
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container
                 .addComputedField("start", this.start)
                 .addComputedField("end", this.end);

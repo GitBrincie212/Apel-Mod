@@ -117,7 +117,7 @@ public class ParticleCylinder extends RenderableParticleObject<ParticleCylinder>
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container.addComputedField("radius", this.radius)
                 .addComputedField("height", this.height);
     }

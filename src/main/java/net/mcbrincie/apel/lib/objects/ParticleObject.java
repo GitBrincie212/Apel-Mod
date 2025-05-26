@@ -1,5 +1,8 @@
 package net.mcbrincie.apel.lib.objects;
 
+import com.mojang.datafixers.util.Function3;
+import net.mcbrincie.apel.lib.util.ComputedEasingPA;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -12,6 +15,8 @@ import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * ParticleObject is the base class for all particle-based constructions that are animated by APEL.  Particle objects
@@ -257,17 +262,22 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      */
     public abstract void draw(ApelServerRenderer renderer, DrawContext data);
 
-
-    /** Computes some additional easing properties.
-     *
-     */
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    /** Computes some additional easing properties. */
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
         return container;
     }
 
     public void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps, float deltaTickTime) {
-        ComputedEasingPO computedEasingPO = new ComputedEasingPO(this, step, numberOfSteps);
-        computedEasingPO = (ComputedEasingPO) this.computeAdditionalEasings(computedEasingPO);
+        doDraw(() -> new ComputedEasingPO(this, step, numberOfSteps), this::computeAdditionalEasings,
+                renderer, step, drawPos, numberOfSteps, deltaTickTime);
+    }
+
+    public <TC extends ComputedEasingPO> void doDraw(
+            Supplier<TC> factory, Function<TC, TC> computeMethod,
+            ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps,
+            float deltaTickTime
+    ) {
+        TC computedEasingPO = computeMethod.apply(factory.get());
         DrawContext drawContext = new DrawContext(
                 renderer.getServerWorld(), drawPos,
                 step, numberOfSteps, deltaTickTime,

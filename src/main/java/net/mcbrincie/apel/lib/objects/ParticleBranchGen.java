@@ -393,7 +393,7 @@ public class ParticleBranchGen extends RenderableParticleObject<ParticleBranchGe
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container.addComputedField("minBranchesPerDivision", this.minBranchesPerDivision)
                 .addComputedField("maxBranchesPerDivision", this.maxBranchesPerDivision)
                 .addComputedField("minLength", this.minLength)

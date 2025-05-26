@@ -1,5 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
@@ -172,7 +173,7 @@ public class ParticleCuboid extends RenderableParticleObject<ParticleCuboid> {
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container.addComputedField("size", this.size)
                 .addComputedField("amounts", this.amounts);
     }
@@ -264,6 +265,17 @@ public class ParticleCuboid extends RenderableParticleObject<ParticleCuboid> {
         public B amounts(EasingCurve<Vector3i> amount) {
             this.amounts = amount;
             return self();
+        }
+
+        @Override
+        public B amount(int amount) {
+            this.amounts = new ConstantEasingCurve<>(new Vector3i(amount));
+            return self();
+        }
+
+        @Override
+        public B amount(EasingCurve<Integer> amount) {
+            throw new RuntimeException("[UNSUPPORTED], use a different builder parameter");
         }
 
         /**

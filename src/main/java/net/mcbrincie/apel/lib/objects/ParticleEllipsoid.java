@@ -158,7 +158,7 @@ public class ParticleEllipsoid extends RenderableParticleObject<ParticleEllipsoi
     }
 
     @Override
-    protected ComputedEasings computeAdditionalEasings(ComputedEasingPO container) {
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container.addComputedField("xSemiAxis", this.xSemiAxis)
                 .addComputedField("ySemiAxis", this.ySemiAxis)
                 .addComputedField("zSemiAxis", this.zSemiAxis);
