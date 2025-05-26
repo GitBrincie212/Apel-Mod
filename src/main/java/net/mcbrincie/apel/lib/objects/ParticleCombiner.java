@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/** A utility particle object class that groups all particle objects as
+/** A particle object class that groups all particle objects as
  * one object instead of multiple. Particle combiners can also group themselves
  * which can produce an object hierarchy. There are many good things about using
  * a particle combiner in most cases, examples include but are not limited to
@@ -68,7 +68,7 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
     }
 
     private ParticleCombiner(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, ObjectInterceptor.identity(),
+        super(builder.rotation, builder.offset, ObjectInterceptor.identity(),
               ObjectInterceptor.identity());
         this.setObjects(builder.objects);
         this.setAfterChildDraw(builder.afterChildDraw);
@@ -283,12 +283,13 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
     }
 
     /**
-     * Sets all child objects to use the same {@code particleEffect} and returns the previous particle effects that
-     * were used.
+     * Sets all <strong>RENDERABLE</strong> child particle objects to use the same {@code particleEffect} and returns the previous
+     * particle effects that were used. If there are other utility particle objects or other particle objects, then it will just
+     * skip them
      * <p>
      * The {@code particleEffect} may be null, but note that it will cause problems when rendering leaf-level objects
-     * as the particle effect must be encoded to traverse the server to client network channel.  Setting a particle
-     * effect on a ParticleCombiner does not have an effect on rendering.
+     * as the particle effect must be encoded to traverse the server to a client network channel. Setting a particle
+     * effect on a ParticleCombiner does not affect rendering.
      *
      * @param particleEffect The new particle
      * @return The previous particle effects
@@ -296,31 +297,32 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
     public List<ParticleEffect> setParticleEffects(ParticleEffect particleEffect) {
         List<ParticleEffect> prevParticleEffects = new ArrayList<>(this.objects.size());
         for (ParticleObject<?> object : this.objects) {
-            prevParticleEffects.add(object.setParticleEffect(particleEffect));
+            if (object instanceof RenderableParticleObject<?> renderableParticleObject) {
+                prevParticleEffects.add(renderableParticleObject.setParticleEffect(particleEffect));
+            }
         }
         return prevParticleEffects;
     }
 
     /**
-     * Sets the particle effect for this combiner and all child objects, recursively.  It returns the previous
-     * particle effect used by this object. If any child objects are also ParticleCombiners, it will recurse and set
-     * their child objects to use the provided {@code particleEffect}.
+     * Sets the particle effect for all child <strong>RENDERABLE</strong> objects, recursively. It returns no result back
+     * If any child objects are also ParticleCombiners, it will recurse and set their child <strong>RENDERABLE</strong> objects
+     * to use the provided {@code particleEffect}.
      * <p>
      * The {@code particleEffect} may be null, but note that it will cause problems when rendering leaf-level objects
-     * as the particle effect must be encoded to traverse the server to client network channel.  Setting a particle
-     * effect on a ParticleCombiner does not have an effect on rendering.
+     * as the particle effect must be encoded to traverse the server to a client network channel. Setting a particle
+     * effect on a ParticleCombiner does not affect rendering.
      *
      * @param particle The new particle
      *
      * @see ParticleCombiner#setParticleEffectsRecursively(ParticleEffect[])
      */
     public void setParticleEffectsRecursively(ParticleEffect particle) {
-        ParticleEffect prevParticle = super.setParticleEffect(particle);
         for (ParticleObject<?> object : this.objects) {
             if (object instanceof ParticleCombiner combiner) {
                 combiner.setParticleEffectsRecursively(particle);
-            } else {
-                object.setParticleEffect(particle);
+            } else if (object instanceof RenderableParticleObject<?> renderableParticleObject){
+                renderableParticleObject.setParticleEffect(particle);
             }
         }
     }
@@ -340,7 +342,6 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @see ParticleCombiner#setParticleEffectsRecursively(ParticleEffect)
      */
     public void setParticleEffectsRecursively(ParticleEffect[] particleEffects) {
-        this.setParticleEffect(null);
         this.particleEffectRecursiveLogic(particleEffects, 0);
     }
 
@@ -350,16 +351,15 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
                 break;
             }
             if (object instanceof ParticleCombiner combiner) {
-                combiner.setParticleEffect(null);
                 combiner.particleEffectRecursiveLogic(particleEffects, depth + 1);
-            } else {
-                object.setParticleEffect(particleEffects[depth]);
+            } else if (object instanceof RenderableParticleObject<?> renderableParticleObject) {
+                renderableParticleObject.setParticleEffect(particleEffects[depth]);
             }
         }
     }
 
     /**
-     * Sets the amount of particles to use for each child object and returns the previous amounts that were used.
+     * Sets the number of particles to use for each child object and returns the previous amounts that were used.
      *
      * @param amount The new particle
      * @return The previous particle
@@ -367,42 +367,48 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @see ParticleCombiner#setAmounts(int, int)
      * @see ParticleCombiner#setAmountsRecursively(int, int)
      * @see ParticleCombiner#setAmountsRecursively(int, int, int)
-     * @see ParticleCombiner#setAmount(int)
      */
     public List<EasingCurve<Integer>> setAmounts(int amount) {
         List<EasingCurve<Integer>> prevAmounts = new ArrayList<>(this.objects.size());
         for (ParticleObject<?> object : this.objects) {
-            prevAmounts.add(object.setAmount(amount));
+            if (object instanceof RenderableParticleObject<?> renderableParticleObject) {
+                prevAmounts.add(renderableParticleObject.setAmount(amount));
+            }
         }
         return prevAmounts;
     }
 
     /**
-     * Sets the amount of particles to use for each child object with an incremental offset for each subsequent object,
+     * Sets the number of particles to use for each child object with an incremental offset for each subsequent object,
      * then returns the previous amounts that were used.  This does not recurse if any child is a ParticleCombiner.
      * <p>
      * For example, if {@code offset} is {@code 1}, the first object's amount will be set to {@code amount}, the second
      * to {@code amount + 1}, the third to {@code amount + 2}, and so on.  The {@code offset} may be negative, but take
      * care not to reach negative amounts: they are not allowed.
      *
-     * @param amount The new amount of particles
+     * @param amount The new number of particles
      * @param offset The incremental amount to apply to every object beyond the first (positive or negative)
      * @return The previous particle
      *
      * @see ParticleCombiner#setAmounts(int)
      * @see ParticleCombiner#setAmountsRecursively(int, int)
      * @see ParticleCombiner#setAmountsRecursively(int, int, int)
-     * @see ParticleCombiner#setAmount(int)
      */
     public List<EasingCurve<Integer>> setAmounts(int amount, int offset) {
         List<EasingCurve<Integer>> prevAmounts = new ArrayList<>(this.objects.size());
         int baseOffset = 0;
         if (!this.objects.isEmpty()) {
-            prevAmounts.add(this.objects.getFirst().setAmount(amount));
+            ParticleObject<?> particleObject = this.objects.getFirst();
+            if (particleObject instanceof RenderableParticleObject<?> renderableParticleObject) {
+                prevAmounts.add(renderableParticleObject.setAmount(amount));
+            }
         }
         for (int i = 1; i < this.objects.size(); i++) {
             baseOffset += offset;
-            prevAmounts.add(this.objects.get(i).setAmount(amount + baseOffset));
+            ParticleObject<?> particleObject = this.objects.get(i);
+            if (particleObject instanceof RenderableParticleObject<?> renderableParticleObject) {
+                prevAmounts.add(renderableParticleObject.setAmount(amount + baseOffset));
+            }
         }
         return prevAmounts;
     }
@@ -422,7 +428,6 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @see ParticleCombiner#setAmountsRecursively(int, int, int)
      * @see ParticleCombiner#setAmounts(int)
      * @see ParticleCombiner#setAmounts(int, int)
-     * @see ParticleCombiner#setAmount(int)
      */
     public void setAmountsRecursively(int amount, int offset) {
         if (offset == 0) {
@@ -433,8 +438,9 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
             i++;
             if (object instanceof ParticleCombiner combiner) {
                 combiner.setAmountsRecursively(amount + (offset * i), offset);
+            } else if (object instanceof RenderableParticleObject<?> renderableParticleObject) {
+                renderableParticleObject.setAmount(amount + (offset * i));
             }
-            object.setAmount(amount + (offset * i));
         }
     }
 
@@ -452,7 +458,6 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * @param recursiveOffset The offset of the amount once the program encounters another combiner
      *
      * @see ParticleCombiner#setAmountsRecursively(int, int)
-     * @see ParticleCombiner#setAmount(int)
      * @see ParticleCombiner#setAmounts(int, int)
      */
     public void setAmountsRecursively(int amount, int offset, int recursiveOffset) {
@@ -467,8 +472,9 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
             i++;
             if (object instanceof ParticleCombiner combiner) {
                 combiner.setAmountsRecursively(amount + (recursiveOffset * i), recursiveOffset);
+            }  else if (object instanceof RenderableParticleObject<?> renderableParticleObject) {
+                renderableParticleObject.setAmount(amount + (offset * i));
             }
-            object.setAmount(amount + (offset * i));
         }
     }
 
