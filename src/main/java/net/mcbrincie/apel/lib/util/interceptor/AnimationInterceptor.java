@@ -1,6 +1,7 @@
 package net.mcbrincie.apel.lib.util.interceptor;
 
 import net.mcbrincie.apel.lib.animators.PathAnimatorBase;
+import net.mcbrincie.apel.lib.objects.ParticleObject;
 
 /** AnimationInterceptor defines the signature for path-animation interceptor methods in APEL.
  * At several points in the library, Apel allows developers to inject custom
@@ -30,4 +31,13 @@ public interface AnimationInterceptor<T extends PathAnimatorBase<T>> extends Bas
      * @param animator the path animator to intercept
      */
     void apply(AnimationContext data, T animator);
+
+    /** An identity interceptor that does nothing. May be used when clearing an
+     * interceptor.
+     * @return the identity interceptor
+     * @param <T> The type being intercepted
+     */
+    static <T extends PathAnimatorBase<T>> AnimationInterceptor<T> identity() {
+        return (data, object) -> {};
+    }
 }

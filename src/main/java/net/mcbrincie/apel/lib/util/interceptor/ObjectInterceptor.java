@@ -30,4 +30,13 @@ public interface ObjectInterceptor<T extends ParticleObject<T>> extends BaseInte
      * @param object the particle object to intercept
      */
     void apply(DrawContext data, T object);
+
+    /** An identity interceptor that does nothing. May be used when clearing an
+     * interceptor.
+     * @return the identity interceptor
+     * @param <T> The type being intercepted
+     */
+    static <T extends ParticleObject<T>> ObjectInterceptor<T> identity() {
+        return (data, object) -> {};
+    }
 }
