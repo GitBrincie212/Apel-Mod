@@ -50,6 +50,7 @@ import java.util.Optional;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class ParticleObject<T extends ParticleObject<T>> {
     protected EasingCurve<Vector3f> rotation;
+    protected EasingCurve<Vector3f> scale;
     protected EasingCurve<Vector3f> offset = new ConstantEasingCurve<>(new Vector3f(0, 0, 0));
     protected ObjectInterceptor<T> afterDraw = ObjectInterceptor.identity();
     protected ObjectInterceptor<T> beforeDraw = ObjectInterceptor.identity();
@@ -82,6 +83,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
         this.offset = object.offset;
         this.beforeDraw = object.beforeDraw;
         this.afterDraw = object.afterDraw;
+        this.scale = object.scale;
     }
 
     /** This is a placeholder constructor */
@@ -98,8 +100,8 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     /**
      * Sets the rotation to a new value. The rotation is calculated in radians and
      * when setting it wraps the rotation to be in the range of (-2π, 2π). The rotation components will have the same
-     * signs as they do in the parameter.  It returns the previous rotation used. This is an overload for specifying
-     * an ease property when using rotation
+     * signs as they do in the parameter. It returns the previous rotation used. This is an overload for specifying
+     * an ease property when using rotation, this is an overload for specifying an ease curve property when using rotation
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
@@ -115,8 +117,8 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     /**
      * Sets the rotation to a new value. The rotation is calculated in radians and
      * when setting it wraps the rotation to be in the range of (-2π, 2π).  The rotation components will have the same
-     * signs as they do in the parameter.  It returns the previous rotation used. This is an overload for specifying
-     * a constant value of rotation
+     * signs as they do in the parameter. It returns the previous rotation used. This is an overload for specifying
+     * a constant value of rotation, this is an overload for specifying a constant property when using rotation
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
@@ -124,9 +126,48 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      * @return the previously used rotation
      */
     public final EasingCurve<Vector3f> setRotation(Vector3f rotation) {
-        EasingCurve<Vector3f> prevRotation = this.rotation;
-        this.rotation = new ConstantEasingCurve<>(rotation);
-        return prevRotation;
+        return this.setRotation(new ConstantEasingCurve<>(rotation));
+    }
+
+    /** Gets the scale which is currently in use and returns it.
+     *
+     * @return The currently used scale
+     */
+    public EasingCurve<Vector3f> getScale() {
+        return this.scale;
+    }
+
+    /**
+     * Sets the scale to a new value. The scale acts as a multiplier to the already defined size of the particle object
+     * It returns the previous scale used. This is an overload for specifying an ease property when using scale. Negative
+     * scales flip the object and when the scale is zero, it isn't rendered, lower than one and greater than zero will shrink
+     * the particle object and any value greater than one will enlarge the particle object
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param scale The new scale
+     * @return the previously used scale
+     */
+    public final EasingCurve<Vector3f> setScale(EasingCurve<Vector3f> scale) {
+        EasingCurve<Vector3f> prevScale = this.scale;
+        this.scale = scale;
+        return prevScale;
+    }
+
+    /**
+     *  Sets the scale to a new value. The scale acts as a multiplier to the already defined size of the particle object
+     *  It returns the previous scale used. This is an overload for specifying an ease property when using scale. Negative
+     *  scales flip the object and when the scale is zero, it isn't rendered, lower than one and greater than zero will shrink
+     *  the particle object and any value greater than one will enlarge the particle object. This is an overload for specifying
+     *  a constant property when using rotation
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param scale The new scale
+     * @return the previously used scale
+     */
+    public final EasingCurve<Vector3f> setScale(Vector3f scale) {
+        return this.setScale(new ConstantEasingCurve<>(scale));
     }
 
     /** Gets the current offset value used. The offset position is added with the drawing position.
@@ -264,6 +305,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     public static abstract class Builder<B extends Builder<B, T>, T extends ParticleObject<T>> {
         protected EasingCurve<Vector3f> rotation = new ConstantEasingCurve<>(new Vector3f(0));
         protected EasingCurve<Vector3f> offset = new ConstantEasingCurve<>(new Vector3f(0));
+        protected EasingCurve<Vector3f> scale = new ConstantEasingCurve<>(new Vector3f(1));
         protected ObjectInterceptor<T> beforeDraw;
         protected ObjectInterceptor<T> afterDraw;
 
@@ -305,6 +347,33 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
          */
         public final B offset(EasingCurve<Vector3f> offset) {
             this.offset = offset;
+            return self();
+        }
+
+        /**
+         * Set the scale on the builder using an easing curve with a vector type.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B scale(EasingCurve<Vector3f> scale) {
+            this.scale = scale;
+            return self();
+        }
+
+        /**
+         * Set the scale on the builder using a constant vector value.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B scale(Vector3f scale) {
+            this.scale = new ConstantEasingCurve<>(scale);
+            return self();
+        }
+
+        /**
+         * Set the scale on the builder using a constant value.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B scale(float scale) {
+            this.scale = new ConstantEasingCurve<>(new Vector3f(scale));
             return self();
         }
 
