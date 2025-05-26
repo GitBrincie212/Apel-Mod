@@ -1,11 +1,14 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ParticleTriangleTest {
+    private static final ServerWorld NULL_WORLD = null;
 
     @Test
     void testValidTriangles() {
@@ -30,6 +33,6 @@ class ParticleTriangleTest {
                 .vertex1(new Vector3f(0))
                 .vertex2(new Vector3f(1))
                 .vertex3(new Vector3f(4))
-                .build());
+                .build().doDraw(ApelServerRenderer.create(NULL_WORLD), 0, new Vector3f(0), 0, 0));
     }
 }
