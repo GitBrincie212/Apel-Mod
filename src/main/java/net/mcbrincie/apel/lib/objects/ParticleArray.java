@@ -24,11 +24,10 @@ import org.joml.Vector3i;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleArray<O extends ParticleObject<O>> extends UtilityParticleObject<ParticleArray<O>, O> {
-    protected O particleObject;
     protected EasingCurve<Vector3i> gridSize;
     protected EasingCurve<Vector3f> spacing;
 
-    public static <B extends Builder<B, T>, T extends ParticleObject<T>> Builder<B, T> builder() {
+    public static <T extends ParticleObject<T>>  Builder<?, T> builder() {
         return new Builder<>();
     }
 
