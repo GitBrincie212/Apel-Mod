@@ -17,22 +17,18 @@ import org.joml.Vector3f;
  * it easier to use. Keep in mind that invisible particle objects won't be rendered.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleMirror extends ParticleObject<ParticleMirror> {
-    protected ParticleObject<?> target_object;
+public class ParticleMirror<O extends ParticleObject<O>> extends UtilityParticleObject<ParticleMirror<O>, O> {
     protected EasingCurve<Float> distance;
     protected boolean lockXAxis = false;
     protected boolean lockYAxis = false;
     protected boolean lockZAxis = false;
-    protected int amount = -1;
 
-    public static Builder<?> builder() {
+    public static <T extends ParticleObject<T>> Builder<?, T> builder() {
         return new Builder<>();
     }
-
-    private ParticleMirror(Builder<?> builder) {
-        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, ObjectInterceptor.identity(),
+    private <B extends Builder<B, O>> ParticleMirror(Builder<B, O> builder) {
+        super(builder.particleObject, builder.rotation, builder.offset, ObjectInterceptor.identity(),
               ObjectInterceptor.identity());
-        this.setTargetObject(builder.target_object);
         this.setDistance(builder.distance);
         this.setLockX(builder.lockX);
         this.setLockY(builder.lockY);
@@ -45,22 +41,12 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
      *
      * @param mirror The particle mirror to copy from
      */
-    public ParticleMirror(ParticleMirror mirror) {
+    public ParticleMirror(ParticleMirror<O> mirror) {
         super(mirror);
-        this.target_object = mirror.target_object;
         this.distance = mirror.distance;
         this.lockXAxis = mirror.lockXAxis;
         this.lockYAxis = mirror.lockYAxis;
         this.lockZAxis = mirror.lockZAxis;
-        this.amount = -1;
-    }
-
-    /** Gets the particle object that is mirrored
-     *
-     * @return The list of particle objects
-     */
-    public ParticleObject<?> getTargetObject() {
-        return this.target_object;
     }
 
     /** Gets the distance between the target object and the center mirror
@@ -77,17 +63,6 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
      * @return the boolean values going in order of xyz
      */
     public boolean[] getLockAxis() {return new boolean[]{this.lockXAxis, this.lockYAxis, this.lockZAxis};}
-
-    /** Sets the target object to a different object.
-     *
-     * @param newObject The new particle object
-     * @return The previous particle object
-     */
-    public ParticleObject<?> setTargetObject(ParticleObject<?> newObject) {
-        ParticleObject<?> prevParticleObj = this.target_object;
-        this.target_object = newObject;
-        return prevParticleObj;
-    }
 
     /** Sets the distance between the target and mirrored particle object.
      * Distance can be negative as well, so it doesn't really matter.
@@ -157,7 +132,7 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
         float dist = (float) computedEasings.getComputedField("distance");
         Vector3f position = drawContext.getPosition();
         if (dist == 0) {
-            this.target_object.doDraw(
+            this.particleObject.doDraw(
                     renderer,
                     drawContext.getCurrentStep(),
                     position,
@@ -172,7 +147,7 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
                 .rotateX(computedEasings.computedRotation.x);
         Vector3f mirrored_pos = new Vector3f(position).add(rotatedDirection.mul(dist));
         Vector3f target_pos = (new Vector3f(position).mul(2)).sub(mirrored_pos);
-        this.target_object.doDraw(
+        this.particleObject.doDraw(
                 renderer,
                 drawContext.getCurrentStep(),
                 target_pos,
@@ -183,22 +158,22 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
         float x = this.lockXAxis ? -pi : pi;
         float y = this.lockYAxis ? -pi : pi;
         float z = this.lockZAxis ? -pi : pi;
-        Vector3f prevRot = this.target_object.getRotation().getValue(
+        Vector3f prevRot = this.particleObject.getRotation().getValue(
                 (float) drawContext.getCurrentStep() / drawContext.getNumberOfStep()
         );
-        this.target_object.setRotation(new Vector3f(x, y, z).sub(prevRot));
-        this.target_object.doDraw(
+        this.particleObject.setRotation(new Vector3f(x, y, z).sub(prevRot));
+        this.particleObject.doDraw(
                 renderer,
                 drawContext.getCurrentStep(),
                 mirrored_pos,
                 drawContext.getNumberOfStep(),
                 drawContext.getDeltaTickTime()
         );
-        this.target_object.setRotation(prevRot);
+        this.particleObject.setRotation(prevRot);
     }
 
-    public static class Builder<B extends Builder<B>> extends ParticleObject.Builder<B, ParticleMirror> {
-        protected ParticleObject<?> target_object;
+    public static class Builder<B extends Builder<B, T>, T extends ParticleObject<T>>
+            extends UtilityParticleObject.Builder<B, ParticleMirror<T>, T> {
         protected EasingCurve<Float> distance;
         protected boolean lockX = false;
         protected boolean lockY = false;
@@ -206,14 +181,6 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
         protected boolean isDistSet = false;
 
         private Builder() {}
-
-        /** Sets the target object to the particle mirror. This method works in the fashion of
-         * last modification wins as such it isn't cumulative
-        */
-        public B object(ParticleObject<?> object) {
-            this.target_object = object;
-            return self();
-        }
 
         /** Sets the distance between the mirror, it also accepts negative distances. This
          * method works in the fashion of last modification wins as such it isn't cumulative
@@ -268,14 +235,12 @@ public class ParticleMirror extends ParticleObject<ParticleMirror> {
         }
 
         @Override
-        public ParticleMirror build() {
-            if (this.target_object == null) {
-                throw new IllegalStateException("A Target Particle Object Must Be Provided");
-            }
+        public ParticleMirror<T> build() {
+            super.build();
             if (!this.isDistSet) {
                 throw new IllegalStateException("A Distance Must Be Provided");
             }
-            return new ParticleMirror(this);
+            return new ParticleMirror<>(this);
         }
     }
 }
