@@ -30,7 +30,6 @@ import java.util.List;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleModel extends RenderableParticleObject<ParticleModel> {
     protected final ObjModel objModel;
-    protected EasingCurve<Vector3f> scale;
     protected EasingCurve<Float> particle_interval = null;
 
     public static Key<ObjModel> objectModelKey(String name) {
@@ -51,7 +50,6 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
         this.setBeforeDraw(builder.beforeDraw);
         this.setAfterDraw(builder.afterDraw);
         this.objModel = builder.objectModel;
-        this.setScale(builder.scale);
         if (builder.interval != null) {
             this.setInterval(builder.interval);
             return;
@@ -67,45 +65,8 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
     public ParticleModel(ParticleModel model) {
         super(model);
         this.objModel = model.objModel;
-        this.scale = model.scale;
         this.particle_interval = model.particle_interval;
     }
-
-    /**
-     * Set the scale of this ParticleModel and returns the previous scaling that was used.
-     * Negative scaling will invert the corresponding axis.  Zero scaling is not allowed.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     * This method overload will set a constant value for the scale
-     *
-     * @param newScale the new scale
-     * @return the previously used scale
-    */
-    public final EasingCurve<Vector3f> setScale(Vector3f newScale) {
-        return this.setScale(new ConstantEasingCurve<>(newScale));
-    }
-
-    /**
-     * Set the scale of this ParticleModel and returns the previous scaling that was used.
-     * Negative scaling will invert the corresponding axis. Zero scaling is not allowed.
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     * This method overload will set an ease curve value for the scale
-     *
-     * @param newScale the new scale
-     * @return the previously used scale
-     */
-    public final EasingCurve<Vector3f> setScale(EasingCurve<Vector3f> newScale) {
-        EasingCurve<Vector3f> prevScale = this.scale;
-        this.scale = newScale;
-        return prevScale;
-    }
-
-    /** Gets the scale of the ParticleModel and returns it.
-     *
-     * @return the scale of the ParticleModel
-     */
-    public EasingCurve<Vector3f> getScale() {return this.scale;}
 
     /** Gets the interval of particles that are currently in use and returns it.
      *
@@ -214,44 +175,6 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
         protected ObjModel objectModel;
 
         private Builder() {}
-
-        /**
-         * Scale the particle model by distinct values per axis.  This method is not cumulative; repeated calls will
-         * overwrite values.  To scale uniformly, see {@link #scale(float)}, which shares overwrite behavior with this
-         * method.
-         *
-         * @param scale The scale per axis xyz
-         * @return The builder instance
-        */
-        public B scale(Vector3f scale) {
-            this.scale = new ConstantEasingCurve<>(scale);
-            return self();
-        }
-
-        /**
-         * Scale the model uniformly on all axes.  This method is not cumulative; repeated calls will overwrite values.
-         * To scale per-axis, see {@link #scale(Vector3f)}, which shares overwrite behavior with this method.
-         *
-         * @param scale The scale for all the axis
-         * @return The builder instance
-        */
-        public B scale(float scale) {
-            this.scale = new ConstantEasingCurve<>(new Vector3f(scale));
-            return self();
-        }
-
-        /**
-         * Scale the particle model by distinct values per axis.  This method is not cumulative; repeated calls will
-         * overwrite values.  To scale uniformly, see {@link #scale(float)}, which shares overwrite behavior with this
-         * method.
-         *
-         * @param scale The scale per axis xyz
-         * @return The builder instance
-         */
-        public B scale(EasingCurve<Vector3f> scale) {
-            this.scale = scale;
-            return self();
-        }
 
         /**
          * Load a model from the given filename.  This method is not cumulative; repeated calls will overwrite the
