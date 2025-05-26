@@ -24,7 +24,9 @@ create a better place for developers to use in their own projects
 - [x] Simplified the ``ParticleBezierCurve`` interface
 - [ ] Reworked the internal system of **Path Animators** to make it easier to create new ones
 - [x] Reworked the handling of the metadata from interceptors
-- [x] Redesigned The APEL Logo into a more modern slick design(For The RadiantFrame Project)
+- [x] Reworked the **Particle Objects** to separate Utility Particle Objects from Renderable Particle Objects 
+(The ParticleCombiner is a particle object but not a utility one due to its nature)
+- [x] Redesigned The APEL Logo into a more modern slick design (For The RadiantFrame Project)
 
 ## Removals
 - [x] Removed Listeners for **Path Animators**
