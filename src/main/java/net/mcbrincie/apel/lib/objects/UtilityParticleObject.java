@@ -117,8 +117,9 @@ public abstract class UtilityParticleObject<T extends UtilityParticleObject<T, O
          * Set the particle object on the builder.  This method is not cumulative; repeated calls will overwrite the
          * value.
          */
-        public final B particleObject(O particleObject) {
-            this.particleObject = particleObject;
+        public final B particleObject(ParticleObject<?> particleObject) {
+            //noinspection unchecked
+            this.particleObject = (O) particleObject;
             return self();
         }
 
