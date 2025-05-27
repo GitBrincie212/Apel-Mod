@@ -1,13 +1,12 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -179,7 +178,7 @@ public class ParticleCuboid extends RenderableParticleObject<ParticleCuboid> {
     }
 
     @Override
-    protected void prepareContext(DrawContext drawContext) {
+    protected void prepareContext(DrawContext<?> drawContext) {
         // Scale
         Vector3f currSize = (Vector3f) drawContext.getComputedEasings().getComputedField("size");
         float width = currSize.x / 2f;
@@ -200,20 +199,20 @@ public class ParticleCuboid extends RenderableParticleObject<ParticleCuboid> {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
         ComputedEasingPO computedEasings = drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);
         // Scaled and re-positioned vertices
         Vector3f[] vertices = drawContext.getMetadata(VERTICES);
 
-        Vector3f vertex0 = vertices[0];
-        Vector3f vertex1 = vertices[1];
-        Vector3f vertex2 = vertices[2];
-        Vector3f vertex3 = vertices[3];
-        Vector3f vertex4 = vertices[4];
-        Vector3f vertex5 = vertices[5];
-        Vector3f vertex6 = vertices[6];
-        Vector3f vertex7 = vertices[7];
+        Vector3f vertex0 = vertices[0].mul(actualSize);
+        Vector3f vertex1 = vertices[1].mul(actualSize);
+        Vector3f vertex2 = vertices[2].mul(actualSize);
+        Vector3f vertex3 = vertices[3].mul(actualSize);
+        Vector3f vertex4 = vertices[4].mul(actualSize);
+        Vector3f vertex5 = vertices[5].mul(actualSize);
+        Vector3f vertex6 = vertices[6].mul(actualSize);
+        Vector3f vertex7 = vertices[7].mul(actualSize);
 
         int step = drawContext.getCurrentStep();
         Vector3i currAmounts = (Vector3i) computedEasings.getComputedField("amounts");

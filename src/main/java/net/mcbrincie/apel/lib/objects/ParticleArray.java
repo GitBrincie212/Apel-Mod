@@ -1,12 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
 import org.joml.Vector3i;
 
@@ -112,13 +110,13 @@ public class ParticleArray<O extends ParticleObject<O>> extends UtilityParticleO
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext data) {
+    public void draw(ApelServerRenderer renderer, DrawContext data, Vector3f actualSize) {
         ComputedEasingPO mainComputedEasings = data.getComputedEasings();
         ComputedEasingPO childComputedEasings = new ComputedEasingPO(this.particleObject, data.getCurrentStep(), data.getNumberOfStep());
         DrawContext childContext = new DrawContext(renderer, data, childComputedEasings);
         this.particleObject.prepareContext(childContext);
         // Call interceptors once
-        this.particleObject.beforeDraw.apply(childContext, this.particleObject);
+        this.particleObject.beforeDrawEvent.compute(this.particleObject, childContext);
         Vector3i currGridSize = (Vector3i) mainComputedEasings.getComputedField("gridSize");
         Vector3f currSpacing = (Vector3f) mainComputedEasings.getComputedField("spacing");
 
@@ -131,12 +129,13 @@ public class ParticleArray<O extends ParticleObject<O>> extends UtilityParticleO
                     Vector3f arrayOffset = new Vector3f(x, y, z).mul(currSpacing).div(2f);
                     // Debating between this and modifying the `particleObject` offset (for baking purposes)
                     childContext.getPosition().add(arrayOffset);
-                    this.particleObject.draw(renderer, childContext);
+                    this.particleObject.display(renderer, childContext, actualSize);
                     childContext.getPosition().sub(arrayOffset);
                 }
             }
         }
-        this.particleObject.afterDraw.apply(childContext, this.particleObject);
+        this.particleObject.afterDrawEvent.compute(this.particleObject, childContext);
+
     }
 
     // The 'T' here is deliberately different from the 'O' in the ParticleArray class.

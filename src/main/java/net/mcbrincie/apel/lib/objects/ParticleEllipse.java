@@ -1,12 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
 
 /** The particle object class that represents an ellipse.
@@ -127,16 +125,21 @@ public class ParticleEllipse extends RenderableParticleObject<ParticleEllipse> {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingRPO computedEasingPO = (ComputedEasingRPO) drawContext.getComputedEasings();
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasingPO = drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
         float currRadius = (float) computedEasingPO.getComputedField("radius");
         float currStretch = (float) computedEasingPO.getComputedField("stretch");
+        /*
         if (currRadius <= 0) {
             throw new RuntimeException("The radius must be positive and non-zero");
         } else if (currStretch <= 0) {
             throw new RuntimeException("The stretch must be positive and non-zero");
         }
+         */
+        currRadius *= actualSize.x;
+        currStretch *= actualSize.y;
+
         renderer.drawEllipse(
                 this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currRadius, currStretch,
                 computedEasingPO.computedRotation, computedEasingPO.computedAmount

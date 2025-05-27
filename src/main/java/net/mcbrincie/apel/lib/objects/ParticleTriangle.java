@@ -1,12 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
 
 /** The particle object class that represents a 2D triangle.
@@ -222,9 +220,9 @@ public class ParticleTriangle extends RenderableParticleObject<ParticleTriangle>
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
         // Defensive copy of `drawPos`
-        ComputedEasingRPO computedEasingPO = (ComputedEasingRPO) drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasingPO = drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
         Vector3f currVertex1 = (Vector3f) computedEasingPO.getComputedField("vertex1");
         Vector3f currVertex2 = (Vector3f) computedEasingPO.getComputedField("vertex2");
@@ -233,6 +231,10 @@ public class ParticleTriangle extends RenderableParticleObject<ParticleTriangle>
 
         Vector3f computedRotation = computedEasingPO.computedRotation;
         int computedAmount = computedEasingPO.computedAmount;
+
+        currVertex1 = currVertex1.mul(actualSize);
+        currVertex2 = currVertex2.mul(actualSize);
+        currVertex3 = currVertex3.mul(actualSize);
 
         int step = drawContext.getCurrentStep();
         renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex1, currVertex2, computedRotation, computedAmount);

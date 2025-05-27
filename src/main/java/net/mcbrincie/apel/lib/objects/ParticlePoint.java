@@ -1,9 +1,9 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import org.joml.Vector3f;
 
@@ -40,11 +40,11 @@ public class ParticlePoint extends RenderableParticleObject<ParticlePoint> {
     }
 
     @Override
-    protected void prepareContext(DrawContext drawContext) {
+    protected void prepareContext(DrawContext<?> drawContext) {
         drawContext.addMetadata(DRAW_POSITION, drawContext.getPosition());
     }
 
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
         Vector3f objectDrawPosition = drawContext.getMetadata(DRAW_POSITION); //, drawContext.getPosition());
         renderer.drawParticle(this.particleEffect, drawContext.getCurrentStep(), objectDrawPosition.add(
                 drawContext.getComputedEasings().computedOffset

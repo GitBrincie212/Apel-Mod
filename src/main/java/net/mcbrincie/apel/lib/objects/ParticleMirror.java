@@ -1,12 +1,11 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import org.joml.Vector3f;
 
@@ -128,7 +127,7 @@ public class ParticleMirror<O extends ParticleObject<O>> extends UtilityParticle
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingPO> drawContext, Vector3f actualSize) {
         ComputedEasingPO computedEasings = drawContext.getComputedEasings();
         float dist = (float) computedEasings.getComputedField("distance");
         Vector3f position = drawContext.getPosition();
@@ -138,7 +137,8 @@ public class ParticleMirror<O extends ParticleObject<O>> extends UtilityParticle
                     drawContext.getCurrentStep(),
                     position,
                     drawContext.getNumberOfStep(),
-                    drawContext.getDeltaTickTime()
+                    drawContext.getDeltaTickTime(),
+                    actualSize
             );
             return;
         }
@@ -153,7 +153,8 @@ public class ParticleMirror<O extends ParticleObject<O>> extends UtilityParticle
                 drawContext.getCurrentStep(),
                 target_pos,
                 drawContext.getNumberOfStep(),
-                drawContext.getDeltaTickTime()
+                drawContext.getDeltaTickTime(),
+                actualSize
         );
         float pi = (float) Math.PI;
         float x = this.lockXAxis ? -pi : pi;
@@ -168,7 +169,8 @@ public class ParticleMirror<O extends ParticleObject<O>> extends UtilityParticle
                 drawContext.getCurrentStep(),
                 mirrored_pos,
                 drawContext.getNumberOfStep(),
-                drawContext.getDeltaTickTime()
+                drawContext.getDeltaTickTime(),
+                actualSize
         );
         this.particleObject.setRotation(prevRot);
     }

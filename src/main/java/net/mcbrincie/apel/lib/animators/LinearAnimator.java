@@ -4,8 +4,8 @@ import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.interceptor.context.AnimationContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;

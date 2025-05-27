@@ -3,8 +3,9 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import org.joml.Vector3f;
 import oshi.util.tuples.Pair;
@@ -166,7 +167,7 @@ public class ParticleBezierCurve extends RenderableParticleObject<ParticleBezier
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
         // Compute total offset from origin
         ComputedEasingPO computedEasings = drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);
@@ -175,7 +176,6 @@ public class ParticleBezierCurve extends RenderableParticleObject<ParticleBezier
         for (int i = 0; i < curveCount; i++) {
             drawContext.addMetadata(BEZIER_CURVE, this.bezierCurves.get(i));
             drawContext.addMetadata(AMOUNT, this.amounts.get(i));
-            this.beforeDraw.apply(drawContext, this);
             BezierCurve bezierCurve = drawContext.getMetadata(BEZIER_CURVE, this.bezierCurves.get(i));
             int amountForCurve = drawContext.getMetadata(AMOUNT, this.amounts.get(i));
 

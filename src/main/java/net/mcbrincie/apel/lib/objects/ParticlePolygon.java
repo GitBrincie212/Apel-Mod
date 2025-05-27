@@ -1,13 +1,11 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +24,6 @@ import java.util.List;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
     protected EasingCurve<Integer> sides;
-    protected EasingCurve<Float> size;
     protected EasingCurve<Float> curve;
     private final List<BezierCurve> bezierCurves = new ArrayList<>();
 
@@ -40,7 +37,6 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
         super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
               builder.afterDraw);
         this.setSides(builder.sides);
-        this.setSize(builder.size);
         this.setCurve(builder.curve);
     }
 
@@ -52,7 +48,6 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
     public ParticlePolygon(ParticlePolygon polygon) {
         super(polygon);
         this.sides = polygon.sides;
-        this.size = polygon.size;
         this.curve = polygon.curve;
         this.cachedShapes = polygon.cachedShapes;
     }
@@ -93,44 +88,6 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
      */
     public EasingCurve<Integer> getSides() {
         return this.sides;
-    }
-
-    /**
-     * Sets the size of the polygon to a new value and returns the previous size used.  The size is the distance from
-     * the centroid to any vertex. This method overload will set a constant value for the size
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param size The new size
-     * @throws IllegalArgumentException If the size is negative or 0
-     * @return The previous size used
-     */
-    public final EasingCurve<Float> setSize(float size) throws IllegalArgumentException {
-        return this.setSize(new ConstantEasingCurve<>(size));
-    }
-
-    /**
-     * Sets the size of the polygon to a new value and returns the previous size used.  The size is the distance from
-     * the centroid to any vertex. This method overload will set an ease curve value for the size
-     * <p>
-     * This implementation is used by the constructor, so subclasses cannot override this method.
-     *
-     * @param size The new size
-     * @throws IllegalArgumentException If the size is negative or 0
-     * @return The previous size used
-     */
-    public final EasingCurve<Float> setSize(EasingCurve<Float> size) throws IllegalArgumentException {
-        EasingCurve<Float> prevSize = this.size;
-        this.size = size;
-        return prevSize;
-    }
-
-    /** Gets the size of the regular polygon
-     *
-     * @return The size of the regular polygon
-     */
-    public EasingCurve<Float> getSize() {
-        return this.size;
     }
 
     /**
@@ -178,13 +135,12 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
     @Override
     protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
         return container.addComputedField("sides", this.sides)
-                .addComputedField("size", this.size)
                 .addComputedField("curve", this.curve);
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingRPO computedEasingPO = (ComputedEasingRPO) drawContext.getComputedEasings();
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasingPO = drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
 
         // Divide the particles evenly among sides
@@ -197,13 +153,9 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
         if (computedCurve < -1 || computedCurve > 1) {
             throw new RuntimeException("Curve value is out of bounds between [-1, 1]");
         }
-        float computedSize = (float) computedEasingPO.getComputedField("size");
-        if (computedSize <= 0) {
-            throw new RuntimeException("Size has to be positive and non-zero");
-        }
         Vector3f computedRotation = computedEasingPO.computedRotation;
 
-        Vector3f[] vertices = getRawVertices(computedSides, computedSize);
+        Vector3f[] vertices = getRawVertices(computedSides, actualSize);
         for (int i = 0; i < vertices.length - 1; i++) {
             Vector3f currVertex = vertices[i];
             Vector3f nextVertex = vertices[i + 1];
@@ -237,7 +189,7 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
         }
     }
 
-    private @NotNull Vector3f[] getRawVertices(int computedSides, float computedSize) {
+    private @NotNull Vector3f[] getRawVertices(int computedSides, Vector3f actualSize) {
         // Cache the vertices, does not rotate or offset
         // (since these change a lot and the goal is to use the cache as much as possible)
         Vector3f[] cachedVertices = this.cachedShapes.computeIfAbsent(computedSides, sides -> {
@@ -257,14 +209,13 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
         // Defensive copy of vertices, scaled after copying, so the cache isn't corrupted
         Vector3f[] verticesCopy = new Vector3f[cachedVertices.length];
         for (int i = 0; i < cachedVertices.length; i++) {
-            verticesCopy[i] = new Vector3f(cachedVertices[i]).mul(computedSize);
+            verticesCopy[i] = new Vector3f(cachedVertices[i]).mul(actualSize);
         }
         return verticesCopy;
     }
 
     public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticlePolygon> {
         protected EasingCurve<Integer> sides;
-        protected EasingCurve<Float> size;
         protected EasingCurve<Float> curve = new ConstantEasingCurve<>(0f);
 
         private Builder() {}
@@ -275,16 +226,6 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
          */
         public B sides(int sides) {
             this.sides = new ConstantEasingCurve<>(sides);
-            return self();
-        }
-
-        /**
-         * Set the size on the builder. This method is not cumulative; repeated calls will overwrite the value.
-         *
-         * @see ParticlePolygon#setSize(float)
-         */
-        public B size(float size) {
-            this.size = new ConstantEasingCurve<>(size);
             return self();
         }
 
@@ -304,16 +245,6 @@ public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
          */
         public B sides(EasingCurve<Integer> sides) {
             this.sides = sides;
-            return self();
-        }
-
-        /**
-         * Set the size on the builder. This method is not cumulative; repeated calls will overwrite the value.
-         *
-         * @see ParticlePolygon#setSize(float)
-         */
-        public B size(EasingCurve<Float> size) {
-            this.size = size;
             return self();
         }
 

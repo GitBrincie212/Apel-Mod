@@ -1,12 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
 
 
@@ -263,8 +261,8 @@ public class ParticleQuad extends RenderableParticleObject<ParticleQuad> {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingRPO computedEasing = (ComputedEasingRPO) drawContext.getComputedEasings();
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasing = drawContext.getComputedEasings();
 
         // Defensive copy of `drawPos`
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasing.computedOffset);
@@ -272,6 +270,11 @@ public class ParticleQuad extends RenderableParticleObject<ParticleQuad> {
         Vector3f currVertex2 = (Vector3f) computedEasing.getComputedField("vertex2");
         Vector3f currVertex3 = (Vector3f) computedEasing.getComputedField("vertex3");
         Vector3f currVertex4 = (Vector3f) computedEasing.getComputedField("vertex4");
+        currVertex1 = currVertex1.mul(actualSize);
+        currVertex2 = currVertex2.mul(actualSize);
+        currVertex3 = currVertex3.mul(actualSize);
+        currVertex4 = currVertex4.mul(actualSize);
+
         Vector3f computedRotation = computedEasing.computedRotation;
         int computedAmount = computedEasing.computedAmount;
 

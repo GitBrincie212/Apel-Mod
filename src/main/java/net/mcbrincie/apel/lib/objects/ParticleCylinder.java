@@ -1,12 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
 
 /** The particle object class that represents a cylinder.
@@ -123,16 +121,21 @@ public class ParticleCylinder extends RenderableParticleObject<ParticleCylinder>
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingRPO computedEasings = (ComputedEasingRPO) drawContext.getComputedEasings();
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasings = drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);
         float currRadius = (float) computedEasings.getComputedField("radius");
         float currHeight = (float) computedEasings.getComputedField("height");
+        /*
         if (currRadius <= 0) {
             throw new RuntimeException("The cylinder's radius is below or equal to zero");
         } else if (currHeight <= 0) {
             throw new RuntimeException("The cylinder's height is below or equal to zero");
         }
+         */
+        currRadius *= actualSize.x;
+        currHeight *= actualSize.y;
+
         renderer.drawCylinder(
                 this.particleEffect, drawContext.getCurrentStep(), objectDrawPos,
                 currRadius, currHeight, computedEasings.computedRotation, computedEasings.computedAmount

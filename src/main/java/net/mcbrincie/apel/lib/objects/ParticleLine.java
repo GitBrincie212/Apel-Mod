@@ -1,12 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
 
 /**
@@ -134,8 +132,8 @@ public class ParticleLine extends RenderableParticleObject<ParticleLine> {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingRPO computedEasings = (ComputedEasingRPO) drawContext.getComputedEasings();
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasings = drawContext.getComputedEasings();
         int currAmount = computedEasings.computedAmount;
         Vector3f currRotation = drawContext.getComputedEasings().computedRotation;
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);

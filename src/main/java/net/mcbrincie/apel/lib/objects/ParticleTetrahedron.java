@@ -1,12 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
 
 /** The particle object class that represents a tetrahedron which may be irregular.
@@ -272,9 +270,9 @@ public class ParticleTetrahedron extends RenderableParticleObject<ParticleTetrah
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
         // Defensive copy of `drawPos`
-        ComputedEasingRPO computedEasing = (ComputedEasingRPO) drawContext.getComputedEasings();
+        ComputedEasingRPO computedEasing = drawContext.getComputedEasings();
         Vector3f currVertex1 = (Vector3f) computedEasing.getComputedField("vertex1");
         Vector3f currVertex2 = (Vector3f) computedEasing.getComputedField("vertex2");
         Vector3f currVertex3 = (Vector3f) computedEasing.getComputedField("vertex3");
@@ -283,6 +281,9 @@ public class ParticleTetrahedron extends RenderableParticleObject<ParticleTetrah
         Vector3f computedRotation = computedEasing.computedRotation;
         int computedAmount = computedEasing.computedAmount;
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasing.computedOffset);
+        currVertex1 = currVertex1.mul(actualSize);
+        currVertex2 = currVertex2.mul(actualSize);
+        currVertex3 = currVertex3.mul(actualSize);
 
         int step = drawContext.getCurrentStep();
         renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex1, currVertex2, computedRotation, computedAmount);

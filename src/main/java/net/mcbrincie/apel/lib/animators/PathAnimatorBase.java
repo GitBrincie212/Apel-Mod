@@ -7,7 +7,7 @@ import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ServerWorldAccess;
 import net.mcbrincie.apel.lib.util.interceptor.AnimationInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 import net.minecraft.server.world.ServerWorld;
@@ -277,7 +277,8 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
         Runnable func = () -> {
             renderer.beforeFrame(step, drawPosition);
             float deltaTickTime = ((ServerWorldAccess) renderer.getServerWorld()).APEL$getDeltaTickTime();
-            this.particleObject.doDraw(renderer, step, drawPosition, steps, deltaTickTime);
+            System.out.println("doDraw called from path animator");
+            this.particleObject.doDraw(renderer, step, drawPosition, steps, deltaTickTime, new Vector3f(1));
             renderer.afterFrame(step, drawPosition);
         };
         if (this.delay == 0) {

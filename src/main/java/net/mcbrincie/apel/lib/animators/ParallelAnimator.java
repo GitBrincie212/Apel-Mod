@@ -4,7 +4,7 @@ import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.AnimationContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.AnimationContext;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
 
 import java.util.ArrayList;

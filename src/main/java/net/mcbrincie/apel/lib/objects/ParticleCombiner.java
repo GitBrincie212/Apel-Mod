@@ -3,8 +3,8 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
@@ -560,7 +560,7 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void display(ApelServerRenderer renderer, DrawContext<?> drawContext, Vector3f actualSize) {
         for (ParticleObject<?> object : this.objects) {
             drawContext.addMetadata(OBJECT_IN_USE, object);
             drawContext.addMetadata(SHOULD_DRAW_OBJECT, true);
@@ -576,7 +576,8 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
                     drawContext.getCurrentStep(),
                     childDrawPos,
                     drawContext.getNumberOfStep(),
-                    drawContext.getDeltaTickTime()
+                    drawContext.getDeltaTickTime(),
+                    actualSize
             );
             this.afterChildDraw.apply(drawContext, this);
         }

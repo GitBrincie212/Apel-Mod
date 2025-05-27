@@ -1,12 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
 
 /**
@@ -165,14 +163,21 @@ public class ParticleEllipsoid extends RenderableParticleObject<ParticleEllipsoi
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingRPO computedEasings = (ComputedEasingRPO) drawContext.getComputedEasings();
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasings = drawContext.getComputedEasings();
         float xSemiAxis = (float) computedEasings.getComputedField("xSemiAxis");
         float ySemiAxis = (float) computedEasings.getComputedField("ySemiAxis");
         float zSemiAxis = (float) computedEasings.getComputedField("zSemiAxis");
+        /*
         if (xSemiAxis <= 0 || ySemiAxis <= 0 || zSemiAxis <= 0) {
             throw new RuntimeException("One of the semi axis values is negative or zero");
         }
+         */
+
+        xSemiAxis *= actualSize.x;
+        ySemiAxis *= actualSize.y;
+        zSemiAxis *= actualSize.z;
+
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);
         renderer.drawEllipsoid(this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, xSemiAxis,
                 ySemiAxis, zSemiAxis, computedEasings.computedRotation, computedEasings.computedAmount

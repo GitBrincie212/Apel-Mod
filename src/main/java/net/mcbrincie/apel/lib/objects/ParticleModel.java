@@ -1,13 +1,11 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.mcbrincie.apel.lib.util.models.ModelParserManager;
 import net.mcbrincie.apel.lib.util.models.ObjModel;
 import org.joml.Vector3f;
@@ -47,8 +45,8 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
         this.setParticleEffect(builder.particleEffect);
         this.setRotation(builder.rotation);
         this.setOffset(builder.offset);
-        this.setBeforeDraw(builder.beforeDraw);
-        this.setAfterDraw(builder.afterDraw);
+        this.subscribeToBeforeDraw(builder.beforeDraw);
+        this.subscribeToAfterDraw(builder.afterDraw);
         this.objModel = builder.objectModel;
         if (builder.interval != null) {
             this.setInterval(builder.interval);
@@ -111,17 +109,13 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
 
     @Override
     protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
-        if (this.particle_interval != null) {
-            container.addComputedField("interval", this.particle_interval);
-        }
-        return container.addComputedField("scale", this.scale);
+        return this.particle_interval != null ? container.addComputedField("interval", this.particle_interval) : container;
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
         ComputedEasingRPO computedEasingPO = (ComputedEasingRPO) drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
-        Vector3f computedScale = (Vector3f) computedEasingPO.getComputedField("scale");
 
         ObjModel objectModel = drawContext.getMetadata(OBJECT_MODEL, this.objModel);
         for (ObjModel.Face face : objectModel.faces()) {
@@ -130,7 +124,7 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
 
             for (ObjModel.Vertex vertex : face.vertices()) {
                 // Defensive copies of internal vertices
-                positions.add(new Vector3f(vertex.position()).mul(computedScale));
+                positions.add(new Vector3f(vertex.position()).mul(computedEasingPO.computedScale));
             }
 
             int step = drawContext.getCurrentStep();

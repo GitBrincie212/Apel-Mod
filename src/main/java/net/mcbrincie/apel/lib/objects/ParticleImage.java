@@ -5,7 +5,7 @@ import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.image.DustPalateGenerator;
 import net.mcbrincie.apel.lib.util.image.PalateGenerator;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.util.Identifier;
@@ -87,7 +87,7 @@ public class ParticleImage extends ParticleObject<ParticleImage> {
     public String getFilename() {return filename;}
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void display(ApelServerRenderer renderer, DrawContext<?> drawContext, Vector3f actualSize) {
         int width = this.image.getWidth();
         int height = this.image.getHeight();
         for (int x = 0; x < width; x++) {

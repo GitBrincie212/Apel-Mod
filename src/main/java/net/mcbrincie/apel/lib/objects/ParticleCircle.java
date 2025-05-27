@@ -1,12 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
 
 /** The particle object class that represents a circle (2D shape) and not a 3D sphere.
@@ -85,16 +83,19 @@ public class ParticleCircle extends RenderableParticleObject<ParticleCircle> {
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
-        ComputedEasingRPO computedEasingRPO = (ComputedEasingRPO) drawContext.getComputedEasings();
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasingRPO = drawContext.getComputedEasings();
         Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingRPO.computedOffset);
         float currRadius = (float) computedEasingRPO.getComputedField("radius");
+        /*
         if (currRadius <= 0) {
             throw new RuntimeException("The radius must be positive and non-zero");
         }
+         */
         renderer.drawEllipse(
-                this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currRadius, currRadius,
-                computedEasingRPO.computedRotation, computedEasingRPO.computedAmount
+                this.particleEffect, drawContext.getCurrentStep(), objectDrawPos,
+                currRadius * actualSize.x, currRadius * actualSize.y, computedEasingRPO.computedRotation,
+                computedEasingRPO.computedAmount
         );
     }
 

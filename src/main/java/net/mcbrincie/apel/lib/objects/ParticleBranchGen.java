@@ -1,13 +1,12 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.MathHelper;
@@ -468,7 +467,7 @@ public class ParticleBranchGen extends RenderableParticleObject<ParticleBranchGe
 
 
     @Override
-    public void draw(ApelServerRenderer renderer, DrawContext drawContext) {
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
         ComputedEasingPO computedEasings = drawContext.getComputedEasings();
         int currMinTotalBranches = (int) computedEasings.getComputedField("minTotalBranches");
         int currMaxTotalBranches = (int) computedEasings.getComputedField("maxTotalBranches");
@@ -478,11 +477,11 @@ public class ParticleBranchGen extends RenderableParticleObject<ParticleBranchGe
             throw new IllegalArgumentException("Maximum Total Branch Count has to be positive and non-zero");
         }
         int totalCount = MathHelper.nextInt(rand, currMinTotalBranches, currMaxTotalBranches);
-        this.beforeDraw.apply(drawContext, this);
+        this.beforeDrawEvent.compute(this, drawContext);
         for (int i = 0; i < totalCount; i++) {
             generateFractal(renderer, drawContext, new Vector3f(0), 0);
         }
-        this.afterDraw.apply(drawContext, this);
+        this.afterDrawEvent.compute(this, drawContext);
     }
 
     public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleBranchGen> {
