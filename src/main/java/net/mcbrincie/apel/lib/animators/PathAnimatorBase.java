@@ -277,7 +277,6 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
         Runnable func = () -> {
             renderer.beforeFrame(step, drawPosition);
             float deltaTickTime = ((ServerWorldAccess) renderer.getServerWorld()).APEL$getDeltaTickTime();
-            System.out.println("doDraw called from path animator");
             this.particleObject.doDraw(renderer, step, drawPosition, steps, deltaTickTime, new Vector3f(1));
             renderer.afterFrame(step, drawPosition);
         };
