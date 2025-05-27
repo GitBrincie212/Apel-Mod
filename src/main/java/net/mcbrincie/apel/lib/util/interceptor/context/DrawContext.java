@@ -1,4 +1,4 @@
-package net.mcbrincie.apel.lib.util.interceptor;
+package net.mcbrincie.apel.lib.util.interceptor.context;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
@@ -39,49 +39,52 @@ import static java.util.Objects.requireNonNull;
  * {@code NullPointerException} if the given key does not have a value or has a null value.  It is strongly recommended
  * to use {@link #getMetadata(Key, Object)} when handling primitive types.
  */
-public class DrawContext {
+public class DrawContext<E extends ComputedEasingPO> {
     private final int currentStep;
     private final int numberOfSteps;
     private final Vector3f position;
     private final ServerWorld world;
     private final float deltaTickTime;
     private final Map<Key<?>, Object> metadata;
-    private final ComputedEasingPO computedEasingPO;
+    private final E computedEasings;
 
     /** Constructs an InterceptorData object to pass to an interceptor
      *
      * @param world the active ServerWorld reference
-     * @param position the position at which drawing will occur
+     * @param position the position at which the drawing will occur
      * @param step the current animation step
      */
-    public DrawContext(ServerWorld world, Vector3f position, int step, int numberOfSteps, float deltaTickTime, ComputedEasingPO computedEasingPO) {
+    public DrawContext(
+            ServerWorld world, Vector3f position, int step, int numberOfSteps,
+            float deltaTickTime, E computedEasingPO
+    ) {
         this.currentStep = step;
         this.position = position;
         this.world = world;
         this.metadata = new HashMap<>();
         this.numberOfSteps = numberOfSteps;
-        this.computedEasingPO = computedEasingPO;
+        this.computedEasings = computedEasingPO;
         this.deltaTickTime = deltaTickTime;
     }
 
-    public DrawContext(DrawContext context) {
+    public DrawContext(DrawContext<E> context) {
         this.currentStep = context.currentStep;
         this.position = context.position;
         this.deltaTickTime = context.deltaTickTime;
         this.numberOfSteps = context.numberOfSteps;
         this.metadata = new HashMap<>();
         this.world = context.world;
-        this.computedEasingPO = context.computedEasingPO;
+        this.computedEasings = context.computedEasings;
     }
 
-    public DrawContext(ApelServerRenderer renderer, DrawContext context, ComputedEasingPO computedEasingPO) {
+    public DrawContext(ApelServerRenderer renderer, DrawContext<E> context, E computedEasings) {
         this(
                 renderer.getServerWorld(),
                 context.getPosition(),
                 context.getCurrentStep(),
                 context.getNumberOfStep(),
                 context.getDeltaTickTime(),
-                computedEasingPO
+                computedEasings
         );
     }
 
@@ -139,8 +142,8 @@ public class DrawContext {
      *
      * @return a collection of the computed easings
      */
-    public ComputedEasingPO getComputedEasings() {
-        return computedEasingPO;
+    public E getComputedEasings() {
+        return computedEasings;
     }
 
     /** Get the number of steps of the path animator.

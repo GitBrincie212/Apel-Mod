@@ -1,4 +1,4 @@
-package net.mcbrincie.apel.lib.util.interceptor;
+package net.mcbrincie.apel.lib.util.interceptor.context;
 
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;

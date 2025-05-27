@@ -1,4 +1,4 @@
-package net.mcbrincie.apel.lib.util.interceptor;
+package net.mcbrincie.apel.lib.util.interceptor.context;
 
 import com.google.common.reflect.TypeToken;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
