@@ -26,7 +26,8 @@ import java.util.*;
 public abstract class InterceptorDispatcher<T, C, I extends BaseInterceptor<C, T>> {
     private final Map<Integer, List<I>> priorityMap = new HashMap<>();
     private int priorityCounter = 0;
-    private final PriorityQueue<Integer> prioritiesQueue = new PriorityQueue<>();
+    private final List<I> sortedInterceptors = new ArrayList<>();
+    private boolean needsSort = true;
 
     protected InterceptorDispatcher() {}
 
@@ -36,10 +37,12 @@ public abstract class InterceptorDispatcher<T, C, I extends BaseInterceptor<C, T
      * @return The priority assigned to the object interceptor
      */
     public int addInterceptor(I objectInterceptor) {
-        this.priorityMap.put(this.priorityCounter, new ArrayList<>(List.of(objectInterceptor)));
-        prioritiesQueue.add(this.priorityCounter);
-        this.priorityCounter += 1;
-        return this.priorityCounter - 1;
+        int prio = this.priorityCounter += 1;
+        this.priorityMap
+                .computeIfAbsent(prio, k -> new ArrayList<>())
+                .add(objectInterceptor);
+        this.needsSort = true;
+        return prio;
     }
 
     /** Add a particle object interceptor with a predefined priority to the dispatcher
@@ -50,18 +53,22 @@ public abstract class InterceptorDispatcher<T, C, I extends BaseInterceptor<C, T
      * @return If there were any other interceptors in that priority
      */
     public boolean addInterceptor(int priority, I objectInterceptor) {
-        if (this.priorityMap.containsKey(priority)) {
-            List<I> objectInterceptorList = this.priorityMap.get(priority);
-            objectInterceptorList.add(objectInterceptor);
-            this.priorityMap.replace(priority, objectInterceptorList);
-            return true;
-        }
-        this.priorityMap.put(priority, new ArrayList<>(List.of(objectInterceptor)));
-        prioritiesQueue.add(priority);
-        if (this.priorityCounter < priority) {
-            this.priorityCounter = priority;
-        }
-        return false;
+        boolean existed = this.priorityMap.containsKey(priority);
+        this.priorityMap
+                .computeIfAbsent(priority, k -> new ArrayList<>())
+                .add(objectInterceptor);
+        needsSort = true;
+        return existed;
+    }
+
+    /** Ensure our flat list is up to date. */
+    private void rebuildIfNeeded() {
+        if (!this.needsSort) return;
+        this.sortedInterceptors.clear();
+        this.priorityMap.entrySet().stream()
+                .sorted(Comparator.comparingInt(Map.Entry::getKey))
+                .forEach(entry -> this.sortedInterceptors.addAll(entry.getValue()));
+        this.needsSort = false;
     }
 
     /** Trigger a computation in the dispatcher whereby the interceptors with the highest priority will be executed
@@ -72,12 +79,9 @@ public abstract class InterceptorDispatcher<T, C, I extends BaseInterceptor<C, T
      * @param context The context to use in the computations
      */
     public void compute(T object, C context) {
-        while (!this.prioritiesQueue.isEmpty()) {
-            int priorityNum = this.prioritiesQueue.peek();
-            List<I> objectInterceptors = this.priorityMap.get(priorityNum);
-            for (I interceptor : objectInterceptors) {
-                interceptor.apply(context, object);
-            }
+        this.rebuildIfNeeded();
+        for (int i = 0; i < this.sortedInterceptors.size(); i++) {
+            this.sortedInterceptors.get(i).apply(context, object);
         }
     }
 }
