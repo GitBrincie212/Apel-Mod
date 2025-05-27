@@ -1,6 +1,8 @@
 package net.mcbrincie.apel.lib.util.interceptor;
 
 import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 
 /** ObjectInterceptor defines the signature for interceptor methods in APEL.
  * At several points in the library, Apel allows developers to inject custom

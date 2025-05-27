@@ -1,6 +1,6 @@
 package net.mcbrincie.apel.lib.animators;
 
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 
 import java.util.List;
 

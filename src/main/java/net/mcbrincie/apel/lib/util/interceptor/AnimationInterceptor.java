@@ -1,7 +1,8 @@
 package net.mcbrincie.apel.lib.util.interceptor;
 
 import net.mcbrincie.apel.lib.animators.PathAnimatorBase;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
+import net.mcbrincie.apel.lib.util.interceptor.context.AnimationContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 
 /** AnimationInterceptor defines the signature for path-animation interceptor methods in APEL.
  * At several points in the library, Apel allows developers to inject custom

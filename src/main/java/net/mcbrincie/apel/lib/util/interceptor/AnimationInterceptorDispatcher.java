@@ -1,6 +1,7 @@
 package net.mcbrincie.apel.lib.util.interceptor;
 
 import net.mcbrincie.apel.lib.animators.PathAnimatorBase;
+import net.mcbrincie.apel.lib.util.interceptor.context.AnimationContext;
 
 /** This is a dispatcher where it can host multiple {@link AnimationInterceptor} to be executed on a specific code section,
  * it executes the interceptors based on their priority whereby interceptors with higher priority will be executed earlier
