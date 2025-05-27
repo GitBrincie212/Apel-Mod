@@ -1,20 +1,17 @@
 package net.mcbrincie.apel.lib.objects;
 
-import com.mojang.datafixers.util.Function3;
-import net.mcbrincie.apel.lib.util.ComputedEasingPA;
-import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.ComputedEasings;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptorDispatcher;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.minecraft.server.world.ServerWorld;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -25,7 +22,7 @@ import java.util.function.Supplier;
  *
  * <p>All particle objects share some common properties, and those are provided on the base class. The
  * {@link #rotation} and {@link #offset}. These will be applied before translating the object to the {@code drawPos}
- * passed to {@link #draw(ApelServerRenderer, DrawContext)}
+ * passed to {@link #display(ApelServerRenderer, DrawContext, Vector3f)}
  *
  * <p>The provided subclasses include interceptors that allow for modification before and after each call to
  * {@code draw}.
@@ -55,10 +52,10 @@ import java.util.function.Supplier;
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class ParticleObject<T extends ParticleObject<T>> {
     protected EasingCurve<Vector3f> rotation;
-    protected EasingCurve<Vector3f> scale;
+    protected EasingCurve<Vector3f> scale = new ConstantEasingCurve<>(new Vector3f(1));
     protected EasingCurve<Vector3f> offset = new ConstantEasingCurve<>(new Vector3f(0, 0, 0));
-    protected ObjectInterceptor<T> afterDraw = ObjectInterceptor.identity();
-    protected ObjectInterceptor<T> beforeDraw = ObjectInterceptor.identity();
+    protected final ObjectInterceptorDispatcher<T> afterDrawEvent;
+    protected final ObjectInterceptorDispatcher<T> beforeDrawEvent;
 
     /**
      * Used by subclasses to when constructing themselves to set the properties shared by all ParticleObjects.
@@ -73,8 +70,8 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     ) {
         this.setRotation(rotation);
         this.setOffset(offset);
-        this.setBeforeDraw(beforeDraw);
-        this.setAfterDraw(afterDraw);
+        this.beforeDrawEvent = new ObjectInterceptorDispatcher<>();
+        this.afterDrawEvent = new ObjectInterceptorDispatcher<>();
     }
 
     /**
@@ -86,13 +83,16 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
     protected ParticleObject(ParticleObject<T> object) {
         this.rotation = object.rotation;
         this.offset = object.offset;
-        this.beforeDraw = object.beforeDraw;
-        this.afterDraw = object.afterDraw;
+        this.beforeDrawEvent = object.beforeDrawEvent;
+        this.afterDrawEvent = object.afterDrawEvent;
         this.scale = object.scale;
     }
 
     /** This is a placeholder constructor */
-    protected ParticleObject() {}
+    protected ParticleObject() {
+        this.beforeDrawEvent = new ObjectInterceptorDispatcher<>();
+        this.afterDrawEvent = new ObjectInterceptorDispatcher<>();
+    }
 
     /** Gets the rotation which is currently in use and returns it.
      *
@@ -215,30 +215,28 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
         return prevOffset;
     }
 
-    /**
-     * Set the interceptor to run prior to drawing the object.  The interceptor will be provided with references to the
-     * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation,
-     * and any metadata defined by {@link Key} defined in the specific subclass.
+    /** Subscribes an interceptor to run prior to drawing the object. The interceptor will be provided with references to the
+     * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation... etc,
+     * and including any metadata defined by {@link Key} defined in the specific subclass.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param beforeDraw the new interceptor to execute before drawing each particle
      */
-    public final void setBeforeDraw(ObjectInterceptor<T> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(ObjectInterceptor.identity());
+    public final void subscribeToBeforeDraw(@NotNull ObjectInterceptor<T> beforeDraw) {
+        this.beforeDrawEvent.addInterceptor(beforeDraw);
     }
 
-    /**
-     * Set the interceptor to run after drawing the object.  The interceptor will be provided with references to the
-     * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation,
-     * and any metadata defined by {@link Key >}s defined in the specific subclass.
+    /** Subscribes an interceptor to run after drawing the object. The interceptor will be provided with references to the
+     * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation... etc,
+     * and including any metadata defined by {@link Key >}s defined in the specific subclass.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param afterDraw the new interceptor to execute after drawing each particle
      */
-    public final void setAfterDraw(ObjectInterceptor<T> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(ObjectInterceptor.identity());
+    public final void subscribeToAfterDraw(@NotNull ObjectInterceptor<T> afterDraw) {
+        this.afterDrawEvent.addInterceptor(afterDraw);
     }
 
     /**
@@ -246,7 +244,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      * step, and the drawing position.
      *
      * <p><b>The method should not be called directly.</b>  It will be called via
-     * {@link #doDraw(ApelServerRenderer, int, Vector3f, int, float)}  by {@code PathAnimatorBase} subclasses to draw objects along
+     * {@link #doDraw(ApelServerRenderer, int, Vector3f, int, float, Vector3f)}  by {@code PathAnimatorBase} subclasses to draw objects along
      * the animation path or at an animation point.  These animators will provide the renderer and calculate the
      * current {@code step} and the {@code drawPos}.  The renderer will have access to the {@code ServerWorld}.
      * <p>
@@ -258,37 +256,48 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      * </ul>
      *
      * @param renderer The server world instance
-     * @param data The InterceptData
+     * @param data The draw context data
      */
-    public abstract void draw(ApelServerRenderer renderer, DrawContext data);
+    public abstract void display(ApelServerRenderer renderer, DrawContext<?> data, Vector3f actualSize);
 
     /** Computes some additional easing properties. */
     protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
         return container;
     }
 
-    public void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps, float deltaTickTime) {
+    public void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos,
+                       int numberOfSteps, float deltaTickTime, Vector3f actualSize) {
+        System.out.println("doDraw overload calling");
         doDraw(() -> new ComputedEasingPO(this, step, numberOfSteps), this::computeAdditionalEasings,
-                renderer, step, drawPos, numberOfSteps, deltaTickTime);
+                renderer, step, drawPos, numberOfSteps, deltaTickTime, actualSize);
     }
 
     public <TC extends ComputedEasingPO> void doDraw(
             Supplier<TC> factory, Function<TC, TC> computeMethod,
             ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps,
-            float deltaTickTime
+            float deltaTickTime, Vector3f actualSize
     ) {
+        System.out.println("doDraw is starting execution");
         TC computedEasingPO = computeMethod.apply(factory.get());
-        DrawContext drawContext = new DrawContext(
+        System.out.println("computedEasingPO success");
+        actualSize = actualSize.mul(computedEasingPO.computedScale);
+        System.out.println("multiplication on sizes success");
+        DrawContext<?> drawContext = new DrawContext<>(
                 renderer.getServerWorld(), drawPos,
                 step, numberOfSteps, deltaTickTime,
                 computedEasingPO
         );
+        System.out.println("drawContext creation success");
         this.prepareContext(drawContext);
+        System.out.println("prepareContext success");
         //noinspection unchecked
-        this.beforeDraw.apply(drawContext, (T) this);
-        this.draw(renderer, drawContext);
+        this.beforeDrawEvent.compute((T) this, drawContext);
+        System.out.println("beforeDrawEvent success");
+        this.display(renderer, drawContext, actualSize);
+        System.out.println("display success");
         //noinspection unchecked
-        this.afterDraw.apply(drawContext, (T) this);
+        this.afterDrawEvent.compute((T) this, drawContext);
+        System.out.println("afterDrawEvent success");
     }
 
     /**
@@ -297,7 +306,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      *
      * @param drawContext the data holder to modify
      */
-    protected void prepareContext(DrawContext drawContext) {
+    protected void prepareContext(DrawContext<?> drawContext) {
         // Default implementation does nothing
     }
 
@@ -392,7 +401,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
          * This method is not cumulative; repeated calls will overwrite
          * the value.
          *
-         * @see ParticleObject#setBeforeDraw(ObjectInterceptor)
+         * @see ParticleObject#subscribeToBeforeDraw(ObjectInterceptor)
          */
         public final B beforeDraw(ObjectInterceptor<T> beforeDraw) {
             this.beforeDraw = beforeDraw;
@@ -403,7 +412,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
          * Sets the interceptor to run after drawing.
          * This method is not cumulative; repeated calls will overwrite the value.
          *
-         * @see ParticleObject#setAfterDraw(ObjectInterceptor)
+         * @see ParticleObject#subscribeToAfterDraw(ObjectInterceptor)
          */
         public final B afterDraw(ObjectInterceptor<T> afterDraw) {
             this.afterDraw = afterDraw;

@@ -3,9 +3,8 @@ package net.mcbrincie.apel.lib.objects;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Vector3f;
@@ -18,7 +17,7 @@ import org.joml.Vector3f;
  * <p>All renderable particle objects share some common properties, and those are provided on the base class. The
  * {@link #particleEffect} is used to render all particles in the object.  All objects allow for specifying a
  * {@link #rotation} and {@link #offset}. These will be applied before translating the object to the {@code drawPos}
- * passed to {@link #draw(ApelServerRenderer, DrawContext)}. Renderable Particle Objects also have an {@link #amount} that
+ * passed to {@link #draw(ApelServerRenderer, DrawContext, Vector3f)}. Renderable Particle Objects also have an {@link #amount} that
  * indicates the number of particles to render. APEL native objects will spread these particles evenly throughout the shape
  * unless otherwise indicated on specific shapes.
  *
@@ -152,9 +151,18 @@ public abstract class RenderableParticleObject<T extends RenderableParticleObjec
         return container;
     }
 
-    public final void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps, float deltaTickTime) {
+    public final void doDraw(
+            ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps,
+            float deltaTickTime, Vector3f actualSize
+    ) {
         super.doDraw(() -> new ComputedEasingRPO(this, step, numberOfSteps), this::computeAdditionalEasings,
-                renderer, step, drawPos, numberOfSteps, deltaTickTime);
+                renderer, step, drawPos, numberOfSteps, deltaTickTime, actualSize);
+    }
+
+    @Override
+    public final void display(ApelServerRenderer renderer, DrawContext<?> data, Vector3f actualSize) {
+        //noinspection unchecked
+        this.draw(renderer, (DrawContext<ComputedEasingRPO>) data, actualSize);
     }
 
     /**
@@ -162,7 +170,7 @@ public abstract class RenderableParticleObject<T extends RenderableParticleObjec
      * step, and the drawing position.
      *
      * <p><b>The method should not be called directly.</b>  It will be called via
-     * {@link #doDraw(ApelServerRenderer, int, Vector3f, int, float)}  by {@code PathAnimatorBase} subclasses to draw objects along
+     * {@link #doDraw(ApelServerRenderer, int, Vector3f, int, float, Vector3f)}  by {@code PathAnimatorBase} subclasses to draw objects along
      * the animation path or at an animation point.  These animators will provide the renderer and calculate the
      * current {@code step} and the {@code drawPos}.  The renderer will have access to the {@code ServerWorld}.
      * <p>
@@ -176,7 +184,9 @@ public abstract class RenderableParticleObject<T extends RenderableParticleObjec
      * @param renderer The server world instance
      * @param data The InterceptData
      */
-    public abstract void draw(ApelServerRenderer renderer, DrawContext data);
+    public abstract void draw(ApelServerRenderer renderer,
+                              DrawContext<ComputedEasingRPO> data,
+                              Vector3f actualSize);
 
     /**
      * Provides a base for ParticleObject subclasses to extend when creating their builders.
