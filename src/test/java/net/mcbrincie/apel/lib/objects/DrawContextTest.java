@@ -1,8 +1,8 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.mcbrincie.apel.lib.util.interceptor.Key;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
@@ -25,7 +25,7 @@ class DrawContextTest {
         context.addMetadata(key, 3);
 
         // Then the value is retrievable
-        int foo = context.getMetadata(key);
+        int foo = (int) context.getMetadata(key);
         assertEquals(3, foo);
     }
 

@@ -2,6 +2,8 @@ package net.mcbrincie.apel.lib.util.interceptor;
 
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.objects.ParticlePoint;
+import net.mcbrincie.apel.lib.util.interceptor.context.AnimationContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;

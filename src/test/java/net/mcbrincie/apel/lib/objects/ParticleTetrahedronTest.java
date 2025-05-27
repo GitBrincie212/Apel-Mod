@@ -1,10 +1,6 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.ComputedEasingPO;
-import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.interceptor.DrawContext;
-import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3f;
 import org.junit.jupiter.api.Test;
@@ -43,6 +39,10 @@ class ParticleTetrahedronTest {
                         .vertex2(new Vector3f(1.f, 0, 1f))
                         .vertex3(new Vector3f(-1.f, 0, 1f))
                         .vertex4(new Vector3f(-1.f, 0, -1.f))
-                        .build().doDraw(ApelServerRenderer.create(NULL_WORLD), 0, new Vector3f(0), 0, 0));
+                        .build()
+                        .doDraw(
+                                ApelServerRenderer.create(NULL_WORLD), 0, new Vector3f(0),
+                                0, 0, new Vector3f(1)
+                        ));
     }
 }

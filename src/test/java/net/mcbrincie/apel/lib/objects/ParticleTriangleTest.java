@@ -33,6 +33,9 @@ class ParticleTriangleTest {
                 .vertex1(new Vector3f(0))
                 .vertex2(new Vector3f(1))
                 .vertex3(new Vector3f(4))
-                .build().doDraw(ApelServerRenderer.create(NULL_WORLD), 0, new Vector3f(0), 0, 0));
+                .build()
+                .doDraw(ApelServerRenderer.create(NULL_WORLD),
+                        0, new Vector3f(0), 0, 0, new Vector3f(1)
+                ));
     }
 }
