@@ -23,7 +23,7 @@ import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
  */
 @SuppressWarnings("unused")
 public class ObjectInterceptorDispatcher<T extends ParticleObject<T>>
-        extends InterceptorDispatcher<T, DrawContext, ObjectInterceptor<T>> {
+        extends InterceptorDispatcher<T, DrawContext<?>, ObjectInterceptor<T>> {
 
     public ObjectInterceptorDispatcher() {}
 
@@ -54,7 +54,7 @@ public class ObjectInterceptorDispatcher<T extends ParticleObject<T>>
      * @param object The particle object to use in the computations
      * @param drawContext The draw context to use in the computations
      */
-    public void compute(T object, DrawContext drawContext) {
+    public void compute(T object, DrawContext<?> drawContext) {
         super.compute(object, drawContext);
     }
 }
