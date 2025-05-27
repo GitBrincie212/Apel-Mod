@@ -229,7 +229,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
 
     /** Subscribes an interceptor to run after drawing the object. The interceptor will be provided with references to the
      * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation... etc,
-     * and including any metadata defined by {@link Key >}s defined in the specific subclass.
+     * and including any metadata defined by {@link Key}s defined in the specific subclass.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
@@ -267,7 +267,6 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
 
     public void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos,
                        int numberOfSteps, float deltaTickTime, Vector3f actualSize) {
-        System.out.println("doDraw overload calling");
         doDraw(() -> new ComputedEasingPO(this, step, numberOfSteps), this::computeAdditionalEasings,
                 renderer, step, drawPos, numberOfSteps, deltaTickTime, actualSize);
     }
@@ -277,27 +276,19 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
             ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps,
             float deltaTickTime, Vector3f actualSize
     ) {
-        System.out.println("doDraw is starting execution");
         TC computedEasingPO = computeMethod.apply(factory.get());
-        System.out.println("computedEasingPO success");
         actualSize = actualSize.mul(computedEasingPO.computedScale);
-        System.out.println("multiplication on sizes success");
         DrawContext<?> drawContext = new DrawContext<>(
                 renderer.getServerWorld(), drawPos,
                 step, numberOfSteps, deltaTickTime,
                 computedEasingPO
         );
-        System.out.println("drawContext creation success");
         this.prepareContext(drawContext);
-        System.out.println("prepareContext success");
         //noinspection unchecked
         this.beforeDrawEvent.compute((T) this, drawContext);
-        System.out.println("beforeDrawEvent success");
         this.display(renderer, drawContext, actualSize);
-        System.out.println("display success");
         //noinspection unchecked
-        this.afterDrawEvent.compute((T) this, drawContext);
-        System.out.println("afterDrawEvent success");
+        // this.afterDrawEvent.compute((T) this, drawContext);
     }
 
     /**
