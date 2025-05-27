@@ -23,7 +23,7 @@ import net.mcbrincie.apel.lib.util.interceptor.context.Key;
  * @param <T> The ParticleObject type being intercepted
  */
 @FunctionalInterface
-public interface ObjectInterceptor<T extends ParticleObject<T>> extends BaseInterceptor<DrawContext, T> {
+public interface ObjectInterceptor<T extends ParticleObject<T>> extends BaseInterceptor<DrawContext<?>, T> {
     /** Apply the particle object interceptor (which basically is computing the particle object interceptor).
      * <br><br>
      * There are no results returned
@@ -31,7 +31,7 @@ public interface ObjectInterceptor<T extends ParticleObject<T>> extends BaseInte
      * @param data metadata useful within the animator interceptor
      * @param object the particle object to intercept
      */
-    void apply(DrawContext data, T object);
+    void apply(DrawContext<?> data, T object);
 
     /** An identity interceptor that does nothing. May be used when clearing an
      * interceptor.
