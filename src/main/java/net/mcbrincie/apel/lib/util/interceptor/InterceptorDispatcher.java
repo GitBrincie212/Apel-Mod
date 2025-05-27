@@ -72,8 +72,8 @@ public abstract class InterceptorDispatcher<T, C, I extends BaseInterceptor<C, T
      * @param context The context to use in the computations
      */
     public void compute(T object, C context) {
-        while (!prioritiesQueue.isEmpty()) {
-            int priorityNum = prioritiesQueue.peek();
+        while (!this.prioritiesQueue.isEmpty()) {
+            int priorityNum = this.prioritiesQueue.peek();
             List<I> objectInterceptors = this.priorityMap.get(priorityNum);
             for (I interceptor : objectInterceptors) {
                 interceptor.apply(context, object);
