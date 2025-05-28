@@ -12,12 +12,14 @@ create a better place for developers to use in their own projects
 - [x] Added ``ParticleArray`` for copying particle objects in an alternating pattern
 - [ ] Added ``ParticleBranchGen`` which allows the rendering of branch fractal patterns
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
+- [ ] Added ``ParticleImage`` for rendering images, including even GIFs
 - [ ] Added ``scale`` to ParticleObject. Used for adjusting the scale (can also be negative)
 - [x] Added ``deltaTimeTick`` to DrawContext, which is used for knowing the difference of time between the last tick and current tick
 - [x] Added ``numberOfSteps`` to DrawContext, which is used for knowing the number of steps of the path animator
 - [x] Support for 1.21.4
 
 ## Modifications
+- [ ] Reworked the ``Interceptors API`` to allow stacking 
 - [ ] Reworked the parameters in such a way to make them able to use ease curves
 - [x] Reworked the way **Particle Objects** are created by using the builder pattern
 - [x] Reworked the way **Path Animators** are created by using the builder pattern
@@ -36,4 +38,3 @@ create a better place for developers to use in their own projects
 - [x] Fixed a bug where setting a vertex on ``ParticleTriangle`` wouldn't check if all of them are making up a triangle
 - [x] Fixed a bug where setting a vertex on ``ParticleTetrahedron`` wouldn't check if all of them are making up a tetrahedron
 - [x] Fixed a bug where ``EllipseAnimator`` does squared the revolutions
-- [x] Fixed a small oversight where ``ParticleCylinder`` builder wouldn't create the ``ParticleCylinder`` and just return null
