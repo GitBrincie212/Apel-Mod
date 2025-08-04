@@ -19,13 +19,12 @@ public class ApelScheduler {
     private final List<ScheduledSequence> scheduledTasks = new ArrayList<>();
     private final List<PathAnimatorBase<?>> animators = new ArrayList<>();
 
-    private final ExecutorService SchedulerThread = Executors.newSingleThreadExecutor();
-
     /** Allocates a new sequence chunk to be used in the scheduler. It accepts the animator object
      *  as a parameter. It is crucial to allocate first if you don't have any chunk. The method
      *  throws a {@link  SeqDuplicateException} if it finds that the animator has allocated more
      *  than one sequence chunk
      *
+     * @param object The path animator to allocate the new sequence for
      */
     public void allocateNewSequence(PathAnimatorBase<?> object) throws SeqDuplicateException {
         this.scheduledTasks.add(new ScheduledSequence());
@@ -35,6 +34,9 @@ public class ApelScheduler {
     /** Allocates a new delayed step. It accepts the animator object and the scheduled step.
      * If the method finds that the object hasn't allocated a sequence chunk, then it throws
      * a {@link SeqMissingException}. The allocated step gets deleted once it is executed
+     *
+     * @param object The target path animator to allocate the new step for
+     * @param step The scheduled step to be executed later on
      */
     public void allocateNewStep(PathAnimatorBase<?> object, ScheduledStep step) throws SeqMissingException {
         int index = this.animators.indexOf(object);
@@ -59,7 +61,7 @@ public class ApelScheduler {
             if (sequence.isEmpty()) {
                 continue;
             }
-            Future<?> future = this.SchedulerThread.submit(sequence::tick);
+            sequence.tick();
             if (sequence.isFinished()) {
                 this.deallocateSequence(index);
                 index--;

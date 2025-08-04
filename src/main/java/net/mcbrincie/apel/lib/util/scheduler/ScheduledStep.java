@@ -1,7 +1,5 @@
 package net.mcbrincie.apel.lib.util.scheduler;
 
-import net.mcbrincie.apel.Apel;
-
 public class ScheduledStep {
     private final Runnable[] actions;
     private int delay;
@@ -15,7 +13,7 @@ public class ScheduledStep {
         this.delay--;
         if (this.delay == 0) {
             for (Runnable action : this.actions) {
-                Apel.DRAW_EXECUTOR.submit(action);
+                action.run();
             }
             return true;
         }
