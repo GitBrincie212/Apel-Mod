@@ -90,7 +90,7 @@ public class SequentialAnimator extends PathAnimatorBase<SequentialAnimator> imp
             AnimationContext animationContext = new AnimationContext(renderer.getServerWorld());
             animationContext.addMetadata(PATH_ANIMATOR, animator);
             animationContext.addMetadata(DELAY, animatorDelay);
-            this.beforeRender.apply(animationContext, this);
+            this.beforeRender.compute(this, animationContext);
 
             if (!animationContext.shouldRender()) {
                 continue;
@@ -111,6 +111,8 @@ public class SequentialAnimator extends PathAnimatorBase<SequentialAnimator> imp
                 );
                 totalDelay += animatorToSchedule.calculateDuration();
             }
+
+            this.afterRender.compute(this, animationContext);
         }
     }
 

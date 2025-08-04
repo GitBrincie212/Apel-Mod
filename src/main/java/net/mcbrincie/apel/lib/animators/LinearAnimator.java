@@ -80,9 +80,10 @@ public class LinearAnimator extends PathAnimatorBase<LinearAnimator> {
                 Vector3f renderPosition = new Vector3f(segmentDelta).mul(i).add(segmentStart);
                 AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
                 animationContext.addMetadata(CURRENT_ENDPOINT_INDEX, segmentIndex);
-                this.beforeRender.apply(animationContext, this);
+                this.beforeRender.compute(this, animationContext);
                 Vector3f actualPosition = animationContext.getPosition();
                 this.handleDrawingStep(renderer, step, actualPosition);
+                this.afterRender.compute(this, animationContext);
             }
         }
     }

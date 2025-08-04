@@ -92,7 +92,7 @@ public class ParallelAnimator extends PathAnimatorBase<ParallelAnimator> impleme
             AnimationContext animationContext = new AnimationContext(renderer.getServerWorld());
             animationContext.addMetadata(PATH_ANIMATOR, animator);
             animationContext.addMetadata(DELAY, totalDelay);
-            this.beforeRender.apply(animationContext, this);
+            this.beforeRender.compute(this, animationContext);
 
             if (!animationContext.shouldRender()) {
                 continue;
@@ -111,6 +111,8 @@ public class ParallelAnimator extends PathAnimatorBase<ParallelAnimator> impleme
                         scheduledAnimator, new ScheduledStep(delayForAnimator, new Runnable[]{func})
                 );
             }
+
+            this.afterRender.compute(this, animationContext);
         }
     }
 

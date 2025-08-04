@@ -65,9 +65,10 @@ public class PointAnimator extends PathAnimatorBase<PointAnimator> {
         for (int step = 0; step < this.renderingSteps; step++) {
             Vector3f renderPoint = new Vector3f(this.point);
             AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPoint, step);
-            this.beforeRender.apply(animationContext, this);
+            this.beforeRender.compute(this, animationContext);
             Vector3f actualPoint = animationContext.getPosition();
             this.handleDrawingStep(renderer, step, actualPoint);
+            this.afterRender.compute(this, animationContext);
         }
     }
 

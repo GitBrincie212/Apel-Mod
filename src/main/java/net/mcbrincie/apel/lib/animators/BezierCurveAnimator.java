@@ -105,9 +105,10 @@ public class BezierCurveAnimator extends PathAnimatorBase<BezierCurveAnimator> {
                 }
                 Vector3f renderPosition = bezierCurve.compute(t);
                 AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
-                this.beforeRender.apply(animationContext, this);
+                this.beforeRender.compute(this, animationContext);
                 Vector3f actualPosition = animationContext.getPosition();
                 this.handleDrawingStep(renderer, step, actualPosition);
+                this.afterRender.compute(this, animationContext);
             }
         }
     }

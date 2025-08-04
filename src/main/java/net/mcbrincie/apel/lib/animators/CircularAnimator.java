@@ -255,9 +255,10 @@ public class CircularAnimator extends PathAnimatorBase<CircularAnimator> {
                 }
                 Vector3f renderPosition = calculatePoint(currAngle);
                 AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
-                this.beforeRender.apply(animationContext, this);
+                this.beforeRender.compute(this, animationContext);
                 Vector3f actualPosition = animationContext.getPosition();
                 this.handleDrawingStep(renderer, step, actualPosition);
+                this.afterRender.compute(this, animationContext);
             }
         }
     }

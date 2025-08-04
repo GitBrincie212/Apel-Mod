@@ -7,6 +7,7 @@ import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ServerWorldAccess;
 import net.mcbrincie.apel.lib.util.interceptor.AnimationInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.AnimationInterceptorDispatcher;
 import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import net.mcbrincie.apel.lib.util.math.TrigTable;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
@@ -17,7 +18,6 @@ import org.joml.Vector3f;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 
 /** The abstract base class that all path animators inherit from. It
@@ -32,7 +32,8 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
     protected int processingSpeed = 1;
     protected int renderingSteps = 0;
     protected float renderingInterval = 0.0f;
-    protected AnimationInterceptor<T> beforeRender = AnimationInterceptor.identity();
+    protected final AnimationInterceptorDispatcher<T> beforeRender;
+    protected final AnimationInterceptorDispatcher<T> afterRender;
 
     protected List<Runnable> storedFuncsBuffer = new ArrayList<>();
 
@@ -49,11 +50,14 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
             case RENDERING_STEPS -> this.setRenderingSteps(builder.renderingSteps);
             case RENDERING_INTERVAL -> this.setRenderingInterval(builder.renderingInterval);
         }
-        this.setBeforeRender(builder.beforeRender);
+        this.beforeRender = builder.beforeRender;
+        this.afterRender = builder.afterRender;
     }
 
     /** This is an empty constructor meant as a placeholder */
     public PathAnimatorBase() {
+        this.beforeRender = new AnimationInterceptorDispatcher<>();
+        this.afterRender = new AnimationInterceptorDispatcher<>();
     }
 
     /**
@@ -71,6 +75,7 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
         this.renderingInterval = animator.renderingInterval;
         this.renderingSteps = animator.renderingSteps;
         this.beforeRender = animator.beforeRender;
+        this.afterRender = animator.afterRender;
         this.storedFuncsBuffer = new ArrayList<>();
     }
 
@@ -229,16 +234,29 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
     }
 
     /**
-     * Set the interceptor to run before rendering the step.  The interceptor will be provided with references to the
+     * Subscribes an interceptor to run prior to rendering the step.  The interceptor will be provided with references to the
      * {@link ServerWorld}, the "origin" point from which the step will be rendered, whether to render during this step,
      * and any metadata available via {@link Key}s defined in specific Animator subclasses.
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
-     * @param beforeRender The new interceptor to execute prior to rendering the step
+     * @param beforeRender The new interceptor to execute before rendering the step
      */
-    public final void setBeforeRender(AnimationInterceptor<T> beforeRender) {
-        this.beforeRender = Optional.ofNullable(beforeRender).orElse(AnimationInterceptor.identity());
+    public final void subscribeToBeforeRender(AnimationInterceptor<T> beforeRender) {
+        this.beforeRender.addInterceptor(beforeRender);
+    }
+
+    /**
+     * Subscribes an interceptor to run after rendering the step. The interceptor will be provided with references to the
+     * {@link ServerWorld}, the "origin" point from which the step will be rendered, whether to render during this step,
+     * and any metadata available via {@link Key}s defined in specific Animator subclasses.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param beforeRender The new interceptor to execute after rendering the step
+     */
+    public final void subscribeToAfterRender(AnimationInterceptor<T> beforeRender) {
+        this.afterRender.addInterceptor(beforeRender);
     }
 
     /** Does the calculations to convert from an interval to rendering steps
@@ -338,7 +356,8 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
         protected int processingSpeed = 1;
         protected int renderingSteps = 0;
         protected float renderingInterval = 0.0f;
-        protected AnimationInterceptor<T> beforeRender = AnimationInterceptor.identity();
+        protected AnimationInterceptorDispatcher<T> beforeRender = new AnimationInterceptorDispatcher<>();
+        protected AnimationInterceptorDispatcher<T> afterRender = new AnimationInterceptorDispatcher<>();
 
         protected RenderCalculationMethod renderCalculationMethod = RenderCalculationMethod.UNSET;
 
@@ -410,13 +429,24 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
         }
 
         /**
-         * Sets the interceptor to run before rendering.  This method is not cumulative; repeated calls will overwrite
-         * the value.
+         * Sets the interceptor to run before rendering. This method is cumulative; repeated calls will create a new
+         * interceptor which executes as last
          *
-         * @see PathAnimatorBase#setBeforeRender(AnimationInterceptor)
+         * @see PathAnimatorBase#subscribeToBeforeRender(AnimationInterceptor)
         */
         public final B beforeRender(AnimationInterceptor<T> beforeRender) {
-            this.beforeRender = beforeRender;
+            this.beforeRender.addInterceptor(beforeRender);
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before rendering. This method is cumulative; repeated calls will create a new
+         * interceptor which executes as last
+         *
+         * @see PathAnimatorBase#subscribeToAfterRender(AnimationInterceptor)
+         */
+        public final B afterRender(AnimationInterceptor<T> afterRender) {
+            this.afterRender.addInterceptor(afterRender);
             return self();
         }
 
