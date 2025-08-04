@@ -15,7 +15,7 @@ create a better place for developers to use in their own projects
 - [ ] Added ``ParticleImage`` for rendering images, including even GIFs
 - [ ] Added ``scale`` to ParticleObject. Used for adjusting the scale (can also be negative)
 - [x] Added ``deltaTimeTick`` to DrawContext, which is used for knowing the difference of time between the last tick and current tick
-- [x] Added ``numberOfSteps`` to DrawContext, which is used for knowing the number of steps of the path animator
+- [x] Added ``numberOfSteps`` to DrawContext, which is used for knowing the steps of the path animator
 - [x] Support for 1.21.4
 
 ## Modifications
@@ -38,3 +38,5 @@ create a better place for developers to use in their own projects
 - [x] Fixed a bug where setting a vertex on ``ParticleTriangle`` wouldn't check if all of them are making up a triangle
 - [x] Fixed a bug where setting a vertex on ``ParticleTetrahedron`` wouldn't check if all of them are making up a tetrahedron
 - [x] Fixed a bug where ``EllipseAnimator`` does squared the revolutions
+- [x] Fixed a bug where the game would crash with ``net.minecraft.util.crash.CrashException: Accessing LegacyRandomSource from multiple threads``
+randomly (because APEL under the hood uses threads and because it renders the particles, it is unsafe)
