@@ -5,7 +5,7 @@ create a better place for developers to use in their own projects
 
 ## Additions
 - [x] Added ``EasingCurve<T>``, allowing easy smooth-based animation on a parameter without the use of interceptors
-- [ ] Added ``ParticleModel`` for 3D model compatibility
+- [x] Added ``ParticleModel`` for 3D model compatibility (Wireframe Is Supported For Now)
 - [x] Added animation interceptors for **Path Animators**
 - [x] Added more markdown documentation on specific topics
 - [x] Added ``ParticleMirror`` for mirroring a particle object
@@ -19,12 +19,12 @@ create a better place for developers to use in their own projects
 - [x] Support for 1.21.4
 
 ## Modifications
-- [ ] Reworked the ``Interceptors API`` to allow stacking 
-- [ ] Reworked the parameters in such a way to make them able to use ease curves
+- [x] Reworked the ``Interceptors API`` to allow stacking 
+- [x] Reworked the parameters in such a way to make them able to use ease curves (For particle objects for now)
 - [x] Reworked the way **Particle Objects** are created by using the builder pattern
 - [x] Reworked the way **Path Animators** are created by using the builder pattern
 - [x] Simplified the ``ParticleBezierCurve`` interface
-- [ ] Reworked the internal system of **Path Animators** to make it easier to create new ones
+- [x] Reworked the internal system of **Path Animators** to make it easier to create new ones
 - [x] Reworked the handling of the metadata from interceptors
 - [x] Reworked the **Particle Objects** to separate Utility Particle Objects from Renderable Particle Objects 
 (The ParticleCombiner is a particle object but not a utility one due to its nature)
