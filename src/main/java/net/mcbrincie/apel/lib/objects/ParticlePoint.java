@@ -12,7 +12,7 @@ import org.joml.Vector3f;
  * ParticlePoint allows for single particles to be rendered.  It will generally be used in conjunction
  * with other ParticleObjects, likely as part of a ParticleCombiner.  As a single point, scaling and rotation
  * do not apply, since Minecraft will render all particles facing the camera.  By default, it will be drawn
- * at the {@code drawPos} in the {@link #draw(ApelServerRenderer, DrawContext)} method.  Translation is possible
+ * at the {@code drawPos} in the {@link #draw(ApelServerRenderer, DrawContext, Vector3f)} method.  Translation is possible
  * using {@link #setOffset(Vector3f)}.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})

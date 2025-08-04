@@ -41,7 +41,7 @@ public class BezierCurveAnimator extends PathAnimatorBase<BezierCurveAnimator> {
      * Copy constructor for the bézier animation. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * bézier animator instance with all of its parameters regardless
-     * of their visibility (this means protected & private params are copied)
+     * of their visibility (this means protected and private params are copied)
      *
      * @param animator The animator to copy from
     */

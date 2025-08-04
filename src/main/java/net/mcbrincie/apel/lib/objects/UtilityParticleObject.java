@@ -39,6 +39,8 @@ import org.joml.Vector3f;
  * scaling, vertex positions, particle amounts, or any other property of the subclass.
  *
  * <p>Subclasses should also provide a builder that mimics those provided by APEL-native ParticleObject subclasses.
+ *
+ * @param <O> What particle object to contain in the utility particle object
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public abstract class UtilityParticleObject<T extends UtilityParticleObject<T, O>, O extends ParticleObject<O>> extends ParticleObject<T> {
@@ -118,6 +120,8 @@ public abstract class UtilityParticleObject<T extends UtilityParticleObject<T, O
      * they must maintain the invariants of ParticleObject.
      *
      * @param <B> the type being built, uses the curiously recurring type pattern
+     * @param <T> The type of the utility particle object
+     * @param <O> The child particle object that hosts the utility particle object
      */
     public static abstract class Builder<B extends Builder<B, T, O>,
             T extends UtilityParticleObject<T, O>, O extends ParticleObject<O>> extends ParticleObject.Builder<B, T> {

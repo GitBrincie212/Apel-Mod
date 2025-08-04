@@ -14,7 +14,7 @@ import java.util.List;
 /** The parallel path animator. Which provides an interface for controlling multiple
  * concurrent path animators (they can also nest themselves) and can have an unlimited
  * number of path animators attached. They also can have delays for each path animator.
- * It is quite advanced but allows for easier management on multiple animators & is
+ * It is quite advanced but allows for easier management on multiple animators and is
  * versatile compared to the other easier ones
  */
 @SuppressWarnings("unused")
@@ -104,7 +104,7 @@ public class ParallelAnimator extends PathAnimatorBase<ParallelAnimator> impleme
             Runnable func = () -> scheduledAnimator.beginAnimation(renderer);
 
             if (delayForAnimator == 0) {
-                Apel.DRAW_EXECUTOR.submit(func);
+                func.run();
             } else {
                 scheduledAnimator.allocateToScheduler();
                 Apel.SCHEDULER.allocateNewStep(

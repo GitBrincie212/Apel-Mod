@@ -34,13 +34,13 @@ import java.util.function.Predicate;
  * and the first half if the direction is clockwise.  The code for the first is:
  * <pre>
  * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
- *                 .counterclockwise().trimming(new AnimationTrimming<>(0.0f, (float)Math.PI))
+ *                 .counterclockwise().trimming(new AnimationTrimming{@literal <}{@literal >}(0.0f, (float)Math.PI))
  *                 .build();
  * </pre>
  * and the second is:
  * <pre>
  * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
- *                 .clockwise().trimming(new AnimationTrimming<>(0.0f, (float)Math.PI))
+ *                 .clockwise().trimming(new AnimationTrimming{@literal <}{@literal >}(0.0f, (float)Math.PI))
  *                 .build();
  * </pre>
  * <p>
@@ -48,7 +48,7 @@ import java.util.function.Predicate;
  * skip to &pi;/2 and continue rendering until it reaches {@code 0}.
  * <pre>
  * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
- *                 .counterclockwise().trimming(new AnimationTrimming<>((float)Math.PI/2, -(float)Math.PI/2))
+ *                 .counterclockwise().trimming(new AnimationTrimming{@literal <}{@literal >}((float)Math.PI/2, -(float)Math.PI/2))
  *                 .build();
  * </pre>
  * If the previous code set `clockwise()` on the builder, it would render continuously from &pi;/2 to -&pi;/2;
@@ -58,7 +58,7 @@ import java.util.function.Predicate;
  * <pre>
  * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
  *                 .rotation(new Vector3f(0.0f, 0.0f, (float)Math.PI/2))
- *                 .counterclockwise().trimming(new AnimationTrimming<>(0, (float)Math.PI))
+ *                 .counterclockwise().trimming(new AnimationTrimming{@literal <}{@literal >}(0, (float)Math.PI))
  *                 .build();
  * </pre>
 */
@@ -89,7 +89,7 @@ public class CircularAnimator extends PathAnimatorBase<CircularAnimator> {
      * Copy constructor for the circular animator. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * circular animator instance with all of its parameters regardless
-     * of their visibility (this means protected & private params are copied)
+     * of their visibility (this means protected and private params are copied)
      *
      * @param animator The animator to copy from
     */

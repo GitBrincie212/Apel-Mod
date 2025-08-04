@@ -288,7 +288,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
         this.beforeDrawEvent.compute((T) this, drawContext);
         this.display(renderer, drawContext, actualSize);
         //noinspection unchecked
-        // this.afterDrawEvent.compute((T) this, drawContext);
+        this.afterDrawEvent.compute((T) this, drawContext);
     }
 
     /**
@@ -311,6 +311,7 @@ public abstract class ParticleObject<T extends ParticleObject<T>> {
      * they must maintain the invariants of ParticleObject.
      *
      * @param <B> the type being built, uses the curiously recurring type pattern
+     * @param <T> The type of the particle object used
      */
     public static abstract class Builder<B extends Builder<B, T>, T extends ParticleObject<T>> {
         protected EasingCurve<Vector3f> rotation = new ConstantEasingCurve<>(new Vector3f(0));

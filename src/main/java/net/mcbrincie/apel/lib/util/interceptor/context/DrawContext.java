@@ -38,6 +38,8 @@ import static java.util.Objects.requireNonNull;
  * <strong>Warning:</strong> Casting or auto-unboxing metadata values to primitive types may result in
  * {@code NullPointerException} if the given key does not have a value or has a null value.  It is strongly recommended
  * to use {@link #getMetadata(Key, Object)} when handling primitive types.
+ *
+ * @param <E> What type of computed easings container to use for particle objects
  */
 public class DrawContext<E extends ComputedEasingPO> {
     private final int currentStep;
@@ -53,6 +55,9 @@ public class DrawContext<E extends ComputedEasingPO> {
      * @param world the active ServerWorld reference
      * @param position the position at which the drawing will occur
      * @param step the current animation step
+     * @param numberOfSteps the number steps of the animation
+     * @param deltaTickTime the deltatime between ticks
+     * @param computedEasingPO The computed easing container
      */
     public DrawContext(
             ServerWorld world, Vector3f position, int step, int numberOfSteps,
@@ -90,7 +95,9 @@ public class DrawContext<E extends ComputedEasingPO> {
 
     /** Add metadata to the map for interceptors to use.
      *
+     * @param key The key of the metadata field
      * @param value the value available to the interceptor
+     * @param <T> The type to add as a metadata field
      */
     public <T> void addMetadata(Key<T> key, T value) {
         this.metadata.put(key, value);

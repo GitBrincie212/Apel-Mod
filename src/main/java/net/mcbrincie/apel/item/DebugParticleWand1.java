@@ -55,7 +55,8 @@ public class DebugParticleWand1 extends Item {
         particleSphere4.setParticleEffect(ParticleTypes.SMOKE);
         particleSphere4.setRadius(0.75f);
         particleSphere4.setAmount(30);
-        particleSphere4.setAfterDraw((data, obj) -> {
+
+        particleMainSphere.subscribeToAfterDraw((data, obj) -> {
             Box hitbox = Box.of(new Vec3d(data.getPosition()), 5f, 4f, 5f);
             List<LivingEntity> livingEntities = data.getWorld().getEntitiesByClass(
                     LivingEntity.class,
@@ -156,8 +157,9 @@ public class DebugParticleWand1 extends Item {
                 .animators(bezierCurveAnimators, List.of(0, 10, 20, 30, 40, 45, 55, 60))
                 .build();
 
-        ApelServerRenderer renderer = ApelServerRenderer.create((ServerWorld) world);
+        ApelServerRenderer renderer = ApelServerRenderer.client((ServerWorld) world);
         parallelAnimator.beginAnimation(renderer);
+        System.out.println("Beginning Animation!");
         return ActionResult.PASS;
     }
 }

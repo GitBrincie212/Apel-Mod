@@ -1,7 +1,7 @@
 package net.mcbrincie.apel.item;
 
 import net.mcbrincie.apel.lib.animators.PointAnimator;
-import net.mcbrincie.apel.lib.easing.shaped.LinearEasingCurve;
+import net.mcbrincie.apel.lib.objects.ParticlePoint;
 import net.mcbrincie.apel.lib.objects.ParticleSphere;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.minecraft.entity.player.PlayerEntity;
@@ -22,21 +22,7 @@ public class DebugParticleWand2 extends Item {
     public ActionResult use(World world, PlayerEntity user, Hand hand) {
         if (world.isClient) return ActionResult.PASS;
 
-        LinearEasingCurve<Float> linearEasingCurve = new LinearEasingCurve<>(3f, 8f);
-        ParticleSphere particleSphere = ParticleSphere.builder()
-                .radius(linearEasingCurve)
-                .amount(100)
-                .particleEffect(ParticleTypes.END_ROD)
-                .build();
-
-        PointAnimator pointAnimator = PointAnimator.builder()
-                .point(new Vector3f(0))
-                .particleObject(particleSphere)
-                .renderingSteps(300)
-                .build();
-
-        ApelServerRenderer apelServerRenderer = ApelServerRenderer.client((ServerWorld) world);
-        pointAnimator.beginAnimation(apelServerRenderer);
+        ApelServerRenderer apelRenderer = ApelServerRenderer.client((ServerWorld) world);
 
         return ActionResult.PASS;
     }

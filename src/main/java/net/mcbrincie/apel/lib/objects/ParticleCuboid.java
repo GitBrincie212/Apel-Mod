@@ -39,7 +39,7 @@ public class ParticleCuboid extends RenderableParticleObject<ParticleCuboid> {
      *      4-------------7   +
      *      |   |    | /  |   |
      *      |   |    |/   |   |
-     * x <--|--------+    |   |
+     * x {@literal <}--|--------+   |   |
      *      |   |         |   |
      *      |   |         |   |
      *      |   1---------|---2

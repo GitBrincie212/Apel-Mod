@@ -41,6 +41,7 @@ public interface ApelRenderer {
      * Instructs the renderer to draw the given particle effect at the given position.
      *
      * @param particleEffect The ParticleEffect to draw
+     * @param step The current step of the animation
      * @param drawPos The position at which to draw
      */
     void drawParticle(ParticleEffect particleEffect, int step, Vector3f drawPos);
@@ -126,6 +127,7 @@ public interface ApelRenderer {
      * evenly around the ellipse.
      *
      * @param particleEffect The ParticleEffect to use
+     * @param step The current step of the animation
      * @param center The point at the center of the ellipse
      * @param radius The radius of the ellipse
      * @param stretch The stretch of the ellipse
@@ -215,6 +217,7 @@ public interface ApelRenderer {
      * {@code rotation} applied using {@code amount} particles.  Particles will be spaced evenly around the cylinder.
      *
      * @param particleEffect The ParticleEffect to use
+     * @param step The current step of the animation
      * @param center The point at the center of the base of the cylinder
      * @param radius The radius of the cylinder
      * @param height The height of the cylinder

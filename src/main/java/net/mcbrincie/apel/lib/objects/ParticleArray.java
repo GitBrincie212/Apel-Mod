@@ -20,6 +20,8 @@ import org.joml.Vector3i;
  * can be adjusted with the {@code offset} property, as usual.  The individual object offset will be consistent across
  * all renderings.  The entire array may also be rotated by using the {@code rotation} property.  Individual objects
  * will be rotated consistently per the object's {@code rotation} value.
+ *
+ * @param <O> The child particle object to use in the ParticleArray class
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleArray<O extends ParticleObject<O>> extends UtilityParticleObject<ParticleArray<O>, O> {

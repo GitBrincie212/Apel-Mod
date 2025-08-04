@@ -15,6 +15,8 @@ import org.joml.Vector3f;
  * The particle mirror can also lock certain rotation axis or even disable the rotation
  * inversion entirely. The same thing can be achieved via interceptors, but this makes
  * it easier to use. Keep in mind that invisible particle objects won't be rendered.
+ *
+ * @param <O> The child particle object to use in the ParticleMirror class
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleMirror<O extends ParticleObject<O>> extends UtilityParticleObject<ParticleMirror<O>, O> {

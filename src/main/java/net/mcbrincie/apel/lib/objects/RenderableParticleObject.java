@@ -198,6 +198,7 @@ public abstract class RenderableParticleObject<T extends RenderableParticleObjec
      * they must maintain the invariants of ParticleObject.
      *
      * @param <B> the type being built, uses the curiously recurring type pattern
+     * @param <T> The type of the particle object used
      */
     public static abstract class Builder<B extends Builder<B, T>, T extends RenderableParticleObject<T>> extends ParticleObject.Builder<B, T> {
         protected ParticleEffect particleEffect;

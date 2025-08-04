@@ -10,15 +10,13 @@ import org.joml.Vector3f;
 /**
  * This particle object subclass represents a 3D line. Constructing the line requires two points, both relative to the
  * provided origin in the {@code DrawContext}.  The line may be rotated and offset relative to the draw origin by using
- * the builder properties, setters after construction, or during interceptor calls.
- * <p>
- * If more complicated, line-based shapes are desired, see the following:
+ * the builder properties, setters after construction, or during interceptor calls. If more complicated, line-based shapes are desired:
+ *
  * @see ParticleCuboid
  * @see ParticlePolygon
  * @see ParticleQuad
  * @see ParticleTetrahedron
  * @see ParticleTriangle
- * </p>
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ParticleLine extends RenderableParticleObject<ParticleLine> {

@@ -18,7 +18,7 @@ import java.util.Objects;
  * <pre>
  * // Does not work at runtime!
  * static &lt;R&gt; Key&lt;R&gt; keyFor(String name) {
- *     return new Key<>(name) {};
+ *     return new Key{@literal <}{@literal >}(name) {};
  * }
  *
  * Key&lt;Integer&gt; integerKey = Class.keyFor("property");

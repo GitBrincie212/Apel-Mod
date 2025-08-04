@@ -35,7 +35,7 @@ import org.joml.*;
  * <p>
  * When using either of the 2 methods, you can also supply a vector value as t, which returns a new vector with the
  * computed results. You can have up to 3D vectors (because of the types supported). <u>Do note however that if you decide
- * to supply a {@link Vector2f} and the start & end happen to not have the same dimensions. It will error out</u>
+ * to supply a {@link Vector2f} and the start and end happen to not have the same dimensions. It will error out</u>
  * </p>
  * <p>
  * Lastly, providing any higher dimensions of t, when the start and end values have a lower dimension, will only use

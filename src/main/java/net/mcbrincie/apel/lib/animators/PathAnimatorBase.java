@@ -60,7 +60,7 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
      * Constructor for the path base animator. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * path base animator instance with all of its parameters regardless
-     * of their visibility (this means protected & private params are copied)
+     * of their visibility (this means protected and private params are copied)
      *
      * @param animator The animator to copy from
     */
@@ -157,6 +157,8 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @see PathAnimatorBase#setProcessingSpeed(int)
+     *
+     * @param delay The new delay value to set
      * @return The previous amount of rendering steps
      */
     public final int setDelay(int delay) {
@@ -183,6 +185,7 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
      * <p>
      * This implementation is used by the constructor, so subclasses cannot override this method.
      *
+     * @param object The new particle object to set
      * @return The previous amount of rendering steps
      */
     public final ParticleObject<? extends ParticleObject<?>> setParticleObject(@NotNull ParticleObject<? extends ParticleObject<?>> object) {
@@ -251,6 +254,8 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
      *
      * @throws SeqDuplicateException When it allocates a new sequence but there is already an allocated sequence
      * @throws SeqMissingException   When it finds, there is no sequence yet allocated
+     *
+     * @param renderer The renderer to use when beggining the animation
      */
     public abstract void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException;
 
@@ -281,7 +286,7 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
             renderer.afterFrame(step, drawPosition);
         };
         if (this.delay == 0) {
-            Apel.DRAW_EXECUTOR.submit(func);
+            func.run();
             return;
         }
         if (this.processingSpeed == 1) {
@@ -409,7 +414,7 @@ public abstract class PathAnimatorBase<T extends PathAnimatorBase<T>> {
          * the value.
          *
          * @see PathAnimatorBase#setBeforeRender(AnimationInterceptor)
-         */
+        */
         public final B beforeRender(AnimationInterceptor<T> beforeRender) {
             this.beforeRender = beforeRender;
             return self();

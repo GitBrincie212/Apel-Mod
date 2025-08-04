@@ -19,10 +19,10 @@ import java.util.Optional;
  * which can produce an object hierarchy. There are many good things about using
  * a particle combiner in most cases, examples include but are not limited to
  * <br><br>
- * <center><h2>Advantages</h2></center>
+ * <h2>Advantages</h2>
  * <br>
  *
- * <b>Fewer Memory Overhead(s) & Smaller Memory Footprint</b><br>
+ * <b>Fewer Memory Overhead(s) and Smaller Memory Footprint</b><br>
  * Since objects are grouped together. This means that there will be fewer particle animators created
  * as well as the object being handled as one particle object instance instead of being multiple. Which
  * means that memory is dramatically reduced down for complex scenes (if you had 10 path animators for 10
@@ -37,7 +37,7 @@ import java.util.Optional;
  *
  * <b>Dynamic Object Allocation At Runtime</b><br>
  * Without the particle combiner, it is challenging to create objects at runtime and create a new path animator
- * that inherits almost all the same attributes as all the other animators for the other objects & programmatically
+ * that inherits almost all the same attributes as all the other animators for the other objects and programmatically
  * changing the params is very tedious. This doesn't have to be the case, because you can allocate a new particle
  * object to the particle combiner and from there APEL would take care the rest.<br><br>
  *
@@ -417,7 +417,7 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * This applies to all the objects (including objects that are way below the hierarchy). The returned
      * value can also be -1 meaning that there are different particle effects at play in the object.
      * The offset param changes the amount per object by a specified amount. There is also a simplified version
-     * that doesn't recursively scale down the tree & another that allows specifying the recursion offset.
+     * that doesn't recursively scale down the tree and another that allows specifying the recursion offset.
      *
      * <p><b>Note:</b> When the program encounters another combiner, it calls the same method, but
      * the amount is added with the iterated offset and the offset remains unchanged
@@ -448,7 +448,7 @@ public class ParticleCombiner extends ParticleObject<ParticleCombiner> {
      * This applies to all the objects (including objects that are way below the hierarchy). The returned
      * value can also be -1 meaning that there are different particle effects at play in the object.
      * The offset param changes the amount per object by a specified amount. There is also a simplified version
-     * that doesn't recursively scale down the tree & another that doesn't accept the recursion offset.
+     * that doesn't recursively scale down the tree and another that doesn't accept the recursion offset.
      *
      * <p><b>Note:</b> when the program encounters another combiner. It calls the same method, but
      * the amount is added with the recursive offset and the recursive offset remains unchanged

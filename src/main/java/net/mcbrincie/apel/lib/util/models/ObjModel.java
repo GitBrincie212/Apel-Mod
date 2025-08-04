@@ -8,6 +8,9 @@ import java.util.List;
 
 /**
  * Represents a read-only *.obj model
+ *
+ * @param faces What are the faces of the model
+ * @param polyLines What are the polylines of the model
  */
 public record ObjModel(ImmutableList<Face> faces, ImmutableList<PolyLine> polyLines) {
     public record Vertex(Vector3f position, Vector2f textureCoordinates, Vector3f normal) {
