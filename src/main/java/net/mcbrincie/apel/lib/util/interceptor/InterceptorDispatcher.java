@@ -37,6 +37,9 @@ public abstract class InterceptorDispatcher<T, C, I extends BaseInterceptor<C, T
      * @return The priority assigned to the object interceptor
      */
     public int addInterceptor(I objectInterceptor) {
+        if (Objects.isNull(objectInterceptor)) {
+            return priorityCounter;
+        }
         int prio = this.priorityCounter += 1;
         this.priorityMap
                 .computeIfAbsent(prio, k -> new ArrayList<>())
