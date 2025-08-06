@@ -12,7 +12,6 @@ import net.mcbrincie.apel.lib.util.media.processors.MediaProcessor;
 import net.mcbrincie.apel.lib.util.media.resamplers.MediaResampler;
 import net.mcbrincie.apel.lib.util.media.resamplers.MediaResamplers;
 import net.minecraft.particle.ParticleEffect;
-import org.apache.commons.lang3.tuple.Triple;
 import org.joml.Vector3f;
 
 import java.util.ArrayList;

@@ -2,9 +2,9 @@ package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.context.Key;
-import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import org.joml.Vector3f;
 
 

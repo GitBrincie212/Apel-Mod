@@ -1,13 +1,13 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingPO;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.context.Key;
-import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.random.Random;
@@ -405,7 +405,7 @@ public class ParticleBranchGen extends RenderableParticleObject<ParticleBranchGe
 
     private void generateFractal(
             ApelServerRenderer renderer,
-            DrawContext drawContext,
+            DrawContext<?> drawContext,
             Vector3f start,
             int subdivs
     ) {

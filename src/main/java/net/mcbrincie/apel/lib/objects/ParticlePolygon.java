@@ -1,10 +1,10 @@
 package net.mcbrincie.apel.lib.objects;
 
-import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
 import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
 import net.minecraft.util.math.MathHelper;

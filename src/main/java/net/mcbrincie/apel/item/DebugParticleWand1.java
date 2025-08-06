@@ -1,6 +1,8 @@
 package net.mcbrincie.apel.item;
 
-import net.mcbrincie.apel.lib.animators.*;
+import net.mcbrincie.apel.lib.animators.BezierCurveAnimator;
+import net.mcbrincie.apel.lib.animators.ParallelAnimator;
+import net.mcbrincie.apel.lib.animators.PathAnimatorBase;
 import net.mcbrincie.apel.lib.objects.ParticleCombiner;
 import net.mcbrincie.apel.lib.objects.ParticleSphere;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;

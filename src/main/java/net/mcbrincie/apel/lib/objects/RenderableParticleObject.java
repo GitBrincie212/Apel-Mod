@@ -4,8 +4,8 @@ import net.mcbrincie.apel.lib.easing.EasingCurve;
 import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
-import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import net.minecraft.particle.ParticleEffect;
 import org.joml.Vector3f;
 

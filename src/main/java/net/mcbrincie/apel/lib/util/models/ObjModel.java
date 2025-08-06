@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableList;
 import org.joml.Vector2f;
 import org.joml.Vector3f;
 
-import java.util.List;
-
 /**
  * Represents a read-only *.obj model
  *
