@@ -20,7 +20,7 @@ This section is for the developers, for any normal people. Its as simple as down
 
 1. Under the ``gradle.properties`` file. Add this line:
    ```java
-   apel_version=0.1.0+1.21.8
+   apel_version=0.1.5+1.21.8
    ```
 2. On ``build.gradle`` file, under the **repositery**. Add these lines if you haven't installed any other dependency mods from modrinth:
    ```java
