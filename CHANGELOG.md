@@ -16,7 +16,7 @@ create a better place for developers to use in their own projects
 - Added ``scale`` to ParticleObject. Used for adjusting the scale (can also be negative)
 - Added ``deltaTimeTick`` to DrawContext, which is used for knowing the difference of time between the last tick and current tick
 - Added ``numberOfSteps`` to DrawContext, which is used for knowing the steps of the path animator
-- Support for 1.21.4
+- Support for 1.21.8
 
 ## Modifications
 - Reworked the ``Interceptors API`` to allow stacking 
