@@ -45,6 +45,7 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
         this.setParticleEffect(builder.particleEffect);
         this.setRotation(builder.rotation);
         this.setOffset(builder.offset);
+        this.setScale(builder.scale);
         this.subscribeToBeforeDraw(builder.beforeDraw);
         this.subscribeToAfterDraw(builder.afterDraw);
         this.objModel = builder.objectModel;
@@ -103,7 +104,7 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
     }
 
     @Override
-    protected void prepareContext(DrawContext drawContext) {
+    protected void prepareContext(DrawContext<?> drawContext) {
         drawContext.addMetadata(OBJECT_MODEL, this.objModel);
     }
 
@@ -136,7 +137,6 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
                     float particleInterval = (float) computedEasingPO.getComputedField("interval");
                     float dist = vertex1.distance(vertex2);
                     useAmount = (int) Math.ceil(dist / particleInterval);
-                    // System.out.printf("%s %s%n", dist, useAmount);
                 }
                 renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex1, vertex2,
                         computedEasingPO.computedRotation, useAmount);
@@ -163,7 +163,6 @@ public class ParticleModel extends RenderableParticleObject<ParticleModel> {
     */
     public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleModel> {
         private static final ModelParserManager MODEL_PARSER_MANAGER = new ModelParserManager();
-        protected EasingCurve<Vector3f> scale = new ConstantEasingCurve<>(new Vector3f(1));
         protected String filename;
         protected EasingCurve<Float> interval;
         protected ObjModel objectModel;
