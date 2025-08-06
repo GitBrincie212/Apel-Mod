@@ -14,6 +14,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+/** This is the {@link ImageMediaProcessor}, it is used for displaying one still image or an animated one.
+ * It accepts a path to be taken and reads the contents of the file according. Once called, if the image provided
+ * is not animated then it always returns the image frame, in the case of it being animated, it will try to return the corresponding
+ * frame of the image. If it doesn't find it, then it returns an error
+ * <br /> <br />
+ * Sadly, this is still a work in progress, so the only tested image working is PNG, for WEBP it doesn't seem to work
+ */
 public class ImageMediaProcessor implements MediaProcessor {
     private final List<ParticleMedia.FrameData> frames;
 
