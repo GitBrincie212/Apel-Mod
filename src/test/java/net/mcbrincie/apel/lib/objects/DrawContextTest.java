@@ -33,7 +33,7 @@ class DrawContextTest {
     void testAddingWildcardGenerics() {
         // This mimics what ParticleCombiner would do with `OBJECT_IN_USE` using a ParticleObject<?>
         // Given a DrawContext
-        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
+        DrawContext<?> context = new DrawContext<>(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
         Key<ParticleObject<?>> objectInUse = Key.particleObjectKey("objectInUse");
 
         // Given a ParticlePoint
@@ -50,7 +50,7 @@ class DrawContextTest {
     @Test
     void testAddingArrays() {
         // Given a DrawContext
-        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
+        DrawContext<?> context = new DrawContext<>(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
         Key<Vector3f[]> verticesKey = Key.vector3fArrayKey("vertices");
 
         // Given an array
@@ -67,7 +67,7 @@ class DrawContextTest {
     @Test
     void testMultipleKeys() {
         // Given a DrawContext
-        DrawContext context = new DrawContext(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
+        DrawContext<?> context = new DrawContext<>(NULL_WORLD, new Vector3f(0), 0, 0, 0, NULL_COMPUTED_EASINGS);
         Key<Integer> key = Key.integerKey("foo");
         Key<Integer> key2 = Key.integerKey("bar");
 
