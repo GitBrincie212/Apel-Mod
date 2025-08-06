@@ -1,5 +1,5 @@
 <img src="./media/APEL_Changelog_Banner.png" alt="APEL Version 0.1.5 Release"/><br>
-The ***FIRST** ever update for _APEL_ to ever receive. It is a moderate update and brings to the table new things 
+The **FIRST** ever update for _APEL_ to ever receive. It is a moderate update and brings to the table new things 
 as well as reworks while also patching unintended stuff. We always wanted and still want to expand upon the library and 
 create a better place for developers to use in their own projects
 
@@ -12,7 +12,7 @@ create a better place for developers to use in their own projects
 - [x] Added ``ParticleArray`` for copying particle objects in an alternating pattern
 - [ ] Added ``ParticleBranchGen`` which allows the rendering of branch fractal patterns
 - [x] Added ``roundness`` to ``ParticlePolygon`` for rounding the shape
-- [ ] Added ``ParticleImage`` for rendering images, including even GIFs
+- [ ] Added ``ParticleMedia`` for rendering images (including even GIFs) and videos
 - [ ] Added ``scale`` to ParticleObject. Used for adjusting the scale (can also be negative)
 - [x] Added ``deltaTimeTick`` to DrawContext, which is used for knowing the difference of time between the last tick and current tick
 - [x] Added ``numberOfSteps`` to DrawContext, which is used for knowing the steps of the path animator
