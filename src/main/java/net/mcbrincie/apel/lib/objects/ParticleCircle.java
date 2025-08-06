@@ -1,14 +1,11 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
-import org.jetbrains.annotations.NotNull;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 /** The particle object class that represents a circle (2D shape) and not a 3D sphere.
  * It has a radius which dictates how large or small the circle is depending on the
@@ -18,54 +15,17 @@ import java.util.Optional;
  * angles for rotation.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCircle extends ParticleObject {
-    protected float radius;
-    private DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
+public class ParticleCircle extends RenderableParticleObject<ParticleCircle> {
+    protected EasingCurve<Float> radius;
 
-    /** This data is used before calculations (it contains the iterated rotation) */
-    public enum BeforeDrawData {}
-
-    /** This data is used after calculations (it contains the drawing position) */
-    public enum AfterDrawData {}
-
-    /** Constructor for the particle circle which is a 2D shape. It accepts as parameters
-     * the particle effect to use, the radius of the circle, the rotation to apply, and the number of particles.
-     * There is also a simplified version for no rotation.
-     *
-     * <p>This implementation calls setters for amount, rotation, and radius so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param radius The radius of the circle (how big it is)
-     * @param rotation The rotation to apply
-     *
-     * @see ParticleCircle#ParticleCircle(ParticleEffect, float, int)
-    */
-    public ParticleCircle(@NotNull ParticleEffect particleEffect, float radius, Vector3f rotation, int amount) {
-        super(particleEffect, rotation);
-        this.setRadius(radius);
-        this.setAmount(amount);
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the particle circle which is a 2D shape. It accepts as parameters
-     * the particle effect to use, the radius of the circle, & the number of particles.
-     * There is also a version that allows for rotation.
-     *
-     * <p>This implementation calls setters for amount, rotation, and radius so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param radius The radius of the circle (how big it is)
-     *
-     * @see ParticleCircle#ParticleCircle(ParticleEffect, float, Vector3f, int)
-    */
-    public ParticleCircle(@NotNull ParticleEffect particleEffect, float radius, int amount) {
-        this(particleEffect, radius, new Vector3f(0), amount);
+    private ParticleCircle(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
+        this.setRadius(builder.radius);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -76,70 +36,95 @@ public class ParticleCircle extends ParticleObject {
     public ParticleCircle(ParticleCircle circle) {
         super(circle);
         this.radius = circle.radius;
-        this.amount = circle.amount;
-        this.afterDraw = circle.afterDraw;
-        this.beforeDraw = circle.beforeDraw;
     }
 
     /** Gets the radius of the ParticleCircle and returns it.
      *
      * @return the radius of the ParticleCircle
      */
-    public float getRadius() {
+    public EasingCurve<Float> getRadius() {
         return radius;
     }
 
-    /** Set the radius of this ParticleCircle and returns the previous radius that was used.
+    /**
+     * Set the radius of this ParticleCircle and returns the previous radius that was used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This overload will set a constant value for the radius
      *
      * @param radius the new radius
      * @return the previously used radius
      */
-    public float setRadius(float radius) {
-        if (radius < 0) {
-            throw new IllegalArgumentException("Radius cannot be negative");
-        }
-        float prevRadius = this.radius;
+    public final EasingCurve<Float> setRadius(float radius) {
+        EasingCurve<Float> prevRadius = this.radius;
+        this.radius = new ConstantEasingCurve<>(radius);
+        return prevRadius;
+    }
+
+    /**
+     * Set the radius of this ParticleCircle and returns the previous radius that was used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This overload will set a constant value for the radius
+     *
+     * @param radius the new radius
+     * @return the previously used radius
+     */
+    public final EasingCurve<Float> setRadius(EasingCurve<Float> radius) {
+        EasingCurve<Float> prevRadius = this.radius;
         this.radius = radius;
         return prevRadius;
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
-        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
+        return container
+                .addComputedField("radius", this.radius);
+    }
+
+    @Override
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasingRPO = drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingRPO.computedOffset);
+        float currRadius = (float) computedEasingRPO.getComputedField("radius");
+        /*
+        if (currRadius <= 0) {
+            throw new RuntimeException("The radius must be positive and non-zero");
+        }
+         */
         renderer.drawEllipse(
-                this.particleEffect, step, objectDrawPos, this.radius, this.radius, this.rotation, this.amount);
-        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
-        this.endDraw(renderer, step, drawPos);
+                this.particleEffect, drawContext.getCurrentStep(), objectDrawPos,
+                currRadius * actualSize.x, currRadius * actualSize.y, computedEasingRPO.computedRotation,
+                computedEasingRPO.computedAmount
+        );
     }
 
-    /** Set the interceptor to run after drawing the circle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position of the center of the circle.
-     *
-     * @param afterDraw the new interceptor to execute after drawing each particle
-     */
-    public void setAfterDraw(DrawInterceptor<ParticleCircle, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleCircle> {
+        protected EasingCurve<Float> radius;
 
-    private void doAfterDraw(ServerWorld world, int step, Vector3f centerPos) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, centerPos, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
+        private Builder() {}
 
-    /** Set the interceptor to run prior to drawing the circle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position of the center of the circle.
-     *
-     * @param beforeDraw the new interceptor to execute prior to drawing each particle
-     */
-    public void setBeforeDraw(DrawInterceptor<ParticleCircle, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
+        /**
+         * Set the radius on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set a constant value for the radius
+         */
+        public B radius(float radius) {
+            this.radius = new ConstantEasingCurve<>(radius);
+            return self();
+        }
 
-    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        this.beforeDraw.apply(interceptData, this);
+        /**
+         * Set the radius on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set a constant value for the radius
+         */
+        public B radius(EasingCurve<Float> radius) {
+            this.radius = radius;
+            return self();
+        }
+
+        @Override
+        public ParticleCircle build() {
+            return new ParticleCircle(this);
+        }
     }
 }

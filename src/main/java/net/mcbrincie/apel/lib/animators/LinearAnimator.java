@@ -1,14 +1,15 @@
 package net.mcbrincie.apel.lib.animators;
 
-import com.mojang.datafixers.util.Function4;
-import com.mojang.datafixers.util.Function5;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
-import org.jetbrains.annotations.NotNull;
+import net.mcbrincie.apel.lib.util.interceptor.context.AnimationContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
 import org.joml.Vector3f;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /** The linear animator. Which is used for linear paths(a.k.a. paths that are drawn as a line). It
  * accepts 2 or multiple points which draw the line and are called endpoints, they draw lines from the
@@ -16,273 +17,297 @@ import org.joml.Vector3f;
  * path animator but still capable of doing basic animations and is friendlier compared to other animators.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class LinearAnimator extends PathAnimatorBase {
-    protected Vector3f[] endpoints;
-    protected int[] renderingSteps;
-    protected float[] renderingInterval;
-    protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
+public class LinearAnimator extends PathAnimatorBase<LinearAnimator> {
+    protected List<Vector3f> endpoints;
+    protected List<Integer> stepsForSegments;
+    protected AnimationTrimming<Integer> trimming;
 
-    protected Function5<AnimationTrimming<Integer>, Vector3f, Vector3f, Integer, Float, Void> onEnd;
-    protected Function4<AnimationTrimming<Integer>, Vector3f, Integer, Float, Void> onStart;
-    protected Function5<AnimationTrimming<Integer>, Vector3f, Vector3f, Integer, Float, Void> onProcess;
+    public static final Key<Integer> CURRENT_ENDPOINT_INDEX = Key.integerKey("currentEndpointIndex");
 
-    /** Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a constant number
-     * of particles. It doesn't look pretty at large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param start The starting position
-     * @param end The ending position
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps for the animation
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f start, @NotNull Vector3f end, @NotNull ParticleObject particle,
-            int renderingSteps
-    ) {
-        this(delay, new Vector3f[]{start, end}, particle, new int[]{renderingSteps});
+    public static <B extends Builder<B>> Builder<B> builder() {
+        return new Builder<>();
+    }
+
+    private <B extends Builder<B>> LinearAnimator(Builder<B> builder) {
+        super(builder);
+        this.endpoints = builder.endpoints;
+        this.stepsForSegments = builder.stepsForSegments;
+        this.trimming = builder.trimming;
     }
 
     /**
-     * Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle line. The amount is dynamic that can cause
-     * performance issues for larger distances (The higher the interval,
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param start The starting position
-     * @param end The ending position
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f start, @NotNull Vector3f end, @NotNull ParticleObject particle,
-            float renderingInterval
-    ) {
-        this(delay, new Vector3f[]{start, end}, particle, new float[]{renderingInterval});
-    }
-
-    /**
-     * Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle line & also want to create multiple endpoints.
-     * Because of the interval, the amount is dynamic that can cause
-     * performance issues for larger distances (The higher the interval
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param endpoints The endpoint positions
-     * @param particle The particle to use
-     * @param renderingInterval The distance, in blocks, between rendering steps
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, float renderingInterval
-    ) {
-        // There should be one fewer interval entries than endpoints, since each pair needs an interval
-        this(delay, endpoints, particle, defaultedArray(new float[endpoints.length - 1], renderingInterval));
-    }
-
-    /**
-     * Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a constant amount &
-     * of particles also multiple endpoints. It doesn't look pretty at
-     * large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param endpoints The endpoint positions
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps between each pair of endpoints
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, int renderingSteps
-    ) {
-        // There should be one fewer step entries than endpoints since each segment needs steps
-        this(delay, endpoints, particle, defaultedArray(new int[endpoints.length - 1], renderingSteps));
-    }
-
-    /**
-     * Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle line as well as better control on their interval
-     * Because of the interval, the amount is dynamic which can cause
-     * performance issues for larger distances(The higher the interval
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param endpoints The endpoint positions
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, float[] renderingInterval
-    ) {
-        super(delay, particle, renderingInterval[0]);
-        if ((renderingInterval.length - 1) == endpoints.length) {
-            throw new IllegalArgumentException("Intervals do not match the endpoints");
-        }
-        this.endpoints = endpoints;
-        this.renderingInterval = renderingInterval;
-        this.renderingSteps = new int[this.renderingInterval.length];
-    }
-
-    /**
-     * Constructor for the linear animation. This constructor is
-     * meant to be used in the case that you want a constant amount &
-     * of particles also multiple endpoints. It doesn't look pretty at
-     * large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param endpoints The endpoint positions
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps for the animation
-     */
-    public LinearAnimator(
-            int delay, @NotNull Vector3f[] endpoints, @NotNull ParticleObject particle, int[] renderingSteps
-    ) {
-        super(delay, particle, renderingSteps[0]);
-        if ((renderingSteps.length - 1) == endpoints.length) {
-            throw new IllegalArgumentException("Steps do not match the endpoints");
-        }
-        this.endpoints = endpoints;
-        this.renderingSteps = renderingSteps;
-        this.renderingInterval = new float[this.renderingSteps.length];
-    }
-
-    /**
-     * Constructor for the linear animation. This constructor is
+     * Copy constructor for the linear animation. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * linear animator instance with all of its parameters regardless
-     * of their visibility (this means protected & private params are copied)
+     * of their visibility (this means protected and private params are copied)
      *
      * @param animator The animator to copy from
     */
     public LinearAnimator(LinearAnimator animator) {
         super(animator);
         this.endpoints = animator.endpoints;
-        this.renderingInterval = animator.renderingInterval;
-        this.renderingSteps = animator.renderingSteps;
+        this.stepsForSegments = animator.stepsForSegments;
         this.trimming = animator.trimming;
-        this.onEnd = animator.onEnd;
-        this.onStart = animator.onStart;
-        this.onProcess = animator.onProcess;
-    }
-
-    /** Gets the distance between the start & end position
-     *
-     * @return The distance between the start and end
-     */
-    public float getDistance() {
-        float sumDistance = 0;
-        for (int i = 0; i < this.endpoints.length - 1; i++) {
-            sumDistance += this.endpoints[i].distance(this.endpoints[i + 1]);
-        }
-        return sumDistance;
-    }
-
-    /** Sets the animation trimming which accepts a start trim or
-     * an ending trim. The trim parts have to be integer values
-     *
-     * @return The animation trimming that is used
-     */
-    public AnimationTrimming<Integer> setTrimming(AnimationTrimming<Integer> trimming) {
-        int startStep = trimming.getStart();
-        int endStep = trimming.getEnd();
-        if (startStep <= 0 || endStep >= this.getRenderSteps() || startStep >= endStep) {
-            throw new IllegalArgumentException("Invalid animation trimming range");
-        }
-        AnimationTrimming<Integer> prevTrimming = this.trimming;
-        this.trimming = trimming;
-        return prevTrimming;
-    }
-
-    /** Gets the animation trimming that is used
-     *
-     * @return The animation trimming that is used
-     */
-    public AnimationTrimming<Integer> getTrimming() {
-        return this.trimming;
-    }
-
-
-    @Override
-    public int convertToSteps() {
-        int steps = 0;
-        for (int i = 0; i < this.endpoints.length - 1; i++) {
-            float distance = this.endpoints[i].distance(this.endpoints[i + 1]);
-            int segmentSteps = (int) Math.ceil(distance / this.renderingInterval[i]);
-            steps += segmentSteps;
-        }
-        return steps;
     }
 
     @Override
-    protected int scheduleGetAmount() {
-        int sumSteps = 0;
-        for (int i : this.renderingSteps) {
-            sumSteps += i;
-        }
-        return sumSteps;
+    public int convertIntervalToSteps() {
+        return this.stepsForSegments.stream().mapToInt(i -> i).sum();
     }
 
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
-        int particleAmount;
-        float particleInterval;
         int startStep = this.trimming.getStart();
         int endStep = this.trimming.getEnd();
-        Vector3f curr = new Vector3f(this.endpoints[0].x, this.endpoints[0].y, this.endpoints[0].z);
-        if (this.onStart != null) {
-            this.onStart.apply(this.trimming, curr, this.renderingSteps[0], this.renderingInterval[0]);
-        }
         this.allocateToScheduler();
-        int lastStep = 0;
-        int endpointIndex = -1;
-        for (Vector3f endPos : this.endpoints) {
-            endpointIndex++;
-            if(endpointIndex == 0) continue;
-            particleAmount = this.renderingSteps[endpointIndex - 1];
-            particleInterval = this.renderingInterval[endpointIndex - 1];
-            if (particleInterval == 0.0f) {
-                particleInterval = (this.getDistance() / particleAmount) * (this.endpoints.length - 1);
-            } else {
-                particleAmount = this.convertToSteps();
-            }
-            Vector3f startPos = this.endpoints[endpointIndex - 1];
-            float dist = this.getDistance();
-            for (int i = 0; i < particleAmount; i++) {
-                double currDist = curr.distance(endPos);
-                float dirX = (endPos.x - startPos.x) / dist;
-                float dirY = (endPos.y - startPos.y) / dist;
-                float dirZ = (endPos.z - startPos.z) / dist;
-                int currDirX = (int) Math.round((endPos.x - curr.x) / currDist);
-                int currDirY = (int) Math.round((endPos.y - curr.y) / currDist);
-                int currDirZ = (int) Math.round((endPos.z - curr.z) / currDist);
-                double dotProduct = (currDirX * dirX) + (currDirY * dirY) + (currDirZ * dirZ);
-                boolean isGoingSameDir = dotProduct > 0;
-                if (curr.equals(endPos) || !isGoingSameDir || (i >= endStep && endStep != -1)) {
-                    lastStep = i;
-                    if (i == 0) break;
+
+        int step = -1;
+        for (int segmentIndex = 0; segmentIndex < this.endpoints.size() - 1; segmentIndex++) {
+            Vector3f segmentStart = this.endpoints.get(segmentIndex);
+            Vector3f segmentEnd = this.endpoints.get(segmentIndex + 1);
+            int segmentSteps = this.stepsForSegments.get(segmentIndex);
+
+            Vector3f segmentDelta = new Vector3f(segmentEnd).sub(segmentStart).div(segmentSteps);
+            for (int i = 0; i < segmentSteps; i++) {
+                step++;
+                if (i < startStep) {
+                    continue;
                 }
-                float newX = curr.x + (dirX * particleInterval);
-                float newY = curr.y + (dirY * particleInterval);
-                float newZ = curr.z + (dirZ * particleInterval);
-                curr = new Vector3f(newX, newY, newZ);
-                if (i < startStep) continue;
-                this.handleDrawingStep(renderer, i, curr);
-                if (this.onProcess != null) {
-                    this.onProcess.apply(this.trimming, curr, endPos, particleAmount, particleInterval);
+                // Handle trimming, but only if the end was set to a non-default value
+                if (i >= endStep && endStep != -1) {
+                    break;
                 }
-                lastStep++;
+                Vector3f renderPosition = new Vector3f(segmentDelta).mul(i).add(segmentStart);
+                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
+                animationContext.addMetadata(CURRENT_ENDPOINT_INDEX, segmentIndex);
+                this.beforeRender.compute(this, animationContext);
+                Vector3f actualPosition = animationContext.getPosition();
+                this.handleDrawingStep(renderer, step, actualPosition);
+                this.afterRender.compute(this, animationContext);
             }
         }
-        if (this.onEnd != null) {
-            this.onEnd.apply(
-                    this.trimming, curr,
-                    this.endpoints[this.endpoints.length - 1],
-                    this.renderingSteps[this.renderingSteps.length - 1],
-                    this.renderingInterval[this.renderingInterval.length - 1]
-            );
+    }
+
+    /** This is the linear path animator builder used for setting up a new linear path animator instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance.
+     * <p>
+     * The LinearAnimator supports multiple, linked segments.  Every endpoint added beyond the first will create a
+     * segment along which the particle object travels.  The travel speed may be configured by providing the number of
+     * steps into which to divide the segment, or an interval that also divides the segment into steps.  These interval
+     * and step values may be provided uniquely for every segment, set in groups of segments, or uniform across all
+     * segments.  The priority is as follows:
+     * <ol>
+     *     <li>{@link #intervalForAllSegments(float)}</li>
+     *     <li>{@link #stepsForAllSegments(int)}</li>
+     *     <li>{@link #intervalForSegment(float)} and {@link #intervalsForSegments(List)}</li>
+     *     <li>{@link #stepsForSegment(int)} and {@link #stepsForSegments(List)}</li>
+     * </ol>
+     *
+     * @param <B> The builder type itself
+    */
+    public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, LinearAnimator> {
+        protected List<Vector3f> endpoints = new ArrayList<>();
+        protected List<Integer> stepsForSegments = new ArrayList<>();
+        protected int stepsForAllSegments = 0;
+        protected List<Float> intervalsForSegments = new ArrayList<>();
+        protected float intervalForAllSegments = 0.0f;
+        protected AnimationTrimming<Integer> trimming = new AnimationTrimming<>(0, -1);
+
+        private Builder() {}
+
+        /**
+         * Adds a waypoint to the path this animator takes.  This method is cumulative; repeated calls will append to
+         * the list of waypoints.  There must be at least two waypoints.
+         *
+         * @param endpoint The endpoint to add to the list of endpoints
+         * @return The builder instance
+         */
+        public B endpoint(Vector3f endpoint) {
+            this.endpoints.add(endpoint);
+            return self();
         }
+
+        /**
+         * Adds multiple waypoints to the path this animator takes.  This method is cumulative; repeated calls will
+         * append to the list of waypoints.  There must be at least two waypoints.
+         *
+         * @param endpoints The endpoints to add to the list of endpoints
+         * @return The builder instance
+        */
+        public B endpoints(List<Vector3f> endpoints) {
+            this.endpoints.addAll(endpoints);
+            return self();
+        }
+
+        /**
+         * Set the number of steps to use when rendering the object along a segment between two waypoints.  This method
+         * is cumulative, each successive call configures a segment.  Any segments not configured will default to 0.
+         * Segments with steps set to 0 will use the segment's interval value.
+         *
+         * @param steps The steps for the next segment
+         * @return The builder instance
+         */
+        public B stepsForSegment(int steps) {
+            if (steps < 0) {
+                throw new IllegalArgumentException("Steps must be non-negative");
+            }
+            this.stepsForSegments.add(steps);
+            return self();
+        }
+
+        /**
+         * Set the number of steps to use when rendering the object along multiple segments.  This method is cumulative,
+         * each successive call configures one or more segments.  Any segments not configured will default to 0.
+         * Segments with steps set to 0 will use the segment's interval value.
+         *
+         * @param stepsForSegments The steps for the next N segments
+         * @return The builder instance
+         */
+        public B stepsForSegments(List<Integer> stepsForSegments) {
+            for (Integer steps : stepsForSegments) {
+                this.stepsForSegment(steps);
+            }
+            return self();
+        }
+
+        /**
+         * Set the number of steps to use on every segment.  This method is not cumulative; repeated calls will
+         * overwrite the value.
+         * <p>
+         * Note: This will take priority over individual segments set in {@link #stepsForSegment(int)} or
+         * {@link #stepsForSegments(List)}.  If all segments but one need the same value, you must use those two
+         * methods to configure values in the proper order.
+         *
+         * @param steps The steps for every segment
+         * @return The builder instance
+         */
+        public B stepsForAllSegments(int steps) {
+            if (steps <= 0) {
+                throw new IllegalArgumentException("Steps for all segments must be positive");
+            }
+            this.stepsForAllSegments = steps;
+            return self();
+        }
+
+        /**
+         * Set the interval to use when rendering the object along a segment between two waypoints.  This method
+         * is cumulative, each successive call configures a segment.  Any segments not configured will default to 0.0.
+         * Segments with an interval of 0.0 will use the segment's value for steps.
+         *
+         * @param interval The interval for the next segment
+         * @return The builder instance
+         */
+        public B intervalForSegment(float interval) {
+            if (interval < 0.0f) {
+                throw new IllegalStateException("Interval must be non-negative");
+            }
+            this.intervalsForSegments.add(interval);
+            return self();
+        }
+
+        /**
+         * Set the interval to use when rendering the object along multiple segments.  This method is cumulative, each
+         * successive call configures a segment.  Any segments not configured will default to 0.0.  Segments with an
+         * interval of 0.0 will use the segment's value for steps.
+         *
+         * @param intervalsForSegments The intervals for the next N segments
+         * @return The builder instance
+         */
+        public B intervalsForSegments(List<Float> intervalsForSegments) {
+            for (Float interval : intervalsForSegments) {
+                this.intervalForSegment(interval);
+            }
+            return self();
+        }
+
+        /**
+         * Set the interval to use on every segment.  This method is not cumulative; repeated calls will overwrite the
+         * value.
+         * <p>
+         * Note: This will take priority over individual segments set in {@link #intervalForSegment(float)} or
+         * {@link #intervalsForSegments(List)}.  If all segments but one need the same value, you must use those two
+         * methods to configure values in the proper order.
+         *
+         * @param interval The interval for every segment
+         * @return The builder instance
+         */
+        public B intervalForAllSegments(float interval) {
+            if (interval <= 0.0f) {
+                throw new IllegalStateException("Interval for all segments must be positive");
+            }
+            this.intervalForAllSegments = interval;
+            return self();
+        }
+
+        /**
+         * Set the trimming of each segment of the path.  Trimming refers to step numbers, and all segments will use
+         * the same trimming settings.  Valid start values range from 0 to the value used for the end.  Valid end values
+         * are 0 and greater.  If the end is set to -1, no steps will be trimmed off the end.
+         *
+         * @param trimming The trimming of the linear path animator
+         * @return The builder instance
+         */
+        public B trimming(AnimationTrimming<Integer> trimming) {
+            if (trimming.getStart() < 0) {
+                throw new IllegalArgumentException("Trim start must be non-negative");
+            }
+            if (trimming.getEnd() < -1) {
+                throw new IllegalArgumentException("Trim end must be -1 (no trim) or non-negative");
+            }
+            if (trimming.getEnd() != -1 && trimming.getStart() >= trimming.getEnd()) {
+                throw new IllegalArgumentException("Trim start must be less than trim end");
+            }
+            this.trimming = new AnimationTrimming<>(trimming);
+            return self();
+        }
+
+        @Override
+        public LinearAnimator build() {
+            if (this.endpoints.size() < 2) {
+                throw new IllegalStateException("Must provide at least two endpoints");
+            }
+            // If an "all segment" value is provided, it takes priority: interval first, then steps
+            if (this.intervalForAllSegments != 0.0f) {
+                this.intervalsForSegments.clear();
+                for (int i = 0; i < this.endpoints.size() - 1; i++) {
+                    this.intervalsForSegments.add(this.intervalForAllSegments);
+                }
+            } else if (this.stepsForAllSegments != 0) {
+                this.stepsForSegments.clear();
+                for (int i = 0; i < this.endpoints.size() - 1; i++) {
+                    this.stepsForSegments.add(this.stepsForAllSegments);
+                }
+            }
+            // At this point, either an "all segments" value is provided or individual values for either steps or
+            // intervals must be provided.  At this point, mixing intervals and steps is not allowed.
+            if ((this.stepsForSegments.size() + 1 != this.endpoints.size()) && (this.intervalsForSegments.size() + 1 != this.endpoints.size())) {
+                throw new IllegalStateException("Must provide steps or intervals for every segment");
+            }
+            for (int i = 0; i < this.endpoints.size() - 1; i++) {
+                // Pad the lists so the conversion from interval to steps is straightforward
+                if (this.stepsForSegments.size() == i) {
+                    this.stepsForSegments.add(0);
+                }
+                if (this.intervalsForSegments.size() == i) {
+                    this.intervalsForSegments.add(0.0f);
+                }
+                // Verify that at least one of steps/interval is provided
+                if (this.stepsForSegments.get(i) == 0 && this.intervalsForSegments.get(i) == 0.0f) {
+                    throw new IllegalStateException("Either steps or interval must be positive for segment " + i);
+                }
+                // Interval takes priority, if set.  If not set, then steps must already be set.
+                if (this.intervalsForSegments.get(i) != 0.0f) {
+                    this.stepsForSegments.set(i, this.getSegmentSteps(i));
+                }
+            }
+            return new LinearAnimator(this);
+        }
+
+        private int getSegmentSteps(int segmentIndex) {
+            float distance = this.endpoints.get(segmentIndex).distance(this.endpoints.get(segmentIndex + 1));
+            return (int) Math.ceil(distance / this.intervalsForSegments.get(segmentIndex));
+        }
+
     }
 }

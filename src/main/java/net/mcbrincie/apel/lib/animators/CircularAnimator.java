@@ -1,103 +1,107 @@
 package net.mcbrincie.apel.lib.animators;
 
-import com.mojang.datafixers.util.Function6;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
 import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
 import net.mcbrincie.apel.lib.util.AnimationTrimming;
+import net.mcbrincie.apel.lib.util.interceptor.context.AnimationContext;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 
-/** A slightly more complex animator than linear animator or point animator because it deals with a circle.
- * The animator basically creates a circle, and when animating on it, you specify which angle (IN RADIANS) should
- * be the start & end, to trim some parts. If you wanna fully revolve around the circle and end up back at the
- * same point, then you can specify the revolutions it should do by using {@code setRevolutions}. By default, it's
- * set to one revolution, which means it loops the circle once
+import java.util.function.Predicate;
+
+/**
+ * The {@code CircularAnimator} moves the given {@link ParticleObject} along a circular path.  This path is defined
+ * by a center point and a radius that describe a circle in the XY-plane.  The path starts at 2&pi; radians and proceeds
+ * clockwise by default.  It makes one revolution, by default, though {@link #setRevolutions(int)} may be used to do
+ * more revolutions if desired.  Potential transformations include rotation, direction, and trimming.
+ * <p>
+ * Rotation is done by providing a {@link Vector3f} indicating rotations about each axis.  For example, putting the
+ * circle in the XZ-plane can be done by passing {@code new Vector3f((float)Math.PI / 2, 0, 0)} to the constructor's
+ * {@code rotation} parameter.
+ * <p>
+ * Directionality is controlled by {@link #setClockwise()}.  This toggles the direction, so each call reverses
+ * direction, with the initial value of {@code true} indicating clockwise.
+ * <p>
+ * Trimming is done by providing a single arc on the circle, in radians, where the object will be rendered.  The start
+ * and end points will be normalized within the interval [0, 2&pi;) such that the arc length between them is 2&pi; or
+ * less.  By default, the entire circle is rendered because the trimming parameters are equal, and this class
+ * interprets that as drawing all particles from the start point to the end point.
+ * <p>
+ * For example, calling {@link #setTrimming(AnimationTrimming)} with {@code new AnimationTrimming<>(0.0f, (float)Math.PI)}
+ * would render on the second half of the circle if the direction is counter-clockwise because 0 == 2&pi; on the circle,
+ * and the first half if the direction is clockwise.  The code for the first is:
+ * <pre>
+ * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
+ *                 .counterclockwise().trimming(new AnimationTrimming{@literal <}{@literal >}(0.0f, (float)Math.PI))
+ *                 .build();
+ * </pre>
+ * and the second is:
+ * <pre>
+ * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
+ *                 .clockwise().trimming(new AnimationTrimming{@literal <}{@literal >}(0.0f, (float)Math.PI))
+ *                 .build();
+ * </pre>
+ * <p>
+ * As another example, the following code will begin at 2&pi;, go counter-clockwise to 3&pi;/2, then
+ * skip to &pi;/2 and continue rendering until it reaches {@code 0}.
+ * <pre>
+ * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
+ *                 .counterclockwise().trimming(new AnimationTrimming{@literal <}{@literal >}((float)Math.PI/2, -(float)Math.PI/2))
+ *                 .build();
+ * </pre>
+ * If the previous code set `clockwise()` on the builder, it would render continuously from &pi;/2 to -&pi;/2;
+ * <p>
+ * To have it start at &pi;/2 and render continuously in a counter-clockwise direction, rotate the circular path &pi;/2
+ * clockwise around the z-axis, and change the trim interval to [0, &pi;]:
+ * <pre>
+ * CircularAnimator.builder().particleObject(particleObject).center(new Vector3f()).radius(2.0f)
+ *                 .rotation(new Vector3f(0.0f, 0.0f, (float)Math.PI/2))
+ *                 .counterclockwise().trimming(new AnimationTrimming{@literal <}{@literal >}(0, (float)Math.PI))
+ *                 .build();
+ * </pre>
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class CircularAnimator extends PathAnimatorBase {
+public class CircularAnimator extends PathAnimatorBase<CircularAnimator> {
     protected float radius;
     protected Vector3f center;
     protected Vector3f rotation;
-    protected int revolutions = 1;
-    protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, (float) (Math.TAU - 0.0001f));
+    protected int revolutions;
+    protected AnimationTrimming<Float> trimming;
     protected boolean clockwise;
 
-    private float tempDiffStore;
+    public static <B extends Builder<B>> Builder<B> builder() {
+        return new Builder<>();
+    }
 
-    protected Function6<AnimationTrimming<Float>, Vector3f, Float, Vector3f, Integer, Float, Void> onEnd;
-    protected Function6<AnimationTrimming<Float>, Vector3f, Float, Vector3f, Integer, Float, Void> onStart;
-    protected Function6<Integer, AnimationTrimming<Float>, Float, Vector3f, Integer, Float, Void> onProcess;
-
-    /**
-     * Constructor for the circular animation. This constructor is
-     * meant to be used in the case that you want a constant number
-     * of particles. It doesn't look pretty at large distances tho
-     *
-     * @param delay The delay between each particle object render
-     * @param radius The radius of the 2D circle
-     * @param center The center point of the 2D circle
-     * @param rotation the rotation in XYZ of the 2D circle<strong>(IN RADIANS)</strong>
-     * @param particle The particle to use
-     * @param renderingSteps The amount of rendering steps for the animation
-     */
-    public CircularAnimator(
-            int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            @NotNull ParticleObject particle, int renderingSteps
-    ) {
-        super(delay, particle, renderingSteps);
-        this.setRadius(radius);
-        this.setCenter(center);
-        this.rotate(rotation.x, rotation.y, rotation.z);
+    private <B extends Builder<B>> CircularAnimator(Builder<B> builder) {
+        super(builder);
+        this.center = builder.center;
+        this.radius = builder.radius;
+        this.rotation = builder.rotation;
+        this.revolutions = builder.revolutions;
+        this.clockwise = builder.clockwise;
+        this.trimming = builder.trimming;
     }
 
     /**
-     * Constructor for the circular animation. This constructor is
-     * meant to be used in the case that you want a good consistent
-     * looking particle circle. The amount is dynamic that can cause
-     * performance issues for larger distances (The higher the interval,
-     * the fewer particles are rendered, and it is also applied vice versa)
-     *
-     * @param delay The delay between each particle object render
-     * @param radius The radius of the 2D circle
-     * @param center The center point of the 2D circle
-     * @param rotation the rotation in XYZ of the 2D circle<strong>(IN RADIANS)</strong>
-     * @param particle The particle to use
-     * @param renderingInterval The number of blocks before placing a new render step
-     */
-    public CircularAnimator(
-            int delay, float radius, @NotNull  Vector3f center, @NotNull Vector3f rotation,
-            @NotNull ParticleObject particle, float renderingInterval
-    ) {
-        super(delay, particle, renderingInterval);
-        this.setRadius(radius);
-        this.setCenter(center);
-        this.rotate(rotation.x, rotation.y, rotation.z);
-    }
-
-    /**
-     * Constructor for the circular animator. This constructor is
+     * Copy constructor for the circular animator. This constructor is
      * meant to be used in the case that you want to fully copy a new
      * circular animator instance with all of its parameters regardless
-     * of their visibility (this means protected & private params are copied)
+     * of their visibility (this means protected and private params are copied)
      *
      * @param animator The animator to copy from
     */
     public CircularAnimator(CircularAnimator animator) {
         super(animator);
-        this.rotation = animator.rotation;
         this.center = animator.center;
         this.radius = animator.radius;
+        this.rotation = animator.rotation;
         this.revolutions = animator.revolutions;
-        this.tempDiffStore = -1.0f;
-        this.onStart = animator.onStart;
-        this.onEnd = animator.onEnd;
-        this.onProcess = animator.onProcess;
         this.clockwise = animator.clockwise;
         this.trimming = animator.trimming;
     }
-
 
     /** Rotates the animator in 3D space. The params are measured as radians
      * and NOT in degrees. It uses euler's 3D rotation
@@ -153,16 +157,37 @@ public class CircularAnimator extends PathAnimatorBase {
         return this.radius;
     }
 
-    /** Sets the animation trimming which accepts a start trim or
-     * an ending trim. The trim parts have to be float values
+    /**
+     * Sets the animation trimming.  This animator trims based on angle (in radians) such that any steps that occur
+     * between the start and end of the trim interval will render.
+     * <p>
+     * The maximum interval of the AnimationTrimming instance is 2&pi;<sup>-</sup> radians, so it can approach
+     * 2&pi;, but will never actually be 2&pi;.  If the trimming interval is greater than 2&pi;, it will be normalized
+     * such that its length is &lt; 2&pi;.  If the entire circle should render an object, the default trimming is
+     * {@code (0.0, 0.0)} which means "start at 0.0 and traverse the circle until reaching 0.0"; this results in
+     * rendering the object at all points on the circle.
      *
-     * @return The animation trimming that is used
+     * @return The previous animation trimming
      */
     public AnimationTrimming<Float> setTrimming(AnimationTrimming<Float> trimming) {
-        trimming.setStart((float) (trimming.getStart() % Math.TAU));
-        trimming.setEnd((float) (trimming.getEnd() % Math.TAU));
+        float start = trimming.getStart();
+        float end = trimming.getEnd();
+        // Ensure start is within [0, TAU)
+        while (start < 0) {
+            start += (float) Math.TAU;
+        }
+        while (start >= Math.TAU) {
+            start -= (float) Math.TAU;
+        }
+        // Ensure end is within [0, TAU)
+        while (end < 0) {
+            end += (float) Math.TAU;
+        }
+        while (end >= Math.TAU) {
+            end -= (float) Math.TAU;
+        }
         AnimationTrimming<Float> prevTrimming = this.trimming;
-        this.trimming = trimming;
+        this.trimming = new AnimationTrimming<>(start, end);
         return prevTrimming;
     }
 
@@ -174,7 +199,7 @@ public class CircularAnimator extends PathAnimatorBase {
         return this.trimming;
     }
 
-    /** Sets the clockwise value that is used
+    /** Toggles the direction of rotation between clockwise and counter-clockwise.
      *
      * @return The previous clockwise value
      */
@@ -191,62 +216,66 @@ public class CircularAnimator extends PathAnimatorBase {
         return this.clockwise;
     }
 
-    /** Converts any render-interval-based animation into render steps
-     *
-     * @return The converted step
-     */
     @Override
-    public int convertToSteps() {
-        return (int) (Math.ceil(this.tempDiffStore / this.renderingInterval) + 1) * this.revolutions;
-    }
-
-    @Override
-    protected int scheduleGetAmount() {
-        return this.renderingSteps * this.revolutions;
+    public int convertIntervalToSteps() {
+        return (int) (Math.ceil(Math.TAU / this.renderingInterval) + 1) * this.revolutions;
     }
 
     /**
-     * This method is used for beginning the animation logic.
-     * It accepts the server world as a parameter. Unlike most
-     * path animators, this one uses angles for trimming
+     * This method is used to compute the animation logic.  It runs, in its entirety, as soon as it's called.
      */
     @Override
     public void beginAnimation(ApelServerRenderer renderer) throws SeqMissingException, SeqDuplicateException {
-        float startAngle = this.trimming.getStart();
-        float differenceAngle = this.trimming.getEnd() - startAngle;
-        this.tempDiffStore = differenceAngle;
+        Predicate<Float> isTrimmed = this.computeTrimmingPredicate();
 
-        int particleAmount = this.renderingSteps == 0 ? this.convertToSteps() : this.renderingSteps * this.revolutions;
-        float angleInterval = this.renderingInterval == 0 ? (
-                ((differenceAngle) / (this.renderingSteps - 1)) * this.revolutions
-        ): this.renderingInterval * this.revolutions;
-
-        float currAngle = startAngle;
-        Vector3f pos = calculatePoint(currAngle);
-        if (this.onStart != null) {
-            this.onStart.apply(
-                    this.trimming, pos, this.radius,
-                    this.center, this.renderingSteps, this.renderingInterval
-            );
+        int stepsPerRevolution = this.renderingSteps;
+        if (this.renderingInterval != 0.0f) {
+            stepsPerRevolution = (int) (Math.ceil(Math.TAU / this.renderingInterval) + 1);
         }
+
+        float angleInterval;
+        float referenceAngle;
+        if (this.clockwise) {
+            angleInterval = (float) (Math.TAU / stepsPerRevolution);
+            referenceAngle = 0.0f;
+        } else {
+            angleInterval = -(float) (Math.TAU / stepsPerRevolution);
+            referenceAngle = (float) Math.TAU;
+        }
+
         this.allocateToScheduler();
-        for (int i = 0; i < particleAmount ; i++) {
-            this.handleDrawingStep(renderer, i, pos);
-            if (this.onProcess != null) {
-                this.onProcess.apply(
-                        i, this.trimming, this.radius, this.center, this.renderingSteps, this.renderingInterval
-                );
+        int step = -1;
+        for (int revolutionCount = 0; revolutionCount < this.revolutions; revolutionCount++) {
+            for (int i = 0; i < stepsPerRevolution; i++) {
+                step++;
+                // Compute this way to avoid the awkward i == 0 case
+                float currAngle = referenceAngle + i * angleInterval;
+                if (isTrimmed.test(currAngle)) {
+                    continue;
+                }
+                Vector3f renderPosition = calculatePoint(currAngle);
+                AnimationContext animationContext = new AnimationContext(renderer.getServerWorld(), renderPosition, step);
+                this.beforeRender.compute(this, animationContext);
+                Vector3f actualPosition = animationContext.getPosition();
+                this.handleDrawingStep(renderer, step, actualPosition);
+                this.afterRender.compute(this, animationContext);
             }
-            currAngle += this.clockwise ? angleInterval : -angleInterval;
-            currAngle = (float) ((currAngle + Math.TAU) % Math.TAU);
-            pos = this.calculatePoint(currAngle);
         }
+    }
 
-        if (this.onEnd != null) {
-            this.onEnd.apply(
-                    this.trimming, pos, this.radius, this.center, this.renderingSteps, this.renderingInterval
-            );
+    private @NotNull Predicate<Float> computeTrimmingPredicate() {
+        float startAngle = this.trimming.getStart();
+        float endAngle = this.trimming.getEnd();
+        if (this.clockwise) {
+            if (startAngle < endAngle) {
+                return (Float angle) -> angle < startAngle || angle > endAngle;
+            }
+            return (Float angle) -> angle < startAngle && angle > endAngle;
         }
+        if (startAngle > endAngle) {
+            return (Float angle) -> angle > startAngle || angle < endAngle;
+        }
+        return (Float angle) -> angle > startAngle && angle < endAngle;
     }
 
     private Vector3f calculatePoint(float currAngle) {
@@ -255,10 +284,109 @@ public class CircularAnimator extends PathAnimatorBase {
                 this.radius * trigTable.getSine(currAngle),
                 0
         );
-        pos = pos
-                .rotateZ(this.rotation.z)
-                .rotateY(this.rotation.y)
-                .rotateX(this.rotation.x);
+        pos = pos.rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
         return pos.add(this.center);
+    }
+
+    /** This is the Circular path-animator builder used for setting up a new Circular path-animator instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+    */
+    public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, CircularAnimator> {
+        protected Vector3f center;
+        protected float radius;
+        protected Vector3f rotation = new Vector3f();
+        protected int revolutions = 1;
+        protected boolean clockwise = true;
+        protected AnimationTrimming<Float> trimming = new AnimationTrimming<>(0.0f, 0.0f);
+
+        private Builder() {}
+
+        /** The center position of the circle
+         *
+         * @param center The center of the circle
+         * @return The builder instance
+        */
+        public B center(Vector3f center) {
+            this.center = center;
+            return self();
+        }
+
+        /** The radius of the circle
+         *
+         * @param radius The radius of the circle
+         * @return The builder instance
+        */
+        public B radius(float radius) {
+            this.radius = radius;
+            return self();
+        }
+
+        /** The rotation of the circle
+         *
+         * @param rotation The rotation of the circle
+         * @return The builder instance
+        */
+        public B rotation(Vector3f rotation) {
+            this.rotation = rotation;
+            return self();
+        }
+
+        /** The revolutions of the circle. How many times to loop through the circle
+         *
+         * @param revolutions The revolutions of the circle
+         * @return The builder instance
+        */
+        public B revolutions(int revolutions) {
+            this.revolutions = revolutions;
+            return self();
+        }
+
+        /** Sets the particle object to rotate clockwise of the circle
+         *
+         * @return The builder instance
+        */
+        public B clockwise() {
+            this.clockwise = true;
+            return self();
+        }
+
+        /** Sets the particle object to rotate counter-clockwise of the circle
+         *
+         * @return The builder instance
+        */
+        public B counterclockwise() {
+            this.clockwise = false;
+            return self();
+        }
+
+        /** Sets the trimming of the circle path-animator
+         *
+         * @param trimming The trimming for the circle path-animator
+         * @return The builder instance
+        */
+        public B trimming(AnimationTrimming<Float> trimming) {
+            this.trimming = new AnimationTrimming<>(trimming);
+            return self();
+        }
+
+        @Override
+        public CircularAnimator build() {
+            if (this.center == null) {
+                throw new IllegalStateException("Center must be provided");
+            }
+            if (this.radius <= 0.0f) {
+                throw new IllegalStateException("Radius must be positive");
+            }
+            if (this.revolutions <= 0) {
+                throw new IllegalStateException("Revolutions must be positive");
+            }
+            if (this.renderCalculationMethod == RenderCalculationMethod.UNSET) {
+                throw new IllegalStateException("Either rendering steps or rendering interval must be set");
+            }
+            return new CircularAnimator(this);
+        }
     }
 }

@@ -35,8 +35,8 @@ final class ApelFramePayloadHandler implements ClientPlayNetworking.PlayPayloadH
 
                     case ApelRenderer.Particle(Vector3f pos) -> renderer.drawParticle(particleEffect, 0, pos);
 
-                    case ApelRenderer.Line(Vector3f start, Vector3f end, int amount) ->
-                            renderer.drawLine(particleEffect, 0, start, end, amount);
+                    case ApelRenderer.Line(Vector3f drawPos, Vector3f start, Vector3f end, Vector3f rotation, int amount) ->
+                            renderer.drawLine(particleEffect, 0, drawPos, start, end, rotation, amount);
 
                     case ApelRenderer.Ellipse(
                             Vector3f center, float radius, float stretch, Vector3f rotation, int amount

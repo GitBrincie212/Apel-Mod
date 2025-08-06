@@ -1,27 +1,41 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.minecraft.particle.ParticleEffect;
-import org.joml.Quaternionfc;
+import net.mcbrincie.apel.lib.util.ComputedEasingPO;
+import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptor;
+import net.mcbrincie.apel.lib.util.interceptor.ObjectInterceptorDispatcher;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
+import net.minecraft.server.world.ServerWorld;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
+
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * ParticleObject is the base class for all particle-based constructions that are animated by APEL.  Particle objects
  * are rendered in the client using particles registered with the particle registry.  APEL provides several common
- * 2D and 3D shapes that are ready for immediate use.
+ * 2D and 3D shapes as well as utility ones that are ready for immediate use.
  *
- * <p>All particle objects share some common properties, and those are provided on the base class.  The
- * {@link #particleEffect} is used to render all particles in the object.  All objects allow for specifying a
- * {@link #rotation} and {@link #offset}.  These will be applied prior to translating the object to the {@code drawPos}
- * passed to {@link #draw(ApelServerRenderer, int, Vector3f)}.  Objects also have an {@link #amount} that indicates
- * the number of particles to render.  APEL native objects will spread these particles evenly throughout the shape
- * unless otherwise indicated on specific shapes.
+ * <p>All particle objects share some common properties, and those are provided on the base class. The
+ * {@link #rotation} and {@link #offset}. These will be applied before translating the object to the {@code drawPos}
+ * passed to {@link #display(ApelServerRenderer, DrawContext, Vector3f)}
  *
  * <p>The provided subclasses include interceptors that allow for modification before and after each call to
  * {@code draw}.
  *
- * <p><strong>Note:</strong> Rotation calculations are in radians and not in degrees.  When rotation values exceed the
- * (-2π, 2π), they are wrapped using modulo to remain in the range (-2π, 2π).
+ * <p><strong>Note:</strong> Rotation calculations are in radians and not in degrees.
+ * When rotation values exceed the (-2π, 2π), they are wrapped using modulo to remain in the range (-2π, 2π).
+ *
+ * <h2>Builders</h2>
+ * <p>ParticleObject and its subclasses use a parallel hierarchy of nested classes to provide a fluent approach to
+ * constructing instances of ParticleObject subclasses.  The builders are typed to allow specifying properties in any
+ * order, regardless of whether they are on a superclass or subclass.  Each builder is templated with a builder that
+ * extends itself, using the <a href="https://nuah.livejournal.com/328187.html">Curiously Recurring Template Pattern
+ * (CRTP)</a>, and extends the Builder class from the outer class' parent.
  *
  * <h2>Subclassing</h2>
  * <p>Custom shapes only need to implement the {@code draw} method, and it should perform the necessary transformations
@@ -32,202 +46,371 @@ import org.joml.Vector3f;
  * <p>Subclasses should consider mimicking the interceptor behavior so developers using the subclasses have the
  * opportunity to modify the object between each rendering.  These modifications may change rotation, translation,
  * scaling, vertex positions, particle amounts, or any other property of the subclass.
+ *
+ * <p>Subclasses should also provide a builder that mimics those provided by APEL-native ParticleObject subclasses.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public abstract class ParticleObject {
-    protected ParticleEffect particleEffect;
-    protected Vector3f rotation;
-    protected Vector3f offset = new Vector3f(0, 0, 0);
-    protected int amount = 1;
+public abstract class ParticleObject<T extends ParticleObject<T>> {
+    protected EasingCurve<Vector3f> rotation;
+    protected EasingCurve<Vector3f> scale = new ConstantEasingCurve<>(new Vector3f(1));
+    protected EasingCurve<Vector3f> offset = new ConstantEasingCurve<>(new Vector3f(0, 0, 0));
+    protected final ObjectInterceptorDispatcher<T> afterDrawEvent;
+    protected final ObjectInterceptorDispatcher<T> beforeDrawEvent;
 
-    /** Constructor for the particle object. It accepts as parameters the particle to use and the rotation to apply.
+    /**
+     * Used by subclasses to when constructing themselves to set the properties shared by all ParticleObjects.
      *
-     * @param particleEffect The particle effect to use
-     * @param rotation The rotation in radians
-     *
-     * @see ParticleObject#ParticleObject(ParticleObject)
+     * @param rotation The rotation to apply
+     * @param offset The offset to apply
+     * @param beforeDraw The interceptor to call before drawing the object
+     * @param afterDraw The interceptor to call after drawing the object
      */
-    public ParticleObject(ParticleEffect particleEffect, Vector3f rotation) {
-        this.particleEffect = particleEffect;
-        this.rotation = this.normalizeRotation(rotation);
+    protected ParticleObject(EasingCurve<Vector3f> rotation, EasingCurve<Vector3f> offset,
+                             ObjectInterceptor<T> beforeDraw, ObjectInterceptor<T> afterDraw
+    ) {
+        this.setRotation(rotation);
+        this.setOffset(offset);
+        this.beforeDrawEvent = new ObjectInterceptorDispatcher<>();
+        this.afterDrawEvent = new ObjectInterceptorDispatcher<>();
     }
 
-    /** Constructor for the particle object. It accepts as a parameter the particle effect to use.
-     *
-     * @param particleEffect The particle effect to use
-     *
-     * @see ParticleObject#ParticleObject(ParticleEffect, Vector3f)
-    */
-    public ParticleObject(ParticleEffect particleEffect) {
-        this(particleEffect, new Vector3f(0, 0, 0));
-    }
-
-    /** The copy constructor for a specific particle object. It copies all the params, including the interceptors the
-     * particle object has.  Rotation and offset are copied to new vectors.
+    /**
+     * Used by subclasses when their copy constructors are invoked.  Rotation and offset are copied to new vectors to
+     * prevent inadvertent modification impacting multiple objects.
      *
      * @param object The particle object to copy from
      */
-    public ParticleObject(ParticleObject object) {
-        this.particleEffect = object.particleEffect;
-        this.rotation = new Vector3f(object.rotation);
-        this.offset = new Vector3f(object.offset);
-        this.amount = object.amount;
+    protected ParticleObject(ParticleObject<T> object) {
+        this.rotation = object.rotation;
+        this.offset = object.offset;
+        this.beforeDrawEvent = object.beforeDrawEvent;
+        this.afterDrawEvent = object.afterDrawEvent;
+        this.scale = object.scale;
     }
 
-    /** Gets the particle which is currently in use and returns it.
-     *
-     * @return The currently used particle
-     */
-    public ParticleEffect getParticleEffect() {
-        return this.particleEffect;
-    }
-
-    /** Sets the particle to use to a new value and returns the previous particle that was used.
-     *
-     * @param particle The new particle
-     * @return The previously used particle
-     */
-    public ParticleEffect setParticleEffect(ParticleEffect particle) {
-        ParticleEffect prevParticle = this.particleEffect;
-        this.particleEffect = particle;
-        return prevParticle;
+    /** This is a placeholder constructor */
+    protected ParticleObject() {
+        this.beforeDrawEvent = new ObjectInterceptorDispatcher<>();
+        this.afterDrawEvent = new ObjectInterceptorDispatcher<>();
     }
 
     /** Gets the rotation which is currently in use and returns it.
      *
      * @return The currently used rotation
      */
-    public Vector3f getRotation() {
+    public EasingCurve<Vector3f> getRotation() {
         return this.rotation;
     }
 
-    /** Sets the rotation to a new value. The rotation is calculated in radians and
-     * when setting it wraps the rotation to be in the range of (-2π, 2π).  The rotation components will have the same
-     * signs as they do in the parameter.  It returns the previous rotation used.
-     *
-     * <p>This implementation uses {@link #normalizeRotation(Vector3f)} to do the rounding which uses
-     * the modulo operator on each member of the {@code Vector3f} to produce a result in (-2π, 2π).
+    /**
+     * Sets the rotation to a new value. The rotation is calculated in radians and
+     * when setting it wraps the rotation to be in the range of (-2π, 2π). The rotation components will have the same
+     * signs as they do in the parameter. It returns the previous rotation used. This is an overload for specifying
+     * an ease property when using rotation, this is an overload for specifying an ease curve property when using rotation
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param rotation The new rotation (IN RADIANS)
      * @return the previously used rotation
      */
-    public Vector3f setRotation(Vector3f rotation) {
-        Vector3f prevRotation = this.rotation;
-        this.rotation = this.normalizeRotation(rotation);
+    public final EasingCurve<Vector3f> setRotation(EasingCurve<Vector3f> rotation) {
+        EasingCurve<Vector3f> prevRotation = this.rotation;
+        this.rotation = rotation;
         return prevRotation;
     }
 
     /**
-     * Removes full rotations from each component of the provided {@code rotation} vector such that each component
-     * maintains its direction but has a magnitude in the range {@code (-2π, 0]} or {@code [0, 2π)}.  Returns a new
-     * vector containing the resulting partial rotation components with the same signs as the parameter's components.
+     * Sets the rotation to a new value. The rotation is calculated in radians and
+     * when setting it wraps the rotation to be in the range of (-2π, 2π).  The rotation components will have the same
+     * signs as they do in the parameter. It returns the previous rotation used. This is an overload for specifying
+     * a constant value of rotation, this is an overload for specifying a constant property when using rotation
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
-     * <p><b>Note:</b> This is called by {@link #setRotation(Vector3f)}, so overrides must maintain this behavior.
-     *
-     * @param rotation The existing rotation vector
-     * @return A new vector with partial rotation components
+     * @param rotation The new rotation (IN RADIANS)
+     * @return the previously used rotation
      */
-    protected Vector3f normalizeRotation(Vector3f rotation) {
-        float x = (float) (rotation.x % Math.TAU);
-        float y = (float) (rotation.y % Math.TAU);
-        float z = (float) (rotation.z % Math.TAU);
-        return new Vector3f(x, y, z);
+    public final EasingCurve<Vector3f> setRotation(Vector3f rotation) {
+        return this.setRotation(new ConstantEasingCurve<>(rotation));
+    }
+
+    /** Gets the scale which is currently in use and returns it.
+     *
+     * @return The currently used scale
+     */
+    public EasingCurve<Vector3f> getScale() {
+        return this.scale;
+    }
+
+    /**
+     * Sets the scale to a new value. The scale acts as a multiplier to the already defined size of the particle object
+     * It returns the previous scale used. This is an overload for specifying an ease property when using scale. Negative
+     * scales flip the object and when the scale is zero, it isn't rendered, lower than one and greater than zero will shrink
+     * the particle object and any value greater than one will enlarge the particle object
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param scale The new scale
+     * @return the previously used scale
+     */
+    public final EasingCurve<Vector3f> setScale(EasingCurve<Vector3f> scale) {
+        EasingCurve<Vector3f> prevScale = this.scale;
+        this.scale = scale;
+        return prevScale;
+    }
+
+    /**
+     *  Sets the scale to a new value. The scale acts as a multiplier to the already defined size of the particle object
+     *  It returns the previous scale used. This is an overload for specifying an ease property when using scale. Negative
+     *  scales flip the object and when the scale is zero, it isn't rendered, lower than one and greater than zero will shrink
+     *  the particle object and any value greater than one will enlarge the particle object. This is an overload for specifying
+     *  a constant property when using rotation
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param scale The new scale
+     * @return the previously used scale
+     */
+    public final EasingCurve<Vector3f> setScale(Vector3f scale) {
+        return this.setScale(new ConstantEasingCurve<>(scale));
     }
 
     /** Gets the current offset value used. The offset position is added with the drawing position.
      *
      * @return The offset
      */
-    public Vector3f getOffset() {
+    public EasingCurve<Vector3f> getOffset() {
         return this.offset;
     }
 
-    /** Sets the offset to a new value. The offset position is added with the drawing position.
-     * Returns the previous offset that was used.
+    /**
+     * Sets the offset to a new value. The offset position is added with the drawing position.
+     * Returns the previous offset that was used. This is an overload for specifying a ease curve
+     * for the offset value
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
      * @param offset The new offset value
      * @return The previous offset
      */
-    public Vector3f setOffset(Vector3f offset) {
-        Vector3f prevOffset = this.offset;
+    public final EasingCurve<Vector3f> setOffset(EasingCurve<Vector3f> offset) {
+        EasingCurve<Vector3f> prevOffset = this.offset;
         this.offset = offset;
         return prevOffset;
     }
 
-    /** Gets the number of particles that are currently in use and returns it.
+    /**
+     * Sets the offset to a new value. The offset position is added with the drawing position.
+     * Returns the previous offset that was used. This is an overload for specifying a constant
+     * value of offset
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
-     * @return The currently used number of particles
+     * @param offset The new offset value
+     * @return The previous offset
      */
-    public int getAmount() {
-        return this.amount;
+    public final EasingCurve<Vector3f> setOffset(Vector3f offset) {
+        EasingCurve<Vector3f> prevOffset = this.offset;
+        this.offset = new ConstantEasingCurve<>(offset);
+        return prevOffset;
     }
 
-    /** Sets the number of particles to use for rendering the object.
-     * This has no effect on this class, but on shapes it does have an effect.
-     * It returns the previously used number of particles.
+    /** Subscribes an interceptor to run prior to drawing the object. The interceptor will be provided with references to the
+     * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation... etc,
+     * and including any metadata defined by {@link Key} defined in the specific subclass.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
      *
-     * @param amount The new particle
-     * @return The previously used amount
+     * @param beforeDraw the new interceptor to execute before drawing each particle
      */
-    public int setAmount(int amount) {
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Amount of particles has to be above 0");
-        }
-        int prevAmount = this.amount;
-        this.amount = amount;
-        return prevAmount;
+    public final void subscribeToBeforeDraw(@NotNull ObjectInterceptor<T> beforeDraw) {
+        this.beforeDrawEvent.addInterceptor(beforeDraw);
+    }
+
+    /** Subscribes an interceptor to run after drawing the object. The interceptor will be provided with references to the
+     * {@link ServerWorld}, an "origin" point from which the object should be drawn, the step number of the animation... etc,
+     * and including any metadata defined by {@link Key}s defined in the specific subclass.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param afterDraw the new interceptor to execute after drawing each particle
+     */
+    public final void subscribeToAfterDraw(@NotNull ObjectInterceptor<T> afterDraw) {
+        this.afterDrawEvent.addInterceptor(afterDraw);
     }
 
     /**
      * This method allows for drawing a particle object using the provided {@link ApelServerRenderer}, the current
      * step, and the drawing position.
      *
-     * <p><b>The method should not be called directly.</b>  It will be called by {@code PathAnimatorBase} subclasses
-     * to draw objects along the animation path or at an animation point.  These animators will provide the renderer
-     * and calculate the current {@code step} and the {@code drawPos}.  The renderer will have access to the
-     * {@code ServerWorld}.  Implementations should call methods on the {@code renderer} that cause drawing to occur.
-     *
-     * <p><b>Important:</b> Implementations must also take care <em>not</em> to modify the {@code drawPos}, as many
-     * operations on {@link Vector3f} instances are in-place.
-     *
-     * <p>The provided subclasses include interceptors that allow developers to perform actions both before and after
-     * drawing the object.
+     * <p><b>The method should not be called directly.</b>  It will be called via
+     * {@link #doDraw(ApelServerRenderer, int, Vector3f, int, float, Vector3f)}  by {@code PathAnimatorBase} subclasses to draw objects along
+     * the animation path or at an animation point.  These animators will provide the renderer and calculate the
+     * current {@code step} and the {@code drawPos}.  The renderer will have access to the {@code ServerWorld}.
+     * <p>
+     * <strong>Implementation Notes:</strong>
+     * <ul>
+     *     <li>Implementations should call methods on the {@code renderer} that cause drawing to occur.</li>
+     *     <li><b>Important:</b> Implementations must also take care <em>not</em> to modify the {@code drawPos}, as many operations on {@link Vector3f} instances are in-place.</li>
+     *     <li>The provided subclasses include interceptors that allow developers to perform actions both before and after drawing the object.</li>
+     * </ul>
      *
      * @param renderer The server world instance
-     * @param step     The current rendering step at
-     * @param drawPos  The position to draw at
+     * @param data The draw context data
      */
-    public abstract void draw(ApelServerRenderer renderer, int step, Vector3f drawPos);
+    public abstract void display(ApelServerRenderer renderer, DrawContext<?> data, Vector3f actualSize);
 
-    public void endDraw(ApelServerRenderer renderer, int step, Vector3f drawPos) {}
+    /** Computes some additional easing properties. */
+    protected ComputedEasingPO computeAdditionalEasings(ComputedEasingPO container) {
+        return container;
+    }
 
-    /**
-     * Transforms the point at {@code (x, y, z)} according to the {@code quaternion} and {@code translation}.
-     *
-     * <p>Does not modify the {@code quaternion} or {@code translation}.
-     *
-     * @param x The x-coordinate of the point to transform
-     * @param y The y-coordinate of the point to transform
-     * @param z The z-coordinate of the point to transform
-     * @param quaternion The rotation to apply
-     * @param translation The translation to apply
-     * @return The transformed point
-     */
-    protected final Vector3f rigidTransformation(float x, float y, float z, Quaternionfc quaternion, Vector3f translation) {
-        return new Vector3f(x, y, z).rotate(quaternion).add(translation);
+    public void doDraw(ApelServerRenderer renderer, int step, Vector3f drawPos,
+                       int numberOfSteps, float deltaTickTime, Vector3f actualSize) {
+        doDraw(() -> new ComputedEasingPO(this, step, numberOfSteps), this::computeAdditionalEasings,
+                renderer, step, drawPos, numberOfSteps, deltaTickTime, actualSize);
+    }
+
+    public <TC extends ComputedEasingPO> void doDraw(
+            Supplier<TC> factory, Function<TC, TC> computeMethod,
+            ApelServerRenderer renderer, int step, Vector3f drawPos, int numberOfSteps,
+            float deltaTickTime, Vector3f actualSize
+    ) {
+        TC computedEasingPO = computeMethod.apply(factory.get());
+        actualSize = actualSize.mul(computedEasingPO.computedScale);
+        DrawContext<?> drawContext = new DrawContext<>(
+                renderer.getServerWorld(), drawPos,
+                step, numberOfSteps, deltaTickTime,
+                computedEasingPO
+        );
+        this.prepareContext(drawContext);
+        //noinspection unchecked
+        this.beforeDrawEvent.compute((T) this, drawContext);
+        this.display(renderer, drawContext, actualSize);
+        //noinspection unchecked
+        this.afterDrawEvent.compute((T) this, drawContext);
     }
 
     /**
-     * Transforms a copy of the point at {@code position} according to the {@code quaternion} and {@code translation}.
+     * Subclasses should override to provide metadata into the {@code interceptData}.  The default implementation does
+     * nothing.
      *
-     * <p>Does not modify the {@code quaternion} or {@code translation}.
-     *
-     * @param position The x-coordinate of the point to transform.
-     * @param quaternion The rotation to apply
-     * @param translation The translation to apply
-     * @return The transformed point in a new Vector3f
+     * @param drawContext the data holder to modify
      */
-    protected final Vector3f rigidTransformation(Vector3f position, Quaternionfc quaternion, Vector3f translation) {
-        return new Vector3f(position).rotate(quaternion).add(translation);
+    protected void prepareContext(DrawContext<?> drawContext) {
+        // Default implementation does nothing
+    }
+
+    /**
+     * Provides a base for ParticleObject subclasses to extend when creating their builders.
+     * <p>
+     * Properties in this class are protected: this allows easy access from subclasses, but subclasses should take care
+     * not to hide these fields by reusing fields of the same name.
+     * <p>
+     * Methods in this class are final: these are specifically setting properties for the ParticleObject class, so
+     * they must maintain the invariants of ParticleObject.
+     *
+     * @param <B> the type being built, uses the curiously recurring type pattern
+     * @param <T> The type of the particle object used
+     */
+    public static abstract class Builder<B extends Builder<B, T>, T extends ParticleObject<T>> {
+        protected EasingCurve<Vector3f> rotation = new ConstantEasingCurve<>(new Vector3f(0));
+        protected EasingCurve<Vector3f> offset = new ConstantEasingCurve<>(new Vector3f(0));
+        protected EasingCurve<Vector3f> scale = new ConstantEasingCurve<>(new Vector3f(1));
+        protected ObjectInterceptor<T> beforeDraw;
+        protected ObjectInterceptor<T> afterDraw;
+
+        @SuppressWarnings({"unchecked"})
+        public final B self() {
+            return (B) this;
+        }
+
+        /**
+         * Set a constant rotation on the builder.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B rotation(Vector3f rotation) {
+            this.rotation = new ConstantEasingCurve<>(rotation);
+            return self();
+        }
+
+        /**
+         * Set a constant offset on the builder.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B offset(Vector3f offset) {
+            this.offset = new ConstantEasingCurve<>(offset);
+            return self();
+        }
+
+        /**
+         * Set the rotation on the builder using an ease function.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B rotation(EasingCurve<Vector3f> rotation) {
+            this.rotation = rotation;
+            return self();
+        }
+
+        /**
+         * Set the offset on the builder using an ease function.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B offset(EasingCurve<Vector3f> offset) {
+            this.offset = offset;
+            return self();
+        }
+
+        /**
+         * Set the scale on the builder using an easing curve with a vector type.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B scale(EasingCurve<Vector3f> scale) {
+            this.scale = scale;
+            return self();
+        }
+
+        /**
+         * Set the scale on the builder using a constant vector value.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B scale(Vector3f scale) {
+            this.scale = new ConstantEasingCurve<>(scale);
+            return self();
+        }
+
+        /**
+         * Set the scale on the builder using a constant value.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public final B scale(float scale) {
+            this.scale = new ConstantEasingCurve<>(new Vector3f(scale));
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run before drawing.
+         * This method is not cumulative; repeated calls will overwrite
+         * the value.
+         *
+         * @see ParticleObject#subscribeToBeforeDraw(ObjectInterceptor)
+         */
+        public final B beforeDraw(ObjectInterceptor<T> beforeDraw) {
+            this.beforeDraw = beforeDraw;
+            return self();
+        }
+
+        /**
+         * Sets the interceptor to run after drawing.
+         * This method is not cumulative; repeated calls will overwrite the value.
+         *
+         * @see ParticleObject#subscribeToAfterDraw(ObjectInterceptor)
+         */
+        public final B afterDraw(ObjectInterceptor<T> afterDraw) {
+            this.afterDraw = afterDraw;
+            return self();
+        }
+
+        public abstract ParticleObject<T> build();
     }
 }

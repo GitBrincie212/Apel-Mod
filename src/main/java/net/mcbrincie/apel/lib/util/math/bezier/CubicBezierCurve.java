@@ -15,7 +15,7 @@ public class CubicBezierCurve extends QuadraticBezierCurve {
 
     /** The constructor for the cubic Bézier curve, which is a curve that consists of
      * a starting and an ending point and two control point defining the curvature.
-     * It is more advanced than the linear & a bit more than the quadratic Bézier curve
+     * It is more advanced than the linear and a bit more than the quadratic Bézier curve
      * but has more capabilities.
      *
      * @param start The starting position

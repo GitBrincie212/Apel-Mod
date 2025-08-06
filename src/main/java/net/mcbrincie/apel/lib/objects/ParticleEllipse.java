@@ -1,80 +1,33 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
-import org.jetbrains.annotations.NotNull;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 /** The particle object class that represents an ellipse.
  * It has a radius which dictates how large or small the ellipse is depending on the
  * radius value supplied and a stretch value for how stretched is the ellipse.  The radius
  * value is used as the X semi-axis, and the stretch value is used as the Y semi-axis.
  * Setting radius and stretch equal to one another means it is a circle.  The ellipse is
- * drawn in the xy-plane by default, though rotations can move it around.
+ * drawn on the xy-plane by default, though rotations can move it around.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleEllipse extends ParticleObject {
-    protected float radius;
-    protected float stretch;
+public class ParticleEllipse extends RenderableParticleObject<ParticleEllipse> {
+    protected EasingCurve<Float> radius;
+    protected EasingCurve<Float> stretch;
 
-    private DrawInterceptor<ParticleEllipse, AfterDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleEllipse, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
-
-    /** This data is used before calculations */
-    public enum BeforeDrawData {}
-
-    /** This data is used after calculations */
-    public enum AfterDrawData {}
-
-    /** Constructor for the particle ellipse which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the ellipse, the stretch of the ellipse,
-     * the rotation to apply, and the number of particles.
-     *
-     * <p>This implementation calls setters for rotation, radius, stretch, and so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param radius The radius of the ellipse
-     * @param stretch The stretch of the ellipse
-     * @param rotation The rotation to apply
-     *
-     * @see ParticleEllipse#ParticleEllipse(ParticleEffect, float, float, int)
-     */
-    public ParticleEllipse(
-            @NotNull ParticleEffect particleEffect, float radius, float stretch, Vector3f rotation, int amount
-    ) {
-        super(particleEffect, rotation);
-        this.setRadius(radius);
-        this.setStretch(stretch);
-        this.setAmount(amount);
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the particle ellipse which is a 3D shape. It accepts as parameters
-     * the particle effect to use, the radius of the ellipse, the stretch of the ellipse
-     * & the number of particles. There is also a version that allows for rotation.
-     *
-     * <p>This implementation calls setters for rotation, radius, stretch, and so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param radius The radius of the ellipse
-     * @param stretch The stretch of the ellipse
-     *
-     * @see ParticleEllipse#ParticleEllipse(ParticleEffect, float, float, Vector3f, int)
-     */
-    public ParticleEllipse(
-            @NotNull ParticleEffect particleEffect, float radius, float stretch, int amount
-    ) {
-        this(particleEffect, radius, stretch, new Vector3f(0,0,0), amount);
+    private ParticleEllipse(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
+        this.setRadius(builder.radius);
+        this.setStretch(builder.stretch);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -86,29 +39,42 @@ public class ParticleEllipse extends ParticleObject {
         super(ellipse);
         this.radius = ellipse.radius;
         this.stretch = ellipse.stretch;
-        this.amount = ellipse.amount;
-        this.beforeDraw = ellipse.beforeDraw;
-        this.afterDraw = ellipse.afterDraw;
     }
 
     /** Gets the radius of the ParticleEllipse and returns it.
      *
      * @return the radius of the ParticleEllipse
      */
-    public float getRadius() {
+    public EasingCurve<Float> getRadius() {
         return radius;
     }
 
-    /** Set the radius of this ParticleEllipse and returns the previous radius that was used.
+    /**
+     * Set the radius of this ParticleEllipse and returns the previous radius that was used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This overload will set a constant value to the radius
      *
      * @param radius the new radius
      * @return the previously used radius
      */
-    public float setRadius(float radius) {
-        if (radius < 0) {
-            throw new IllegalArgumentException("stretch cannot be negative");
-        }
-        float prevRadius = this.radius;
+    public final EasingCurve<Float> setRadius(float radius) {
+        EasingCurve<Float> prevRadius = this.radius;
+        this.radius = new ConstantEasingCurve<>(radius);
+        return prevRadius;
+    }
+
+    /**
+     * Set the radius of this ParticleEllipse and returns the previous radius that was used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This overload will set an ease curve value to the radius
+     *
+     * @param radius the new radius
+     * @return the previously used radius
+     */
+    public final EasingCurve<Float> setRadius(EasingCurve<Float> radius) {
+        EasingCurve<Float> prevRadius = this.radius;
         this.radius = radius;
         return prevRadius;
     }
@@ -117,61 +83,110 @@ public class ParticleEllipse extends ParticleObject {
      *
      * @return the stretch of the ParticleEllipse
      */
-    public float getStretch() {
+    public EasingCurve<Float> getStretch() {
         return stretch;
     }
 
-    /** Sets the stretch of the ParticleEllipse and returns the previous stretch that was used.
+    /**
+     * Sets the stretch of the ParticleEllipse and returns the previous stretch that was used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This overload will set a constant value to the stretch
      *
      * @param stretch The new stretch
      * @return The previous used stretch
      */
-    public float setStretch(float stretch) {
-        if (stretch < 0) {
-            throw new IllegalArgumentException("stretch cannot be negative");
-        }
-        float prevHeight = this.stretch;
+    public final EasingCurve<Float> setStretch(float stretch) {
+        EasingCurve<Float> prevStretch = this.stretch;
+        this.stretch = new ConstantEasingCurve<>(stretch);
+        return prevStretch;
+    }
+
+    /**
+     * Sets the stretch of the ParticleEllipse and returns the previous stretch that was used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This overload will set an ease curve value to the stretch
+     *
+     * @param stretch The new stretch
+     * @return The previous used stretch
+     */
+    public final EasingCurve<Float> setStretch(EasingCurve<Float> stretch) {
+        EasingCurve<Float> prevStretch = this.stretch;
         this.stretch = stretch;
-        return prevHeight;
+        return prevStretch;
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
-        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
+        return container
+                .addComputedField("radius", this.radius)
+                .addComputedField("stretch", this.stretch);
+    }
+
+    @Override
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasingPO = drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
+        float currRadius = (float) computedEasingPO.getComputedField("radius");
+        float currStretch = (float) computedEasingPO.getComputedField("stretch");
+        /*
+        if (currRadius <= 0) {
+            throw new RuntimeException("The radius must be positive and non-zero");
+        } else if (currStretch <= 0) {
+            throw new RuntimeException("The stretch must be positive and non-zero");
+        }
+         */
+        currRadius *= actualSize.x;
+        currStretch *= actualSize.y;
+
         renderer.drawEllipse(
-                this.particleEffect, step, objectDrawPos, this.radius, this.stretch, this.rotation, this.amount);
-        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
-        this.endDraw(renderer, step, drawPos);
+                this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, currRadius, currStretch,
+                computedEasingPO.computedRotation, computedEasingPO.computedAmount
+        );
     }
 
-    /** Set the interceptor to run after drawing the ellipse. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position of the center of the ellipse.
-     *
-     * @param afterDraw the new interceptor to execute after drawing each particle
-     */
-    public void setAfterDraw(DrawInterceptor<ParticleEllipse, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleEllipse> {
+        protected EasingCurve<Float> radius;
+        protected EasingCurve<Float> stretch;
 
-    private void doAfterDraw(ServerWorld world, int step, Vector3f drawPos) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, drawPos, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
+        private Builder() {}
 
-    /** Set the interceptor to run prior to drawing the ellipse. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position of the center of the ellipse.
-     *
-     * @param beforeDraw the new interceptor to execute prior to drawing each particle
-     */
-    public void setBeforeDraw(DrawInterceptor<ParticleEllipse, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
+        /**
+         * Set the radius on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B radius(EasingCurve<Float> radius) {
+            this.radius = radius;
+            return self();
+        }
 
-    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        this.beforeDraw.apply(interceptData, this);
+        /**
+         * Set the stretch on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B stretch(EasingCurve<Float> stretch) {
+            this.stretch = stretch;
+            return self();
+        }
+
+        /**
+         * Set the radius on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B radius(float radius) {
+            this.radius = new ConstantEasingCurve<>(radius);
+            return self();
+        }
+
+        /**
+         * Set the stretch on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B stretch(float stretch) {
+            this.stretch = new ConstantEasingCurve<>(stretch);
+            return self();
+        }
+
+        @Override
+        public ParticleEllipse build() {
+            return new ParticleEllipse(this);
+        }
     }
 }

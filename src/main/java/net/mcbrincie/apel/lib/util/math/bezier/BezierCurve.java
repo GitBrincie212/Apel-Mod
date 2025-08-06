@@ -2,6 +2,7 @@ package net.mcbrincie.apel.lib.util.math.bezier;
 
 import org.joml.Vector3f;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -16,7 +17,26 @@ public abstract class BezierCurve {
     protected Vector3f end;
 
     /**
+     * Factory method to simplify construction of a BezierCurve from a variable number of control points.
+     *
+     * @param points The control points defining the BezierCurve object.
+     * @return A BezierCurve implementation
+     *
+     * @see #of(Vector3f, Vector3f, List)
+     */
+    public static BezierCurve of(Vector3f... points) {
+        if (points.length < 2) {
+            throw new IllegalArgumentException("BezierCurve requires at least two points");
+        }
+        Vector3f start = points[0];
+        Vector3f end = points[points.length - 1];
+        List<Vector3f> interiorPoints = Arrays.asList(points).subList(1, points.length - 1);
+        return of(start, end, interiorPoints);
+    }
+
+    /**
      * Factory method to simplify construction of a BezierCurve implementation based on the number of control points.
+     *
      * @param start The start point of the Bézier curve
      * @param end The end point of the Bézier curve
      * @param controlPoints A list (can be empty) of control points

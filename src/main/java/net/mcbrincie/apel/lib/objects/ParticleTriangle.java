@@ -1,79 +1,34 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
-import org.joml.Quaternionf;
-import org.joml.Quaternionfc;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 /** The particle object class that represents a 2D triangle.
  * It has three vertices that make it up, all of them must be coplanar with each other.
  * The vertices can be set individually or by supplying a list of three vertices.
 */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleTriangle extends ParticleObject {
-    private DrawInterceptor<ParticleTriangle, AfterDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleTriangle, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
-
-    /** There is no data being transmitted */
-    public enum BeforeDrawData {}
-    public enum AfterDrawData {}
-
-    protected Vector3f vertex1;
-    protected Vector3f vertex2;
-    protected Vector3f vertex3;
+public class ParticleTriangle extends RenderableParticleObject<ParticleTriangle> {
+    protected EasingCurve<Vector3f> vertex1;
+    protected EasingCurve<Vector3f> vertex2;
+    protected EasingCurve<Vector3f> vertex3;
 
     private final IllegalArgumentException UNBALANCED_VERTICES = new IllegalArgumentException(
             "Unbalanced vertices, there must be only 3 vertices"
     );
 
-    /** Constructor for the particle triangle. It accepts as parameters
-     * the particle effect to use, the vertices that compose the triangle, the number of particles, and the
-     * rotation to apply.
-     *
-     * <p>This implementation calls setters for rotation and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param vertices The vertices that make up the triangle
-     * @param rotation The rotation to apply
-     *
-     * @see ParticleTriangle#ParticleTriangle(ParticleEffect, Vector3f[], int)
-    */
-    public ParticleTriangle(ParticleEffect particleEffect, Vector3f[] vertices, int amount, Vector3f rotation) {
-        super(particleEffect, rotation);
-        if (vertices.length != 3) {
-            throw UNBALANCED_VERTICES;
-        }
-        this.checkValidTriangle(vertices);
-        this.vertex1 = vertices[0];
-        this.vertex2 = vertices[1];
-        this.vertex3 = vertices[2];
-        this.setAmount(amount);
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the particle triangle. It accepts as parameters
-     * the particle to use, the vertices that compose the triangle, and the number of particles.
-     *
-     * <p>This implementation calls setters for rotation and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param vertices The vertices that make up the triangle
-     * @param amount The number of particles for the object
-     *
-     * @see ParticleTriangle#ParticleTriangle(ParticleEffect, Vector3f[], int, Vector3f)
-    */
-    public ParticleTriangle(ParticleEffect particleEffect, Vector3f[] vertices, int amount) {
-        this(particleEffect, vertices, amount, new Vector3f(0));
+    private ParticleTriangle(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
+        this.setVertices(builder.vertex1, builder.vertex2, builder.vertex3);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -83,17 +38,19 @@ public class ParticleTriangle extends ParticleObject {
     */
     public ParticleTriangle(ParticleTriangle triangle) {
         super(triangle);
-        this.vertex1 = new Vector3f(triangle.vertex1);
-        this.vertex2 = new Vector3f(triangle.vertex2);
-        this.vertex3 = new Vector3f(triangle.vertex3);
-        this.beforeDraw = triangle.beforeDraw;
-        this.afterDraw = triangle.afterDraw;
+        this.vertex1 = triangle.vertex1;
+        this.vertex2 = triangle.vertex2;
+        this.vertex3 = triangle.vertex3;
     }
 
     private void checkValidTriangle(Vector3f vertex1, Vector3f vertex2, Vector3f vertex3) {
-        // Defensive copy before cross-product, which is done in-place.
-        float dotProduct1 = vertex3.dot(new Vector3f(vertex1).cross(vertex2));
-        if (dotProduct1 == 0) {
+        // Defensive copies prior to subtraction and cross-product, which are done in-place.
+        Vector3f v1 = new Vector3f(vertex2).sub(vertex1);
+        Vector3f v2 = new Vector3f(vertex3).sub(vertex1);
+        // As long as the vectors from vertex1->vertex2 and vertex1->vertex3 are not collinear, the triangle is valid.
+        // If they are collinear, the magnitude of the cross product vector will be zero (as will its square).
+        float crossProductMagnitudeSquared = v1.cross(v2).lengthSquared();
+        if (crossProductMagnitudeSquared == 0) {
             throw new IllegalArgumentException("Provided vertices do not produce a triangle");
         }
     }
@@ -105,66 +62,126 @@ public class ParticleTriangle extends ParticleObject {
         this.checkValidTriangle(vertex1, vertex2, vertex3);
     }
 
-    /** Sets the first individual vertex, it returns the previous
-     * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}.
+    /**
+     * Sets the first individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set the first vertex as a constant value
      *
      * @param newVertex The new vertex
      * @return The previous vertex
      *
      * @see ParticleTriangle#setVertices(Vector3f...)
      */
-    public Vector3f setVertex1(Vector3f newVertex) {
-        Vector3f prevVertex1 = this.vertex1;
-        this.checkValidTriangle(vertex1, this.vertex2, this.vertex3);
+    public EasingCurve<Vector3f> setVertex1(Vector3f newVertex) {
+        return this.setVertex1(new ConstantEasingCurve<>(newVertex));
+    }
+
+    /**
+     * Sets the first individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set the first vertex as an ease curve value
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleTriangle#setVertices(Vector3f...)
+     */
+    public EasingCurve<Vector3f> setVertex1(EasingCurve<Vector3f> newVertex) {
+        EasingCurve<Vector3f> prevVertex1 = this.vertex1;
         this.vertex1 = newVertex;
         return prevVertex1;
     }
 
-    /** Sets the second individual vertex, it returns the previous
-     * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}.
+    /**
+     * Sets the second individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set the first vertex as a constant value
      *
      * @param newVertex The new vertex
      * @return The previous vertex
      *
      * @see ParticleTriangle#setVertices(Vector3f...)
      */
-    public Vector3f setVertex2(Vector3f newVertex) {
-        Vector3f prevVertex2 = this.vertex2;
-        this.checkValidTriangle(this.vertex1, vertex2, this.vertex3);
+    public EasingCurve<Vector3f> setVertex2(Vector3f newVertex) {
+        return this.setVertex2(new ConstantEasingCurve<>(newVertex));
+    }
+
+    /**
+     * Sets the second individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set the first vertex as an ease curve value
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleTriangle#setVertices(Vector3f...)
+     */
+    public EasingCurve<Vector3f> setVertex2(EasingCurve<Vector3f> newVertex) {
+        EasingCurve<Vector3f> prevVertex2 = this.vertex2;
         this.vertex2 = newVertex;
         return prevVertex2;
     }
 
-    /** Sets the third individual vertex, it returns the previous
-     * vertex that was used. If you want to modify multiple
-     * vertices at once then use {@code setVertices}.
+    /**
+     * Sets the third individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set the first vertex as a constant value
      *
      * @param newVertex The new vertex
      * @return The previous vertex
      *
      * @see ParticleTriangle#setVertices(Vector3f...)
      */
-    public Vector3f setVertex3(Vector3f newVertex) {
-        Vector3f prevVertex3 = this.vertex3;
-        this.checkValidTriangle(this.vertex1, this.vertex2, vertex3);
+    public EasingCurve<Vector3f> setVertex3(Vector3f newVertex) {
+        return this.setVertex3(new ConstantEasingCurve<>(newVertex));
+    }
+
+    /**
+     * Sets the third individual vertex, it returns the previous vertex that was used. If you want to modify multiple
+     * vertices at once then use {@code setVertices}. This method overload will set the first vertex as an ease curve value
+     *
+     * @param newVertex The new vertex
+     * @return The previous vertex
+     *
+     * @see ParticleTriangle#setVertices(Vector3f...)
+     */
+    public EasingCurve<Vector3f> setVertex3(EasingCurve<Vector3f> newVertex) {
+        EasingCurve<Vector3f> prevVertex3 = this.vertex3;
         this.vertex3 = newVertex;
         return prevVertex3;
     }
 
-    /** Sets all vertices at once.  If you want to set one vertex at a time, then it's recommended to use
-     * {@link #setVertex1(Vector3f)}, etc.  Returns nothing.
+    /**
+     * Sets all vertices at once.  If you want to set one vertex at a time, use individual setters such as
+     * {@link #setVertex1(Vector3f)}. Returns nothing.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method. This
+     * method overload will set the vertices as constant values
      *
      * @param vertices The vertices to modify
      *
      * @throws IllegalArgumentException if the number of vertices supplied isn't equal to 3
     */
-    public void setVertices(Vector3f... vertices) {
+    public final void setVertices(Vector3f... vertices) {
         if (vertices.length != 3) {
             throw UNBALANCED_VERTICES;
         }
-        this.checkValidTriangle(vertices);
+        this.vertex1 = new ConstantEasingCurve<>(vertices[0]);
+        this.vertex2 = new ConstantEasingCurve<>(vertices[1]);
+        this.vertex3 = new ConstantEasingCurve<>(vertices[2]);
+    }
+
+    /**
+     * Sets all vertices at once.  If you want to set one vertex at a time, use individual setters such as
+     * {@link #setVertex1(Vector3f)}. Returns nothing.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method. This
+     * method overload will set the vertices as ease curve values
+     *
+     * @param vertices The vertices to modify
+     *
+     * @throws IllegalArgumentException if the number of vertices supplied isn't equal to 3
+     */
+    @SafeVarargs
+    public final void setVertices(EasingCurve<Vector3f>... vertices) {
+        if (vertices.length != 3) {
+            throw UNBALANCED_VERTICES;
+        }
         this.vertex1 = vertices[0];
         this.vertex2 = vertices[1];
         this.vertex3 = vertices[2];
@@ -174,7 +191,7 @@ public class ParticleTriangle extends ParticleObject {
      *
      * @return The first individual vertex
     */
-    public Vector3f getVertex1() {
+    public EasingCurve<Vector3f> getVertex1() {
         return this.vertex1;
     }
 
@@ -182,7 +199,7 @@ public class ParticleTriangle extends ParticleObject {
      *
      * @return The second individual vertex
     */
-    public Vector3f getVertex2() {
+    public EasingCurve<Vector3f> getVertex2() {
         return this.vertex2;
     }
 
@@ -190,60 +207,105 @@ public class ParticleTriangle extends ParticleObject {
      *
      * @return The third individual vertex
     */
-    public Vector3f getVertex3() {
+    public EasingCurve<Vector3f> getVertex3() {
         return this.vertex3;
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
+        return container
+                .addComputedField("vertex1", this.vertex1)
+                .addComputedField("vertex2", this.vertex2)
+                .addComputedField("vertex3", this.vertex3);
+    }
 
-        // Rotation
-        Quaternionfc quaternion =
-                new Quaternionf().rotateZ(this.rotation.z).rotateY(this.rotation.y).rotateX(this.rotation.x);
+    @Override
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
         // Defensive copy of `drawPos`
-        Vector3f totalOffset = new Vector3f(drawPos).add(this.offset);
+        ComputedEasingRPO computedEasingPO = drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
+        Vector3f currVertex1 = (Vector3f) computedEasingPO.getComputedField("vertex1");
+        Vector3f currVertex2 = (Vector3f) computedEasingPO.getComputedField("vertex2");
+        Vector3f currVertex3 = (Vector3f) computedEasingPO.getComputedField("vertex3");
+        checkValidTriangle(currVertex1, currVertex2, currVertex3);
 
-        // Defensive copies of internal vertices
-        Vector3f v1 = this.rigidTransformation(this.vertex1, quaternion, totalOffset);
-        Vector3f v2 = this.rigidTransformation(this.vertex2, quaternion, totalOffset);
-        Vector3f v3 = this.rigidTransformation(this.vertex3, quaternion, totalOffset);
+        Vector3f computedRotation = computedEasingPO.computedRotation;
+        int computedAmount = computedEasingPO.computedAmount;
 
-        renderer.drawLine(this.particleEffect, step, v1, v2, this.amount);
-        renderer.drawLine(this.particleEffect, step, v2, v3, this.amount);
-        renderer.drawLine(this.particleEffect, step, v3, v1, this.amount);
+        currVertex1 = currVertex1.mul(actualSize);
+        currVertex2 = currVertex2.mul(actualSize);
+        currVertex3 = currVertex3.mul(actualSize);
 
-        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
-        this.endDraw(renderer, step, drawPos);
+        int step = drawContext.getCurrentStep();
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex1, currVertex2, computedRotation, computedAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex2, currVertex3, computedRotation, computedAmount);
+        renderer.drawLine(this.particleEffect, step, objectDrawPos, currVertex3, currVertex1, computedRotation, computedAmount);
     }
 
-    /** Set the interceptor to run after drawing the triangle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the triangle is rendered, the
-     * step number of the animation, and the ParticleTriangle instance.
-     *
-     * @param afterDraw the new interceptor to execute prior to drawing the triangle
-     */
-    public void setAfterDraw(DrawInterceptor<ParticleTriangle, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleTriangle> {
+        protected EasingCurve<Vector3f> vertex1;
+        protected EasingCurve<Vector3f> vertex2;
+        protected EasingCurve<Vector3f> vertex3;
 
-    private void doAfterDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, pos, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
+        private Builder() {}
 
-    /** Set the interceptor to run prior to drawing the triangle.  The interceptor will be provided
-     * with references to the {@link ServerWorld}, the position where the triangle is rendered, the
-     * step number of the animation, and the ParticleTriangle instance.
-     *
-     * @param beforeDraw the new interceptor to execute prior to drawing the triangle
-     */
-    public void setBeforeDraw(DrawInterceptor<ParticleTriangle, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
+        /**
+         * Set vertex1 on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set a constant value for the vertex
+         */
+        public B vertex1(Vector3f vertex1) {
+            this.vertex1 = new ConstantEasingCurve<>(vertex1);
+            return self();
+        }
 
-    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        this.beforeDraw.apply(interceptData, this);
+        /**
+         * Set vertex2 on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set a constant value for the vertex
+         */
+        public B vertex2(Vector3f vertex2) {
+            this.vertex2 = new ConstantEasingCurve<>(vertex2);
+            return self();
+        }
+
+        /**
+         * Set vertex3 on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set a constant value for the vertex
+         */
+        public B vertex3(Vector3f vertex3) {
+            this.vertex3 = new ConstantEasingCurve<>(vertex3);
+            return self();
+        }
+
+        /**
+         * Set vertex1 on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set an ease curve value for the vertex
+         */
+        public B vertex1(EasingCurve<Vector3f> vertex1) {
+            this.vertex1 = vertex1;
+            return self();
+        }
+
+        /**
+         * Set vertex2 on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set an ease curve value for the vertex
+         */
+        public B vertex2(EasingCurve<Vector3f> vertex2) {
+            this.vertex2 = vertex2;
+            return self();
+        }
+
+        /**
+         * Set vertex3 on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         * This method overload will set an ease curve value for the vertex
+         */
+        public B vertex3(EasingCurve<Vector3f> vertex3) {
+            this.vertex3 = vertex3;
+            return self();
+        }
+
+        @Override
+        public ParticleTriangle build() {
+            return new ParticleTriangle(this);
+        }
     }
 }

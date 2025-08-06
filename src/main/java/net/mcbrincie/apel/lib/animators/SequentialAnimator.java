@@ -3,101 +3,35 @@ package net.mcbrincie.apel.lib.animators;
 import net.mcbrincie.apel.Apel;
 import net.mcbrincie.apel.lib.exceptions.SeqDuplicateException;
 import net.mcbrincie.apel.lib.exceptions.SeqMissingException;
-import net.mcbrincie.apel.lib.objects.ParticleObject;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.interceptor.context.AnimationContext;
 import net.mcbrincie.apel.lib.util.scheduler.ScheduledStep;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-/** The parallel path animator. Which provides an interface for controlling multiple
- * concurrent path animators (they can also nest themselves) and can have an unlimited
- * number of path animators attached. They also can have delays for each path animator.
- * It is quite advanced but allows for easier management on multiple animators & is
+/** The sequential path animator. Which provides an interface for controlling multiple
+ * path animators (they can also nest themselves) that execute one after the other and
+ * can have an unlimited number of path animators attached. They also can have delays for each path animator.
+ * It is quite advanced but allows for easier management on multiple animators and is
  * versatile compared to the other easier ones
  */
 @SuppressWarnings("unused")
-public class SequentialAnimator extends PathAnimatorBase implements TreePathAnimator<PathAnimatorBase> {
-    protected List<PathAnimatorBase> animators = new ArrayList<>();
-    protected List<Integer> delays = new ArrayList<>();
+public class SequentialAnimator extends PathAnimatorBase<SequentialAnimator> implements TreePathAnimator {
+    protected List<PathAnimatorBase<? extends PathAnimatorBase<?>>> animators;
+    protected List<Integer> animatorDelays;
 
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you want to supply a specific
-     * number of path animators in the form of varargs
-     *
-     * @param delay The delay between each particle object render
-     * @param pathAnimators The path animators to append
-     */
-    public SequentialAnimator(int delay, PathAnimatorBase... pathAnimators) {
-        super();
-        this.renderingSteps = pathAnimators.length;
-        this.setDelay(delay);
-        if (pathAnimators.length == 0) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        this.animators.addAll(List.of(pathAnimators));
+    public static <B extends Builder<B>> Builder<B> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you have a list of path
-     * animators which you want to supply all of them
-     *
-     * @param delay The delay between each particle object render
-     * @param pathAnimators The path animators to append
-    */
-    public SequentialAnimator(int delay, List<PathAnimatorBase> pathAnimators) {
+    private <B extends Builder<B>> SequentialAnimator(Builder<B> builder) {
         super();
-        this.renderingSteps = pathAnimators.size();
-        this.setDelay(delay);
-        if (pathAnimators.isEmpty()) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        this.animators.addAll(pathAnimators);
-    }
-
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you have a list of path
-     * animators and a list of the delays
-     *
-     * @param delay The delays between each particle object render for each particle animator
-     * @param pathAnimators The path animators to append
-     */
-    public SequentialAnimator(List<Integer> delay, List<PathAnimatorBase> pathAnimators) {
-        super();
-        this.delay = -1;
-        this.renderingSteps = pathAnimators.size();
-        if (pathAnimators.isEmpty()) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        if (pathAnimators.size() != delay.size()) {
-            throw new IllegalArgumentException("Delays must match the number of path animators");
-        }
-        this.animators.addAll(pathAnimators);
-        this.delays.addAll(delay);
-    }
-
-    /** Constructor for the parallel animation. This constructor is
-     * meant to be used in the case that you want to supply the path
-     * animators in the form of varargs, and in addition you want a
-     * separate delays
-     *
-     * @param delay The delay between each particle object render
-     * @param pathAnimators The path animators to append
-     */
-    public SequentialAnimator(List<Integer> delay, PathAnimatorBase... pathAnimators) {
-        super();
-        this.delay = -1;
-        this.renderingSteps = pathAnimators.length;
-        if (pathAnimators.length == 0) {
-            throw new IllegalArgumentException("There must be at least one path animator");
-        }
-        if (pathAnimators.length != delay.size()) {
-            throw new IllegalArgumentException("Delays must match the number of path animators");
-        }
-        this.animators.addAll(List.of(pathAnimators));
-        this.delays.addAll(delay);
+        this.setDelay(builder.delay);
+        this.setProcessingSpeed(builder.processingSpeed);
+        this.animators = builder.childAnimators;
+        this.animatorDelays = builder.childAnimatorDelays;
     }
 
     /** Appends a new child path animator to the collection of the child path animators
@@ -106,7 +40,7 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
      * @param animator The path animator to append
     */
     @Override
-    public void addAnimatorPath(PathAnimatorBase animator) {
+    public void addAnimatorPath(PathAnimatorBase<? extends PathAnimatorBase<?>> animator) {
         this.animators.add(animator);
     }
 
@@ -116,92 +50,147 @@ public class SequentialAnimator extends PathAnimatorBase implements TreePathAnim
      * @param animator The path animator to remove
     */
     @Override
-    public void removeAnimatorPath(PathAnimatorBase animator) {
+    public void removeAnimatorPath(PathAnimatorBase<? extends PathAnimatorBase<?>> animator) {
         this.animators.remove(animator);
     }
 
     @Override
-    public List<PathAnimatorBase> getPathAnimators() {
+    public List<PathAnimatorBase<? extends PathAnimatorBase<?>>> getPathAnimators() {
         return this.animators;
     }
 
     @Override
-    public PathAnimatorBase getPathAnimator(int index) {
+    public PathAnimatorBase<? extends PathAnimatorBase<?>> getPathAnimator(int index) {
         return this.animators.get(index);
     }
 
-    /** This method is DEPRECATED and SHOULD NOT BE USED */
     @Override
-    @Deprecated
-    public int setRenderSteps(int steps) {
-        throw new UnsupportedOperationException("Sequential Animators cannot set rendering steps");
-    }
-
-    /** This method is DEPRECATED and SHOULD NOT BE USED */
-    @Deprecated
-    @Override
-    public ParticleObject setParticleObject(@NotNull ParticleObject object) {
-        throw new UnsupportedOperationException("Sequential Animators cannot set an individual particle object");
-    }
-
-    /** This method is DEPRECATED and SHOULD NOT BE USED */
-    @Override
-    @Deprecated
-    public float setRenderInterval(float interval) {
-        throw new UnsupportedOperationException("Sequential Animators cannot set rendering interval");
-    }
-
-    @Override
-    public int convertToSteps() {
-        return this.animators.size();
-    }
-
-    @Override
-    public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
-        this.allocateToScheduler();
-        int step = 0;
-        PathAnimatorBase prev = null;
-        for (PathAnimatorBase animator : this.animators) {
-            step++;
-            this.allocateNewAnimator(renderer, step, animator, prev);
-            prev = animator;
-        }
+    public int convertIntervalToSteps() {
+        return 0;
     }
 
     @Override
     protected int calculateDuration() {
-        int index = 0;
-        int delaySum = 0;
-        for (PathAnimatorBase animatorChild : this.animators) {
-            int seqDelay = ((this.delay == -1) ? this.delays.get(index) : this.delay);
-            delaySum += seqDelay + animatorChild.calculateDuration();
-            System.out.println(delaySum);
-            index++;
+        int totalDuration = this.delay;
+        for (int index = 0; index < this.animators.size(); index++) {
+            int childAnimatorDelay = this.animatorDelays.get(index);
+            PathAnimatorBase<?> childAnimator = this.animators.get(index);
+            totalDuration += childAnimatorDelay + childAnimator.calculateDuration();
         }
-        return delaySum;
+        return totalDuration;
     }
 
-    protected void allocateNewAnimator(ApelServerRenderer renderer, int step, PathAnimatorBase animator, PathAnimatorBase prev) {
-        Runnable func = () -> animator.beginAnimation(renderer);
-        int childDelay = 0;
-        if (prev != null) childDelay = prev.calculateDuration();
-        int delayUsed = childDelay + ((this.delay == -1) ? this.delays.get(step - 1) : this.delay);
-        if (delayUsed == 0) {
-            Apel.DRAW_EXECUTOR.submit(func);
-            return;
+    @Override
+    public void beginAnimation(ApelServerRenderer renderer) throws SeqDuplicateException, SeqMissingException {
+        int totalDelay = this.delay;
+        for (int index = 0; index < this.animators.size(); index++) {
+            PathAnimatorBase<?> animator = this.animators.get(index);
+            int animatorDelay = this.animatorDelays.get(index);
+
+            AnimationContext animationContext = new AnimationContext(renderer.getServerWorld());
+            animationContext.addMetadata(PATH_ANIMATOR, animator);
+            animationContext.addMetadata(DELAY, animatorDelay);
+            this.beforeRender.compute(this, animationContext);
+
+            if (!animationContext.shouldRender()) {
+                continue;
+            }
+
+            // Effectively final variables for the lambda
+            PathAnimatorBase<?> animatorToSchedule = animationContext.getMetadata(PATH_ANIMATOR, animator);
+            int delayForAnimator = animationContext.getMetadata(DELAY, animatorDelay);
+            Runnable func = () -> animatorToSchedule.beginAnimation(renderer);
+
+            if (this.delay + delayForAnimator == 0) {
+                func.run();
+            } else {
+                totalDelay += delayForAnimator;
+                animatorToSchedule.allocateToScheduler();
+                Apel.SCHEDULER.allocateNewStep(
+                        animatorToSchedule, new ScheduledStep(totalDelay, new Runnable[]{func})
+                );
+                totalDelay += animatorToSchedule.calculateDuration();
+            }
+
+            this.afterRender.compute(this, animationContext);
         }
-        if (this.processSpeed <= 1) {
-            Apel.SCHEDULER.allocateNewStep(
-                    this, new ScheduledStep(delayUsed, new Runnable[]{func})
-            );
-            return;
-        } else if (step % this.processSpeed != 0) {
-            this.storedFuncsBuffer.add(func);
-            return;
+    }
+
+    /** This is the sequential path-animator builder used for setting up a new sequential path-animator instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+     */
+    public static class Builder<B extends Builder<B>> extends PathAnimatorBase.Builder<B, SequentialAnimator> {
+        protected List<PathAnimatorBase<? extends PathAnimatorBase<?>>> childAnimators = new ArrayList<>();
+        protected List<Integer> childAnimatorDelays = new ArrayList<>();
+
+        private Builder () {}
+
+        /** Add an animator to the list of path-animators
+         *
+         * @param animator The path-animator instance
+         * @return The builder instance
+         */
+        public B animator(PathAnimatorBase<? extends PathAnimatorBase<?>> animator) {
+            this.childAnimators.add(animator);
+            return self();
         }
-        Apel.SCHEDULER.allocateNewStep(
-                this, new ScheduledStep(delayUsed, this.storedFuncsBuffer.toArray(Runnable[]::new))
-        );
-        this.storedFuncsBuffer.clear();
+
+        /** Add the animator to the list of path-animators along with a set-delay
+         *
+         * @param animator The path-animator instance
+         * @param delay The delay for the path-animator
+         * @return The builder instance
+         */
+        public B animator(PathAnimatorBase<? extends PathAnimatorBase<?>> animator, int delay) {
+            this.childAnimators.add(animator);
+            this.childAnimatorDelays.add(delay);
+            return self();
+        }
+
+        /** Add all the path-animators to the list of path-animators
+         *
+         * @param animators The path-animator instance
+         * @return The builder instance
+        */
+        public B animators(List<PathAnimatorBase<? extends PathAnimatorBase<?>>> animators) {
+            this.childAnimators.addAll(animators);
+            return self();
+        }
+
+        /** Add all the path-animators to the list of path-animators along with
+         * an individual delay for each path-animator matching 1:1
+         *
+         * @param animators The path-animator instance
+         * @param delays The delays of each path-animator
+         * @return The builder instance
+        */
+        public B animators(List<PathAnimatorBase<? extends PathAnimatorBase<?>>> animators, List<Integer> delays) {
+            this.childAnimators.addAll(animators);
+            this.childAnimatorDelays.addAll(delays);
+            return self();
+        }
+
+        @Override
+        public SequentialAnimator build() {
+            if (this.delay < 0) {
+                throw new IllegalStateException("Initial delay must be non-negative");
+            }
+            for (int i = 0; i < this.childAnimators.size(); i++) {
+                if (this.childAnimators.get(i) == null) {
+                    throw new NullPointerException("Child Animator cannot be null");
+                }
+                // Pad the list of delays, so it's equal in length
+                if (this.childAnimatorDelays.size() == i) {
+                    this.childAnimatorDelays.add(0);
+                }
+                if (this.childAnimatorDelays.get(i) < 0) {
+                    throw new IllegalStateException("Child animator delays must be non-negative");
+                }
+            }
+            return new SequentialAnimator(this);
+        }
     }
 }

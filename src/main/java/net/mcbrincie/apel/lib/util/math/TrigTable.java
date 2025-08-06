@@ -4,7 +4,7 @@ import net.mcbrincie.apel.Apel;
 import org.joml.Math;
 
 /**
- * The trigonometry table is for performance reasons, it sacrifices some accuracy & memory over speed.
+ * The trigonometry table is for performance reasons, it sacrifices some accuracy and memory over speed.
  * It precomputes sin, cos and arc cosine functions for angles. Size is a parameter that dictates the precision of
  * the trigonometry functions
  */

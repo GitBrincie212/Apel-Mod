@@ -1,14 +1,11 @@
 package net.mcbrincie.apel.lib.objects;
 
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
-import org.jetbrains.annotations.NotNull;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
 import org.joml.Vector3f;
-
-import java.util.Optional;
 
 /** The particle object class that represents a cylinder.
  * It has a radius which dictates how large or small the cylinder is depending on the
@@ -19,62 +16,19 @@ import java.util.Optional;
  * x-axis will achieve that.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticleCylinder extends ParticleObject {
-    protected float radius;
-    protected float height;
+public class ParticleCylinder extends RenderableParticleObject<ParticleCylinder> {
+    protected EasingCurve<Float> radius;
+    protected EasingCurve<Float> height;
 
-    private DrawInterceptor<ParticleCylinder, AfterDrawData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticleCylinder, BeforeDrawData> beforeDraw = DrawInterceptor.identity();
-
-    /** This data is used before calculations (it contains the iterated rotation) */
-    public enum BeforeDrawData {}
-
-    /** This data is used after calculations (it contains the drawing position) */
-    public enum AfterDrawData {}
-
-    /** Constructor for the particle cylinder. It accepts as parameters the particle effect to use, the radius of the
-     * cylinder, the height of the cylinder, the rotation to apply, and the number of particles.
-     *
-     * <p>This implementation calls setters for amount, rotation, height, and radius so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param radius The radius of the cylinder (how xz wise big it is)
-     * @param height The height of the cylinder (how tall it is)
-     * @param rotation The rotation to apply
-     *
-     * @see ParticleCylinder#ParticleCylinder(ParticleEffect, float, float, int)
-    */
-    public ParticleCylinder(
-            @NotNull ParticleEffect particleEffect, float radius, float height, Vector3f rotation, int amount
-    ) {
-        super(particleEffect, rotation);
-        this.setRadius(radius);
-        this.setAmount(amount);
-        this.setHeight(height);
+    public static Builder<?> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the particle cylinder. It accepts as parameters the particle effect to use, the radius of the
-     * cylinder, the height of the cylinder, and the number of particles.
-     *
-     * <p>This implementation calls setters for amount, rotation, height, and radius so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param amount The number of particles for the object
-     * @param height The height of the cylinder (how tall it is)
-     * @param radius The radius of the cylinder (how xz wise big it is)
-     *
-     * @see ParticleCylinder#ParticleCylinder(ParticleEffect, float, float, Vector3f, int)
-    */
-    public ParticleCylinder(
-            @NotNull ParticleEffect particleEffect,
-            float radius, float height, int amount
-    ) {
-        this(particleEffect, radius, height, new Vector3f(0,0,0), amount);
+    private ParticleCylinder(Builder<?> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
+        this.setRadius(builder.radius);
+        this.setHeight(builder.height);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -86,29 +40,40 @@ public class ParticleCylinder extends ParticleObject {
         super(cylinder);
         this.radius = cylinder.radius;
         this.height = cylinder.height;
-        this.amount = cylinder.amount;
-        this.afterDraw = cylinder.afterDraw;
-        this.beforeDraw = cylinder.beforeDraw;
     }
 
     /** Gets the radius of the ParticleCylinder and returns it.
      *
      * @return the radius of the ParticleCylinder
      */
-    public float getRadius() {
+    public EasingCurve<Float> getRadius() {
         return radius;
     }
 
-    /** Set the radius of this ParticleCylinder and returns the previous radius that was used.  Radius must be positive.
+    /**
+     * Set the radius of this ParticleCylinder and returns the previous radius that was used.  Radius must be positive.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the radius
      *
      * @param radius the new radius
      * @return the previously used radius
      */
-    public float setRadius(float radius) {
-        if (radius < 0) {
-            throw new IllegalArgumentException("Radius must be positive");
-        }
-        float prevRadius = this.radius;
+    public final EasingCurve<Float> setRadius(float radius) {
+        return this.setRadius(new ConstantEasingCurve<>(radius));
+    }
+
+    /**
+     * Set the radius of this ParticleCylinder and returns the previous radius that was used.  Radius must be positive.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an easing curve value for the radius
+     *
+     * @param radius the new radius
+     * @return the previously used radius
+     */
+    public final EasingCurve<Float> setRadius(EasingCurve<Float> radius) {
+        EasingCurve<Float> prevRadius = this.radius;
         this.radius = radius;
         return prevRadius;
     }
@@ -117,60 +82,107 @@ public class ParticleCylinder extends ParticleObject {
      *
      * @return the height of the ParticleCylinder
     */
-    public float getHeight() {
+    public EasingCurve<Float> getHeight() {
         return height;
     }
 
-    /** Sets the height of the ParticleCylinder and returns the previous height that was used.  Height must be positive.
+    /**
+     * Sets the height of the ParticleCylinder and returns the previous height that was used.  Height must be positive.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the height
      *
      * @param height The new height
      * @return The previous used height
      */
-    public float setHeight(float height) {
-        if (height < 0) {
-            throw new IllegalArgumentException("Height must be positive");
-        }
-        float prevHeight = this.height;
+    public final EasingCurve<Float> setHeight(float height) {
+        return this.setHeight(new ConstantEasingCurve<>(height));
+    }
+
+    /**
+     * Sets the height of the ParticleCylinder and returns the previous height that was used.  Height must be positive.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the height
+     *
+     * @param height The new height
+     * @return The previous used height
+     */
+    public final EasingCurve<Float> setHeight(EasingCurve<Float> height) {
+        EasingCurve<Float> prevHeight = this.height;
         this.height = height;
         return prevHeight;
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step, drawPos);
-        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
-        renderer.drawCylinder(this.particleEffect, step, objectDrawPos, this.radius, this.height, this.rotation, this.amount);
-        this.doAfterDraw(renderer.getServerWorld(), step, drawPos);
-        this.endDraw(renderer, step, drawPos);
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
+        return container.addComputedField("radius", this.radius)
+                .addComputedField("height", this.height);
     }
 
-    /** Set the interceptor to run after drawing the cylinder. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the cylinder is rendered.
-     *
-     * @param afterDraw the new interceptor to execute after drawing each particle
-     */
-    public void setAfterDraw(DrawInterceptor<ParticleCylinder, AfterDrawData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
+    @Override
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasings = drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasings.computedOffset);
+        float currRadius = (float) computedEasings.getComputedField("radius");
+        float currHeight = (float) computedEasings.getComputedField("height");
+        /*
+        if (currRadius <= 0) {
+            throw new RuntimeException("The cylinder's radius is below or equal to zero");
+        } else if (currHeight <= 0) {
+            throw new RuntimeException("The cylinder's height is below or equal to zero");
+        }
+         */
+        currRadius *= actualSize.x;
+        currHeight *= actualSize.y;
+
+        renderer.drawCylinder(
+                this.particleEffect, drawContext.getCurrentStep(), objectDrawPos,
+                currRadius, currHeight, computedEasings.computedRotation, computedEasings.computedAmount
+        );
     }
 
-    private void doAfterDraw(ServerWorld world, int step, Vector3f centerPos) {
-        InterceptData<AfterDrawData> interceptData = new InterceptData<>(world, centerPos, step, AfterDrawData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleCylinder> {
+        protected EasingCurve<Float> radius;
+        protected EasingCurve<Float> height;
 
-    /** Set the interceptor to run prior to drawing the cylinder. The interceptor will be provided
-     * with references to the {@link ServerWorld}, the step number of the animation, and the
-     * position where the cylinder is rendered.
-     *
-     * @param beforeDraw the new interceptor to execute prior to drawing each particle
-     */
-    public void setBeforeDraw(DrawInterceptor<ParticleCylinder, BeforeDrawData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
+        private Builder() {}
 
-    private void doBeforeDraw(ServerWorld world, int step, Vector3f pos) {
-        InterceptData<BeforeDrawData> interceptData = new InterceptData<>(world, pos, step, BeforeDrawData.class);
-        this.beforeDraw.apply(interceptData, this);
+        /**
+         * Set the radius on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B radius(EasingCurve<Float> radius) {
+            this.radius = radius;
+            return self();
+        }
+
+        /**
+         * Set the height on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B height(EasingCurve<Float> height) {
+            this.height = height;
+            return self();
+        }
+
+        /**
+         * Set the radius on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B radius(float radius) {
+            this.radius = new ConstantEasingCurve<>(radius);
+            return self();
+        }
+
+        /**
+         * Set the height on the builder.  This method is not cumulative; repeated calls will overwrite the value.
+         */
+        public B height(float height) {
+            this.height = new ConstantEasingCurve<>(height);
+            return self();
+        }
+
+        @Override
+        public ParticleCylinder build() {
+            return new ParticleCylinder(this);
+        }
     }
 }

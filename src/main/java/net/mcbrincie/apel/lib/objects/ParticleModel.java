@@ -1,0 +1,222 @@
+package net.mcbrincie.apel.lib.objects;
+
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
+import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.interceptor.context.Key;
+import net.mcbrincie.apel.lib.util.models.ModelParserManager;
+import net.mcbrincie.apel.lib.util.models.ObjModel;
+import org.joml.Vector3f;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * {@code ParticleModel} can render 3D Model files (*.obj, *.fbx, *.gltf) as a particle object.  These models inherit
+ * everything allowed by {@link ParticleObject}, and may also be scaled along each of the three axes.  The model is
+ * drawn in a wireframe fashion, so only the edges are visible.  A single particle effect is used for the entire
+ * model.
+ * <p>
+ * Implementation-specific details:
+ * <ul>
+ *     <li>{@code amount} will set the number of particles to use on every edge in the model</li>
+ * </ul>
+ */
+@SuppressWarnings({"unused", "UnusedReturnValue"})
+public class ParticleModel extends RenderableParticleObject<ParticleModel> {
+    protected final ObjModel objModel;
+    protected EasingCurve<Float> particle_interval = null;
+
+    public static Key<ObjModel> objectModelKey(String name) {
+        return new Key<>(name) { };
+    }
+
+    public static final Key<ObjModel> OBJECT_MODEL = objectModelKey("object_model");
+
+    public static <B extends Builder<B>> Builder<B> builder() {
+        return new Builder<>();
+    }
+
+    private <B extends Builder<B>> ParticleModel(Builder<B> builder) {
+        super();
+        this.setParticleEffect(builder.particleEffect);
+        this.setRotation(builder.rotation);
+        this.setOffset(builder.offset);
+        this.setScale(builder.scale);
+        this.subscribeToBeforeDraw(builder.beforeDraw);
+        this.subscribeToAfterDraw(builder.afterDraw);
+        this.objModel = builder.objectModel;
+        if (builder.interval != null) {
+            this.setInterval(builder.interval);
+            return;
+        }
+        this.setAmount(builder.amount);
+    }
+
+    /** The copy constructor for a specific particle object. It copies all
+     * the params, including the interceptors the particle object has
+     *
+     * @param model The particle model object to copy from
+    */
+    public ParticleModel(ParticleModel model) {
+        super(model);
+        this.objModel = model.objModel;
+        this.particle_interval = model.particle_interval;
+    }
+
+    /** Gets the interval of particles that are currently in use and returns it.
+     *
+     * @return The currently used number of particles
+     */
+    public EasingCurve<Float> getInterval() {
+        return this.particle_interval;
+    }
+
+    /**
+     * Sets the interval of particles to use for rendering the model. This makes the model more detailed
+     * and saves the number of particles. It returns the previously used number of particles.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newInterval The new particle interval
+     * @return The previously used interval
+     */
+    public final EasingCurve<Float> setInterval(float newInterval) {
+        return this.setInterval(new ConstantEasingCurve<>(newInterval));
+    }
+
+    /**
+     * Sets the interval of particles to use for rendering the model. This makes the model more detailed
+     * and saves the number of particles. It returns the previously used number of particles.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     *
+     * @param newInterval The new particle interval
+     * @return The previously used interval
+     */
+    public final EasingCurve<Float> setInterval(EasingCurve<Float> newInterval) {
+        EasingCurve<Float> prevInterval = this.particle_interval;
+        this.particle_interval = newInterval;
+        return prevInterval;
+    }
+
+    @Override
+    protected void prepareContext(DrawContext<?> drawContext) {
+        drawContext.addMetadata(OBJECT_MODEL, this.objModel);
+    }
+
+    @Override
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
+        return this.particle_interval != null ? container.addComputedField("interval", this.particle_interval) : container;
+    }
+
+    @Override
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasingPO = (ComputedEasingRPO) drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
+
+        ObjModel objectModel = drawContext.getMetadata(OBJECT_MODEL, this.objModel);
+        for (ObjModel.Face face : objectModel.faces()) {
+            List<ObjModel.Vertex> vertices = face.vertices();
+            List<Vector3f> positions = new ArrayList<>(vertices.size());
+
+            for (ObjModel.Vertex vertex : face.vertices()) {
+                // Defensive copies of internal vertices
+                positions.add(new Vector3f(vertex.position()).mul(computedEasingPO.computedScale));
+            }
+
+            int step = drawContext.getCurrentStep();
+            for (int i = 0; i < positions.size() - 1; i++) {
+                Vector3f vertex1 = positions.get(i);
+                Vector3f vertex2 = positions.get(i + 1);
+                int useAmount = computedEasingPO.computedAmount;
+                if (this.particle_interval != null) {
+                    float particleInterval = (float) computedEasingPO.getComputedField("interval");
+                    float dist = vertex1.distance(vertex2);
+                    useAmount = (int) Math.ceil(dist / particleInterval);
+                }
+                renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex1, vertex2,
+                        computedEasingPO.computedRotation, useAmount);
+            }
+            Vector3f vertex1 = positions.getLast();
+            Vector3f vertex2 = positions.getFirst();
+            // Close the face
+            int useAmount = computedEasingPO.computedAmount;
+            if (this.particle_interval != null) {
+                float particleInterval = (float) computedEasingPO.getComputedField("interval");
+                float dist = vertex1.distance(vertex2);
+                useAmount = (int) Math.ceil(dist / particleInterval);
+            }
+            renderer.drawLine(this.particleEffect, step, objectDrawPos, vertex1, vertex2,
+                    computedEasingPO.computedRotation, useAmount);
+        }
+    }
+
+    /** This is the particle model object builder used for setting up a new particle model instance.
+     * It is designed to be more friendly of how you arrange the parameters. Call {@code .builder()} to initiate
+     * the builder, once you supplied the parameters then you can call {@code .build()} to create the instance
+     *
+     * @param <B> The builder type itself
+    */
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticleModel> {
+        private static final ModelParserManager MODEL_PARSER_MANAGER = new ModelParserManager();
+        protected String filename;
+        protected EasingCurve<Float> interval;
+        protected ObjModel objectModel;
+
+        private Builder() {}
+
+        /**
+         * Load a model from the given filename.  This method is not cumulative; repeated calls will overwrite the
+         * value.  This should be exclusive with {@link #model(ObjModel)}.
+         *
+         * @param filename The model path for loading it
+         * @return The builder instance
+         */
+        public B filename(String filename) {
+            this.filename = filename;
+            return self();
+        }
+
+        /**
+         * Set the {@code ObjModel} to use.  This method is not cumulative; repeated calls will overwrite the value.
+         * This should be exclusive with {@link #filename(String)}.
+         */
+        public B model(ObjModel objectModel) {
+            this.objectModel = objectModel;
+            return self();
+        }
+
+        /**
+         * Set the particle interval on the builder.  This method is not cumulative; repeated calls will overwrite the
+         * value. When an interval is supplied, it prioritizes that instead of steps
+         */
+        public final B interval(float interval) {
+            this.interval = new ConstantEasingCurve<>(interval);
+            return self();
+        }
+
+        /**
+         * Set the particle interval on the builder.  This method is not cumulative; repeated calls will overwrite the
+         * value. When an interval is supplied, it prioritizes that instead of steps
+         */
+        public final B interval(EasingCurve<Float> interval) {
+            this.interval = interval;
+            return self();
+        }
+
+        @Override
+        public ParticleModel build() {
+            if (filename == null && objectModel == null) {
+                throw new IllegalStateException("Filename or object model must be provided");
+            }
+            if (objectModel == null) {
+                objectModel = MODEL_PARSER_MANAGER.parse(new File(this.filename));
+            }
+            return new ParticleModel(this);
+        }
+    }
+}

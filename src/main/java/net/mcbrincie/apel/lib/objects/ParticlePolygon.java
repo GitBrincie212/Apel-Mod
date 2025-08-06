@@ -1,17 +1,19 @@
 package net.mcbrincie.apel.lib.objects;
 
 import net.mcbrincie.apel.Apel;
+import net.mcbrincie.apel.lib.easing.EasingCurve;
+import net.mcbrincie.apel.lib.easing.shaped.ConstantEasingCurve;
 import net.mcbrincie.apel.lib.renderers.ApelServerRenderer;
-import net.mcbrincie.apel.lib.util.interceptor.DrawInterceptor;
-import net.mcbrincie.apel.lib.util.interceptor.InterceptData;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.server.world.ServerWorld;
+import net.mcbrincie.apel.lib.util.ComputedEasingRPO;
+import net.mcbrincie.apel.lib.util.interceptor.context.DrawContext;
+import net.mcbrincie.apel.lib.util.math.bezier.BezierCurve;
+import net.minecraft.util.math.MathHelper;
 import org.jetbrains.annotations.NotNull;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Optional;
+import java.util.List;
 
 
 /** The particle object class that represents a 2D regular polygon. Regular polygons contain the
@@ -20,62 +22,22 @@ import java.util.Optional;
  * will have.
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public class ParticlePolygon extends ParticleObject {
-    protected int sides;
-    protected float size;
+public class ParticlePolygon extends RenderableParticleObject<ParticlePolygon> {
+    protected EasingCurve<Integer> sides;
+    protected EasingCurve<Float> curve;
+    private final List<BezierCurve> bezierCurves = new ArrayList<>();
 
     protected HashMap<Integer, Vector3f[]> cachedShapes = new HashMap<>();
 
-    private DrawInterceptor<ParticlePolygon, CommonData> afterDraw = DrawInterceptor.identity();
-    private DrawInterceptor<ParticlePolygon, CommonData> beforeDraw = DrawInterceptor.identity();
-
-    /** There is no data being transmitted */
-    public enum CommonData {}
-
-    /** Constructor for the particle polygon which is a 2D regular polygon.
-     * It accepts as parameters the particle effect to use, the sides of the polygon,
-     * the size of the polygon, the number of particles, and the rotation to apply.
-     *
-     * <p>The size of the polygon is the distance from the center of the polygon to any of its vertices.
-     *
-     * <p>This implementation calls setters for rotation, sides, size, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param sides The of the regular polygon
-     * @param size The size of the regular polygon
-     * @param amount The number of particles for the object
-     * @param rotation The rotation to apply
-     *
-     * @see ParticlePolygon#ParticlePolygon(ParticleEffect, int, float, int)
-     */
-    public ParticlePolygon(ParticleEffect particleEffect, int sides, float size, int amount, Vector3f rotation) {
-        super(particleEffect, rotation);
-        this.setSides(sides);
-        this.setSize(size);
-        this.setAmount(amount);
+    public static <B extends Builder<B>> Builder<B> builder() {
+        return new Builder<>();
     }
 
-    /** Constructor for the particle polygon which is a 2D regular polygon.
-     * It accepts as parameters the particle effect to use, the sides of the polygon,
-     * the size of the polygon, and the number of particles.
-     *
-     * <p>The size of the polygon is the distance from the center of the polygon to any of its vertices.
-     *
-     * <p>This implementation calls setters for rotation, sides, size, and amount so checks are performed to
-     * ensure valid values are accepted for each property.  Subclasses should take care not to violate these lest
-     * they risk undefined behavior.
-     *
-     * @param particleEffect The particle to use
-     * @param size The size of the regular polygon
-     * @param sides The sides of the regular polygon
-     * @param amount The number of particles for the object
-     *
-     * @see ParticlePolygon#ParticlePolygon(ParticleEffect, int, float, int, Vector3f)
-     */
-    public ParticlePolygon(ParticleEffect particleEffect, int sides, float size, int amount) {
-        this(particleEffect, sides, size, amount, new Vector3f(0));
+    private <B extends Builder<B>> ParticlePolygon(Builder<B> builder) {
+        super(builder.particleEffect, builder.rotation, builder.offset, builder.amount, builder.beforeDraw,
+              builder.afterDraw);
+        this.setSides(builder.sides);
+        this.setCurve(builder.curve);
     }
 
     /** The copy constructor for a specific particle object. It copies all
@@ -86,23 +48,36 @@ public class ParticlePolygon extends ParticleObject {
     public ParticlePolygon(ParticlePolygon polygon) {
         super(polygon);
         this.sides = polygon.sides;
-        this.size = polygon.size;
+        this.curve = polygon.curve;
         this.cachedShapes = polygon.cachedShapes;
-        this.beforeDraw = polygon.beforeDraw;
-        this.afterDraw = polygon.afterDraw;
     }
 
-    /** Sets the sides to a new value and returns the previous sides used.
+    /**
+     * Sets the sides to a new value and returns the previous sides used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the sides
      *
      * @param sides The new sides
      * @throws IllegalArgumentException If the sides are less than 3
      * @return The previous sides used
      */
-    public int setSides(int sides) throws IllegalArgumentException {
-        if (sides < 3) {
-            throw new IllegalArgumentException("Cannot produce a polygon with sides below 3");
-        }
-        int prevSides = this.sides;
+    public final EasingCurve<Integer> setSides(int sides) throws IllegalArgumentException {
+        return this.setSides(new ConstantEasingCurve<>(sides));
+    }
+
+    /**
+     * Sets the sides to a new value and returns the previous sides used.
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the sides
+     *
+     * @param sides The new sides
+     * @throws IllegalArgumentException If the sides are less than 3
+     * @return The previous sides used
+     */
+    public final EasingCurve<Integer> setSides(EasingCurve<Integer> sides) throws IllegalArgumentException {
+        EasingCurve<Integer> prevSides = this.sides;
         this.sides = sides;
         return prevSides;
     }
@@ -111,113 +86,181 @@ public class ParticlePolygon extends ParticleObject {
      *
      * @return The sides of the regular polygon
      */
-    public int getSides() {
+    public EasingCurve<Integer> getSides() {
         return this.sides;
     }
 
-    /** Sets the size of the polygon to a new value and returns the previous size used.
+    /**
+     * Sets the curve of the polygon to a new value and returns the previous curve value used.
+     * The curve is the distance of the control points that make up the Bézier curves. Values that
+     * are below 1 make the shape contract while values that are above 0 make the shape more circular
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set a constant value for the size
      *
-     * @param size The new size
-     * @throws IllegalArgumentException If the size is negative or 0
-     * @return The previous size used
+     * @param curve The new curve value
+     * @throws IllegalArgumentException If the curve value
+     * @return The previous curve value used
      */
-    public float setSize(float size) throws IllegalArgumentException {
-        if (size <= 0) {
-            throw new IllegalArgumentException("Size must be non-negative and above 0");
-        }
-        float prevSize = this.size;
-        this.size = size;
-        return prevSize;
+    public final EasingCurve<Float> setCurve(float curve) throws IllegalArgumentException {
+        return this.setCurve(new ConstantEasingCurve<>(curve));
     }
 
-    /** Gets the size of the regular polygon
+    /**
+     * Sets the curve of the polygon to a new value and returns the previous curve value used.
+     * The curve is the distance of the control points that make up the Bézier curves. Values that
+     * are below 1 make the shape contract while values that are above 0 make the shape more circular
+     * <p>
+     * This implementation is used by the constructor, so subclasses cannot override this method.
+     * This method overload will set an ease curve value for the size
      *
-     * @return The size of the regular polygon
+     * @param curve The new curve value
+     * @throws IllegalArgumentException If the curve value
+     * @return The previous curve value used
      */
-    public float getSize() {
-        return this.size;
+    public final EasingCurve<Float> setCurve(EasingCurve<Float> curve) throws IllegalArgumentException {
+        EasingCurve<Float> prevCurve = this.curve;
+        this.curve = curve;
+        return prevCurve;
+    }
+
+    /** Gets the roundness of the regular polygon
+     *
+     * @return The roundness of the regular polygon
+     */
+    public EasingCurve<Float> getCurve() {
+        return this.curve;
     }
 
     @Override
-    public void draw(ApelServerRenderer renderer, int step, Vector3f drawPos) {
-        this.doBeforeDraw(renderer.getServerWorld(), step);
-
-        Vector3f[] vertices = getRawVertices();
-        // Defensive copy
-        Vector3f objectDrawPos = new Vector3f(drawPos).add(this.offset);
-        this.computeVertices(vertices, objectDrawPos);
-
-        // Divide the particles evenly among sides
-        int particlesPerLine = this.amount / this.sides;
-        for (int i = 0; i < vertices.length - 1; i++) {
-            renderer.drawLine(this.particleEffect, step, vertices[i], vertices[i + 1], particlesPerLine);
-        }
-
-        this.doAfterDraw(renderer.getServerWorld(), step);
-        this.endDraw(renderer, step, drawPos);
+    protected ComputedEasingRPO computeAdditionalEasings(ComputedEasingRPO container) {
+        return container.addComputedField("sides", this.sides)
+                .addComputedField("curve", this.curve);
     }
 
-    private @NotNull Vector3f[] getRawVertices() {
+    @Override
+    public void draw(ApelServerRenderer renderer, DrawContext<ComputedEasingRPO> drawContext, Vector3f actualSize) {
+        ComputedEasingRPO computedEasingPO = drawContext.getComputedEasings();
+        Vector3f objectDrawPos = new Vector3f(drawContext.getPosition()).add(computedEasingPO.computedOffset);
+
+        // Divide the particles evenly among sides
+        int computedSides = (int) computedEasingPO.getComputedField("sides");
+        if (computedSides <= 2) {
+            throw new RuntimeException("Sides has to be more than 2 in order to generate");
+        }
+        int particlesPerLine = computedEasingPO.computedAmount / computedSides;
+        float computedCurve = (float) computedEasingPO.getComputedField("curve");
+        if (computedCurve < -1 || computedCurve > 1) {
+            throw new RuntimeException("Curve value is out of bounds between [-1, 1]");
+        }
+        Vector3f computedRotation = computedEasingPO.computedRotation;
+
+        Vector3f[] vertices = getRawVertices(computedSides, actualSize);
+        for (int i = 0; i < vertices.length - 1; i++) {
+            Vector3f currVertex = vertices[i];
+            Vector3f nextVertex = vertices[i + 1];
+            if (computedCurve == 1.0f) {
+                renderer.drawLine(
+                    this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, vertices[i], vertices[i + 1],
+                    computedRotation, particlesPerLine
+                );
+            } else {
+                // Create Bézier curves, if needed
+                if (this.bezierCurves.size() < vertices.length - 1) {
+                    // Empty is OK, values will be set right after this
+                    this.bezierCurves.add(BezierCurve.of(new Vector3f(), new Vector3f(), new Vector3f()));
+                }
+                Vector3f controlPoint = new Vector3f(
+                        MathHelper.lerp(0.5f, currVertex.x, nextVertex.x),
+                        MathHelper.lerp(0.5f, currVertex.y, nextVertex.y),
+                        MathHelper.lerp(0.5f, currVertex.z, nextVertex.z)
+                ).mul(computedCurve);
+
+                BezierCurve bezierCurve = this.bezierCurves.get(i);
+                bezierCurve.setStart(currVertex);
+                bezierCurve.setEnd(nextVertex);
+                bezierCurve.getControlPoints().getFirst().set(controlPoint);
+
+                renderer.drawBezier(
+                        this.particleEffect, drawContext.getCurrentStep(), objectDrawPos, bezierCurve,
+                        computedRotation, particlesPerLine
+                );
+            }
+        }
+    }
+
+    private @NotNull Vector3f[] getRawVertices(int computedSides, Vector3f actualSize) {
         // Cache the vertices, does not rotate or offset
         // (since these change a lot and the goal is to use the cache as much as possible)
-        Vector3f[] cachedVertices = this.cachedShapes.computeIfAbsent(this.sides, sides -> {
-            float angleInterval = (float) (Math.TAU / this.sides);
-            // Apply this angle offset to make it point up to 0º
-            float offset = (float) (2.5f * Math.PI);
+        Vector3f[] cachedVertices = this.cachedShapes.computeIfAbsent(computedSides, sides -> {
+            float angleInterval = (float) (Math.TAU / computedSides);
             // Sides + 1 to repeat the starting point to prevent modulo math later
-            Vector3f[] newVertices = new Vector3f[this.sides + 1];
-            for (int i = 0; i < this.sides; i++) {
-                float currAngle = (angleInterval * i) + offset;
-                float x = this.size * Apel.TRIG_TABLE.getCosine(currAngle);
-                float y = this.size * Apel.TRIG_TABLE.getSine(currAngle);
+            Vector3f[] newVertices = new Vector3f[computedSides + 1];
+            for (int i = 0; i < computedSides; i++) {
+                float currAngle = angleInterval * i; //) + offset;
+                float x = Apel.TRIG_TABLE.getCosine(currAngle);
+                float y = Apel.TRIG_TABLE.getSine(currAngle);
                 newVertices[i] = new Vector3f(x, y, 0);
             }
             // Ensure the last particle is exactly the same as the first
-            newVertices[this.sides] = new Vector3f(newVertices[0]);
+            newVertices[computedSides] = new Vector3f(newVertices[0]);
             return newVertices;
         });
-        // Defensive copy of vertices so the cache isn't corrupted
+        // Defensive copy of vertices, scaled after copying, so the cache isn't corrupted
         Vector3f[] verticesCopy = new Vector3f[cachedVertices.length];
         for (int i = 0; i < cachedVertices.length; i++) {
-            verticesCopy[i] = new Vector3f(cachedVertices[i]);
+            verticesCopy[i] = new Vector3f(cachedVertices[i]).mul(actualSize);
         }
         return verticesCopy;
     }
 
-    private void computeVertices(Vector3f[] vertices, Vector3f center) {
-        Quaternionf quaternion = new Quaternionf().rotateZ(this.rotation.z)
-                                                  .rotateY(this.rotation.y)
-                                                  .rotateX(this.rotation.x);
-        for (Vector3f vertex : vertices) {
-            vertex.rotate(quaternion).add(center);
+    public static class Builder<B extends Builder<B>> extends RenderableParticleObject.Builder<B, ParticlePolygon> {
+        protected EasingCurve<Integer> sides;
+        protected EasingCurve<Float> curve = new ConstantEasingCurve<>(0f);
+
+        private Builder() {}
+
+        /**
+         * Set the number of sides on the builder.  This method is not cumulative; repeated calls will overwrite the
+         * value.
+         */
+        public B sides(int sides) {
+            this.sides = new ConstantEasingCurve<>(sides);
+            return self();
         }
-    }
 
-     /** Sets the interceptor to run after drawing the polygon. The interceptor will be provided with references to
-      * the {@link ServerWorld}, the animation step number, and the ParticlePolygon instance.
-     *
-     * @param afterDraw The new interceptor to use
-     */
-    public void setAfterDraw(DrawInterceptor<ParticlePolygon, CommonData> afterDraw) {
-        this.afterDraw = Optional.ofNullable(afterDraw).orElse(DrawInterceptor.identity());
-    }
+        /**
+         * Set the curve on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         *
+         * @see ParticlePolygon#setCurve(float) (float)
+         */
+        public B curve(float curve) {
+            this.curve = new ConstantEasingCurve<>(curve);
+            return self();
+        }
 
-    private void doAfterDraw(ServerWorld world, int step) {
-        InterceptData<CommonData> interceptData = new InterceptData<>(world, null, step, CommonData.class);
-        this.afterDraw.apply(interceptData, this);
-    }
+        /**
+         * Set the number of sides on the builder.  This method is not cumulative; repeated calls will overwrite the
+         * value.
+         */
+        public B sides(EasingCurve<Integer> sides) {
+            this.sides = sides;
+            return self();
+        }
 
-    /** Sets the interceptor to run before drawing the polygon. The interceptor will be provided with references to
-     * the {@link ServerWorld}, the animation step number, and the ParticlePolygon instance.
-     *
-     * @param beforeDraw The new interceptor to use
-     */
-    public void setBeforeDraw(DrawInterceptor<ParticlePolygon, CommonData> beforeDraw) {
-        this.beforeDraw = Optional.ofNullable(beforeDraw).orElse(DrawInterceptor.identity());
-    }
+        /**
+         * Set the curve on the builder. This method is not cumulative; repeated calls will overwrite the value.
+         *
+         * @see ParticlePolygon#setCurve(float) (float)
+         */
+        public B curve(EasingCurve<Float> curve) {
+            this.curve = curve;
+            return self();
+        }
 
-    private void doBeforeDraw(ServerWorld world, int step) {
-        InterceptData<CommonData> interceptData = new InterceptData<>(world, null, step, CommonData.class);
-        this.beforeDraw.apply(interceptData, this);
+        @Override
+        public ParticlePolygon build() {
+            return new ParticlePolygon(this);
+        }
     }
 }
