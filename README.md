@@ -1,3 +1,10 @@
+> [!WARNING]
+> The APEL project has been archived indefinitely and won't be receiving any further updates due to low demand of a particle engine library.
+> Feel free to fork the library and adapt for your use cases but anything. In terms of the project's mantainence I (McBrincie212) won't be involved further,
+> the only motive / reason I may come back is if this project suddenly gets attention and developers want to use it in their projects as a library.
+>
+> Archival Date: June 20 - 2026
+
 # <center>APEL</center>
 **A**nimative **P**article **E**ngine **L**ibrary, also known as Apel is a 
 fully featured minecraft library mod that promises to bring a fully featured 
